@@ -9,7 +9,7 @@
 // const char* ssid;
 // const char* password;
 
-bool apMode = true;
+bool apMode = false;
 String hostname = "fsbrowser";
 
 // Test "config" values
@@ -24,7 +24,7 @@ ESP8266WebServer server(80);
 WebServer myWebServer(FILESYSTEM, server);
 struct tm Time;
 
-////////////////////////////////  NTP Time  /////////////////////////////////////////
+////////////////////////////////  NTP Time  /////////////////////////////////////
 void getUpdatedtime(const uint32_t timeout)
 {
   uint32_t start = millis();
@@ -151,7 +151,7 @@ void loadApplicationConfig() {
 
 
 void handleLed() {
-  // If new led state is specifically setted
+  // If new led state is specifically setted - http://xxx.xxx.xxx.xxx/led?val=1
   if(myWebServer.webserver->hasArg("val")) {
     int value = myWebServer.webserver->arg("val").toInt();
     digitalWrite(ledPin, value);
@@ -203,6 +203,4 @@ void loop() {
   if(WiFi.status() == WL_CONNECTED) {
     MDNS.update();
   }
-
-
 }

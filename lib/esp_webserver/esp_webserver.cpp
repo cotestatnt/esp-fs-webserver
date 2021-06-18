@@ -36,8 +36,7 @@ const char* WebServer::getContentType(const char* filename) {
     return PSTR("text/plain");
 }
 
-bool WebServer::begin(){
-
+bool WebServer::begin() {
     File root = m_filesystem->open("/", "r");
     if(root) {
         m_fsOK = true;
@@ -52,12 +51,6 @@ bool WebServer::begin(){
         Serial.println();
     }
 
-// #ifdef ESP8266
-//     m_server.reset(new ESP8266WebServer(80));
-// #else
-//     m_server.reset(new WebServer(80));
-// #endif
-
 #ifdef INCLUDE_EDIT_HTM
     webserver->on("/status", HTTP_GET, std::bind(&WebServer::handleStatus, this));
     webserver->on("/list", HTTP_GET, std::bind(&WebServer::handleFileList, this));
@@ -65,11 +58,9 @@ bool WebServer::begin(){
     webserver->on("/edit", HTTP_PUT, std::bind(&WebServer::handleFileCreate, this));
     webserver->on("/edit", HTTP_DELETE, std::bind(&WebServer::handleFileDelete, this));
 #endif
-    // Handle request for token generation page
     webserver->onNotFound(std::bind(&WebServer::handleRequest, this));
-    // m_server->on("/", HTTP_GET, std::bind(&WebServer::handleSetup, this));
     webserver->on("/favicon.ico", HTTP_GET, std::bind(&WebServer::replyOK, this));
-    webserver->on("/", HTTP_GET, std::bind(&WebServer::handleSetup, this));
+    webserver->on("/", HTTP_GET, std::bind(&WebServer::handleIndex, this));
     webserver->on("/setup", HTTP_GET, std::bind(&WebServer::handleSetup, this));
     webserver->on("/scan", HTTP_GET, std::bind(&WebServer::handleScanNetworks, this));
     webserver->on("/connect", HTTP_GET, std::bind(&WebServer::doWifiConnection, this));
@@ -174,9 +165,19 @@ void WebServer::handleScanNetworks() {
   DebugPrintln(jsonList);
 }
 
+
 void WebServer::handleSetup(){
     webserver->sendHeader(PSTR("Content-Encoding"), "gzip");
     webserver->send_P(200, "text/html", WEBPAGE_HTML, WEBPAGE_HTML_SIZE);
+}
+
+void WebServer::handleIndex(){
+    if (m_filesystem->exists("/index.htm")) {
+        handleFileRead("/index.htm");
+    }
+    else {
+        handleSetup();
+    }
 }
 
 void WebServer::handleRequest(){

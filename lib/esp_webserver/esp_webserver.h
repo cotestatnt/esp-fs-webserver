@@ -101,6 +101,7 @@ private:
     void getIpAddress();
     void handleRequest();
     void handleSetup();
+    void handleIndex();
     bool handleFileRead( const String &path);
     void handleFileUpload();
     void replyToCLient(int msg_type, const char* msg);
