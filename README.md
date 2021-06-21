@@ -2,9 +2,9 @@
 # esp-fs-webserver
 From FSBrowser.ino example to an Arduino library
 
-FSBrowser.ino is one of the best examples to start with, when you want to make a small webserver with ESP32 or ESP8266. 
-Unfortunately it is a rather complex example for a novice. 
-This library makes it easier by incorporating the many functions of example into a specific class.
+When you need a a small webserver with ESP32 or ESP8266 device, [FSBrowser@ESP8266]8https://github.com/esp8266/Arduino/tree/master/libraries/ESP8266WebServer/examples/FSBrowser) or [FSBrowser@ESP32](https://github.com/espressif/arduino-esp32/tree/master/libraries/WebServer/examples/FSBrowser) is the best examples as start point. 
+Unfortunately are a little complex examples for a novice due to a lot of handling functions "under the cover". 
+This library makes it easier by incorporating this functions into a specific class and more, it adds some convenience functionality like WiFi / Custom Options manager.
 
 
 ## ACE web broswer editor
