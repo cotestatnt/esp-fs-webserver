@@ -1,6 +1,6 @@
 
 # esp-fs-webserver
-From FSBrowser.ino example to an Arduino library
+From **FSBrowser.ino** example to **esp-fs-webserver** Arduino library
 
 When you need a webserver running on ESP32 or ESP8266 device, [FSBrowser@ESP8266](https://github.com/esp8266/Arduino/tree/master/libraries/ESP8266WebServer/examples/FSBrowser) or [FSBrowser@ESP32](https://github.com/espressif/arduino-esp32/tree/master/libraries/WebServer/examples/FSBrowser) is the best examples as start point because you can simply put your webserver HTML/CSS/JavaScript source files in the flash memory of device (for example with filesystem-type dedicated plugins) or in an external SD.
 
