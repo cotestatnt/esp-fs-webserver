@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+  <title>ESP Index Page</title>
+
+  <style>
+    body {
+      background-color:#47597E;
+      color:white;
+      margin:auto;
+      max-width:820px;
+    }
+    button {
+      padding:5px;
+    }
+    .container {
+      display:flex;
+      padding:10px;
+      border: 1px solid #f69c55;
+    }
+    #demo {
+      margin:auto;
+    }
+  </style>
+
+  <script type="text/javascript">
+    function onBodyLoad(){
+      console.log("we are loaded!!");
+    }
+
+    function toggleLed() {
+    const xhttp = new XMLHttpRequest();
+    xhttp.onload = function() {
+      document.getElementById("demo").innerHTML = this.responseText;
+    }
+    xhttp.open("GET", "/led", true);
+    xhttp.send();
+  }
+  </script>
+
+</head>
+<body id="index" onload="onBodyLoad()">
+  <h1>ESP FS WebServer</h1>
+  <br>
+  <div class="container">
+    <button type="button" onclick="toggleLed()">TOGGLE</button>
+    <div id="demo">Toggle built-in LED</div>
+  </div>
+  <img src="espressif.jpg" style="opacity: 0.75"/>
+</body>
+</html>

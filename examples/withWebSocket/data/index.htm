@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+  <title>ESP Index</title>
+  
+  <style>
+     body {
+      background-color:#47597E;
+      color:white;
+      margin:auto;
+      max-width:820px;
+    }
+    button {
+      padding:5px;
+    }
+    .container {
+      display:flex;
+      padding:10px;
+      border: 1px solid #f69c55;
+    }
+    #demo {
+      margin:auto;
+    }
+  </style>
+  
+  <script type="text/javascript">
+    var connection = new WebSocket('ws://' + location.hostname + ':81/');
+    connection.onopen = function () {
+      connection.send('Connected - ' + new Date());
+    };
+    connection.onerror = function (error) {
+      console.log('WebSocket Error ', error);
+    };
+    connection.onmessage = function (e) {
+      console.log('Server: ', e.data);
+      parseMessage(e.data);
+    };
+    connection.onclose = function () {
+      console.log('WebSocket connection closed');
+    };
+
+    function parseMessage(msg) {
+      try {
+        const obj = JSON.parse(msg);
+        if (typeof obj === 'object' && obj !== null) {
+          if (obj.esptime !== null) {
+            var date = new Date(0); // The 0 sets the date to epoch
+            date.setUTCSeconds(obj.esptime);
+            document.getElementById("esp-time").innerHTML = date;
+          }
+        }
+      } catch {
+        console.log('Error on parse message ' + msg);
+      }
+    }
+    
+    function toggleLed() {
+      const xhttp = new XMLHttpRequest();
+      xhttp.onload = function() {
+        document.getElementById("demo").innerHTML = this.responseText;
+      }
+      xhttp.open("GET", "/led", true);
+      xhttp.send();
+    }
+  </script>
+  
+</head>
+<body id="index">
+  <h1>ESP8266 Pin Functions</h1>
+  
+  <div id="esp-time"></div>
+  <br>
+  <div class="container">
+    <button type="button" onclick="toggleLed()">TOGGLE</button>
+    <div id="demo" >Toggle built-in LED</div>
+  </div>
+  <br><br>
+  <img src="pins.png" />
+</body>
+</html>

@@ -1,0 +1,22 @@
+WebServer	KEYWORD1
+webserver KEYWORD3
+
+doWifiConnection	KEYWORD2
+doRestart		KEYWORD2
+replyOK		KEYWORD2
+getIpAddress		KEYWORD2
+handleRequest			KEYWORD2
+handleSetup	KEYWORD2
+handleIndex			KEYWORD2
+handleFileRead		KEYWORD2
+handleFileUpload		KEYWORD2
+replyToCLient				KEYWORD2
+setCrossOrigin		KEYWORD2
+handleScanNetworks			KEYWORD2
+
+getContentType	    KEYWORD2
+handleGetEdit	KEYWORD2
+handleFileCreate	    KEYWORD2
+handleFileDelete	KEYWORD2
+handleStatus		KEYWORD2
+handleFileList		KEYWORD2
