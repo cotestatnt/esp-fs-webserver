@@ -81,8 +81,7 @@ IPAddress startWiFi(){
   Serial.printf("Connecting to %s\n", WiFi.SSID().c_str());
   WiFi.mode(WIFI_STA);
   WiFi.begin();
-  // WiFi.begin(ssid, password);
-  uint32_t startTime = millis();
+  // WiFi.begin(ssid, password);  
   while (WiFi.status() != WL_CONNECTED ){
     delay(500);
     Serial.print(".");
@@ -194,8 +193,8 @@ void loop() {
     uint32_t free;
     uint16_t max;
     ESP.getHeapStats(&free, &max, nullptr);
-    doc["totalHeap"] = free
-    doc["maxBlock"]  =  max
+    doc["totalHeap"] = free;
+    doc["maxBlock"]  =  max;
   #endif
     String msg;
     serializeJson(doc, msg);
