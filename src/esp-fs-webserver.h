@@ -14,6 +14,7 @@
 
 #define INCLUDE_SETUP_HTM
 #ifdef INCLUDE_SETUP_HTM
+#define ARDUINOJSON_USE_LONG_LONG 1
 #include <ArduinoJson.h>
 #include "setup_htm.h"
 #endif
@@ -50,11 +51,11 @@ public:
         webserver->handleClient();
     }
 
-    inline void addHandler(const Uri &uri, HTTPMethod method, WebServer::THandlerFunction fn) {
+    inline void addHandler(const Uri &uri, HTTPMethod method, WebServerClass::THandlerFunction fn) {
         webserver->on(uri, method, fn);
     }
 
-    inline void addHandler(const Uri &uri, WebServer::THandlerFunction handler) {
+    inline void addHandler(const Uri &uri, WebServerClass::THandlerFunction handler) {
         webserver->on(uri, HTTP_ANY, handler);
     }
 
