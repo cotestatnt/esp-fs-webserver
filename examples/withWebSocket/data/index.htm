@@ -19,7 +19,7 @@
       padding:10px;
       border: 1px solid #f69c55;
     }
-    #demo {
+    #led-state {
       margin:auto;
     }
   </style>
@@ -58,7 +58,7 @@
     function toggleLed() {
       const xhttp = new XMLHttpRequest();
       xhttp.onload = function() {
-        document.getElementById("demo").innerHTML = this.responseText;
+        document.getElementById("led-state").innerHTML = this.responseText;
       }
       xhttp.open("GET", "/led", true);
       xhttp.send();
@@ -67,15 +67,13 @@
   
 </head>
 <body id="index">
-  <h1>ESP8266 Pin Functions</h1>
-  
-  <div id="esp-time"></div>
+  <h1>ESP FS WebServer</h1>
   <br>
   <div class="container">
     <button type="button" onclick="toggleLed()">TOGGLE</button>
-    <div id="demo" >Toggle built-in LED</div>
+    <div id="led-state">Toggle built-in LED</div>
   </div>
-  <br><br>
-  <img src="pins.png" />
+  <img src="espressif.jpg" style="opacity: 0.75"/>
 </body>
 </html>
+
