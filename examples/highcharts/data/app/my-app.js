@@ -1,4 +1,9 @@
+const timezone = new Date().getTimezoneOffset();
+
 let chart = Highcharts.chart('container', {
+  time: {
+    timezoneOffset: timezone
+  },
 	chart: {
 		zoomType: 'x'
 	},
@@ -60,10 +65,9 @@ let chart = Highcharts.chart('container', {
 });
 
 
-function addPoint(total, max) {
-
-	chart.series[0].addPoint([Date.now(), total]);
-	chart.series[1].addPoint([Date.now(), max]);
+function addPoint(timestamp, total, max) {
+	chart.series[0].addPoint([timestamp, total]);
+	chart.series[1].addPoint([timestamp, max]);
 }
 
 
@@ -89,10 +93,13 @@ function parseMessage(msg) {
 		if (typeof obj === 'object' && obj !== null) {
 			// Add new point to chart message
 			if (obj.addPoint !== null) {
-				var date = new Date(0); // The 0 sets the date to epoch
-				date.setUTCSeconds(obj.timestamp);
+			  
+			  // Updated the ESP timedate
+				var date = new Date(obj.timestamp*1000);   
 				document.getElementById("esp-time").innerHTML = date;
-				addPoint(obj.totalHeap, obj.maxBlock);
+				
+				// Add the new point
+				addPoint(obj.timestamp*1000, obj.totalHeap, obj.maxBlock);
 			}
 		}
 	} catch {
