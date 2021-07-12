@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+  <title>ESP Index</title>
+
+  <style>
+    body {
+      background-color:black;
+      color:white;
+    }
+    .container {
+      display:block;
+    }
+    .row {
+      display:flex;
+    }
+    #demo, #fw-version, button {
+      margin-right:10px;
+    }
+  </style>
+
+  <script type="text/javascript">
+    var actual_version = '1.0.0';
+
+    function onBodyLoad (){
+      console.log("we are loaded!!");
+      getFirmwareVersion();
+    }
+
+    function toggleLed () {
+      const xhttp = new XMLHttpRequest();
+      xhttp.onload = function() {
+        document.getElementById("demo").innerHTML = this.responseText;
+      }
+      xhttp.open("GET", "/led", true);
+      xhttp.send();
+    }
+
+
+    // v1 > v2 -> 1; v1 = v2 -> 0; v1 < v2 = -1
+    function compareVersion (v1, v2) {
+      if (typeof v1 !== 'string') return false;
+      if (typeof v2 !== 'string') return false;
+      v1 = v1.split('.');
+      v2 = v2.split('.');
+      const k = Math.min(v1.length, v2.length);
+      for (let i = 0; i < k; ++ i) {
+          v1[i] = parseInt(v1[i], 10);
+          v2[i] = parseInt(v2[i], 10);
+          if (v1[i] > v2[i]) return 1;
+          if (v1[i] < v2[i]) return -1;
+      }
+      return v1.length == v2.length ? 0: (v1.length < v2.length ? -1 : 1);
+    }
+
+    // Check if a new firmware is avalaible
+    function checkNewFirmware () {
+      const xhttp = new XMLHttpRequest();
+      const url = 'https://raw.githubusercontent.com/cotestatnt/esp-fs-webserver/main/examples/remoteOTA/version.json';
+
+      xhttp.open('GET', url, true);
+      xhttp.onload =  function() {
+        const response = JSON.parse(xhttp.responseText);
+        // Check if online version is greater
+        if (compareVersion( response.version, actual_version) === 1) {
+          // Prompt the user for confirmation
+          if (confirm('Are you sure you want to proceed with firmware update?')) {
+            updateFirmware(response);
+          }
+        }
+        else {
+          alert("No new version available");
+        }
+      };
+      xhttp.send();
+    }
+
+    // Get actual firmeware version from ESP
+    function getFirmwareVersion () {
+      const xhttp = new XMLHttpRequest();
+      xhttp.onload = function() {
+        document.getElementById("fw-version").innerHTML = 'Firmware version: ' + this.responseText;
+        actual_version = this.responseText;
+      }
+      xhttp.open("GET", "/version", true);
+      xhttp.send();
+    }
+
+    // Procede with firmware update (after user confirmation)
+    function updateFirmware (obj) {
+      console.log(obj.version);
+      console.log(obj.raw_url);
+
+      const url = '/firmware_update?fwupdate=1&version=' + obj.version + '&url=' + obj.raw_url;
+      const xhttp = new XMLHttpRequest();
+      xhttp.onload = function () {
+        console.log(this.responseText);
+        document.getElementById("update-result").innerHTML = this.responseText;
+      }
+      xhttp.open("GET", url, true);
+      xhttp.send();
+    }
+
+  </script>
+
+</head>
+<body id="index" onload="onBodyLoad()">
+  <h1>This is the H1 title</h1>
+  <br>
+  <div class="container">
+
+    <div class="row">
+      <div id="fw-version" >Firmware version: </div>
+      <button type="button" onclick="checkNewFirmware()">UPDATE</button>
+      <br>
+      <div id="update-result"></div>
+
+    </div>
+
+    <br><br>
+    <div class="row">
+      <div id="demo" >Toggle built-in LED</div>
+      <button type="button" onclick="toggleLed()">TOGGLE</button>
+    </div>
+
+  </div>
+  <br><br>
+  <img src="espressif.jpg" />
+</body>
+</html>
