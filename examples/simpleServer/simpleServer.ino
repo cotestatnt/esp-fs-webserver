@@ -19,7 +19,7 @@
 
 uint8_t ledPin = LED_BUILTIN;
 bool apMode = false;
-String hostname = "fsbrowser";
+char* hostname = "fsbrowser";
 
 #ifdef ESP8266
   ESP8266WebServer server(80);
@@ -41,9 +41,8 @@ IPAddress startWiFi(){
     Serial.print(".");
 
     // If no connection (or specifically activated) go in Access Point mode
-    if( millis() - startTime > 10000 || apMode ) {
-      WiFi.mode(WIFI_AP);
-      WiFi.softAP("ESP8266_AP", "123456789");
+    if( millis() - startTime > 10000 || apMode ) {      
+      myWebServer.setAPmode("ESP8266_AP", "123456789");
       myIP = WiFi.softAPIP();
       Serial.print(F("\nAP mode.\nServer IP address: "));
       Serial.println(myIP);
@@ -60,11 +59,11 @@ IPAddress startWiFi(){
   #ifdef ESP8266
     WiFi.hostname(hostname);
   #elif defined(ESP32)
-    WiFi.setHostname(hostname.c_str());
+    WiFi.setHostname(hostname);
   #endif
 
     // Start MDNS responder
-    if (MDNS.begin(hostname.c_str())) {
+    if (MDNS.begin(hostname)) {
       Serial.println(F("MDNS responder started."));
       Serial.printf("You should be able to connect with address\t http://%s.local/\n", hostname.c_str());
       // Add service to MDNS-SD

@@ -3,11 +3,11 @@
 
 #include <FS.h>
 #ifdef ESP8266
-  #include <LittleFS.h>
-  #define FILESYSTEM LittleFS
+#include <LittleFS.h>
+#define FILESYSTEM LittleFS
 #elif defined(ESP32)
-  #include <FFat.h>
-  #define FILESYSTEM FFat
+#include <FFat.h>
+#define FILESYSTEM FFat
 #endif
 
 #ifndef LED_BUILTIN
@@ -17,47 +17,49 @@
 // In order to set SSID and password open the /setup webserver page
 // const char* ssid;
 // const char* password;
-const char* hostname = "heap-chart";
+char* hostname = "heap-chart";
 
 // Timezone definition to get properly time from NTP server
 #define MYTZ "CET-1CEST,M3.5.0,M10.5.0/3"
 struct tm Time;
 
 #ifdef ESP8266
-  ESP8266WebServer server(80);
+ESP8266WebServer server(80);
 #elif defined(ESP32)
-  WebServer server(80);
+WebServer server(80);
 #endif
 
 FSWebServer myWebServer(FILESYSTEM, server);
 WebSocketsServer webSocket = WebSocketsServer(81);
 
+DNSServer dnsServer;
+
 ////////////////////////////////   WebSocket Handler  /////////////////////////////
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length) {
-  switch(type) {
+  switch (type) {
     case WStype_DISCONNECTED:
-        Serial.printf("[%u] Disconnected!\n", num);
-        break;
+      Serial.printf("[%u] Disconnected!\n", num);
+      break;
     case WStype_CONNECTED:
-        {
-          IPAddress ip = webSocket.remoteIP(num);
-          Serial.printf("[%u] Connected from %d.%d.%d.%d url: %s\n", num, ip[0], ip[1], ip[2], ip[3], payload);
-          // send message to client
-          webSocket.sendTXT(num, "{\"Connected\": true}");
-        }
-        break;
-    case WStype_TEXT:
-        Serial.printf("[%u] get Text: %s\n", num, payload);
+      {
+        IPAddress ip = webSocket.remoteIP(num);
+        Serial.printf("[%u] Connected from %d.%d.%d.%d url: %s\n", num, ip[0], ip[1], ip[2], ip[3], payload);
         // send message to client
-        // webSocket.sendTXT(num, "message here");
-        // send data to all connected clients
-        // webSocket.broadcastTXT("message here");
-        break;
+        webSocket.sendTXT(num, "{\"Connected\": true}");
+      }
+      break;
+    case WStype_TEXT:
+      Serial.printf("[%u] get Text: %s\n", num, payload);
+      // send message to client
+      // webSocket.sendTXT(num, "message here");
+      // send data to all connected clients
+      // webSocket.broadcastTXT("message here");
+      break;
     case WStype_BIN:
-        Serial.printf("[%u] get binary length: %u\n", num, length);
-        break;
+      Serial.printf("[%u] get binary length: %u\n", num, length);
+      break;
     default:
-        break;
+      break;
   }
 
 }
@@ -76,36 +78,39 @@ void getUpdatedtime(const uint32_t timeout)
 }
 
 ////////////////////////////////  WiFi  /////////////////////////////////////////
-IPAddress startWiFi(){
+IPAddress startWiFi(bool startAP = false) {
   IPAddress myIP;
   Serial.printf("Connecting to %s\n", WiFi.SSID().c_str());
   WiFi.mode(WIFI_STA);
   WiFi.begin();
-  // WiFi.begin(ssid, password);  
-  while (WiFi.status() != WL_CONNECTED ){
+  // WiFi.begin(ssid, password);
+  uint32_t startTime = millis();
+  while (WiFi.status() != WL_CONNECTED ) {
     delay(500);
     Serial.print(".");
+
+    // If no connection (or specifically activated) go in Access Point mode
+    if ( millis() - startTime > 10000 || startAP ) {
+      myIP = myWebServer.setAPmode("ESP8266_AP", "123456789");
+      Serial.print(F("\nAP mode.\nServer IP address: "));
+      Serial.println(myIP);
+      dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
+      dnsServer.start(53, "*", WiFi.softAPIP());
+      break;
+    }
   }
 
-  if(WiFi.status() == WL_CONNECTED) {
+  if (WiFi.status() == WL_CONNECTED) {
     myIP = WiFi.localIP();
     Serial.print(F("\nConnected! IP address: "));
     Serial.println(myIP);
 
-    // Set hostname, timezone and NTP servers
-  #ifdef ESP8266
+    // Set hostname
+#ifdef ESP8266
     WiFi.hostname(hostname);
-    configTime(MYTZ, "time.google.com", "time.windows.com", "pool.ntp.org");
-  #elif defined(ESP32)
+#elif defined(ESP32)
     WiFi.setHostname(hostname);
-    configTzTime(MYTZ, "time.google.com", "time.windows.com", "pool.ntp.org");
-  #endif
-
-    // Sync time with NTP. Blocking, but with timeout (0 == no timeout)
-    getUpdatedtime(10000);
-    char buffer[30];
-    strftime (buffer, 30, "%d/%m/%Y - %X", &Time);
-    Serial.printf("Synced time: %s\n", buffer);
+#endif
 
     // Start MDNS responder
     if (MDNS.begin(hostname)) {
@@ -119,12 +124,12 @@ IPAddress startWiFi(){
 }
 
 ////////////////////////////////  Filesystem  /////////////////////////////////////////
-void startFilesystem(){
+void startFilesystem() {
   // FILESYSTEM INIT
-  if ( FILESYSTEM.begin()){
+  if ( FILESYSTEM.begin()) {
     File root = FILESYSTEM.open("/", "r");
     File file = root.openNextFile();
-    while (file){
+    while (file) {
       const char* fileName = file.name();
       size_t fileSize = file.size();
       Serial.printf("FS File: %s, size: %lu\n", fileName, (long unsigned)fileSize);
@@ -140,14 +145,14 @@ void startFilesystem(){
 }
 
 
-void setup(){
+void setup() {
   Serial.begin(115200);
 
   // FILESYSTEM INIT
   startFilesystem();
 
   // WiFi INIT
-  IPAddress myIP = startWiFi();
+  startWiFi(true);
 
   // Start WebSocket server on port 81
   webSocket.begin();
@@ -155,8 +160,7 @@ void setup(){
 
   // Start webserver
   if (myWebServer.begin()) {
-    Serial.print(F("ESP Web Server started on IP Address"));
-    Serial.println(myIP);
+    Serial.println(F("ESP Web Server started"));
     Serial.println(F("Open /setup page to configure optional parameters"));
     Serial.println(F("Open /edit page to view and edit files"));
   }
@@ -168,12 +172,14 @@ void setup(){
 void loop() {
 
   myWebServer.run();
+  dnsServer.processNextRequest();
+  
   webSocket.loop();
 
-  if(WiFi.status() == WL_CONNECTED) {
-    #ifdef ESP8266
+  if (WiFi.status() == WL_CONNECTED) {
+#ifdef ESP8266
     MDNS.update();
-    #endif
+#endif
   }
 
   // Send ESP system time (epoch) and heap stats to WS client
@@ -181,21 +187,21 @@ void loop() {
   if (millis() - sendToClientTime > 1000 ) {
     sendToClientTime = millis();
     digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
-    
-    time_t now = time(nullptr);    
+
+    time_t now = time(nullptr);
     StaticJsonDocument<1024> doc;
     doc["addPoint"] = true;
     doc["timestamp"] = now;
-  #ifdef ESP32
+#ifdef ESP32
     doc["totalHeap"] = heap_caps_get_free_size(0);
     doc["maxBlock"]  =  heap_caps_get_largest_free_block(0);
-  #elif defined(ESP8266)
+#elif defined(ESP8266)
     uint32_t free;
     uint16_t max;
     ESP.getHeapStats(&free, &max, nullptr);
     doc["totalHeap"] = free;
     doc["maxBlock"]  =  max;
-  #endif
+#endif
     String msg;
     serializeJson(doc, msg);
     webSocket.broadcastTXT(msg);

@@ -28,7 +28,7 @@
 
 uint8_t ledPin = LED_BUILTIN;
 bool apMode = false;
-const char* hostname = "fsbrowser";
+char* hostname = "fsbrowser";
 char fw_version[10] = {"0.0.0"};
 
 #ifdef ESP8266
@@ -39,21 +39,20 @@ char fw_version[10] = {"0.0.0"};
 FSWebServer myWebServer(FILESYSTEM, server);
 
 ////////////////////////////////  WiFi  /////////////////////////////////////////
-IPAddress startWiFi(){
+IPAddress startWiFi(bool startAP = false){
   IPAddress myIP;
   Serial.printf("Connecting to %s\n", WiFi.SSID().c_str());
   WiFi.mode(WIFI_STA);
   WiFi.begin();
-  
+  // WiFi.begin(ssid, password);
   uint32_t startTime = millis();
   while (WiFi.status() != WL_CONNECTED ){
     delay(500);
     Serial.print(".");
 
     // If no connection (or specifically activated) go in Access Point mode
-    if( millis() - startTime > 10000 || apMode ) {
-      WiFi.mode(WIFI_AP);
-      WiFi.softAP("ESP8266_AP", "123456789");
+    if( millis() - startTime > 10000 || startAP ) {
+      myWebServer.setAPmode("ESP8266_AP", "123456789");
       myIP = WiFi.softAPIP();
       Serial.print(F("\nAP mode.\nServer IP address: "));
       Serial.println(myIP);
@@ -217,8 +216,7 @@ void setup(){
 
   // Start webserver
   if (myWebServer.begin()) {
-    Serial.print(F("ESP Web Server started on IP Address"));
-    Serial.println(myIP);
+    Serial.println(F("ESP Web Server started"));    
     Serial.println(F("Open /setup page to configure optional parameters"));
     Serial.println(F("Open /edit page to view and edit files"));
   }

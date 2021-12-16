@@ -75,6 +75,16 @@ bool FSWebServer::begin() {
     webserver->on("/restart", HTTP_GET, std::bind(&FSWebServer::doRestart, this));
     webserver->on("/ipaddress", HTTP_GET, std::bind(&FSWebServer::getIpAddress, this));
 
+    // Captive Portal redirect
+    webserver->on("/redirect", HTTP_GET, std::bind(&FSWebServer::captivePortal, this));
+    // Windows
+    webserver->on("/connecttest.txt", HTTP_GET, std::bind(&FSWebServer::captivePortal, this));
+    // Apple
+    webserver->on("/hotspot-detect.html", HTTP_GET, std::bind(&FSWebServer::captivePortal, this));
+    // Android
+    webserver->on("/generate_204", HTTP_GET, std::bind(&FSWebServer::captivePortal, this));
+    webserver->on("/gen_204", HTTP_GET, std::bind(&FSWebServer::captivePortal, this));
+
     // Upload file
     // - first callback is called after the request has ended with all parsed arguments
     // - second callback handles file upload at that location
@@ -88,6 +98,55 @@ bool FSWebServer::begin() {
 }
 
 
+IPAddress FSWebServer::setAPmode(const char* ssid, const char* psk) {
+	m_apmode = true;
+	WiFi.mode(WIFI_AP);
+	WiFi.softAP(ssid, psk);
+	/* Setup the DNS server redirecting all the domains to the apIP */
+	m_dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
+	m_dnsServer.start(53, "*", WiFi.softAPIP());
+    return WiFi.softAPIP();
+}
+
+/**
+ * Redirect to captive portal if we got a request for another domain.
+ */
+bool FSWebServer::captivePortal() {
+  IPAddress ip = webserver->client().localIP();
+  char serverLoc [sizeof("https:://255.255.255.255/")+ sizeof(m_apWebpage) + 1];
+  snprintf(serverLoc, sizeof(serverLoc), "http://%d.%d.%d.%d%s", ip[0], ip[1], ip[2], ip[3], m_apWebpage);
+
+  // redirect if hostheader not server ip, prevent redirect loops
+  if (strcmp(serverLoc, webserver->hostHeader().c_str())) {
+    webserver->sendHeader(F("Location"), serverLoc, true);
+    webserver->send(302, F("text/html"), "");       // Empty content inhibits Content-length header so we have to close the socket ourselves.
+    webserver->client().stop();                     // Stop is needed because we sent no content length
+    return true;
+  }
+  return false;
+}
+
+
+void FSWebServer::handleRequest(){
+    if (!m_fsOK){
+        replyToCLient(ERROR, PSTR(FS_INIT_ERROR));
+        return;
+    }
+#if defined(ESP32)
+    String _url =  WebServer::urlDecode(webserver->uri());
+#elif defined(ESP8266)
+    String _url = ESP8266WebServer::urlDecode(webserver->uri());
+#endif
+    // First try to find and return the requested file from the filesystem,
+    // and if it fails, return a 404 page with debug information
+    //Serial.println(_url);
+    if (handleFileRead(_url))
+        return;
+    else
+        replyToCLient(NOT_FOUND, PSTR(FILE_NOT_FOUND));
+}
+
+
 void FSWebServer::getIpAddress() {
     webserver->send(200, "text/json", WiFi.localIP().toString());
 }
@@ -98,8 +157,10 @@ void FSWebServer::doRestart(){
     ESP.restart();
 }
 
+
 void FSWebServer::doWifiConnection(){
     String ssid, pass;
+
     if(webserver->hasArg("ssid"))
         ssid = webserver->arg("ssid");
     if(webserver->hasArg("password"))
@@ -107,6 +168,7 @@ void FSWebServer::doWifiConnection(){
 
     if(ssid.length() && pass.length()) {
         // Try to connect to new ssid
+        WiFi.mode(WIFI_STA);
         if(WiFi.status() != WL_CONNECTED)
             WiFi.begin(ssid.c_str(), pass.c_str());
 
@@ -119,9 +181,22 @@ void FSWebServer::doWifiConnection(){
         }
         // reply to client
         if (WiFi.status() == WL_CONNECTED ) {
+            m_apmode = false;
+
+            IPAddress ip = WiFi.localIP();
             Serial.print("\nConnected! IP address: ");
-            Serial.println(WiFi.localIP());
-            webserver->send(200, "text/plain", "Connection succesfull");
+            Serial.println(ip);
+            //webserver->send(200, "text/plain", "Connection succesfull");
+
+            // Redirect browser to new location
+            String serverLoc = F("http://");
+            for (int i=0; i<4; i++)
+                serverLoc += i  ? "." + String(ip[i]) : String(ip[i]);
+            serverLoc += "/";
+            webserver->sendHeader(F("Location"), serverLoc, true);
+            webserver->send(302, F("text/html"), "");
+            webserver->client().stop();
+            m_dnsServer.stop();
         }
         else
             webserver->send(200, "text/plain", "Connection error");
@@ -187,25 +262,6 @@ void FSWebServer::handleIndex(){
         handleSetup();
     }
 }
-
-void FSWebServer::handleRequest(){
-    if (!m_fsOK){
-        replyToCLient(ERROR, PSTR(FS_INIT_ERROR));
-        return;
-    }
-#ifdef ESP32
-    String _url =  WebServer::urlDecode(webserver->uri());
-#elif defined(ESP8266)
-    String _url = ESP8266WebServer::urlDecode(webserver->uri());
-#endif
-    // First try to find and return the requested file from the filesystem,
-    // and if it fails, return a 404 page with debug information
-    if (handleFileRead(_url))
-        return;
-    else
-        replyToCLient(NOT_FOUND, PSTR(FILE_NOT_FOUND));
-}
-
 
 /*
     Read the given file from the filesystem and stream it back to the client

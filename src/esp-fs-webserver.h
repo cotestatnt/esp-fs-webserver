@@ -2,9 +2,9 @@
 #define esp_fs_webserver_H
 
 #include <Arduino.h>
-#include <DNSServer.h>
 #include <memory>
 #include <typeinfo>
+#include <base64.h>
 #include <FS.h>
 
 #define INCLUDE_EDIT_HTM
@@ -19,8 +19,7 @@
 #include "setup_htm.h"
 #endif
 
-
-#ifdef ESP8266
+#if defined(ESP8266)
     #include <ESP8266WiFi.h>
     #include <ESP8266WebServer.h>
     #include <ESP8266mDNS.h>
@@ -31,6 +30,7 @@
     #include <ESPmDNS.h>
     using WebServerClass = WebServer;
 #endif
+#include <DNSServer.h>
 
 #define DBG_OUTPUT_PORT Serial
 
@@ -49,6 +49,8 @@ public:
 
     inline void run(){
         webserver->handleClient();
+         if (m_apmode)
+            m_dnsServer.processNextRequest();
     }
 
     inline void addHandler(const Uri &uri, HTTPMethod method, WebServerClass::THandlerFunction fn) {
@@ -89,11 +91,20 @@ public:
     }
 #endif
     WebServerClass* webserver;
+    IPAddress setAPmode(const char* ssid, const char* psk) ;
+
+	void setCaptiveWebage(const char* url) {
+		m_apWebpage = (char*) realloc (m_apWebpage, sizeof(url));
+		strcpy(m_apWebpage, url);
+	}
 
 private:
+    DNSServer   m_dnsServer;
     fs::FS*     m_filesystem;
     File        m_uploadFile;
     bool        m_fsOK = false;
+    bool        m_apmode = false;
+	char* 		m_apWebpage = (char*) "/setup";
 
     // Default handler for all URIs not defined above, use it to read files from filesystem
 
@@ -111,6 +122,7 @@ private:
     void setCrossOrigin();
     void handleScanNetworks();
     const char* getContentType(const char* filename);
+    bool captivePortal();
 
     // edit page, in usefull in some situation, but if you need to provide only a web interface, you can disable
 #ifdef INCLUDE_EDIT_HTM

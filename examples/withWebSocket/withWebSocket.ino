@@ -19,7 +19,7 @@
 // const char* password;
 
 bool apMode = false;
-String hostname = "fsbrowser";
+char* hostname = "fsbrowser";
 
 // Test "config" values
 String option1 = "Test option String";
@@ -84,7 +84,7 @@ void getUpdatedtime(const uint32_t timeout)
 }
 
 ////////////////////////////////  WiFi  /////////////////////////////////////////
-IPAddress startWiFi(){
+IPAddress startWiFi(bool startAP = false){
   IPAddress myIP;
   Serial.printf("Connecting to %s\n", WiFi.SSID().c_str());
   WiFi.mode(WIFI_STA);
@@ -96,9 +96,8 @@ IPAddress startWiFi(){
     Serial.print(".");
 
     // If no connection (or specifically activated) go in Access Point mode
-    if( millis() - startTime > 10000 || apMode ) {
-      WiFi.mode(WIFI_AP);
-      WiFi.softAP("ESP8266_AP", "123456789");
+    if( millis() - startTime > 10000 || startAP ) {
+      myWebServer.setAPmode("ESP8266_AP", "123456789");
       myIP = WiFi.softAPIP();
       Serial.print(F("\nAP mode.\nServer IP address: "));
       Serial.println(myIP);
@@ -111,25 +110,17 @@ IPAddress startWiFi(){
     Serial.print(F("\nConnected! IP address: "));
     Serial.println(myIP);
 
-    // Set hostname, timezone and NTP servers
+    // Set hostname
   #ifdef ESP8266
     WiFi.hostname(hostname);
-    configTime(MYTZ, "time.google.com", "time.windows.com", "pool.ntp.org");
   #elif defined(ESP32)
-    WiFi.setHostname(hostname.c_str());
-    configTzTime(MYTZ, "time.google.com", "time.windows.com", "pool.ntp.org");
+    WiFi.setHostname(hostname);
   #endif
 
-    // Sync time with NTP. Blocking, but with timeout (0 == no timeout)
-    getUpdatedtime(10000);
-    char buffer[30];
-    strftime (buffer, 30, "%d/%m/%Y - %X", &Time);
-    Serial.printf("Synced time: %s\n", buffer);
-
     // Start MDNS responder
-    if (MDNS.begin(hostname.c_str())) {
+    if (MDNS.begin(hostname)) {
       Serial.println(F("MDNS responder started."));
-      Serial.printf("You should be able to connect with address\t http://%s.local/\n", hostname.c_str());
+      Serial.printf("You should be able to connect with address\t http://%s.local/\n", hostname);
       // Add service to MDNS-SD
       MDNS.addService("http", "tcp", 80);
     }
@@ -163,7 +154,6 @@ void startFilesystem(){
 void saveApplicationConfig(){
   StaticJsonDocument<1024> doc;
   File file = FILESYSTEM.open("/config.json", "w");
-  doc["hostname"] = hostname;
   doc["Option 1"] = option1;
   doc["Option 2"] = option2;
   doc["AP mode"] = apMode;
@@ -182,7 +172,6 @@ void loadApplicationConfig() {
     file.close();
     if (!error) {
       Serial.println(F("Deserializing JSON.."));
-      hostname = doc["hostname"].as<String>();
       apMode = doc["AP mode"];
       option1 = doc["Option 1"].as<String>();
       option2 = doc["Option 2"];
@@ -234,7 +223,6 @@ void setup(){
   webSocket.onEvent(webSocketEvent);
 
   // Configure /setup page and start Web Server
-  myWebServer.addOption(FILESYSTEM, "hostname", hostname);
   myWebServer.addOption(FILESYSTEM, "AP mode", apMode);
   myWebServer.addOption(FILESYSTEM, "LED Pin", ledPin);
   myWebServer.addOption(FILESYSTEM, "Option 1", option1.c_str());
@@ -253,7 +241,6 @@ void setup(){
 
 
 void loop() {
-
   myWebServer.run();
   webSocket.loop();
 
