@@ -133,20 +133,21 @@ void handleUpdate() {
     Serial.println(url);
     
     if( value && WiFi.status() == WL_CONNECTED) {
-
       #ifdef ESP8266
       #define UPDATER ESPhttpUpdate
+
+      #elif defined(ESP32)
+      #define UPDATER httpUpdate
+      #endif
+
       // onProgress handling is missing with ESP32 library
-      ESPhttpUpdate.onProgress([](int cur, int total){
+      UPDATER.onProgress([](int cur, int total){
           static uint32_t sendT;
           if(millis() - sendT > 1000){
               sendT = millis();
               Serial.printf("Updating %d of %d bytes...\n", cur, total);
           }
       });
-      #elif defined(ESP32)
-      #define UPDATER httpUpdate
-      #endif
 
       WiFiClientSecure client;
       client.setInsecure();
