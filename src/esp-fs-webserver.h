@@ -25,6 +25,7 @@
     #include <ESP8266mDNS.h>
     using WebServerClass = ESP8266WebServer;
 #elif defined(ESP32)
+    #include <esp_wifi.h>
     #include <WebServer.h>
     #include <WiFi.h>
     #include <ESPmDNS.h>
@@ -61,6 +62,15 @@ public:
         webserver->on(uri, HTTP_ANY, handler);
     }
 
+  	void setCaptiveWebage(const char* url) {
+		m_apWebpage = (char*) realloc (m_apWebpage, sizeof(url));
+		strcpy(m_apWebpage, url);
+	}
+
+    IPAddress setAPmode(const char* ssid, const char* psk);
+
+    IPAddress startWiFi(uint32_t timeout, const char* apSSID, const char* apPsw);
+
 
 #ifdef INCLUDE_SETUP_HTM
     // Add custom option to config webpage
@@ -91,12 +101,7 @@ public:
     }
 #endif
     WebServerClass* webserver;
-    IPAddress setAPmode(const char* ssid, const char* psk) ;
 
-	void setCaptiveWebage(const char* url) {
-		m_apWebpage = (char*) realloc (m_apWebpage, sizeof(url));
-		strcpy(m_apWebpage, url);
-	}
 
 private:
     DNSServer   m_dnsServer;
@@ -105,6 +110,8 @@ private:
     bool        m_fsOK = false;
     bool        m_apmode = false;
 	char* 		m_apWebpage = (char*) "/setup";
+	
+	uint32_t	m_timeout = 10000;
 
     // Default handler for all URIs not defined above, use it to read files from filesystem
 

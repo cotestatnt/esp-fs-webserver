@@ -27,6 +27,8 @@ const char* FSWebServer::getContentType(const char* filename) {
         return PSTR("application/javascript");
     else if (strstr(filename, ".png"))
         return PSTR("image/png");
+    else if (strstr(filename, ".svg"))
+        return PSTR("image/svg+xml");
     else if (strstr(filename, ".gif"))
         return PSTR("image/gif");
     else if (strstr(filename, ".jpg"))
@@ -101,12 +103,74 @@ bool FSWebServer::begin() {
 IPAddress FSWebServer::setAPmode(const char* ssid, const char* psk) {
 	m_apmode = true;
 	WiFi.mode(WIFI_AP);
+    WiFi.persistent(false);
 	WiFi.softAP(ssid, psk);
 	/* Setup the DNS server redirecting all the domains to the apIP */
 	m_dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
 	m_dnsServer.start(53, "*", WiFi.softAPIP());
     return WiFi.softAPIP();
 }
+
+
+
+IPAddress FSWebServer::startWiFi(uint32_t timeout, const char* apSSID, const char* apPsw ) {
+  IPAddress ip;
+  m_timeout = timeout;
+  WiFi.persistent(true);
+  WiFi.setAutoReconnect(true);
+  WiFi.mode(WIFI_STA);
+  
+  const char* _ssid;
+  const char* _pass;
+  
+ #if defined(ESP8266)
+  struct station_config conf;
+  wifi_station_get_config_default(&conf);
+  _ssid = reinterpret_cast<const char*> (conf.ssid);
+  _pass = reinterpret_cast<const char*> (conf.password);
+  
+#elif defined(ESP32)
+  wifi_config_t conf;
+  esp_wifi_get_config(WIFI_IF_STA, &conf);
+	  
+  _ssid = reinterpret_cast<const char*> (conf.sta.ssid);
+  _pass = reinterpret_cast<const char*> (conf.sta.password);
+#endif
+
+  Serial.print(F("Connecting to SSID "));
+  Serial.println(_ssid);
+  
+  if( _ssid != nullptr && _pass != nullptr )
+	WiFi.begin(_ssid, _pass);
+  else 
+	WiFi.begin();
+
+  uint32_t startTime = millis();
+  while (WiFi.status() != WL_CONNECTED ){
+    delay(500);
+    Serial.print(".");
+
+    // If no connection go in Access Point mode
+    if( millis() - startTime > m_timeout ) {
+      if( apSSID != nullptr && apPsw != nullptr )
+        setAPmode(apSSID, apPsw);
+      else
+        setAPmode("ESP_AP", "123456789");
+
+      ip = WiFi.softAPIP();
+      Serial.print(F("\nAP mode.\nServer IP address: "));
+      Serial.println(ip);
+      return ip;
+    }
+  }
+  Serial.println();
+  ip = WiFi.localIP();
+
+  return ip;
+}
+
+////////////////////////////////  WiFi  /////////////////////////////////////////
+
 
 /**
  * Redirect to captive portal if we got a request for another domain.
@@ -174,14 +238,31 @@ void FSWebServer::doWifiConnection(){
 
         uint32_t beginTime = millis();
         while (WiFi.status() != WL_CONNECTED ){
-            delay(1000);
+            delay(500);
             Serial.print("*.*");
-            if( millis() - beginTime > 10000 )
+            if( millis() - beginTime > m_timeout )
                 break;
         }
         // reply to client
         if (WiFi.status() == WL_CONNECTED ) {
             m_apmode = false;
+			
+			// Store current WiFi configuration in flash
+#if defined(ESP8266)
+			struct station_config stationConf;
+			wifi_station_get_config_default(&stationConf);
+			os_memcpy(&stationConf.ssid, ssid.c_str(), ssid.length());
+			os_memcpy(&stationConf.password, pass.c_str(), pass.length());
+			wifi_set_opmode( STATION_MODE );
+			wifi_station_set_config(&stationConf);
+  
+#elif defined(ESP32)
+			wifi_config_t stationConf;
+			esp_wifi_get_config(WIFI_IF_STA, &stationConf);
+			memcpy(&stationConf.sta.ssid, ssid.c_str(), ssid.length());
+			memcpy(&stationConf.sta.password, pass.c_str(), pass.length());
+			esp_wifi_set_config(WIFI_IF_STA, &stationConf);			
+#endif
 
             IPAddress ip = WiFi.localIP();
             Serial.print("\nConnected! IP address: ");

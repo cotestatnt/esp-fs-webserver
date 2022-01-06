@@ -83,50 +83,6 @@ void getUpdatedtime(const uint32_t timeout)
   Serial.println(" done.");
 }
 
-////////////////////////////////  WiFi  /////////////////////////////////////////
-IPAddress startWiFi(bool startAP = false){
-  IPAddress myIP;
-  Serial.printf("Connecting to %s\n", WiFi.SSID().c_str());
-  WiFi.mode(WIFI_STA);
-  WiFi.begin();
-  // WiFi.begin(ssid, password);
-  uint32_t startTime = millis();
-  while (WiFi.status() != WL_CONNECTED ){
-    delay(500);
-    Serial.print(".");
-
-    // If no connection (or specifically activated) go in Access Point mode
-    if( millis() - startTime > 10000 || startAP ) {
-      myWebServer.setAPmode("ESP8266_AP", "123456789");
-      myIP = WiFi.softAPIP();
-      Serial.print(F("\nAP mode.\nServer IP address: "));
-      Serial.println(myIP);
-      break;
-    }
-  }
-
-  if(WiFi.status() == WL_CONNECTED) {
-    myIP = WiFi.localIP();
-    Serial.print(F("\nConnected! IP address: "));
-    Serial.println(myIP);
-
-    // Set hostname
-  #ifdef ESP8266
-    WiFi.hostname(hostname);
-  #elif defined(ESP32)
-    WiFi.setHostname(hostname);
-  #endif
-
-    // Start MDNS responder
-    if (MDNS.begin(hostname)) {
-      Serial.println(F("MDNS responder started."));
-      Serial.printf("You should be able to connect with address\t http://%s.local/\n", hostname);
-      // Add service to MDNS-SD
-      MDNS.addService("http", "tcp", 80);
-    }
-  }
-  return myIP;
-}
 
 ////////////////////////////////  Filesystem  /////////////////////////////////////////
 void startFilesystem(){
@@ -215,9 +171,9 @@ void setup(){
   // Load configuration (if not present, default will be created)
   loadApplicationConfig();
 
-  // WiFi INIT
-  IPAddress myIP = startWiFi();
-
+  /// Try to connect to flash stored SSID, start AP if fails after timeout
+  IPAddress myIP = myWebServer.startWiFi(15000, "ESP8266_AP", "123456789" );
+  
   // Start WebSocket server on port 81
   webSocket.begin();
   webSocket.onEvent(webSocketEvent);
@@ -229,11 +185,28 @@ void setup(){
   myWebServer.addOption(FILESYSTEM, "Option 2", option2);
   // Add custom page handlers
   myWebServer.webserver->on("/led", HTTP_GET, handleLed);
+  
   if (myWebServer.begin()) {
     Serial.print(F("ESP Web Server started on IP Address"));
     Serial.println(myIP);
     Serial.println(F("Open /setup page to configure optional parameters"));
     Serial.println(F("Open /edit page to view and edit files"));
+  }
+  
+  // Start MDSN responder
+  if (WiFi.status() == WL_CONNECTED) {
+    // Set hostname
+#ifdef ESP8266
+    WiFi.hostname(hostname);
+#elif defined(ESP32)
+    WiFi.setHostname(hostname);
+#endif
+    if (MDNS.begin(hostname)) {
+      Serial.println(F("MDNS responder started."));
+      Serial.printf("You should be able to connect with address\t http://%s.local/\n", hostname);
+      // Add service to MDNS-SD
+      MDNS.addService("http", "tcp", 80);
+    }
   }
 
   pinMode(LED_BUILTIN, OUTPUT);
