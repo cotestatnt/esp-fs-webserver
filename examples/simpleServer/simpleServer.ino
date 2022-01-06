@@ -65,7 +65,7 @@ IPAddress startWiFi(){
     // Start MDNS responder
     if (MDNS.begin(hostname)) {
       Serial.println(F("MDNS responder started."));
-      Serial.printf("You should be able to connect with address\t http://%s.local/\n", hostname.c_str());
+      Serial.printf("You should be able to connect with address\t http://%s.local/\n", hostname);
       // Add service to MDNS-SD
       MDNS.addService("http", "tcp", 80);
     }
