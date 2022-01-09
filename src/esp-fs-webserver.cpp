@@ -339,6 +339,9 @@ void FSWebServer::handleIndex(){
     if (m_filesystem->exists("/index.htm")) {
         handleFileRead("/index.htm");
     }
+	else if (m_filesystem->exists("/index.html")) {
+        handleFileRead("/index.html");
+    } 
     else {
         handleSetup();
     }
