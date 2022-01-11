@@ -18,5 +18,4 @@ Thanks to the built-in **/edit** page (enabled by default), is possible upload, 
 ## WiFi manager
 I've added also another built-in page **/setup**, also enabled by default, with which it is possible to set the WiFi credentials and other freely configurable parameters.
 
-![image](https://user-images.githubusercontent.com/27758688/148923072-b615db3b-a99c-405d-8cfc-afa69c5f6435.png)
-
+![image](https://user-images.githubusercontent.com/27758688/148923310-060d58e7-6589-4487-9b0e-78b8e504af99.png)
