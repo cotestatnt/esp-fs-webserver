@@ -1,0 +1,65 @@
+/*@import "bulma/css/bulma.min.css";*/
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 40px;
+}
+
+.button-row {
+	display: inline-flex;
+	align-items: center;
+	width: 100%;
+	padding: 5px;
+}
+.connect, .scan{
+	margin-left: 10px;
+	margin-right: 10px;
+}
+
+.connect:before {
+    background: url("wifi-connect.svg") no-repeat scroll center center / 100% auto rgba(0, 0, 0, 0);
+    content: "";
+    display: inline-block;
+    color: #fff;
+    height: 24px;
+    margin-right: 13px;
+    position: relative;
+    top: -2px;
+    vertical-align: middle;
+    width: 24px;
+	-webkit-filter: invert(100%); /* safari 6.0 - 9.0 */
+    filter: invert(100%);
+}
+
+.scan:before {
+    background: url("wifi-scan.svg") no-repeat scroll center center / 100% auto rgba(0, 0, 0, 0);
+    content: "";
+    display: inline-block;
+    color: #fff;
+    height: 24px;
+    margin-right: 13px;
+    position: relative;
+    top: -2px;
+    vertical-align: middle;
+    width: 24px;
+	-webkit-filter: invert(100%); /* safari 6.0 - 9.0 */
+    filter: invert(100%);
+}
+
+.hidden {
+  display: none;
+}
+
+.table {
+  width: 90%;
+  margin: auto;
+}
+
+.table td {
+  vertical-align: middle;
+}
+
+

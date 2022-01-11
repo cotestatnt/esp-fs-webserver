@@ -1,0 +1,10 @@
+{
+  "name": "vanilla-ui",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@gfx/zopfli": "^1.0.14",    
+    "core-js": "^3.6.5",   
+    "zlib": "^1.0.5"
+  }
+}
