@@ -38,6 +38,6 @@ const uint32_t WEBPAGE_HTML_SIZE = ${indexHTML.length};
 const char WEBPAGE_HTML[] PROGMEM = { ${indexHTML} };
 `;
 
-fs.writeFileSync('webpage.h', source, 'utf8');
+fs.writeFileSync('setup_htm.h', source, 'utf8');
 
 });
