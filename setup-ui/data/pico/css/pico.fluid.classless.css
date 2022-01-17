@@ -1,22 +1,15 @@
-/*!
- * Pico.css v1.4.3 (https://picocss.com)
- * Copyright 2019-2021 - Licensed under MIT
- */
-/**
- * Theme: default
- */
 :root {
   --font-family: system-ui, -apple-system, "Segoe UI", "Roboto", "Ubuntu",
     "Cantarell", "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
     "Segoe UI Symbol", "Noto Color Emoji";
-  --line-height: 1.5;
+  --line-height: 1.2;
   --font-weight: 400;
   --font-size: 16px;
   --border-radius: 0.25rem;
   --border-width: 1px;
   --outline-width: 3px;
   --spacing: 1rem;
-  --typography-spacing-vertical: 1.5rem;
+  --typography-spacing-vertical: 1.2rem;
   --block-spacing-vertical: calc(var(--spacing) * 2);
   --block-spacing-horizontal: var(--spacing);
   --form-element-spacing-vertical: 0.75rem;
@@ -26,24 +19,15 @@
 }
 @media (min-width: 576px) {
   :root {
-    --font-size: 17px;
+    --font-size: 16px;
   }
 }
 @media (min-width: 768px) {
   :root {
-    --font-size: 18px;
+    --font-size: 17px;
   }
 }
-@media (min-width: 992px) {
-  :root {
-    --font-size: 19px;
-  }
-}
-@media (min-width: 1200px) {
-  :root {
-    --font-size: 20px;
-  }
-}
+
 
 @media (min-width: 576px) {
   body > header,
@@ -126,10 +110,7 @@ small {
 
 h1,
 h2,
-h3,
-h4,
-h5,
-h6 {
+{
   --font-weight: 700;
 }
 
@@ -184,10 +165,6 @@ kbd {
   --color: #415462;
   --h1-color: #1b2832;
   --h2-color: #24333e;
-  --h3-color: #2c3d49;
-  --h4-color: #374956;
-  --h5-color: #415462;
-  --h6-color: #4d606d;
   --muted-color: #73828c;
   --muted-border-color: #edf0f3;
   --primary: #1095c1;
@@ -402,61 +379,26 @@ h2 {
 }
 
 
-address ~ h1, address ~ h2, address ~ h3, address ~ h4, address ~ h5, address ~ h6,
+address ~ h1, 
 blockquote ~ h1,
 blockquote ~ h2,
-blockquote ~ h3,
-blockquote ~ h4,
-blockquote ~ h5,
-blockquote ~ h6,
 dl ~ h1,
 dl ~ h2,
-dl ~ h3,
-dl ~ h4,
-dl ~ h5,
-dl ~ h6,
 figure ~ h1,
 figure ~ h2,
 figure ~ h3,
-figure ~ h4,
-figure ~ h5,
-figure ~ h6,
 form ~ h1,
 form ~ h2,
-form ~ h3,
-form ~ h4,
-form ~ h5,
-form ~ h6,
 ol ~ h1,
 ol ~ h2,
-ol ~ h3,
-ol ~ h4,
-ol ~ h5,
-ol ~ h6,
 p ~ h1,
 p ~ h2,
-p ~ h3,
-p ~ h4,
-p ~ h5,
-p ~ h6,
 pre ~ h1,
 pre ~ h2,
-pre ~ h3,
-pre ~ h4,
-pre ~ h5,
-pre ~ h6,
 table ~ h1,
 table ~ h2,
-table ~ h3,
-table ~ h4,
-table ~ h5,
-table ~ h6,
 ul ~ h1,
-ul ~ h2,
-ul ~ h3,
-ul ~ h4,
-ul ~ h5,
-ul ~ h6 {
+ul ~ h2,{
   margin-top: var(--typography-spacing-vertical);
 }
 

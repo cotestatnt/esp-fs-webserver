@@ -9,10 +9,13 @@
 #endif
 
 
+
+
 FSWebServer::FSWebServer(fs::FS &fs, WebServerClass& server){
     m_filesystem = &fs;
     webserver = &server;
 }
+
 
 const char* FSWebServer::getContentType(const char* filename) {
     if (webserver->hasArg("download"))
@@ -22,6 +25,8 @@ const char* FSWebServer::getContentType(const char* filename) {
     else if (strstr(filename, ".html"))
         return PSTR("text/html");
     else if (strstr(filename, ".css"))
+        return PSTR("text/css");
+	else if (strstr(filename, ".sass"))
         return PSTR("text/css");
     else if (strstr(filename, ".js"))
         return PSTR("application/javascript");
@@ -73,7 +78,7 @@ bool FSWebServer::begin() {
     webserver->on("/", HTTP_GET, std::bind(&FSWebServer::handleIndex, this));
     webserver->on("/setup", HTTP_GET, std::bind(&FSWebServer::handleSetup, this));
     webserver->on("/scan", HTTP_GET, std::bind(&FSWebServer::handleScanNetworks, this));
-    webserver->on("/connect", HTTP_GET, std::bind(&FSWebServer::doWifiConnection, this));
+    webserver->on("/connect", HTTP_POST, std::bind(&FSWebServer::doWifiConnection, this));
     webserver->on("/restart", HTTP_GET, std::bind(&FSWebServer::doRestart, this));
     webserver->on("/ipaddress", HTTP_GET, std::bind(&FSWebServer::getIpAddress, this));
 
@@ -116,8 +121,6 @@ IPAddress FSWebServer::setAPmode(const char* ssid, const char* psk) {
 IPAddress FSWebServer::startWiFi(uint32_t timeout, const char* apSSID, const char* apPsw ) {
   IPAddress ip;
   m_timeout = timeout;
-  WiFi.persistent(true);
-  WiFi.setAutoReconnect(true);
   WiFi.mode(WIFI_STA);
   
   const char* _ssid;
@@ -224,15 +227,33 @@ void FSWebServer::doRestart(){
 
 void FSWebServer::doWifiConnection(){
     String ssid, pass;
-
-    if(webserver->hasArg("ssid"))
+	
+	bool persistent = true;
+	
+    if(webserver->hasArg("ssid")) {
         ssid = webserver->arg("ssid");
-    if(webserver->hasArg("password"))
+	}
+    
+	if(webserver->hasArg("password")) {
         pass = webserver->arg("password");
+	}
+	
+	if(webserver->hasArg("persistent")) {
+        String pers = webserver->arg("persistent");
+		if (pers.equals("false")) {
+			persistent = false;		
+		}
+	}
+	
+	if(WiFi.status() == WL_CONNECTED) {
+		webserver->send(500, "text/plain", "WiFi already connected");
+		return;
+	}
 
     if(ssid.length() && pass.length()) {
         // Try to connect to new ssid
-        WiFi.mode(WIFI_STA);
+   
+		
         if(WiFi.status() != WL_CONNECTED)
             WiFi.begin(ssid.c_str(), pass.c_str());
 
@@ -246,24 +267,28 @@ void FSWebServer::doWifiConnection(){
         // reply to client
         if (WiFi.status() == WL_CONNECTED ) {
             m_apmode = false;
-			
+			WiFi.softAPdisconnect();
+			WiFi.mode(WIFI_STA);
+						
 			// Store current WiFi configuration in flash
+			if(persistent) {			
 #if defined(ESP8266)
-			struct station_config stationConf;
-			wifi_station_get_config_default(&stationConf);
-			os_memcpy(&stationConf.ssid, ssid.c_str(), ssid.length());
-			os_memcpy(&stationConf.password, pass.c_str(), pass.length());
-			wifi_set_opmode( STATION_MODE );
-			wifi_station_set_config(&stationConf);
+				struct station_config stationConf;
+				wifi_station_get_config_default(&stationConf);
+				os_memcpy(&stationConf.ssid, ssid.c_str(), ssid.length());
+				os_memcpy(&stationConf.password, pass.c_str(), pass.length());
+				wifi_set_opmode( STATION_MODE );
+				wifi_station_set_config(&stationConf);
   
 #elif defined(ESP32)
-			wifi_config_t stationConf;
-			esp_wifi_get_config(WIFI_IF_STA, &stationConf);
-			memcpy(&stationConf.sta.ssid, ssid.c_str(), ssid.length());
-			memcpy(&stationConf.sta.password, pass.c_str(), pass.length());
-			esp_wifi_set_config(WIFI_IF_STA, &stationConf);			
+				wifi_config_t stationConf;
+				esp_wifi_get_config(WIFI_IF_STA, &stationConf);
+				memcpy(&stationConf.sta.ssid, ssid.c_str(), ssid.length());
+				memcpy(&stationConf.sta.password, pass.c_str(), pass.length());
+				esp_wifi_set_config(WIFI_IF_STA, &stationConf);			
 #endif
-
+			}
+			
             IPAddress ip = WiFi.localIP();
             Serial.print("\nConnected! IP address: ");
             Serial.println(ip);
@@ -280,9 +305,9 @@ void FSWebServer::doWifiConnection(){
             m_dnsServer.stop();
         }
         else
-            webserver->send(200, "text/plain", "Connection error");
+            webserver->send(500, "text/plain", "Connection error, maybe the password is wrong?");
     }
-    webserver->send(200, "text/plain", "Wrong credentials provided");
+    webserver->send(500, "text/plain", "Wrong credentials provided");
 }
 
 void FSWebServer::setCrossOrigin(){

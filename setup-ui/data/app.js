@@ -1,4 +1,3 @@
-
 const svgLock =  '<svg height="16pt" viewBox="0 0 512 512"><path d="m336 512h-288c-26.453125 0-48-21.523438-48-48v-224c0-26.476562 21.546875-48 48-48h288c26.453125 0 48 21.523438 48 48v224c0 26.476562-21.546875 48-48 48zm-288-288c-8.8125 0-16 7.167969-16 16v224c0 8.832031 7.1875 16 16 16h288c8.8125 0 16-7.167969 16-16v-224c0-8.832031-7.1875-16-16-16zm0 0"/><path d="m304 224c-8.832031 0-16-7.167969-16-16v-80c0-52.929688-43.070312-96-96-96s-96 43.070312-96 96v80c0 8.832031-7.167969 16-16 16s-16-7.167969-16-16v-80c0-70.59375 57.40625-128 128-128s128 57.40625 128 128v80c0 8.832031-7.167969 16-16 16zm0 0"/></svg>'
 const svgUnlock = '<svg height="16pt" viewBox="0 0 512 512"><path d="m336 512h-288c-26.453125 0-48-21.523438-48-48v-224c0-26.476562 21.546875-48 48-48h288c26.453125 0 48 21.523438 48 48v224c0 26.476562-21.546875 48-48 48zm-288-288c-8.8125 0-16 7.167969-16 16v224c0 8.832031 7.1875 16 16 16h288c8.8125 0 16-7.167969 16-16v-224c0-8.832031-7.1875-16-16-16zm0 0"/><path d="m80 224c-8.832031 0-16-7.167969-16-16v-80c0-70.59375 57.40625-128 128-128s128 57.40625 128 128c0 8.832031-7.167969 16-16 16s-16-7.167969-16-16c0-52.929688-43.070312-96-96-96s-96 43.070312-96 96v80c0 8.832031-7.167969 16-16 16zm0 0"/></svg>'
 
@@ -12,30 +11,33 @@ var $ = function(el) {
 };
 
 
+function showPass() {
+  var x = document.getElementById("password");
+  if (x.type === "password") {
+    x.type = "text";
+  } else {
+    x.type = "password";
+  }
+}
+
 /**
 * Read some data from database
 */
 function getWiFiList() {
  var url = new URL("http://" + `${window.location.hostname}` + "/scan");
   fetch(url)
-
   .then(response => response.json())
   .then(data => {
-    console.log(data);
     listWifiNetworks(data);
   });
 }
 
 
 function selectWifi(row) {
-  // console.log(row.target.parentNode.id);
-  console.log(this.cells[1].innerHTML);
   $('select-' + row.target.parentNode.id).checked = true;
   $('ssid').value = this.cells[1].innerHTML;
-  $('connect1').innerHTML = 'Connect to ' + this.cells[1].innerHTML;
-  $('connect2').innerHTML = 'Connect to ' + this.cells[1].innerHTML;
+  $('ssid-name').innerHTML = this.cells[1].innerHTML;
   $('password').focus();
-  
 }
 
 
@@ -65,16 +67,24 @@ function listWifiNetworks(elems) {
     
   });
   
-  $("wifi-box").classList.remove("hidden");
+  $("wifi-table").classList.remove("hidden");
 }
 
 
 function getParameters() {
   var url = new URL("http://" + `${window.location.hostname}` + "/config.json");
   fetch(url)
-
   .then(response => response.json())
   .then(data => {
+    
+    Object.keys(data).forEach(function(key){
+      if (key === 'logo-name' || key === 'logo-svg') {
+        console.log(data[key]);
+        $(key).innerHTML = data[key];
+        delete data[key];
+      }
+    });
+
     options = data;
     listParameters(options);
   });
@@ -82,62 +92,55 @@ function getParameters() {
 }
 
 function listParameters( params) {
-  var html, div;
+  
   $('parameter-list').innerHTML = '';
   for (var key in params) {
-    console.log(key, params[key]);
+    var html;
+    // Fiel name label style
+    var lblStyle = `width: calc(0.55rem * ${key.length}); text-align:right; padding:10px;`;
+    var inputElem = `<input class="opt-input" id="${key}" type="${typeof(params[key])}"`; 
     
+    // Set input property (id, type and value)
+    // Check first if is boolean
     if (typeof(params[key]) === "boolean"){
-    
-      html =  `<div class="field-body"><label class="label">${key}</label></div>`;
-      html += `<div class="field-body"><div class="field checkbox" id="${key}"><input type="checkbox" checked=${params[key]}></div></div>`;
-      div = document.createElement('div');
-      div.className = 'field is-horizontal';
-      div.innerHTML = html;
-      $('parameter-list').appendChild(div);
-    }
+      var chk = "";
+      if (params[key] === true) chk = "checked";
+      html = `<label for="${key}"><input class="opt-input" type="checkbox" role="switch" id="${key}" ${chk}>${key}</label>`;
+    } 
     else {
-      var type = 'class="input" type="number"';
-      var value = ' value=' + params[key];
-      
-      if (typeof(params[key]) === "string") {
-        type = 'class="input" type="text"';
-        value = ' value=' + params[key];
-      }
-      
-      html = '<div class="field-body"><div class="field has-addons">';
-      html += `<p class="control"><a class="button is-static">${key}</a></p>`;
-      html += `<p class="control is-expanded" id="${key}"><input ${type} ${value}></p></div></div></div>`;
-      
-      div = document.createElement('div');
-      div.className = 'field is-horizontal';
-      div.innerHTML = html;
-      $('parameter-list').appendChild(div);
+      if (typeof(params[key]) === "string")
+        inputElem += ` value="${params[key]}">`;
+      else
+        inputElem += ` value=${params[key]}>`;
+      html = `<input type="text" style="${lblStyle}" value="${key}:" disabled>${inputElem}`;
     }
+  
+    var div = document.createElement('div');
+    div.className = 'button-row';
+    div.innerHTML = html;
+    $('parameter-list').appendChild(div);
   }
   
   // Add event listener to option input box to get update options var
-  document.querySelectorAll('input').forEach(item => {
-  
+  document.querySelectorAll('.opt-input').forEach(item => {
     item.addEventListener('input', event => {
       if(item.type === "string") 
-        options[item.parentElement.id] = item.value;
+        options[item.id] = item.value;
       
       if(item.type === "number") 
-        options[item.parentElement.id] = parseInt(item.value);
+        options[item.id] = parseInt(item.value);
       
       if(item.type === "checkbox") 
-        options[item.parentElement.id] = item.checked;
+        options[item.id] = item.checked;
     });
   });
  
   $("params-box").classList.remove("hidden");
-  $("button-param").classList.remove("hidden");
 }
 
 
 function closeModalMessage() {
-  $('modal-message').classList.remove('is-active');
+  $('modal-message').classList.add('hidden');
 }
 
 function saveParameters() {
@@ -164,11 +167,8 @@ function saveParameters() {
   // Handle the server response
   .then(response => response.text())
   .then(text => {
-    console.log(text);
     $('message-body').innerHTML = '<br><b>config.json</b> file saved successfully on flash memory!<br><br>';
-    $('modal-message').classList.add('is-active');
-    if(connected === false)
-      $('connect-wifi2').classList.remove("hidden");
+    $('modal-message').classList.remove('hidden');
   });
 }
 
@@ -182,8 +182,6 @@ function doConnection() {
   formData.append('persistent', $('persistent').checked);
   
   var params = `ssid=${$('ssid').value}&password=${$('password').value}&persistent=${$('persistent').checked}`
-  console.log(params);
-  
   fetch('/connect', {
     method: 'POST',
     redirect: 'follow',
@@ -198,53 +196,24 @@ function doConnection() {
     return response.text();
   })
   .then(function(text) {
-    console.log(text);
     if (httpCode === 302) {
       connected = true;
       $('message-body').innerHTML = '<br>ESP connected to <b>' + $('ssid').value + '</b><br><br>';
-      $('modal-message').classList.add('is-active');
+      $('modal-message').classList.remove('hidden');
     }
     
     if (httpCode === 500) {
       $('message-body').innerHTML = '<br>Error on connection: <b>' +  text + '</b><br><br>';
-      $('modal-message').classList.add('is-active');
+      $('modal-message').classList.remove('hidden');
     }
   });
   
-  
-  
-  // .then(response => {
-  //   if( response.status === 302) {
-  //     connected = true;
-  //     $('message-body').innerHTML = '<br>ESP connected to <b>' + $('ssid').value + '</b><br><br>';
-  //     $('modal-message').classList.add('is-active');
-  //   }
-    
-  //   if( response.status === 500) {
-  //     $('message-body').innerHTML = '<br>Error on connection: <b>' +  response + '</b><br><br>';
-  //     $('modal-message').classList.add('is-active');
-  //   }
-    
-  // })
-  // .then(text => {
-  //   if( connected === false) {
-  //     $('message-body').innerHTML = '<br>Error on connection: <b>' +  text; + '</b><br><br>';
-  //     $('modal-message').classList.add('is-active');
-  //   }
-  // });
 }
 
-/**
- * Initializes the app.
- */
- 
- 
+// Initializes the app.
 window.addEventListener('load', getParameters);
 
 $('scan-wifi').addEventListener('click', getWiFiList);
-
-$('connect-wifi').addEventListener('click', doConnection);
-$('connect-wifi2').addEventListener('click', doConnection);
 
 $('save-params').addEventListener('click', saveParameters);
 

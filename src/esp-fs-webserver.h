@@ -75,8 +75,8 @@ public:
 #ifdef INCLUDE_SETUP_HTM
     // Add custom option to config webpage
     template <typename T>
-    inline void addOption(fs::FS& fs, const char* label, T value) {
-        StaticJsonDocument<2048> doc;
+    inline void addOption(fs::FS& fs, const char* label, T val) {		
+        StaticJsonDocument<2048> doc;		
         File file = fs.open("/config.json", "r");
         if (file) {
             // If file is present, load actual configuration
@@ -92,12 +92,13 @@ public:
         else {
             Serial.println(F("File not found, will be created new configuration file"));
         }
-        doc[label] = static_cast<T>(value);
+		
+        doc[label] = static_cast<T>(val);
         file = fs.open("/config.json", "w");
         if (serializeJsonPretty(doc, file) == 0) {
             Serial.println(F("Failed to write to file"));
-        }
-        file.close();
+		}
+        file.close();	
     }
 #endif
     WebServerClass* webserver;
@@ -109,12 +110,10 @@ private:
     File        m_uploadFile;
     bool        m_fsOK = false;
     bool        m_apmode = false;
-	char* 		m_apWebpage = (char*) "/setup";
-	
+	char* 		m_apWebpage = (char*) "/setup";	
 	uint32_t	m_timeout = 10000;
 
     // Default handler for all URIs not defined above, use it to read files from filesystem
-
     void doWifiConnection();
     void doRestart();
     void replyOK();
@@ -139,6 +138,23 @@ private:
     void handleStatus();
     void handleFileList();
 #endif // INCLUDE_EDIT_HTM
+
+/*
+#ifdef INCLUDE_SETUP_HTM
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+	const char* getTypes(String a) { return "string"; }
+	const char* getTypes(const char* a) { return "string"; }
+	const char* getTypes(char *a) {return "string";}
+	const char* getTypes(int a) { return "number"; }
+	const char* getTypes(unsigned int a) { return "number"; }
+	const char* getTypes(long a) { return "number"; }
+	const char* getTypes(unsigned long a) { return "number"; }
+	const char* getTypes(float a) { return "number";}
+	const char* getTypes(bool a) { return "boolean"; }
+#pragma GCC diagnostic pop
+#endif // INCLUDE_SETUP_HTM
+*/
 
 };
 
