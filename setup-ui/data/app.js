@@ -97,7 +97,7 @@ function listParameters( params) {
   for (var key in params) {
     var html;
     // Fiel name label style
-    var lblStyle = `width: calc(0.55rem * ${key.length}); text-align:right; padding:10px;`;
+    var lblStyle = `width: calc(0.75rem * ${key.length}); text-align:right; padding:10px;`;
     var inputElem = `<input class="opt-input" id="${key}" type="${typeof(params[key])}"`; 
     
     // Set input property (id, type and value)
@@ -121,10 +121,16 @@ function listParameters( params) {
     $('parameter-list').appendChild(div);
   }
   
+  addInputListener();
+  $("params-box").classList.remove("hidden");
+}
+
+function addInputListener() {
   // Add event listener to option input box to get update options var
   document.querySelectorAll('.opt-input').forEach(item => {
-    item.addEventListener('input', event => {
-      if(item.type === "string") 
+    item.addEventListener('change', event => {
+      
+      if(item.type === "text") 
         options[item.id] = item.value;
       
       if(item.type === "number") 
@@ -134,8 +140,6 @@ function listParameters( params) {
         options[item.id] = item.checked;
     });
   });
- 
-  $("params-box").classList.remove("hidden");
 }
 
 
