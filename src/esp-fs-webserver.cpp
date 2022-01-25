@@ -9,8 +9,6 @@
 #endif
 
 
-
-
 FSWebServer::FSWebServer(fs::FS &fs, WebServerClass& server){
     m_filesystem = &fs;
     webserver = &server;
@@ -122,30 +120,30 @@ IPAddress FSWebServer::startWiFi(uint32_t timeout, const char* apSSID, const cha
   IPAddress ip;
   m_timeout = timeout;
   WiFi.mode(WIFI_STA);
-  
+
   const char* _ssid;
   const char* _pass;
-  
+
  #if defined(ESP8266)
   struct station_config conf;
   wifi_station_get_config_default(&conf);
   _ssid = reinterpret_cast<const char*> (conf.ssid);
   _pass = reinterpret_cast<const char*> (conf.password);
-  
+
 #elif defined(ESP32)
   wifi_config_t conf;
   esp_wifi_get_config(WIFI_IF_STA, &conf);
-	  
+
   _ssid = reinterpret_cast<const char*> (conf.sta.ssid);
   _pass = reinterpret_cast<const char*> (conf.sta.password);
 #endif
 
   Serial.print(F("Connecting to SSID "));
   Serial.println(_ssid);
-  
+
   if( _ssid != nullptr && _pass != nullptr )
 	WiFi.begin(_ssid, _pass);
-  else 
+  else
 	WiFi.begin();
 
   uint32_t startTime = millis();
@@ -227,24 +225,24 @@ void FSWebServer::doRestart(){
 
 void FSWebServer::doWifiConnection(){
     String ssid, pass;
-	
+
 	bool persistent = true;
-	
+
     if(webserver->hasArg("ssid")) {
         ssid = webserver->arg("ssid");
 	}
-    
+
 	if(webserver->hasArg("password")) {
         pass = webserver->arg("password");
 	}
-	
+
 	if(webserver->hasArg("persistent")) {
         String pers = webserver->arg("persistent");
 		if (pers.equals("false")) {
-			persistent = false;		
+			persistent = false;
 		}
 	}
-	
+
 	if(WiFi.status() == WL_CONNECTED) {
 		webserver->send(500, "text/plain", "WiFi already connected");
 		return;
@@ -252,8 +250,8 @@ void FSWebServer::doWifiConnection(){
 
     if(ssid.length() && pass.length()) {
         // Try to connect to new ssid
-   
-		
+
+
         if(WiFi.status() != WL_CONNECTED)
             WiFi.begin(ssid.c_str(), pass.c_str());
 
@@ -269,9 +267,9 @@ void FSWebServer::doWifiConnection(){
             m_apmode = false;
 			WiFi.softAPdisconnect();
 			WiFi.mode(WIFI_STA);
-						
+
 			// Store current WiFi configuration in flash
-			if(persistent) {			
+			if(persistent) {
 #if defined(ESP8266)
 				struct station_config stationConf;
 				wifi_station_get_config_default(&stationConf);
@@ -279,16 +277,16 @@ void FSWebServer::doWifiConnection(){
 				os_memcpy(&stationConf.password, pass.c_str(), pass.length());
 				wifi_set_opmode( STATION_MODE );
 				wifi_station_set_config(&stationConf);
-  
+
 #elif defined(ESP32)
 				wifi_config_t stationConf;
 				esp_wifi_get_config(WIFI_IF_STA, &stationConf);
 				memcpy(&stationConf.sta.ssid, ssid.c_str(), ssid.length());
 				memcpy(&stationConf.sta.password, pass.c_str(), pass.length());
-				esp_wifi_set_config(WIFI_IF_STA, &stationConf);			
+				esp_wifi_set_config(WIFI_IF_STA, &stationConf);
 #endif
 			}
-			
+
             IPAddress ip = WiFi.localIP();
             Serial.print("\nConnected! IP address: ");
             Serial.println(ip);
@@ -366,7 +364,7 @@ void FSWebServer::handleIndex(){
     }
 	else if (m_filesystem->exists("/index.html")) {
         handleFileRead("/index.html");
-    } 
+    }
     else {
         handleSetup();
     }
@@ -390,6 +388,7 @@ bool FSWebServer::handleFileRead(const String &uri) {
     File file = m_filesystem->open(path, "r");
     if (webserver->streamFile(file, contentType) != file.size()) {
         DBG_OUTPUT_PORT.println(PSTR("Sent less data than expected!"));
+        //webserver->stop();
     }
     file.close();
     return true;
@@ -665,8 +664,17 @@ void FSWebServer::handleGetEdit() {
 void FSWebServer::handleStatus() {
     DBG_OUTPUT_PORT.println(PSTR("handleStatus"));
 
-    size_t totalBytes = 100;// = m_filesystem->totalBytes();
-    size_t usedBytes = 1;// = m_filesystem->usedBytes();
+    size_t totalBytes = 1024;
+    size_t usedBytes = 1024;
+
+#ifdef ESP8266
+    FSInfo fs_info;
+    m_filesystem->info(fs_info);
+    totalBytes = fs_info.totalBytes;
+    usedBytes = fs_info.usedBytes;
+#elif defined(ESP32)
+
+#endif
 
     String json;
     json.reserve(128);
