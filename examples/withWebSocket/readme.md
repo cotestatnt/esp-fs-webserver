@@ -8,3 +8,5 @@ I've used this library [arduinoWebSockets](https://github.com/Links2004/arduinoW
 
 With the help of WebSocket technology, we can send message from server-to-clients or from client-to-server in a **full-duplex communication channels over a single TCP connection.**
 In this very simple example is used only to push from ESP side a message (the NTP updated ESP system time) to the connected clients, just to show hot to setup a system like this.
+
+![image](https://user-images.githubusercontent.com/27758688/151001497-6468b50f-d4cb-46e1-ab4c-4d7aca3883db.png)
