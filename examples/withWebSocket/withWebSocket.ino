@@ -198,8 +198,10 @@ void setup(){
     // Set hostname
 #ifdef ESP8266
     WiFi.hostname(hostname);
+    configTime(MYTZ, "time.google.com", "time.windows.com", "pool.ntp.org");
 #elif defined(ESP32)
     WiFi.setHostname(hostname);
+    configTzTime(MYTZ, "time.google.com", "time.windows.com", "pool.ntp.org");
 #endif
     if (MDNS.begin(hostname)) {
       Serial.println(F("MDNS responder started."));
@@ -210,6 +212,7 @@ void setup(){
   }
 
   pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, HIGH);
 }
 
 
@@ -225,7 +228,7 @@ void loop() {
 
   // Send ESP system time (epoch) to WS client
   static uint32_t sendToClientTime;
-  if (millis() - sendToClientTime > 10000 ) {
+  if (millis() - sendToClientTime > 1000 ) {
     sendToClientTime = millis();
     time_t now = time(nullptr);
     char buffer[50];
