@@ -42,41 +42,34 @@ enum { MSG_OK, CUSTOM, NOT_FOUND, BAD_REQUEST, ERROR };
 
 class FSWebServer{
 
-using CallbackF = std::function<void(void)>;
+// using CallbackF = std::function<void(void)>;
 
 public:
+    WebServerClass* webserver;
+
     FSWebServer(fs::FS& fs, WebServerClass& server);
+
     bool begin();
 
-    inline void run(){
-        webserver->handleClient();
-         if (m_apmode)
-            m_dnsServer.processNextRequest();
-    }
+    void run();
 
-    inline void addHandler(const Uri &uri, HTTPMethod method, WebServerClass::THandlerFunction fn) {
-        webserver->on(uri, method, fn);
-    }
+    void addHandler(const Uri &uri, HTTPMethod method, WebServerClass::THandlerFunction fn) ;
 
-    inline void addHandler(const Uri &uri, WebServerClass::THandlerFunction handler) {
-        webserver->on(uri, HTTP_ANY, handler);
-    }
+    void addHandler(const Uri &uri, WebServerClass::THandlerFunction handler);
 
-  	void setCaptiveWebage(const char* url) {
-		m_apWebpage = (char*) realloc (m_apWebpage, sizeof(url));
-		strcpy(m_apWebpage, url);
-	}
+  	void setCaptiveWebage(const char* url);
 
     IPAddress setAPmode(const char* ssid, const char* psk);
 
     IPAddress startWiFi(uint32_t timeout, const char* apSSID, const char* apPsw);
 
+    WebServerClass* getRequest();
 
 #ifdef INCLUDE_SETUP_HTM
     // Add custom option to config webpage
     template <typename T>
-    inline void addOption(fs::FS& fs, const char* label, T val) {		
-        StaticJsonDocument<2048> doc;		
+    inline void addOption(fs::FS& fs, const char* label, T val) {
+        StaticJsonDocument<2048> doc;
         File file = fs.open("/config.json", "r");
         if (file) {
             // If file is present, load actual configuration
@@ -92,16 +85,16 @@ public:
         else {
             Serial.println(F("File not found, will be created new configuration file"));
         }
-		
+
         doc[label] = static_cast<T>(val);
         file = fs.open("/config.json", "w");
         if (serializeJsonPretty(doc, file) == 0) {
             Serial.println(F("Failed to write to file"));
 		}
-        file.close();	
+        file.close();
     }
 #endif
-    WebServerClass* webserver;
+
 
 
 private:
@@ -110,7 +103,7 @@ private:
     File        m_uploadFile;
     bool        m_fsOK = false;
     bool        m_apmode = false;
-	char* 		m_apWebpage = (char*) "/setup";	
+	char* 		m_apWebpage = (char*) "/setup";
 	uint32_t	m_timeout = 10000;
 
     // Default handler for all URIs not defined above, use it to read files from filesystem

@@ -14,39 +14,22 @@ FSWebServer::FSWebServer(fs::FS &fs, WebServerClass& server){
     webserver = &server;
 }
 
+WebServerClass* FSWebServer::getRequest() {
+    return webserver;
+}
 
-const char* FSWebServer::getContentType(const char* filename) {
-    if (webserver->hasArg("download"))
-        return PSTR("application/octet-stream");
-    else if (strstr(filename, ".htm"))
-        return PSTR("text/html");
-    else if (strstr(filename, ".html"))
-        return PSTR("text/html");
-    else if (strstr(filename, ".css"))
-        return PSTR("text/css");
-	else if (strstr(filename, ".sass"))
-        return PSTR("text/css");
-    else if (strstr(filename, ".js"))
-        return PSTR("application/javascript");
-    else if (strstr(filename, ".png"))
-        return PSTR("image/png");
-    else if (strstr(filename, ".svg"))
-        return PSTR("image/svg+xml");
-    else if (strstr(filename, ".gif"))
-        return PSTR("image/gif");
-    else if (strstr(filename, ".jpg"))
-        return PSTR("image/jpeg");
-    else if (strstr(filename, ".ico"))
-        return PSTR("image/x-icon");
-    else if (strstr(filename, ".xml"))
-        return PSTR("text/xml");
-    else if (strstr(filename, ".pdf"))
-        return PSTR("application/x-pdf");
-    else if (strstr(filename, ".zip"))
-        return PSTR("application/x-zip");
-    else if (strstr(filename, ".gz"))
-        return PSTR("application/x-gzip");
-    return PSTR("text/plain");
+void FSWebServer::run() {
+    webserver->handleClient();
+    if (m_apmode)
+        m_dnsServer.processNextRequest();
+}
+
+void FSWebServer::addHandler(const Uri &uri, HTTPMethod method, WebServerClass::THandlerFunction fn) {
+    webserver->on(uri, method, fn);
+}
+
+void FSWebServer::addHandler(const Uri &uri, WebServerClass::THandlerFunction handler) {
+    webserver->on(uri, HTTP_ANY, handler);
 }
 
 bool FSWebServer::begin() {
@@ -103,6 +86,11 @@ bool FSWebServer::begin() {
 }
 
 
+void FSWebServer::setCaptiveWebage(const char* url) {
+    m_apWebpage = (char*) realloc (m_apWebpage, sizeof(url));
+    strcpy(m_apWebpage, url);
+}
+
 IPAddress FSWebServer::setAPmode(const char* ssid, const char* psk) {
 	m_apmode = true;
 	WiFi.mode(WIFI_AP);
@@ -113,7 +101,6 @@ IPAddress FSWebServer::setAPmode(const char* ssid, const char* psk) {
 	m_dnsServer.start(53, "*", WiFi.softAPIP());
     return WiFi.softAPIP();
 }
-
 
 
 IPAddress FSWebServer::startWiFi(uint32_t timeout, const char* apSSID, const char* apPsw ) {
@@ -172,7 +159,6 @@ IPAddress FSWebServer::startWiFi(uint32_t timeout, const char* apSSID, const cha
 
 ////////////////////////////////  WiFi  /////////////////////////////////////////
 
-
 /**
  * Redirect to captive portal if we got a request for another domain.
  */
@@ -225,7 +211,6 @@ void FSWebServer::doRestart(){
 
 void FSWebServer::doWifiConnection(){
     String ssid, pass;
-
 	bool persistent = true;
 
     if(webserver->hasArg("ssid")) {
@@ -250,8 +235,6 @@ void FSWebServer::doWifiConnection(){
 
     if(ssid.length() && pass.length()) {
         // Try to connect to new ssid
-
-
         if(WiFi.status() != WL_CONNECTED)
             WiFi.begin(ssid.c_str(), pass.c_str());
 
@@ -291,7 +274,6 @@ void FSWebServer::doWifiConnection(){
             Serial.print("\nConnected! IP address: ");
             Serial.println(ip);
             //webserver->send(200, "text/plain", "Connection succesfull");
-
             // Redirect browser to new location
             String serverLoc = F("http://");
             for (int i=0; i<4; i++)
@@ -316,7 +298,6 @@ void FSWebServer::setCrossOrigin(){
 };
 
 void FSWebServer::handleScanNetworks() {
-
   String jsonList = "[";
   DebugPrint("Scanning WiFi networks...");
   int n = WiFi.scanNetworks();
@@ -357,6 +338,7 @@ void FSWebServer::handleSetup(){
     webserver->sendHeader(PSTR("Content-Encoding"), "gzip");
     webserver->send_P(200, "text/html", WEBPAGE_HTML, WEBPAGE_HTML_SIZE);
 }
+
 
 void FSWebServer::handleIndex(){
     if (m_filesystem->exists("/index.htm")) {
@@ -444,6 +426,10 @@ void FSWebServer::handleFileUpload() {
     }
 }
 
+void FSWebServer::replyOK(){
+    replyToCLient(OK, "");
+}
+
 void FSWebServer::replyToCLient(int msg_type=0, const char* msg="") {
     webserver->sendHeader("Access-Control-Allow-Origin", "*");
     switch (msg_type){
@@ -465,10 +451,6 @@ void FSWebServer::replyToCLient(int msg_type=0, const char* msg="") {
     }
 }
 
-void FSWebServer::replyOK(){
-    replyToCLient(OK, "");
-}
-
 /*
     Checks filename for character combinations that are not supported by FSBrowser (alhtough valid on SPIFFS).
     Returns an empty String if supported, or detail of error(s) if unsupported
@@ -487,6 +469,40 @@ void FSWebServer::checkForUnsupportedPath(String &filename, String &error) {
     DBG_OUTPUT_PORT.println(error);
 }
 
+
+const char* FSWebServer::getContentType(const char* filename) {
+    if (webserver->hasArg("download"))
+        return PSTR("application/octet-stream");
+    else if (strstr(filename, ".htm"))
+        return PSTR("text/html");
+    else if (strstr(filename, ".html"))
+        return PSTR("text/html");
+    else if (strstr(filename, ".css"))
+        return PSTR("text/css");
+	else if (strstr(filename, ".sass"))
+        return PSTR("text/css");
+    else if (strstr(filename, ".js"))
+        return PSTR("application/javascript");
+    else if (strstr(filename, ".png"))
+        return PSTR("image/png");
+    else if (strstr(filename, ".svg"))
+        return PSTR("image/svg+xml");
+    else if (strstr(filename, ".gif"))
+        return PSTR("image/gif");
+    else if (strstr(filename, ".jpg"))
+        return PSTR("image/jpeg");
+    else if (strstr(filename, ".ico"))
+        return PSTR("image/x-icon");
+    else if (strstr(filename, ".xml"))
+        return PSTR("text/xml");
+    else if (strstr(filename, ".pdf"))
+        return PSTR("application/x-pdf");
+    else if (strstr(filename, ".zip"))
+        return PSTR("application/x-zip");
+    else if (strstr(filename, ".gz"))
+        return PSTR("application/x-gzip");
+    return PSTR("text/plain");
+}
 
 // edit page, in usefull in some situation, but if you need to provide only a web interface, you can disable
 #ifdef INCLUDE_EDIT_HTM
