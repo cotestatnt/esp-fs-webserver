@@ -2,7 +2,7 @@
 #include <esp-fs-webserver.h>   // https://github.com/cotestatnt/esp-fs-webserver
 
 #include <FS.h>
-#ifdef ESP8266
+#if defined(ESP8266)
 #include <LittleFS.h>
 #define FILESYSTEM LittleFS
 #elif defined(ESP32)
@@ -17,7 +17,7 @@
 // In order to set SSID and password open the /setup webserver page
 // const char* ssid;
 // const char* password;
-char* hostname = "heap-chart";
+const char* hostname = "heap-chart";
 
 // Timezone definition to get properly time from NTP server
 #define MYTZ "CET-1CEST,M3.5.0,M10.5.0/3"
@@ -31,8 +31,6 @@ WebServer server(80);
 
 FSWebServer myWebServer(FILESYSTEM, server);
 WebSocketsServer webSocket = WebSocketsServer(81);
-
-DNSServer dnsServer;
 
 ////////////////////////////////   WebSocket Handler  /////////////////////////////
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length) {
@@ -99,7 +97,6 @@ void startFilesystem() {
   }
 }
 
-
 void setup() {
   Serial.begin(115200);
 
@@ -108,7 +105,7 @@ void setup() {
 
   // Try to connect to flash stored SSID, start AP if fails after timeout
   IPAddress myIP = myWebServer.startWiFi(15000, "ESP8266_AP", "123456789" );
-  
+
   // Start WebSocket server on port 81
   webSocket.begin();
   webSocket.onEvent(webSocketEvent);
@@ -120,7 +117,7 @@ void setup() {
     Serial.println(F("Open /setup page to configure optional parameters"));
     Serial.println(F("Open /edit page to view and edit files"));
   }
-  
+
   // Start MDNS responder
   if (WiFi.status() == WL_CONNECTED) {
     // Set hostname
@@ -144,8 +141,6 @@ void setup() {
 void loop() {
 
   myWebServer.run();
-  dnsServer.processNextRequest();
-  
   webSocket.loop();
 
   if (WiFi.status() == WL_CONNECTED) {

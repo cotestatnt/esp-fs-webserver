@@ -145,21 +145,21 @@ void loadApplicationConfig() {
   }
 }
 
-
+////////////////////////////  HTTP Request Handlers  ////////////////////////////////////
 void handleLed() {
-  // If new led state is specifically setted - http://xxx.xxx.xxx.xxx/led?val=1
-  if(myWebServer.webserver->hasArg("val")) {
-    int value = myWebServer.webserver->arg("val").toInt();
+  WebServerClass* webRequest = myWebServer.getRequest();
+
+  // http://xxx.xxx.xxx.xxx/led?val=1
+  if(webRequest->hasArg("val")) {
+    int value = webRequest->arg("val").toInt();
     digitalWrite(ledPin, value);
   }
-  // else simple toggle the actual state
-  else {
-    digitalWrite(ledPin, !digitalRead(ledPin));
-  }
+
   String reply = "LED is now ";
   reply += digitalRead(ledPin) ? "OFF" : "ON";
-  myWebServer.webserver->send(200, "text/plain", reply);
+  webRequest->send(200, "text/plain", reply);
 }
+
 
 
 void setup(){
@@ -173,7 +173,7 @@ void setup(){
 
   /// Try to connect to flash stored SSID, start AP if fails after timeout
   IPAddress myIP = myWebServer.startWiFi(15000, "ESP8266_AP", "123456789" );
-  
+
   // Start WebSocket server on port 81
   webSocket.begin();
   webSocket.onEvent(webSocketEvent);
@@ -185,14 +185,14 @@ void setup(){
   myWebServer.addOption(FILESYSTEM, "Option 2", option2);
   // Add custom page handlers
   myWebServer.webserver->on("/led", HTTP_GET, handleLed);
-  
+
   if (myWebServer.begin()) {
     Serial.print(F("ESP Web Server started on IP Address"));
     Serial.println(myIP);
     Serial.println(F("Open /setup page to configure optional parameters"));
     Serial.println(F("Open /edit page to view and edit files"));
   }
-  
+
   // Start MDSN responder
   if (WiFi.status() == WL_CONNECTED) {
     // Set hostname
@@ -211,8 +211,7 @@ void setup(){
     }
   }
 
-  pinMode(LED_BUILTIN, OUTPUT);
-  digitalWrite(LED_BUILTIN, HIGH);
+  pinMode(LED_BUILTIN, OUTPUT);  
 }
 
 

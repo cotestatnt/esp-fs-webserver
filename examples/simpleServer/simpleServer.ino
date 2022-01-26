@@ -19,7 +19,6 @@
 
 uint8_t ledPin = LED_BUILTIN;
 bool apMode = false;
-char* hostname = "fsbrowser";
 
 #ifdef ESP8266
   ESP8266WebServer server(80);
@@ -52,18 +51,17 @@ void startFilesystem(){
 
 ////////////////////////////  HTTP Request Handlers  ////////////////////////////////////
 void handleLed() {
-  // If new led state is specified - http://xxx.xxx.xxx.xxx/led?val=1
-  if(myWebServer.webserver->hasArg("val")) {
-    int value = myWebServer.webserver->arg("val").toInt();
+  WebServerClass* webRequest = myWebServer.getRequest();
+
+  // http://xxx.xxx.xxx.xxx/led?val=1
+  if(webRequest->hasArg("val")) {
+    int value = webRequest->arg("val").toInt();
     digitalWrite(ledPin, value);
   }
-  // else simple toggle the actual state
-  else {
-    digitalWrite(ledPin, !digitalRead(ledPin));
-  }
+
   String reply = "LED is now ";
   reply += digitalRead(ledPin) ? "OFF" : "ON";
-  myWebServer.webserver->send(200, "text/plain", reply);
+  webRequest->send(200, "text/plain", reply);
 }
 
 
@@ -93,5 +91,5 @@ void setup(){
 
 void loop() {
   myWebServer.run();
-  
+
 }
