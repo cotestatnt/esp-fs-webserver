@@ -4,6 +4,7 @@
   #include <ESP8266HTTPClient.h>
   #include <ESP8266httpUpdate.h>
 #elif defined(ESP32)
+  #include <WiFiClientSecure.h>
   #include <HTTPClient.h>
   #include <HTTPUpdate.h>
 #endif
@@ -28,8 +29,11 @@
 
 uint8_t ledPin = LED_BUILTIN;
 bool apMode = false;
-char* hostname = "fsbrowser";
+
+//String fimwareInfo = "https://raw.githubusercontent.com/cotestatnt/esp-fs-webserver/main/examples/remoteOTA/version-esp32.json";
+String fimwareInfo = "https://raw.githubusercontent.com/cotestatnt/esp-fs-webserver/main/examples/remoteOTA/version-esp8266.json";
 char fw_version[10] = {"0.0.0"};
+
 
 #ifdef ESP8266
   ESP8266WebServer server(80);
@@ -39,6 +43,54 @@ char fw_version[10] = {"0.0.0"};
 FSWebServer myWebServer(FILESYSTEM, server);
 
 
+//////////////////////////////  Firmware update /////////////////////////////////////////
+void doUpdate(const char* url, const char* version) {
+
+  #ifdef ESP8266
+  #define UPDATER ESPhttpUpdate
+  #elif defined(ESP32)
+  #define UPDATER httpUpdate
+  #endif
+
+  // onProgress handling is missing with ESP32 library
+  UPDATER.onProgress([](int cur, int total){
+      static uint32_t sendT;
+      if(millis() - sendT > 1000){
+          sendT = millis();
+          Serial.printf("Updating %d of %d bytes...\n", cur, total);
+      }
+  });
+
+  WiFiClientSecure client;
+  client.setInsecure();
+  UPDATER.rebootOnUpdate(false);
+  UPDATER.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);
+  UPDATER.setLedPin(LED_BUILTIN, LOW);
+  t_httpUpdate_return ret = UPDATER.update(client, url, fw_version);
+  client.stop();
+
+  switch (ret) {
+    case HTTP_UPDATE_FAILED:
+      Serial.printf("HTTP_UPDATE_FAILED Error (%d): %s\n", UPDATER.getLastError(), UPDATER.getLastErrorString().c_str());
+      break;
+
+    case HTTP_UPDATE_NO_UPDATES:
+      Serial.println("HTTP_UPDATE_NO_UPDATES");
+      break;
+
+    case HTTP_UPDATE_OK:
+      Serial.println("HTTP_UPDATE_OK");
+      strcpy(fw_version, version);
+      EEPROM.put(0, fw_version);
+      EEPROM.commit();
+      Serial.print("System will be restarted with the new version ");
+      Serial.println(fw_version);
+      delay(1000);
+      ESP.restart();
+      break;
+  }
+
+}
 
 ////////////////////////////////  Filesystem  /////////////////////////////////////////
 void startFilesystem(){
@@ -62,88 +114,48 @@ void startFilesystem(){
 }
 
 
+////////////////////////////  HTTP Request Handlers  ////////////////////////////////////
 void handleLed() {
-  // If new led state is specified - http://xxx.xxx.xxx.xxx/led?val=1
-  if(myWebServer.webserver->hasArg("val")) {
-    int value = myWebServer.webserver->arg("val").toInt();
+  WebServerClass* webRequest = myWebServer.getRequest();
+
+  // http://xxx.xxx.xxx.xxx/led?val=1
+  if(webRequest->hasArg("val")) {
+    int value = webRequest->arg("val").toInt();
     digitalWrite(ledPin, value);
   }
-  // else simple toggle the actual state
-  else {
-    digitalWrite(ledPin, !digitalRead(ledPin));
-  }
+
   String reply = "LED is now ";
   reply += digitalRead(ledPin) ? "OFF" : "ON";
-  myWebServer.webserver->send(200, "text/plain", reply);
+  webRequest->send(200, "text/plain", reply);
 }
 
+/* Handle the update request from client.
+* The web page will check if is it necessary or not checking the actual version.
+* Info about firmware as version and remote url, are stored in "version.json" file
+*
+* Using this example, the correct workflow for deploying a new firmware version is:
+  - upload the new firmware.bin compiled on your web space (in this example Github is used)
+  - update the "version.json" file with the new version number and the address of the binary file
+  - on the update webpage, press the "UPDATE" button.
+*/
 void handleUpdate() {
-  if(myWebServer.webserver->hasArg("fwupdate")) {
-    bool value = myWebServer.webserver->arg("fwupdate").toInt();
-    String new_version = myWebServer.webserver->arg("version");
-    String url = myWebServer.webserver->arg("url");
+  WebServerClass* webRequest = myWebServer.getRequest();
+
+  if(webRequest->hasArg("fwupdate")) {
+    bool update = webRequest->arg("fwupdate").toInt();
+    const char* new_version = webRequest->arg("version").c_str();
+    const char* url = webRequest->arg("url").c_str();
     String reply = "Firmware is going to be updated to version ";
     reply += new_version;
-    myWebServer.webserver->send(200, "text/plain", reply );
-    
+    reply += " from remote address";
+    reply += url;
+    reply += "<br>Wait 10-20 seconds and then reload page.";
+    webRequest->send(200, "text/plain", reply );
     Serial.println(reply);
-    Serial.println(url);
-    
-    if( value && WiFi.status() == WL_CONNECTED) {
 
-      #ifdef ESP8266
-      #define UPDATER ESPhttpUpdate
-      // onProgress handling is missing with ESP32 library
-      ESPhttpUpdate.onProgress([](int cur, int total){
-          static uint32_t sendT;
-          if(millis() - sendT > 1000){
-              sendT = millis();
-              Serial.printf("Updating %d of %d bytes...\n", cur, total);
-          }
-      });
-      #elif defined(ESP32)
-      #define UPDATER httpUpdate
-      #endif
-
-      WiFiClientSecure client;
-      client.setInsecure();
-      UPDATER.rebootOnUpdate(false);
-      UPDATER.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);
-      UPDATER.setLedPin(LED_BUILTIN, LOW);
-      t_httpUpdate_return ret = UPDATER.update(client, url, fw_version);
-      client.stop();
-      
-      switch (ret) {
-        case HTTP_UPDATE_FAILED:
-          Serial.printf("HTTP_UPDATE_FAILED Error (%d): %s\n", UPDATER.getLastError(), UPDATER.getLastErrorString().c_str());
-          break;
-
-        case HTTP_UPDATE_NO_UPDATES:
-          Serial.println("HTTP_UPDATE_NO_UPDATES");
-          break;
-
-        case HTTP_UPDATE_OK:
-          Serial.println("HTTP_UPDATE_OK"); 
-          strcpy(fw_version, new_version.c_str());
-          EEPROM.put(0, fw_version);
-          EEPROM.commit();     
-          Serial.print("System will be restarted with the new version ");
-          Serial.println(fw_version);   
-          delay(1000);
-          ESP.restart();                                  
-          break;
-      }
-    }
+    if(update)
+      doUpdate(url, new_version);
   }
-}
-
-void handleVersion() {  
-  EEPROM.get(0, fw_version);
-  Serial.printf("\n\nFirmware version: %s\n", fw_version );
-  if(fw_version != NULL) 
-    myWebServer.webserver->send(200, "text/plain", fw_version);  
-  else
-    myWebServer.webserver->send(200, "text/plain", "0.0.0");
 }
 
 ///////////////////////////////////  SETUP  ///////////////////////////////////////
@@ -158,18 +170,28 @@ void setup(){
   // Try to connect to flash stored SSID, start AP if fails after timeout
   IPAddress myIP = myWebServer.startWiFi(15000, "ESP8266_AP", "123456789" );
 
-  // Add custom page handlers to webserver
+  // Configure /setup page and start Web Server
+  myWebServer.addOption(FILESYSTEM, "New firmware JSON", fimwareInfo);
+
+  // Add custom handlers to webserver
   myWebServer.addHandler("/led", HTTP_GET, handleLed);
   myWebServer.addHandler("/firmware_update", HTTP_GET, handleUpdate);
-  myWebServer.addHandler("/version", HTTP_GET, handleVersion);
 
-  /*
-  // Add handler as lambda function
+  // Add handler as lambda function (just to show a different method)
   myWebServer.addHandler("/version", HTTP_GET, []() {
-    if(firmware_version.length())
-      myWebServer.webserver->send(200, "text/plain", firmware_version);
+    EEPROM.get(0, fw_version);
+    if (fw_version[0] == 0xFF) // Still not stored in EEPROM (first run)
+      strcpy(fw_version, "0.0.0");
+    String reply = "{\"version\":\"";
+    reply += fw_version;
+    reply += "\", \"newFirmwareInfoJSON\":\"";
+    reply += fimwareInfo;
+    reply += "\"}";
+
+    // Send to client actual firmware version and address where to check if new firmware available
+    myWebServer.webserver->send(200, "text/json", reply);
   });
-  */
+
 
   // Start webserver
   if (myWebServer.begin()) {
@@ -185,5 +207,4 @@ void setup(){
 ///////////////////////////////////  LOOP  ///////////////////////////////////////
 void loop() {
   myWebServer.run();
-
 }

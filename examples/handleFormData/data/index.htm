@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!-- Load document style sheet-->
+  <link rel="stylesheet" href="myStyle.css">
+</head>
+  
+<body>
+  <div class="container">
+    <h3>Collapsible form option menu</h3>
+    <button class="collapsible">Open Section 1</button>
+    <div class="content" style="max-height: 90px;">
+      <p>This example show how to handle a form without reload web page on submit.</p>
+      <p>In addition show a way to build a nice collapsible menu with CSS and JS</p>
+    </div>
+    
+    <button class="collapsible">Open Section 2</button>
+    <div class="content">
+      
+      <!-- With HTML 5 we can use custom element attributes, so keep track where we want the result of form submit -->
+      <!-- By default, HTML forms will send to request to the action link with GET method -->
+      <form action="/setForm1" data-result="form1-result" enctype="text/plain" method="post">
+        <label for="cars">Choose a car brand:</label>
+        <select id="cars" name="cars">
+          <option value="Alfa Romeo">Alfa Romeo</option>
+          <option value="Ferrari">Ferrari</option>
+          <option value="Lamborghini">Lamborghini</option>
+          <option value="Maserati">Maserati</option>
+        </select>
+        <input type="submit">
+      </form>
+      <br><br>
+      <p id="form1-result"></p>
+    </div>
+      
+    <button class="collapsible">Open Section 3</button>
+    <div class="content">
+       <!-- With HTML 5 we can use custom element attributes, so keep track where we want the result of form submit -->
+      <form action="/setForm2" data-result="form2-result" enctype="text/plain" method="post">
+        <p><label for="fname">Firstname</label><input type="text" id="fname" name="firstname" placeholder="Your name.."></p>
+        <p><label for="lname">Lastname</label><input type="text" id="lname" name="lastname" placeholder="Your last name.."></p>
+        <p><label for="age">Your Age</label><input type="number" id="age" name="age"></p> 
+        <br>
+    	  <input type="submit">
+      </form>
+      <br><br>
+      <p id="form2-result"></p>
+    </div>
+  </div>
+  
+  <!-- Load document Javascript  -->
+  <script src="myScript.js"></script>
+
+</body>
+</html>
