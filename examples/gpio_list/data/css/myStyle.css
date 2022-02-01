@@ -1,0 +1,41 @@
+
+body {
+  margin: 40px;
+}
+
+#container {
+  padding: 20px;
+  max-width: 680px;
+  margin: 0 auto;
+  text-align: center;
+  background: #f2f2f2;
+}
+
+/*.clearfix {*/
+/*  clear: both;*/
+/*}*/
+
+/*.hidden {*/
+/*  display: none;*/
+/*}*/
+
+/*.table {*/
+/*  width: 90%;*/
+/*  margin: auto;*/
+/*}*/
+
+/*.table td th{*/
+/*  vertical-align: middle;*/
+/*  text-align: center !important;*/
+/*}*/
+
+button {
+  max-width: 70%;
+}
+
+td, th{
+  text-align: center;
+}
+th {
+  font-weight: bold;
+}

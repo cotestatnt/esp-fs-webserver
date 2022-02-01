@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>ESP GPIO dinamic list</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/css/pico.classless.min.css">
+	  <link rel="stylesheet" href="/css/myStyle.css">
+    
+  </head>
+  <body>
+    <div id="container">
+      <article class="grid">
+        <img src="img/logo.svg" alt="Espressif logo" width="100">
+        <h3 class="box">GPIO status list</h3>
+        <div class="box">
+          <table>
+            <thead>
+              <tr>
+                <th>Pin Name</th>
+                <th>Pin number</th>
+                <th>Type</th>
+                <th>Level</th>
+              </tr>
+            </thead>
+            <tbody id='gpio-list'>
+            <!-- The content of table body will be injected here with javascript function updateGpiosList() -->
+            </tbody>
+          </table>
+        </div>
+      </article>
+    </div>
+    
+    <script src="/js/app.js"></script>
+  </body>
+</html>
