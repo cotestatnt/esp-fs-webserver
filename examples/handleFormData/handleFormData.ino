@@ -1,13 +1,12 @@
 #include <esp-fs-webserver.h>   // https://github.com/cotestatnt/esp-fs-webserver
 
 #include <FS.h>
+#include <LittleFS.h>
+#define FILESYSTEM LittleFS
+
 #ifdef ESP8266
-  #include <LittleFS.h>
-  #define FILESYSTEM LittleFS
   ESP8266WebServer server(80);
 #elif defined(ESP32)
-  #include <FFat.h>
-  #define FILESYSTEM FFat
   WebServer server(80);
 #endif
 

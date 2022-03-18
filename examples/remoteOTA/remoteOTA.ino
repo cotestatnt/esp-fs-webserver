@@ -11,13 +11,8 @@
 #include <EEPROM.h>            // For storing the firmware version
 
 #include <FS.h>
-#ifdef ESP8266
-  #include <LittleFS.h>
-  #define FILESYSTEM LittleFS
-#elif defined(ESP32)
-  #include <FFat.h>
-  #define FILESYSTEM FFat
-#endif
+#include <LittleFS.h>
+#define FILESYSTEM LittleFS
 
 #ifndef LED_BUILTIN
 #define LED_BUILTIN 2

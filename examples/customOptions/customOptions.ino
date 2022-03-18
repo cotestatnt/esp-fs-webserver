@@ -1,13 +1,8 @@
 #include <esp-fs-webserver.h>   // https://github.com/cotestatnt/esp-fs-webserver
 
 #include <FS.h>
-#ifdef ESP8266
-  #include <LittleFS.h>
-  #define FILESYSTEM LittleFS
-#elif defined(ESP32)
-  #include <FFat.h>
-  #define FILESYSTEM FFat
-#endif
+#include <LittleFS.h>
+#define FILESYSTEM LittleFS
 
 #ifndef LED_BUILTIN
 #define LED_BUILTIN 2

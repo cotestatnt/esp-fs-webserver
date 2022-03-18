@@ -3,16 +3,13 @@
 #include <ArduinoJson.h>
 
 #include <FS.h>
-#ifdef ESP8266
-#include <ESP8266WiFi.h>
 #include <LittleFS.h>
 #define FILESYSTEM LittleFS
-ESP8266WebServer server(80);
+
+#ifdef ESP8266
+  ESP8266WebServer server(80);
 #elif defined(ESP32)
-#include <WiFi.h>
-#include <FFat.h>
-#define FILESYSTEM FFat
-WebServer server(80);
+  WebServer server(80);
 #endif
 
 FSWebServer myWebServer(FILESYSTEM, server);

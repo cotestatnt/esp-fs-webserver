@@ -681,7 +681,7 @@ void FSWebServer::handleStatus() {
     DBG_OUTPUT_PORT.println(PSTR("handleStatus"));
 
     size_t totalBytes = 1024;
-    size_t usedBytes = 1024;
+    size_t usedBytes = 0;
 
 #ifdef ESP8266
     FSInfo fs_info;
@@ -689,7 +689,8 @@ void FSWebServer::handleStatus() {
     totalBytes = fs_info.totalBytes;
     usedBytes = fs_info.usedBytes;
 #elif defined(ESP32)
-
+	//totalBytes = m_filesystem->totalBytes();
+    //usedBytes = m_filesystem->usedBytes();
 #endif
 
     String json;
