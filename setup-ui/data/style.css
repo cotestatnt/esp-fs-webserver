@@ -10,6 +10,10 @@ body {
   max-width: 800px;
 }
 
+body.waiting * { 
+  cursor: wait; 
+}
+
 .icon {
   width: 24px;
   height: 24px;
@@ -45,11 +49,11 @@ body {
 }
 
 .button{
-	display: inline-flex;
+  display: inline-flex;
   justify-content: center;
   align-items: center;
-	margin-left: 20px;
-	margin-right: 20px;
+  margin-left: 20px;
+  margin-right: 20px;
 }
 
 

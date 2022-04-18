@@ -24,11 +24,14 @@ function showPass() {
 * Read some data from database
 */
 function getWiFiList() {
+ document.body.className = 'waiting';
+  
  var url = new URL("http://" + `${window.location.hostname}` + "/scan");
   fetch(url)
   .then(response => response.json())
   .then(data => {
     listWifiNetworks(data);
+    document.body.className = '';
   });
 }
 
@@ -42,7 +45,6 @@ function selectWifi(row) {
 
 
 function listWifiNetworks(elems) {
-
   const list = document.querySelector('#wifi-list');
   list.innerHTML = "";
   var counter = 0;
@@ -76,11 +78,13 @@ function getParameters() {
   fetch(url)
   .then(response => response.json())
   .then(data => {
-    
     Object.keys(data).forEach(function(key){
-      if (key === 'logo-name' || key === 'logo-svg') {
-        console.log(data[key]);
-        $(key).innerHTML = data[key];
+      if (key.startsWith('logo-name')) {
+        $('logo-name').innerHTML = data[key];
+        delete data[key];
+      }
+      if (key.startsWith('logo-svg')) {
+        $('logo-svg').innerHTML = data[key];
         delete data[key];
       }
     });
@@ -88,37 +92,45 @@ function getParameters() {
     options = data;
     listParameters(options);
   });
-  
 }
 
+
 function listParameters( params) {
+  var html;
   
   $('parameter-list').innerHTML = '';
   for (var key in params) {
-    var html;
-    // Fiel name label style
-    var lblStyle = `width: calc(0.75rem * ${key.length}); text-align:right; padding:10px;`;
-    var inputElem = `<input class="opt-input" id="${key}" type="${typeof(params[key])}"`; 
-    
-    // Set input property (id, type and value)
-    // Check first if is boolean
-    if (typeof(params[key]) === "boolean"){
-      var chk = "";
-      if (params[key] === true) chk = "checked";
-      html = `<label for="${key}"><input class="opt-input" type="checkbox" role="switch" id="${key}" ${chk}>${key}</label>`;
-    } 
-    else {
-      if (typeof(params[key]) === "string")
-        inputElem += ` value="${params[key]}">`;
-      else
-        inputElem += ` value=${params[key]}>`;
-      html = `<input type="text" style="${lblStyle}" value="${key}:" disabled>${inputElem}`;
+    if(key.startsWith('raw-html')) {
+      html = params[key].trim();
     }
-  
+    else {
+      // Fiel name label style
+      var lblStyle = `width: calc(0.75rem * ${key.length}); text-align:right; padding:10px;`;
+      var inputElem = `<input class="opt-input" id="${key}" type="${typeof(params[key])}"`; 
+      
+      // Set input property (id, type and value)
+      // Check first if is boolean
+      if (typeof(params[key]) === "boolean"){
+        var chk = "";
+        if (params[key] === true) chk = "checked";
+        html = `<label for="${key}"><input class="opt-input" type="checkbox" role="switch" id="${key}" ${chk}>${key}</label>`;
+      } 
+      else {
+        if (typeof(params[key]) === "string")
+          inputElem += ` value="${params[key]}">`;
+        else
+          inputElem += ` value=${params[key]}>`;
+        html = `<input type="text" style="${lblStyle}" value="${key}:" disabled>${inputElem}`;
+      }
+    }
     var div = document.createElement('div');
     div.className = 'button-row';
     div.innerHTML = html;
+    if(key.endsWith('-hidden')) {
+      div.className += ' hidden';
+    }
     $('parameter-list').appendChild(div);
+    
   }
   
   addInputListener();
@@ -148,6 +160,7 @@ function closeModalMessage() {
 }
 
 function saveParameters() {
+  document.body.className = 'waiting';
   console.log(options);
   
   var myblob = new Blob([JSON.stringify(options, null, 2)], {
@@ -173,11 +186,13 @@ function saveParameters() {
   .then(text => {
     $('message-body').innerHTML = '<br><b>config.json</b> file saved successfully on flash memory!<br><br>';
     $('modal-message').classList.remove('hidden');
+    document.body.className = '';
   });
 }
 
 
 function doConnection() {
+  document.body.className = 'waiting';
   
   var httpCode;
   var formData = new FormData();
@@ -189,9 +204,7 @@ function doConnection() {
   fetch('/connect', {
     method: 'POST',
     redirect: 'follow',
-    headers: {
-                "Content-Type": "application/x-www-form-urlencoded"
-             },
+    headers: {"Content-Type": "application/x-www-form-urlencoded"},
     body: params
   })
   
@@ -200,7 +213,7 @@ function doConnection() {
     return response.text();
   })
   .then(function(text) {
-    if (httpCode === 302) {
+    if (httpCode === 200) {
       connected = true;
       $('message-body').innerHTML = '<br>ESP connected to <b>' + $('ssid').value + '</b><br><br>';
       $('modal-message').classList.remove('hidden');
@@ -210,6 +223,7 @@ function doConnection() {
       $('message-body').innerHTML = '<br>Error on connection: <b>' +  text + '</b><br><br>';
       $('modal-message').classList.remove('hidden');
     }
+    document.body.className = '';
   });
   
 }
@@ -231,6 +245,3 @@ $('password').addEventListener('input', (event) => {
     $('connect-wifi').disabled = false;
   }
 });
-
-
-
