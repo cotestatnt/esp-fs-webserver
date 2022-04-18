@@ -68,7 +68,7 @@ public:
 #ifdef INCLUDE_SETUP_HTM
     // Add custom option to config webpage
     template <typename T>
-    inline void addOption(fs::FS& fs, const char* label, T val) {
+    inline void addOption(fs::FS& fs, const char* label, T val, bool hidden = false) {
         StaticJsonDocument<2048> doc;
         File file = fs.open("/config.json", "r");
         if (file) {
@@ -86,7 +86,11 @@ public:
             Serial.println(F("File not found, will be created new configuration file"));
         }
 
-        doc[label] = static_cast<T>(val);
+        String key = label;
+        if (hidden)
+            key += "-hidden";
+
+        doc[key] = static_cast<T>(val);
         file = fs.open("/config.json", "w");
         if (serializeJsonPretty(doc, file) == 0) {
             Serial.println(F("Failed to write to file"));
@@ -94,8 +98,6 @@ public:
         file.close();
     }
 #endif
-
-
 
 private:
     DNSServer   m_dnsServer;

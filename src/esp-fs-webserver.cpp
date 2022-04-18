@@ -93,7 +93,7 @@ void FSWebServer::setCaptiveWebage(const char* url) {
 
 IPAddress FSWebServer::setAPmode(const char* ssid, const char* psk) {
 	m_apmode = true;
-	WiFi.mode(WIFI_AP);
+	WiFi.mode(WIFI_AP_STA);
     WiFi.persistent(false);
 	WiFi.softAP(ssid, psk);
 	/* Setup the DNS server redirecting all the domains to the apIP */
@@ -153,7 +153,6 @@ IPAddress FSWebServer::startWiFi(uint32_t timeout, const char* apSSID, const cha
   }
   Serial.println();
   ip = WiFi.localIP();
-
   return ip;
 }
 
@@ -229,7 +228,13 @@ void FSWebServer::doWifiConnection(){
 	}
 
 	if(WiFi.status() == WL_CONNECTED) {
-		webserver->send(500, "text/plain", "WiFi already connected");
+        IPAddress ip = WiFi.localIP();
+        String resp = "WiFi already connected!\n";
+        resp += "Try to load from <a href='http://";
+        for (int i=0; i<4; i++)
+            resp += i  ? "." + String(ip[i]) : String(ip[i]);
+        resp += "/setup'>new LAN address</a>";
+		webserver->send(500, "text/plain", resp);
 		return;
 	}
 
@@ -248,8 +253,8 @@ void FSWebServer::doWifiConnection(){
         // reply to client
         if (WiFi.status() == WL_CONNECTED ) {
             m_apmode = false;
-			WiFi.softAPdisconnect();
-			WiFi.mode(WIFI_STA);
+			//WiFi.softAPdisconnect();
+			WiFi.mode(WIFI_AP_STA);
 
 			// Store current WiFi configuration in flash
 			if(persistent) {
@@ -271,17 +276,22 @@ void FSWebServer::doWifiConnection(){
 			}
 
             IPAddress ip = WiFi.localIP();
-            Serial.print("\nConnected! IP address: ");
+            Serial.print("\nConnected to Wifi! IP address: ");
             Serial.println(ip);
-            //webserver->send(200, "text/plain", "Connection succesfull");
-            // Redirect browser to new location
             String serverLoc = F("http://");
             for (int i=0; i<4; i++)
                 serverLoc += i  ? "." + String(ip[i]) : String(ip[i]);
             serverLoc += "/";
-            webserver->sendHeader(F("Location"), serverLoc, true);
-            webserver->send(302, F("text/html"), "");
-            webserver->client().stop();
+
+            String resp = "Restart ESP and then reload this page from <a href='";
+            resp += serverLoc;
+            resp += "/setup'>the new LAN address</a> or from <a href='http://";
+			resp += WiFi.getHostname();
+			resp += "/setup'>http://";
+			resp += WiFi.getHostname();
+			resp += ".local/setup</a>";
+
+            webserver->send(200, "text/plain", resp);
             m_dnsServer.stop();
         }
         else
