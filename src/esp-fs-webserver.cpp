@@ -286,11 +286,17 @@ void FSWebServer::doWifiConnection(){
             String resp = "Restart ESP and then reload this page from <a href='";
             resp += serverLoc;
             resp += "/setup'>the new LAN address</a> or from <a href='http://";
+#if defined(ESP8266)
+			resp += WiFi.hostname();
+			resp += "/setup'>http://";
+			resp += WiFi.hostname();
+			resp += ".local/setup</a>";
+#elif defined(ESP32)
 			resp += WiFi.getHostname();
 			resp += "/setup'>http://";
 			resp += WiFi.getHostname();
 			resp += ".local/setup</a>";
-
+#endif
             webserver->send(200, "text/plain", resp);
             m_dnsServer.stop();
         }
