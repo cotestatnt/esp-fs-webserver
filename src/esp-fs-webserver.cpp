@@ -3,9 +3,11 @@
 #if DEBUG_MODE_WS
 #define DebugPrint(x) Serial.print(x)
 #define DebugPrintln(x) Serial.println(x)
+#define DebugPrintf(fmt, ...) Serial.printf(fmt, ##__VA_ARGS__)
 #else
 #define DebugPrint(x)
 #define DebugPrintln(x)
+#define DebugPrintf(x)
 #endif
 
 
@@ -41,10 +43,10 @@ bool FSWebServer::begin() {
         while (file){
             const char* fileName = file.name();
             size_t fileSize = file.size();
-            Serial.printf("FS File: %s, size: %lu\n", fileName, (long unsigned)fileSize);
+            DebugPrintf("FS File: %s, size: %lu\n", fileName, (long unsigned)fileSize);
             file = root.openNextFile();
         }
-        Serial.println();
+        DebugPrintln();
     }
 
 #ifdef INCLUDE_EDIT_HTM
@@ -125,8 +127,8 @@ IPAddress FSWebServer::startWiFi(uint32_t timeout, const char* apSSID, const cha
   _pass = reinterpret_cast<const char*> (conf.sta.password);
 #endif
 
-  Serial.print(F("Connecting to SSID "));
-  Serial.println(_ssid);
+  DebugPrint(F("Connecting to SSID "));
+  DebugPrintln(_ssid);
 
   if( _ssid != nullptr && _pass != nullptr )
 	WiFi.begin(_ssid, _pass);
@@ -136,7 +138,7 @@ IPAddress FSWebServer::startWiFi(uint32_t timeout, const char* apSSID, const cha
   uint32_t startTime = millis();
   while (WiFi.status() != WL_CONNECTED ){
     delay(500);
-    Serial.print(".");
+    DebugPrint(".");
 
     // If no connection go in Access Point mode
     if( millis() - startTime > m_timeout ) {
@@ -146,12 +148,12 @@ IPAddress FSWebServer::startWiFi(uint32_t timeout, const char* apSSID, const cha
         setAPmode("ESP_AP", "123456789");
 
       ip = WiFi.softAPIP();
-      Serial.print(F("\nAP mode.\nServer IP address: "));
-      Serial.println(ip);
+      DebugPrint(F("\nAP mode.\nServer IP address: "));
+      DebugPrintln(ip);
       return ip;
     }
   }
-  Serial.println();
+  DebugPrintln();
   ip = WiFi.localIP();
   return ip;
 }
@@ -189,7 +191,7 @@ void FSWebServer::handleRequest(){
 #endif
     // First try to find and return the requested file from the filesystem,
     // and if it fails, return a 404 page with debug information
-    //Serial.println(_url);
+    //DebugPrintln(_url);
     if (handleFileRead(_url))
         return;
     else
@@ -246,7 +248,7 @@ void FSWebServer::doWifiConnection(){
         uint32_t beginTime = millis();
         while (WiFi.status() != WL_CONNECTED ){
             delay(500);
-            Serial.print("*.*");
+            DebugPrint("*.*");
             if( millis() - beginTime > m_timeout )
                 break;
         }
@@ -276,8 +278,8 @@ void FSWebServer::doWifiConnection(){
 			}
 
             IPAddress ip = WiFi.localIP();
-            Serial.print("\nConnected to Wifi! IP address: ");
-            Serial.println(ip);
+            DebugPrint("\nConnected to Wifi! IP address: ");
+            DebugPrintln(ip);
             String serverLoc = F("http://");
             for (int i=0; i<4; i++)
                 serverLoc += i  ? "." + String(ip[i]) : String(ip[i]);
@@ -286,11 +288,17 @@ void FSWebServer::doWifiConnection(){
             String resp = "Restart ESP and then reload this page from <a href='";
             resp += serverLoc;
             resp += "/setup'>the new LAN address</a> or from <a href='http://";
+#if defined(ESP8266)
+			resp += WiFi.hostname();
+			resp += "/setup'>http://";
+			resp += WiFi.hostname();
+			resp += ".local/setup</a>";
+#elif defined(ESP32)
 			resp += WiFi.getHostname();
 			resp += "/setup'>http://";
 			resp += WiFi.getHostname();
 			resp += ".local/setup</a>";
-
+#endif
             webserver->send(200, "text/plain", resp);
             m_dnsServer.stop();
         }
