@@ -79,11 +79,16 @@ bool FSWebServer::begin() {
     // - first callback is called after the request has ended with all parsed arguments
     // - second callback handles file upload at that location
     webserver->on("/edit",  HTTP_POST, std::bind(&FSWebServer::replyOK, this), std::bind(&FSWebServer::handleFileUpload, this));
+
+    // OTA update via webbrowser
+    httpUpdater.setup(webserver);
+
 #ifdef ESP32
     webserver->enableCrossOrigin(true);
 #endif
     webserver->setContentLength(50);
     webserver->begin();
+    
     return true;
 }
 

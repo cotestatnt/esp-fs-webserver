@@ -33,6 +33,8 @@
 #endif
 #include <DNSServer.h>
 
+#include <ESP8266HTTPUpdateServer.h> // from Arduino core, OTA update via webbrowser
+
 #define DBG_OUTPUT_PORT Serial
 
 enum { MSG_OK, CUSTOM, NOT_FOUND, BAD_REQUEST, ERROR };
@@ -45,7 +47,7 @@ class FSWebServer{
 // using CallbackF = std::function<void(void)>;
 
 public:
-    WebServerClass* webserver;
+    WebServerClass* webserver; 
 
     FSWebServer(fs::FS& fs, WebServerClass& server);
 
@@ -100,6 +102,7 @@ public:
 #endif
 
 private:
+    ESP8266HTTPUpdateServer httpUpdater;
     DNSServer   m_dnsServer;
     fs::FS*     m_filesystem;
     File        m_uploadFile;
