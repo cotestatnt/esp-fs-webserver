@@ -95,6 +95,7 @@ void setup(){
     Serial.println(myIP);
     Serial.println(F("Open /setup page to configure optional parameters"));
     Serial.println(F("Open /edit page to view and edit files"));
+    Serial.println(F("Open /update page to upload firmware and filesystem updates"));
   }
 
   // Load configuration (if not present, default will be created when webserver will start)

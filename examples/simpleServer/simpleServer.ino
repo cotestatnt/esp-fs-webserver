@@ -78,6 +78,7 @@ void setup(){
     Serial.println(myIP);
     Serial.println(F("Open /setup page to configure optional parameters"));
     Serial.println(F("Open /edit page to view and edit files"));
+    Serial.println(F("Open /update page to upload firmware and filesystem updates"));
   }
 
   pinMode(LED_BUILTIN, OUTPUT);

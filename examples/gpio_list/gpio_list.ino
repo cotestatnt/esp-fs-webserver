@@ -164,6 +164,7 @@ void setup() {
     Serial.println(F("ESP Web Server started"));
     Serial.println(F("Open /setup page to configure optional parameters"));
     Serial.println(F("Open /edit page to view and edit files"));
+    Serial.println(F("Open /update page to upload firmware and filesystem updates"));
   }
 
   // Start WebSocket server on port 81
