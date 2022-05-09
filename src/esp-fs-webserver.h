@@ -102,7 +102,7 @@ public:
 #endif
 
 private:
-    ESP8266HTTPUpdateServer httpUpdater;
+    ESP8266HTTPUpdateServer m_httpUpdater;
     DNSServer   m_dnsServer;
     fs::FS*     m_filesystem;
     File        m_uploadFile;

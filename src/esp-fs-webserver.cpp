@@ -81,7 +81,7 @@ bool FSWebServer::begin() {
     webserver->on("/edit",  HTTP_POST, std::bind(&FSWebServer::replyOK, this), std::bind(&FSWebServer::handleFileUpload, this));
 
     // OTA update via webbrowser
-    httpUpdater.setup(webserver);
+    m_httpUpdater.setup(webserver);
 
 #ifdef ESP32
     webserver->enableCrossOrigin(true);
