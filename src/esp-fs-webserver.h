@@ -35,9 +35,13 @@
 #endif
 #include <DNSServer.h>
 
-
+#ifndef DEBUG_ESP_PORT
 #define DBG_OUTPUT_PORT Serial
 #define DEBUG_MODE_WS true
+#else
+#define DBG_OUTPUT_PORT DEBUG_ESP_PORT
+#endif
+
 #if DEBUG_MODE_WS
 #define DebugPrint(x) DBG_OUTPUT_PORT.print(x)
 #define DebugPrintln(x) DBG_OUTPUT_PORT.println(x)

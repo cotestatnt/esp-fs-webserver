@@ -1,14 +1,3 @@
-#define DEBUG_MODE_WS true
-#if DEBUG_MODE_WS
-#define DebugPrint(x) Serial.print(x)
-#define DebugPrintln(x) Serial.println(x)
-#define DebugPrintf(fmt, ...) Serial.printf(fmt, ##__VA_ARGS__)
-#else
-#define DebugPrint(x)
-#define DebugPrintln(x)
-#define DebugPrintf(x)
-#endif
-
 #include <Arduino.h>
 
 #include <WebSocketsServer.h>   // https://github.com/Links2004/arduinoWebSockets
@@ -175,8 +164,8 @@ void handleLed() {
 void setup(){
 
 #if DEBUG_MODE_WS
-  Serial.begin(115200);
-  Serial.setDebugOutput(true);
+  DBG_OUTPUT_PORT.begin(115200);
+  DBG_OUTPUT_PORT.setDebugOutput(true);
 #endif
 
   // FILESYSTEM INIT
