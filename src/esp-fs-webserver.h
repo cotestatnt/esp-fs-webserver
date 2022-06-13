@@ -23,17 +23,38 @@
     #include <ESP8266WiFi.h>
     #include <ESP8266WebServer.h>
     #include <ESP8266mDNS.h>
+	#include <ESP8266HTTPUpdateServer.h> // from Arduino core, OTA update via webbrowser
     using WebServerClass = ESP8266WebServer;
 #elif defined(ESP32)
     #include <esp_wifi.h>
     #include <WebServer.h>
     #include <WiFi.h>
     #include <ESPmDNS.h>
+	#include <HTTPUpdateServer.h> // from Arduino core, OTA update via webbrowser
     using WebServerClass = WebServer;
 #endif
 #include <DNSServer.h>
 
+#ifndef DEBUG_ESP_PORT
 #define DBG_OUTPUT_PORT Serial
+#define DEBUG_MODE_WS true
+#else
+#define DBG_OUTPUT_PORT DEBUG_ESP_PORT
+#endif
+
+#if DEBUG_MODE_WS
+#define DebugPrint(x) DBG_OUTPUT_PORT.print(x)
+#define DebugPrintln(x) DBG_OUTPUT_PORT.println(x)
+#define DebugPrintf(fmt, ...) DBG_OUTPUT_PORT.printf(fmt, ##__VA_ARGS__)
+#define DebugPrintf_P(fmt, ...) DBG_OUTPUT_PORT.printf_P(fmt, ##__VA_ARGS__)
+#else
+#define DebugPrint(x)
+#define DebugPrintln(x)
+#define DebugPrintf(x)
+#define DebugPrintf_P(x)
+#endif
+
+
 
 enum { MSG_OK, CUSTOM, NOT_FOUND, BAD_REQUEST, ERROR };
 #define TEXT_PLAIN "text/plain"
@@ -45,7 +66,7 @@ class FSWebServer{
 // using CallbackF = std::function<void(void)>;
 
 public:
-    WebServerClass* webserver;
+    WebServerClass* webserver; 
 
     FSWebServer(fs::FS& fs, WebServerClass& server);
 
@@ -75,15 +96,15 @@ public:
             // If file is present, load actual configuration
             DeserializationError error = deserializeJson(doc, file);
             if (error) {
-                Serial.println(F("Failed to deserialize file, may be corrupted"));
-                Serial.println(error.c_str());
+                DebugPrintln(F("Failed to deserialize file, may be corrupted"));
+                DebugPrintln(error.c_str());
                 file.close();
                 return;
             }
             file.close();
         }
         else {
-            Serial.println(F("File not found, will be created new configuration file"));
+            DebugPrintln(F("File not found, will be created new configuration file"));
         }
 
         String key = label;
@@ -93,13 +114,14 @@ public:
         doc[key] = static_cast<T>(val);
         file = fs.open("/config.json", "w");
         if (serializeJsonPretty(doc, file) == 0) {
-            Serial.println(F("Failed to write to file"));
+            DebugPrintln(F("Failed to write to file"));
 		}
         file.close();
     }
 #endif
 
 private:
+    ESP8266HTTPUpdateServer m_httpUpdater;
     DNSServer   m_dnsServer;
     fs::FS*     m_filesystem;
     File        m_uploadFile;

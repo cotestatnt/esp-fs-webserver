@@ -1,5 +1,8 @@
+#include <Arduino.h>
+
 #include <WebSocketsServer.h>   // https://github.com/Links2004/arduinoWebSockets
 #include <esp-fs-webserver.h>   // https://github.com/cotestatnt/esp-fs-webserver
+
 
 #include <FS.h>
 #include <LittleFS.h>
@@ -9,12 +12,13 @@
 #define LED_BUILTIN 2
 #endif
 
+
 // In order to set SSID and password open the /setup webserver page
 // const char* ssid;
 // const char* password;
 
 bool apMode = false;
-char* hostname = "fsbrowser";
+char const* hostname = "fsbrowser";
 
 // Test "config" values
 String option1 = "Test option String";
@@ -38,18 +42,18 @@ WebSocketsServer webSocket = WebSocketsServer(81);
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length) {
   switch(type) {
     case WStype_DISCONNECTED:
-        Serial.printf("[%u] Disconnected!\n", num);
+        DebugPrintf("[%u] Disconnected!\n", num);
         break;
     case WStype_CONNECTED:
         {
           IPAddress ip = webSocket.remoteIP(num);
-          Serial.printf("[%u] Connected from %d.%d.%d.%d url: %s\n", num, ip[0], ip[1], ip[2], ip[3], payload);
+          DebugPrintf("[%u] Connected from %d.%d.%d.%d url: %s\n", num, ip[0], ip[1], ip[2], ip[3], payload);
           // send message to client
           webSocket.sendTXT(num, "{\"Connected\": true}");
         }
         break;
     case WStype_TEXT:
-        Serial.printf("[%u] get Text: %s\n", num, payload);
+        DebugPrintf("[%u] get Text: %s\n", num, payload);
         // send message to client
         // webSocket.sendTXT(num, "message here");
 
@@ -57,7 +61,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
         // webSocket.broadcastTXT("message here");
         break;
     case WStype_BIN:
-        Serial.printf("[%u] get binary length: %u\n", num, length);
+        DebugPrintf("[%u] get binary length: %u\n", num, length);
         break;
     default:
         break;
@@ -69,13 +73,13 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
 void getUpdatedtime(const uint32_t timeout)
 {
   uint32_t start = millis();
-  Serial.print("Sync time...");
+  DebugPrint("Sync time...");
   while (millis() - start < timeout  && Time.tm_year <= (1970 - 1900)) {
     time_t now = time(nullptr);
     Time = *localtime(&now);
     delay(5);
   }
-  Serial.println(" done.");
+  DebugPrintln(" done.");
 }
 
 
@@ -88,13 +92,13 @@ void startFilesystem(){
     while (file){
       const char* fileName = file.name();
       size_t fileSize = file.size();
-      Serial.printf("FS File: %s, size: %lu\n", fileName, (long unsigned)fileSize);
+      DebugPrintf("FS File: %s, size: %lu\n", fileName, (long unsigned)fileSize);
       file = root.openNextFile();
     }
-    Serial.println();
+    DebugPrintln();
   }
   else {
-    Serial.println("ERROR on mounting filesystem. It will be formmatted!");
+    DebugPrintln("ERROR on mounting filesystem. It will be formmatted!");
     FILESYSTEM.format();
     ESP.restart();
   }
@@ -122,21 +126,21 @@ void loadApplicationConfig() {
     DeserializationError error = deserializeJson(doc, file);
     file.close();
     if (!error) {
-      Serial.println(F("Deserializing JSON.."));
+      DebugPrintln(F("Deserializing JSON.."));
       apMode = doc["AP mode"];
       option1 = doc["Option 1"].as<String>();
       option2 = doc["Option 2"];
       ledPin = doc["LED Pin"];
     }
     else {
-      Serial.println(F("Failed to deserialize JSON. File could be corrupted"));
-      Serial.println(error.c_str());
+      DebugPrintln(F("Failed to deserialize JSON. File could be corrupted"));
+      DebugPrintln(error.c_str());
       saveApplicationConfig();
     }
   }
   else {
     saveApplicationConfig();
-    Serial.println(F("New file created with default values"));
+    DebugPrintln(F("New file created with default values"));
   }
 }
 
@@ -158,7 +162,11 @@ void handleLed() {
 
 
 void setup(){
-  Serial.begin(115200);
+
+#if DEBUG_MODE_WS
+  DBG_OUTPUT_PORT.begin(115200);
+  DBG_OUTPUT_PORT.setDebugOutput(true);
+#endif
 
   // FILESYSTEM INIT
   startFilesystem();
@@ -182,10 +190,11 @@ void setup(){
   myWebServer.webserver->on("/led", HTTP_GET, handleLed);
 
   if (myWebServer.begin()) {
-    Serial.print(F("ESP Web Server started on IP Address"));
-    Serial.println(myIP);
-    Serial.println(F("Open /setup page to configure optional parameters"));
-    Serial.println(F("Open /edit page to view and edit files"));
+    DebugPrint(F("ESP Web Server started on IP Address: "));
+    DebugPrintln(myIP);
+    DebugPrintln(F("Open /setup page to configure optional parameters"));
+    DebugPrintln(F("Open /edit page to view and edit files"));
+    DebugPrintln(F("Open /update page to upload firmware and filesystem updates"));
   }
 
   // Start MDSN responder
@@ -199,14 +208,14 @@ void setup(){
     configTzTime(MYTZ, "time.google.com", "time.windows.com", "pool.ntp.org");
 #endif
     if (MDNS.begin(hostname)) {
-      Serial.println(F("MDNS responder started."));
-      Serial.printf("You should be able to connect with address\t http://%s.local/\n", hostname);
+      DebugPrintln(F("MDNS responder started."));
+      DebugPrintf("You should be able to connect with address\t http://%s.local/\n", hostname);
       // Add service to MDNS-SD
       MDNS.addService("http", "tcp", 80);
     }
   }
 
-  pinMode(LED_BUILTIN, OUTPUT);  
+  pinMode(LED_BUILTIN, OUTPUT); 
 }
 
 

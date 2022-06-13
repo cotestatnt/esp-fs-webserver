@@ -1,13 +1,4 @@
 #include "esp-fs-webserver.h"
-#define DEBUG_MODE_WS true
-#if DEBUG_MODE_WS
-#define DebugPrint(x) Serial.print(x)
-#define DebugPrintln(x) Serial.println(x)
-#else
-#define DebugPrint(x)
-#define DebugPrintln(x)
-#endif
-
 
 FSWebServer::FSWebServer(fs::FS &fs, WebServerClass& server){
     m_filesystem = &fs;
@@ -77,11 +68,16 @@ bool FSWebServer::begin() {
     // - first callback is called after the request has ended with all parsed arguments
     // - second callback handles file upload at that location
     webserver->on("/edit",  HTTP_POST, std::bind(&FSWebServer::replyOK, this), std::bind(&FSWebServer::handleFileUpload, this));
+
+    // OTA update via webbrowser
+    m_httpUpdater.setup(webserver);
+
 #ifdef ESP32
     webserver->enableCrossOrigin(true);
 #endif
     webserver->setContentLength(50);
     webserver->begin();
+    
     return true;
 }
 
@@ -364,7 +360,7 @@ void FSWebServer::handleIndex(){
 */
 bool FSWebServer::handleFileRead(const String &uri) {
   String path = uri;
-  DBG_OUTPUT_PORT.println("handleFileRead: " + path);
+  DebugPrintln("handleFileRead: " + path);
   if (path.endsWith("/")) {
     path += "index.htm";
   }
@@ -376,7 +372,7 @@ bool FSWebServer::handleFileRead(const String &uri) {
     const char* contentType = getContentType(path.c_str());
     File file = m_filesystem->open(path, "r");
     if (webserver->streamFile(file, contentType) != file.size()) {
-        DBG_OUTPUT_PORT.println(PSTR("Sent less data than expected!"));
+        DebugPrintln(PSTR("Sent less data than expected!"));
         //webserver->stop();
     }
     file.close();
@@ -407,13 +403,13 @@ void FSWebServer::handleFileUpload() {
             return;
         }
 
-        DBG_OUTPUT_PORT.printf_P(PSTR("handleFileUpload Name: %s\n"), filename.c_str());
+        DebugPrintf_P(PSTR("handleFileUpload Name: %s\n"), filename.c_str());
         m_uploadFile = m_filesystem->open(filename, "w");
         if (!m_uploadFile) {
             replyToCLient(ERROR, PSTR("CREATE FAILED"));
             return;
         }
-        DBG_OUTPUT_PORT.printf_P(PSTR("Upload: START, filename: %s\n"), filename.c_str());
+        DebugPrintf_P(PSTR("Upload: START, filename: %s\n"), filename.c_str());
     }
     else if (upload.status == UPLOAD_FILE_WRITE) {
         if (m_uploadFile) {
@@ -423,13 +419,13 @@ void FSWebServer::handleFileUpload() {
                 return;
             }
         }
-        DBG_OUTPUT_PORT.printf_P(PSTR("Upload: WRITE, Bytes: %d\n"), upload.currentSize);
+        DebugPrintf_P(PSTR("Upload: WRITE, Bytes: %d\n"), upload.currentSize);
     }
     else if (upload.status == UPLOAD_FILE_END) {
         if (m_uploadFile) {
             m_uploadFile.close();
         }
-        DBG_OUTPUT_PORT.printf_P(PSTR("Upload: END, Size: %d\n"), upload.totalSize);
+        DebugPrintf_P(PSTR("Upload: END, Size: %d\n"), upload.totalSize);
     }
 }
 
@@ -472,8 +468,8 @@ void FSWebServer::checkForUnsupportedPath(String &filename, String &error) {
     if (filename.endsWith("/")) {
         error += PSTR(" ! TRAILING_SLASH ! ");
     }
-    DBG_OUTPUT_PORT.println(filename);
-    DBG_OUTPUT_PORT.println(error);
+    DebugPrintln(filename);
+    DebugPrintln(error);
 }
 
 
@@ -524,7 +520,7 @@ void FSWebServer::handleFileList() {
     }
 
     String path = webserver->arg("dir");
-    DBG_OUTPUT_PORT.println("handleFileList: " + path);
+    DebugPrintln("handleFileList: " + path);
     if (path != "/" && !m_filesystem->exists(path)) {
         return replyToCLient(BAD_REQUEST, "BAD PATH");
     }
@@ -583,7 +579,7 @@ void FSWebServer::handleFileCreate(){
     String src = webserver->arg("src");
     if (src.isEmpty()) {
         // No source specified: creation
-        DBG_OUTPUT_PORT.printf_P(PSTR("handleFileCreate: %s\n"), path.c_str());
+        DebugPrintf_P(PSTR("handleFileCreate: %s\n"), path.c_str());
         if (path.endsWith("/")) {
             // Create a folder
             path.remove(path.length() - 1);
@@ -617,7 +613,7 @@ void FSWebServer::handleFileCreate(){
             return;
         }
 
-        DBG_OUTPUT_PORT.printf_P(PSTR("handleFileCreate: %s from %s\n"), path.c_str(), src.c_str());
+        DebugPrintf_P(PSTR("handleFileCreate: %s from %s\n"), path.c_str(), src.c_str());
         if (path.endsWith("/")) {
             path.remove(path.length() - 1);
         }
@@ -647,7 +643,7 @@ void FSWebServer::handleFileDelete() {
         return;
     }
 
-    DBG_OUTPUT_PORT.printf_P(PSTR("handleFileDelete: %s\n"), path.c_str());
+    DebugPrintf_P(PSTR("handleFileDelete: %s\n"), path.c_str());
     if (!m_filesystem->exists(path)) {
         replyToCLient(NOT_FOUND, PSTR(FILE_NOT_FOUND));
         return;
@@ -685,7 +681,7 @@ void FSWebServer::handleGetEdit() {
     Return the FS type, status and size info
 */
 void FSWebServer::handleStatus() {
-    DBG_OUTPUT_PORT.println(PSTR("handleStatus"));
+    DebugPrintln(PSTR("handleStatus"));
 
     size_t totalBytes = 1024;
     size_t usedBytes = 0;
