@@ -25,6 +25,7 @@
     #include <ESP8266mDNS.h>
 	#include <ESP8266HTTPUpdateServer.h> // from Arduino core, OTA update via webbrowser
     using WebServerClass = ESP8266WebServer;
+    using UpdateServerClass = ESP8266HTTPUpdateServer;
 #elif defined(ESP32)
     #include <esp_wifi.h>
     #include <WebServer.h>
@@ -32,6 +33,7 @@
     #include <ESPmDNS.h>
 	#include <HTTPUpdateServer.h> // from Arduino core, OTA update via webbrowser
     using WebServerClass = WebServer;
+    using UpdateServerClass = HTTPUpdateServer;
 #endif
 #include <DNSServer.h>
 
@@ -66,7 +68,7 @@ class FSWebServer{
 // using CallbackF = std::function<void(void)>;
 
 public:
-    WebServerClass* webserver; 
+    WebServerClass* webserver;
 
     FSWebServer(fs::FS& fs, WebServerClass& server);
 
@@ -121,7 +123,7 @@ public:
 #endif
 
 private:
-    ESP8266HTTPUpdateServer m_httpUpdater;
+    UpdateServerClass m_httpUpdater;
     DNSServer   m_dnsServer;
     fs::FS*     m_filesystem;
     File        m_uploadFile;
