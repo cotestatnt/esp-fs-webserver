@@ -102,7 +102,7 @@ void setup(){
   myWebServer.addOption(FILESYSTEM, "A bool var", boolVar);
   myWebServer.addOption(FILESYSTEM, "LED Pin", ledPin);
   myWebServer.addOption(FILESYSTEM, "A long var", longVar);
-  myWebServer.addOption(FILESYSTEM, "A String var", stringVar);
+  myWebServer.addOption(FILESYSTEM, "A String var", stringVar.c_str());
 
   // Add custom HTML to setup page
   myWebServer.addOption(FILESYSTEM, "raw-html-button", button_html);

@@ -136,20 +136,17 @@ void handleLed() {
 void handleUpdate() {
   WebServerClass* webRequest = myWebServer.getRequest();
 
-  if(webRequest->hasArg("fwupdate")) {
-    bool update = webRequest->arg("fwupdate").toInt();
+  if(webRequest->hasArg("version") && webRequest->hasArg("url")) {    
     const char* new_version = webRequest->arg("version").c_str();
     const char* url = webRequest->arg("url").c_str();
     String reply = "Firmware is going to be updated to version ";
     reply += new_version;
-    reply += " from remote address";
+    reply += " from remote address ";
     reply += url;
     reply += "<br>Wait 10-20 seconds and then reload page.";
     webRequest->send(200, "text/plain", reply );
     Serial.println(reply);
-
-    if(update)
-      doUpdate(url, new_version);
+    doUpdate(url, new_version);
   }
 }
 
