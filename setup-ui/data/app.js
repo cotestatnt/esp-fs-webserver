@@ -37,7 +37,13 @@ function getWiFiList() {
 
 
 function selectWifi(row) {
-  $(row.target.id).checked = true;
+  try {
+    $('select-' + row.target.parentNode.id).checked = true;
+  }
+  catch(err) {
+    $(row.target.id).checked = true;
+  }
+
   $('ssid').value = this.cells[1].innerHTML;
   $('ssid-name').innerHTML = this.cells[1].innerHTML;
   $('password').focus();
