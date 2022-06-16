@@ -97,6 +97,17 @@ void setup(){
 
   // Try to connect to flash stored SSID, start AP if fails after timeout
   IPAddress myIP = myWebServer.startWiFi(15000, "ESP8266_AP", "123456789" );
+  
+  // Load configuration (if not present, default will be created when webserver will start)
+  if (loadApplicationConfig()) {
+    Serial.println(F("Application option loaded"));
+  } 
+  else {
+     Serial.println(F("Application NOT loaded!"));
+     Serial.print(F("Open http://"));
+     Serial.print(myIP);
+     Serial.println(F("/setup to configure parameters"));
+  }
 
   // Configure /setup page and start Web Server
   myWebServer.addOption(FILESYSTEM, "A bool var", boolVar);
@@ -120,16 +131,6 @@ void setup(){
     Serial.println(F("Open /update page to upload firmware and filesystem updates"));
   }
 
-  // Load configuration (if not present, default will be created when webserver will start)
-  if (loadApplicationConfig()) {
-    Serial.println(F("Application option loaded"));
-  } 
-  else {
-     Serial.println(F("Application NOT loaded!"));
-     Serial.print(F("Open http://"));
-     Serial.print(myIP);
-     Serial.println(F("/setup to configure parameters"));
-  }
 }
 
 
