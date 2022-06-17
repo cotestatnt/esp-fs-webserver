@@ -37,6 +37,7 @@ function getWiFiList() {
 
 
 function selectWifi(row) {
+  //$(row.target.id).checked = true;
   try {
     $('select-' + row.target.parentNode.id).checked = true;
   }
@@ -110,22 +111,27 @@ function listParameters( params) {
       html = params[key].trim();
     }
     else {
-      // Fiel name label style
+      // Field name label style
       var lblStyle = `width: calc(0.75rem * ${key.length}); text-align:right; padding:10px;`;
       var inputElem = `<input class="opt-input" id="${key}" type="${typeof(params[key])}"`; 
       
-      // Set input property (id, type and value)
-      // Check first if is boolean
+      // Set input property (id, type and value). Check first if is boolean
       if (typeof(params[key]) === "boolean"){
         var chk = "";
         if (params[key] === true) chk = "checked";
         html = `<label for="${key}"><input class="opt-input" type="checkbox" role="switch" id="${key}" ${chk}>${key}</label>`;
       } 
       else {
-        if (typeof(params[key]) === "string")
+        var step = 'step="1"';
+        
+        if (typeof(params[key]) === "number") {
+          if (!Number.isSafeInteger(params[key])) 
+            step = 'step="0.01"';
+          inputElem += `${step} value=${params[key]}>`;
+        }
+        else // This is text
           inputElem += ` value="${params[key]}">`;
-        else
-          inputElem += ` value=${params[key]}>`;
+      
         html = `<input type="text" style="${lblStyle}" value="${key}:" disabled>${inputElem}`;
       }
     }
@@ -136,7 +142,6 @@ function listParameters( params) {
       div.className += ' hidden';
     }
     $('parameter-list').appendChild(div);
-    
   }
   
   addInputListener();
@@ -147,13 +152,16 @@ function addInputListener() {
   // Add event listener to option input box to get update options var
   document.querySelectorAll('.opt-input').forEach(item => {
     item.addEventListener('change', event => {
+
+      if (item.type  === "number")
+        if (Number.isSafeInteger(item.value)) 
+          options[item.id] = parseInt(item.value);
+        else 
+          options[item.id] = Math.round(parseFloat(item.value) * 100) / 100;
       
       if(item.type === "text") 
         options[item.id] = item.value;
-      
-      if(item.type === "number") 
-        options[item.id] = parseInt(item.value);
-      
+
       if(item.type === "checkbox") 
         options[item.id] = item.checked;
     });
