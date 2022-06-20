@@ -156,7 +156,8 @@ public:
         if (file) {
             DeserializationError error = deserializeJson(doc, file);
             if (error) {
-                DebugPrintf_P(F("Failed to deserialize file, may be corrupted %s\n"), error.c_str());
+                DebugPrintln(F("Failed to deserialize file, may be corrupted"));
+                DebugPrintln(error.c_str());
                 file.close();
                 return false;
             }
