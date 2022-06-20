@@ -55,7 +55,7 @@ bool loadOptions() {
 
   if (FILESYSTEM.exists("/config.json")) {
     myWebServer.getOptionValue("LED pin", ledPin);
-    myWebServer.getOptionValue("A bool var", boolVar)
+    myWebServer.getOptionValue("A bool var", boolVar);
     myWebServer.getOptionValue("A long var", longVar);
     myWebServer.getOptionValue("A float var", floatVar);
     myWebServer.getOptionValue("A String var", stringVar);
