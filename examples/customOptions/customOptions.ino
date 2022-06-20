@@ -9,11 +9,18 @@
 #endif
 
 // Test "options" values
+uint8_t ledPin = LED_BUILTIN;
 bool boolVar = true;
 uint32_t longVar = 1234567890;
-String stringVar = "Test option String";
-uint8_t ledPin = LED_BUILTIN;
 float floatVar = 15.5F;
+String stringVar = "Test option String";
+
+// Var labels (in /setup webpage)
+#define LED_LABEL "The LED pin number"
+#define BOOL_LABEL "A bool variable"
+#define LONG_LABEL "A long variable"
+#define FLOAT_LABEL "A float varible"
+#define STRING_LABEL "A String variable"
 
 // Timezone definition to get properly time from NTP server
 #define MYTZ "CET-1CEST,M3.5.0,M10.5.0/3"
@@ -54,18 +61,18 @@ void startFilesystem() {
 bool loadOptions() {
 
   if (FILESYSTEM.exists("/config.json")) {
-    myWebServer.getOptionValue("LED pin", ledPin);
-    myWebServer.getOptionValue("A bool var", boolVar);
-    myWebServer.getOptionValue("A long var", longVar);
-    myWebServer.getOptionValue("A float var", floatVar);
-    myWebServer.getOptionValue("A String var", stringVar);
+    myWebServer.getOptionValue(LED_LABEL, ledPin);
+    myWebServer.getOptionValue(BOOL_LABEL, boolVar);
+    myWebServer.getOptionValue(LONG_LABEL, longVar);
+    myWebServer.getOptionValue(FLOAT_LABEL, floatVar);
+    myWebServer.getOptionValue(STRING_LABEL, stringVar);
 
-    Serial.println();
+    Serial.println();    
     Serial.printf("LED pin value: %d\n", ledPin);
     Serial.printf("Bool value: %d\n", boolVar);
     Serial.printf("Long value: %l\n",longVar);
     Serial.println(floatVar);
-    Serial.println(stringVar);
+    Serial.println(stringVar);    
     return true;
   }
   else
@@ -91,11 +98,11 @@ void setup() {
     Serial.println(F("Application options NOT loaded!"));
 
   // Configure /setup page and start Web Server
-  myWebServer.addOption("LED Pin", ledPin);
-  myWebServer.addOption("A long var", longVar);
-  myWebServer.addOption("A float var", floatVar, 0.0, 100.0, 0.01);
-  myWebServer.addOption("A String var", stringVar.c_str());
-  myWebServer.addOption("A bool var", boolVar);
+  myWebServer.addOption(LED_LABEL, ledPin);
+  myWebServer.addOption(LONG_LABEL, longVar);
+  myWebServer.addOption(FLOAT_LABEL, floatVar, 0.0, 100.0, 0.01);
+  myWebServer.addOption(STRING_LABEL, stringVar.c_str());
+  myWebServer.addOption(BOOL_LABEL, boolVar);
 
   if (myWebServer.begin()) {
     Serial.print(F("ESP Web Server started on IP Address: "));
