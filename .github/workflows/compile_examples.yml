@@ -67,7 +67,6 @@ jobs:
         - "examples/simpleServer/simpleServer.ino"
         - "examples/customOptions/customOptions.ino"
         - "examples/customHTML/customHTML.ino"
-        - "examples/gpio_list/gpio_list.ino"
         - "examples/handleFormData/handleFormData.ino"
         - "examples/highcharts/highcharts.ino"
         - "examples/remoteOTA/remoteOTA.ino"
