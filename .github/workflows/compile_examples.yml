@@ -24,7 +24,7 @@ jobs:
         - "examples/handleFormData/handleFormData.ino"
         - "examples/highCharts/highCharts.ino"
         - "examples/remoteOTA/remoteOTA.ino"
-        - "examples/withWebsocket/withWebsocket.ino"
+        - "examples/withWebSocket/withWebSocket.ino"
 
     steps:
     - uses: actions/checkout@v2
@@ -71,7 +71,7 @@ jobs:
         - "examples/handleFormData/handleFormData.ino"
         - "examples/highCharts/highCharts.ino"
         - "examples/remoteOTA/remoteOTA.ino"
-        - "examples/withWebsocket/withWebsocket.ino"
+        - "examples/withWebSocket/withWebSocket.ino"
         
     steps:
     - uses: actions/checkout@v2
