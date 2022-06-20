@@ -1,9 +1,7 @@
-const svgLock =  '<svg height="16pt" viewBox="0 0 512 512"><path d="m336 512h-288c-26.453125 0-48-21.523438-48-48v-224c0-26.476562 21.546875-48 48-48h288c26.453125 0 48 21.523438 48 48v224c0 26.476562-21.546875 48-48 48zm-288-288c-8.8125 0-16 7.167969-16 16v224c0 8.832031 7.1875 16 16 16h288c8.8125 0 16-7.167969 16-16v-224c0-8.832031-7.1875-16-16-16zm0 0"/><path d="m304 224c-8.832031 0-16-7.167969-16-16v-80c0-52.929688-43.070312-96-96-96s-96 43.070312-96 96v80c0 8.832031-7.167969 16-16 16s-16-7.167969-16-16v-80c0-70.59375 57.40625-128 128-128s128 57.40625 128 128v80c0 8.832031-7.167969 16-16 16zm0 0"/></svg>'
-const svgUnlock = '<svg height="16pt" viewBox="0 0 512 512"><path d="m336 512h-288c-26.453125 0-48-21.523438-48-48v-224c0-26.476562 21.546875-48 48-48h288c26.453125 0 48 21.523438 48 48v224c0 26.476562-21.546875 48-48 48zm-288-288c-8.8125 0-16 7.167969-16 16v224c0 8.832031 7.1875 16 16 16h288c8.8125 0 16-7.167969 16-16v-224c0-8.832031-7.1875-16-16-16zm0 0"/><path d="m80 224c-8.832031 0-16-7.167969-16-16v-80c0-70.59375 57.40625-128 128-128s128 57.40625 128 128c0 8.832031-7.167969 16-16 16s-16-7.167969-16-16c0-52.929688-43.070312-96-96-96s-96 43.070312-96 96v80c0 8.832031-7.167969 16-16 16zm0 0"/></svg>'
+const svgLock =  '<svg height="16pt" viewBox="0 0 512 512"><path d="m336 512h-288c-26.453125 0-48-21.523438-48-48v-224c0-26.476562 21.546875-48 48-48h288c26.453125 0 48 21.523438 48 48v224c0 26.476562-21.546875 48-48 48zm-288-288c-8.8125 0-16 7.167969-16 16v224c0 8.832031 7.1875 16 16 16h288c8.8125 0 16-7.167969 16-16v-224c0-8.832031-7.1875-16-16-16zm0 0"/><path d="m304 224c-8.832031 0-16-7.167969-16-16v-80c0-52.929688-43.070312-96-96-96s-96 43.070312-96 96v80c0 8.832031-7.167969 16-16 16s-16-7.167969-16-16v-80c0-70.59375 57.40625-128 128-128s128 57.40625 128 128v80c0 8.832031-7.167969 16-16 16zm0 0"/></svg>';
+const svgUnlock = '<svg height="16pt" viewBox="0 0 512 512"><path d="m336 512h-288c-26.453125 0-48-21.523438-48-48v-224c0-26.476562 21.546875-48 48-48h288c26.453125 0 48 21.523438 48 48v224c0 26.476562-21.546875 48-48 48zm-288-288c-8.8125 0-16 7.167969-16 16v224c0 8.832031 7.1875 16 16 16h288c8.8125 0 16-7.167969 16-16v-224c0-8.832031-7.1875-16-16-16zm0 0"/><path d="m80 224c-8.832031 0-16-7.167969-16-16v-80c0-70.59375 57.40625-128 128-128s128 57.40625 128 128c0 8.832031-7.167969 16-16 16s-16-7.167969-16-16c0-52.929688-43.070312-96-96-96s-96 43.070312-96 96v80c0 8.832031-7.167969 16-16 16zm0 0"/></svg>';
 
 var options = {};
-var connected = false;
-
 
 // JQuery-like selector
 var $ = function(el) {
@@ -13,11 +11,10 @@ var $ = function(el) {
 
 function showPass() {
   var x = document.getElementById("password");
-  if (x.type === "password") {
+  if (x.type === "password") 
     x.type = "text";
-  } else {
+  else 
     x.type = "password";
-  }
 }
 
 /**
@@ -37,7 +34,6 @@ function getWiFiList() {
 
 
 function selectWifi(row) {
-  //$(row.target.id).checked = true;
   try {
     $('select-' + row.target.parentNode.id).checked = true;
   }
@@ -54,13 +50,11 @@ function selectWifi(row) {
 function listWifiNetworks(elems) {
   const list = document.querySelector('#wifi-list');
   list.innerHTML = "";
-  var counter = 0;
-
-	elems.forEach(elem => {
+	elems.forEach((elem, idx) => {
    
     // Create a single row with all columns
     var row = document.createElement('tr');
-    var id = 'wifi-' + counter++;
+    var id = 'wifi-' + idx;
     row.id = id;
     row.addEventListener('click', selectWifi); 
 	  row.innerHTML  = `<td><input type="radio" name="select" id="select-${id}"></td>`;
@@ -73,7 +67,6 @@ function listWifiNetworks(elems) {
   
     // Add row to list
     list.appendChild(row);
-    
   });
   
   $("wifi-table").classList.remove("hidden");
@@ -101,36 +94,37 @@ function getParameters() {
   });
 }
 
-
-function listParameters( params) {
+function listParameters (params) {
   var html;
   
-  $('parameter-list').innerHTML = '';
+  $('param-list').innerHTML = '';
   for (var key in params) {
     if(key.startsWith('raw-html')) {
       html = params[key].trim();
     }
     else {
-      // Field name label style
+      var val = params[key];
+      // Field name CSS style
       var lblStyle = `width: calc(0.75rem * ${key.length}); text-align:right; padding:10px;`;
-      var inputElem = `<input class="opt-input" id="${key}" type="${typeof(params[key])}"`; 
-      
+      var inputElem = `<input class="opt-input" id="${key}" type="${typeof(val)}"`; 
+
       // Set input property (id, type and value). Check first if is boolean
-      if (typeof(params[key]) === "boolean"){
-        var chk = "";
-        if (params[key] === true) chk = "checked";
+      if (typeof(val) === "boolean"){
+        var chk = (val === true) ? chk = "checked" : "";
         html = `<label for="${key}"><input class="opt-input" type="checkbox" role="switch" id="${key}" ${chk}>${key}</label>`;
       } 
       else {
-        var step = 'step="1"';
+    
+        if (typeof(val) === "string")
+          inputElem += ` value="${val}">`;
         
-        if (typeof(params[key]) === "number") {
-          if (!Number.isSafeInteger(params[key])) 
-            step = 'step="0.01"';
-          inputElem += `${step} value=${params[key]}>`;
+        if (typeof(val) === "number")
+          inputElem += `  inputmode="numeric" value=${val}>`;
+              
+        if (typeof(val) === "object" ) {
+          var num = Math.round(val.value  * (1/val.step)) / (1/val.step);
+          inputElem = `<input class="opt-input" id="${key}" type="${typeof(val.value)}"" inputmode="numeric" value=${num} step=${val.step} min=${val.min} max=${val.max}>`;
         }
-        else // This is text
-          inputElem += ` value="${params[key]}">`;
       
         html = `<input type="text" style="${lblStyle}" value="${key}:" disabled>${inputElem}`;
       }
@@ -138,26 +132,33 @@ function listParameters( params) {
     var div = document.createElement('div');
     div.className = 'button-row';
     div.innerHTML = html;
-    if(key.endsWith('-hidden')) {
+    if(key.endsWith('-hidden')) 
       div.className += ' hidden';
-    }
-    $('parameter-list').appendChild(div);
+    
+    $('param-list').appendChild(div);
   }
   
   addInputListener();
   $("params-box").classList.remove("hidden");
 }
 
+
 function addInputListener() {
   // Add event listener to option input box to get update options var
   document.querySelectorAll('.opt-input').forEach(item => {
     item.addEventListener('change', event => {
 
-      if (item.type  === "number")
-        if (Number.isSafeInteger(item.value)) 
-          options[item.id] = parseInt(item.value);
+      if (item.type  === "number") 
+        if (item.getAttribute("step")) {
+          var obj = {};
+          obj.value = Math.round(parseFloat(item.value) * 100) / 100;
+          obj.step = item.getAttribute("step");
+          obj.min = item.getAttribute("min");
+          obj.max = item.getAttribute("max");
+          options[item.id] = obj;
+        }
         else 
-          options[item.id] = Math.round(parseFloat(item.value) * 100) / 100;
+          options[item.id] = parseInt(item.value);
       
       if(item.type === "text") 
         options[item.id] = item.value;
@@ -214,7 +215,7 @@ function doConnection() {
   formData.append('password',  $('password').value);
   formData.append('persistent', $('persistent').checked);
   
-  var params = `ssid=${$('ssid').value}&password=${$('password').value}&persistent=${$('persistent').checked}`
+  var params = `ssid=${$('ssid').value}&password=${$('password').value}&persistent=${$('persistent').checked}`;
   fetch('/connect', {
     method: 'POST',
     redirect: 'follow',
@@ -228,7 +229,6 @@ function doConnection() {
   })
   .then(function(text) {
     if (httpCode === 200) {
-      connected = true;
       $('message-body').innerHTML = '<br>ESP connected to <b>' + $('ssid').value + '</b><br><br>';
       $('modal-message').classList.remove('hidden');
     }
@@ -244,18 +244,14 @@ function doConnection() {
 
 // Initializes the app.
 window.addEventListener('load', getParameters);
-
 $('scan-wifi').addEventListener('click', getWiFiList);
-
 $('save-params').addEventListener('click', saveParameters);
 
 // Enable wifi-connect button only if password inserted
 $('connect-wifi').disabled = true;
 $('password').addEventListener('input', (event) => {
-  if( $('password').value.length  === 0 ) {
+  if( $('password').value.length  === 0 ) 
     $('connect-wifi').disabled = true;
-  }
-  else {
+  else 
     $('connect-wifi').disabled = false;
-  }
 });
