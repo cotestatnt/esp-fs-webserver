@@ -103,10 +103,10 @@ void setup(){
     Serial.println(F("Application option loaded"));
   } 
   else {
-     Serial.println(F("Application NOT loaded!"));
-     Serial.print(F("Open http://"));
-     Serial.print(myIP);
-     Serial.println(F("/setup to configure parameters"));
+    Serial.println(F("Application NOT loaded!"));
+    Serial.print(F("Open http://"));
+    Serial.print(myIP);
+    Serial.println(F("/setup to configure parameters"));
   }
 
   // Configure /setup page and start Web Server

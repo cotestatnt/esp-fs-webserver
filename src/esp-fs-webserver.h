@@ -89,11 +89,22 @@ public:
     WebServerClass* getRequest();
 
 #ifdef INCLUDE_SETUP_HTM
-    // Add custom option to config webpage
+
+
+    // Only for backward-compatibility
     template <typename T>
     inline void addOption(fs::FS& fs, const char* label, T val, bool hidden = false) {
+        addOption(label, val, hidden);
+    }
+
+    #define MIN_F -3.4028235E+38
+    #define MAX_F 3.4028235E+38
+
+    // Add custom option to config webpage (type of parameter will be deduced from variable itself)
+    template <typename T>
+    inline void addOption(const char* label, T val, bool hidden = false,  double min=MIN_F, double max=MAX_F, double step=1) {
         StaticJsonDocument<2048> doc;
-        File file = fs.open("/config.json", "r");
+        File file = m_filesystem->open("/config.json", "r");
         if (file) {
             // If file is present, load actual configuration
             DeserializationError error = deserializeJson(doc, file);
@@ -113,12 +124,52 @@ public:
         if (hidden)
             key += "-hidden";
 
-        doc[key] = static_cast<T>(val);
-        file = fs.open("/config.json", "w");
+        // if min, max, step != from default, treat this as object in order to set other properties
+        if (min != MIN_F || max != MAX_F || step != 1.0) {
+            JsonObject obj  = doc.createNestedObject(key);
+            obj["value"] = static_cast<T>(val);
+            obj["min"] = min;
+            obj["max"] = max;
+            obj["step"] = step;
+        }
+        else
+            doc[key] = static_cast<T>(val);
+
+        file =  m_filesystem->open("/config.json", "w");
         if (serializeJsonPretty(doc, file) == 0) {
             DebugPrintln(F("Failed to write to file"));
 		}
         file.close();
+    }
+
+    // Add custom "numeric-only" option to config webpage
+    template <typename T>
+    inline void addOption(const char* label, T val, double min, double max, double step) {
+        addOption( label, val, false,  min, max, step);
+    }
+
+    // Get current value for a specific custom option (true on success)
+    template <typename T>
+    bool getOptionValue(const char* label, T& variable) {
+        StaticJsonDocument<2048> doc;
+        File file = m_filesystem->open("/config.json", "r");
+        if (file) {
+            DeserializationError error = deserializeJson(doc, file);
+            if (error) {
+                DebugPrintf_P(F("Failed to deserialize file, may be corrupted %s\n"), error.c_str());
+                file.close();
+                return false;
+            }
+            file.close();
+        }
+        else
+            return false;
+
+        if (doc[label]["value"])
+            variable = doc[label]["value"].as<T>();
+        else
+            variable = doc[label].as<T>();
+        return true;
     }
 #endif
 
@@ -169,11 +220,12 @@ private:
 	const char* getTypes(unsigned int a) { return "number"; }
 	const char* getTypes(long a) { return "number"; }
 	const char* getTypes(unsigned long a) { return "number"; }
-	const char* getTypes(float a) { return "number";}
+	const char* getTypes(float a) { return "float";}
 	const char* getTypes(bool a) { return "boolean"; }
 #pragma GCC diagnostic pop
 #endif // INCLUDE_SETUP_HTM
 */
+
 
 };
 
