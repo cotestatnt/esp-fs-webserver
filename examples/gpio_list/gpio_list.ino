@@ -6,12 +6,7 @@
 #include <LittleFS.h>
 #define FILESYSTEM LittleFS
 
-#ifdef ESP8266
-  ESP8266WebServer server(80);
-#elif defined(ESP32)
-  WebServer server(80);
-#endif
-
+WebServerClass server(80);
 FSWebServer myWebServer(FILESYSTEM, server);
 WebSocketsServer webSocket = WebSocketsServer(81);
 
@@ -21,31 +16,45 @@ struct gpio_type {
   const char* type;
   const char* label;
   int pin;
-  bool level = LOW;
+  bool level;
 };
 
 // Define an array of struct GPIO and initialize with values
-#define NUM_GPIOS 6
-/* (ESP32-C3)
+
+/* (ESP32-C3) */
+/*
 gpio_type gpios[NUM_GPIOS] = {
   {"input", "INPUT 2", 2}, 
   {"input", "INPUT 4", 4},
   {"input", "INPUT 5", 5},
   {"output", "OUTPUT 6", 6},
   {"output", "OUTPUT 7", 7},
-  {"output", "LED BUILTIN", 3} // Led ON with signal HIGH (ESP32-C3)
+  {"output", "LED BUILTIN", 3} // Led ON with signal HIGH
 };
 */
 
 /* ESP8266 - Wemos D1-mini */
-gpio_type gpios[NUM_GPIOS] = {
+/*
+  gpio_type gpios[] = {
   {"input", "INPUT 5", D5},
   {"input", "INPUT 6", D6},
   {"input", "INPUT 7", D7},
   {"output", "OUTPUT 2", D2},
   {"output", "OUTPUT 3", D3},
-  {"output", "LED BUILTIN", LED_BUILTIN} 
+  {"output", "LED BUILTIN", LED_BUILTIN} // Led ON with signal LOW usually
+  };
+*/
+
+/* ESP32 - NodeMCU-32S */
+gpio_type gpios[] = {
+  {"input", "INPUT 18", 18},  
+  {"input", "INPUT 19", 19},
+  {"input", "INPUT 21", 21},  
+  {"output", "OUTPUT 4", 4},
+  {"output", "OUTPUT 5", 5},
+  {"output", "LED BUILTIN", 2} // Led ON with signal HIGH
 };
+
 
 ////////////////////////////////   WebSocket Handler  /////////////////////////////
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len) {
@@ -79,10 +88,10 @@ void parseMessage(String& json) {
     if (strcmp(cmd, "writeOut") == 0) {
       int pin = doc["pin"];
       int level = doc["level"];
-      for (int i = 0; i < NUM_GPIOS; i++) {
-        if (gpios[i].pin == pin) {
+      for (gpio_type &gpio : gpios) {
+        if (gpio.pin == pin) {
           Serial.printf("Set pin %d to %d\n", pin, level);
-          gpios[i].level = level ;
+          gpio.level = level ;
           digitalWrite(pin, level);
           updateGpioList();
           return;
@@ -98,12 +107,12 @@ void updateGpioList() {
   StaticJsonDocument<512> doc;
   JsonArray array = doc.to<JsonArray>();
 
-  for (int i = 0; i < NUM_GPIOS; i++) {
+  for (gpio_type &gpio : gpios) {
     JsonObject obj = array.createNestedObject();
-    obj["type"] = gpios[i].type;
-    obj["pin"] = gpios[i].pin;
-    obj["label"] = gpios[i].label;
-    obj["level"] = gpios[i].level;
+    obj["type"] = gpio.type;
+    obj["pin"] = gpio.pin;
+    obj["label"] = gpio.label;
+    obj["level"] = gpio.level;
   }
 
   String json;
@@ -118,11 +127,11 @@ void updateGpioList() {
 
 bool updateGpioState() {
   // Iterate the array of GPIO struct and check level of inputs
-  for (int i = 0; i < NUM_GPIOS; i++) {
-    if (strcmp(gpios[i].type, "input") == 0) {
+  for (gpio_type &gpio : gpios) {
+    if (strcmp(gpio.type, "input") == 0) {
       // Input value != from last read
-      if (digitalRead(gpios[i].pin) != gpios[i].level) {
-        gpios[i].level = digitalRead(gpios[i].pin);
+      if (digitalRead(gpio.pin) != gpio.level) {
+        gpio.level = digitalRead(gpio.pin);
         return true;
       }
     }
@@ -140,15 +149,7 @@ void setup() {
     //FILESYSTEM.format();
     ESP.restart();
   }
-  // Set your Static IP address
-  IPAddress local_IP(192, 168, 2, 64);
-  // Set your Gateway IP address
-  IPAddress gateway(192, 168, 2, 1);
-  IPAddress subnet(255, 255, 255, 0);
-  if (!WiFi.config(local_IP, gateway, subnet)) {
-    Serial.println("STA Failed to configure");
-  }
-
+  
   IPAddress myIP = myWebServer.startWiFi(15000, "ESP32-AP", "123456789");  //timeout, AP SSID, AP password
   if (WiFi.status() == WL_CONNECTED) {
     myIP = WiFi.localIP();
@@ -157,7 +158,7 @@ void setup() {
   }
 
   // Add custom page handlers
-  myWebServer.webserver->on("/getGpioList", HTTP_GET, updateGpioList);
+  myWebServer.addHandler("/getGpioList", HTTP_GET, updateGpioList);
 
   // Start webserver
   if (myWebServer.begin()) {
@@ -172,12 +173,12 @@ void setup() {
   webSocket.begin();
   webSocket.onEvent(webSocketEvent);
 
-  // GPIO configuration
-  for (int i=0; i<NUM_GPIOS; i++) {
-    if (strcmp(gpios[i].type, "input") == 0)
-      pinMode(gpios[i].pin, INPUT_PULLUP);
-    else
-      pinMode(gpios[i].pin, OUTPUT);
+  // GPIOs configuration
+  for (gpio_type &gpio : gpios) {
+    if (strcmp(gpio.type, "input") == 0)     
+        pinMode(gpio.pin, INPUT_PULLUP);
+    else 
+      pinMode(gpio.pin, OUTPUT); 
   }
 }
 
