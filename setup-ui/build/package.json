@@ -1,0 +1,16 @@
+{
+  "name": "vanilla-ui",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@gfx/zopfli": "^1.0.14",
+    "@node-minify/core": "^7.0.0",
+    "@node-minify/cssnano": "^7.0.0",
+    "@node-minify/html-minifier": "^7.0.0",
+    "@node-minify/run": "^7.0.0",
+    "@node-minify/uglify-es": "^7.0.0",
+    "@node-minify/uglify-js": "^7.0.0",
+    "core-js": "^3.6.5",
+    "zlib": "^1.0.5"
+  }
+}
