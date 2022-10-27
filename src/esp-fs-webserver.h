@@ -72,7 +72,7 @@ public:
 
     FSWebServer(fs::FS& fs, WebServerClass& server);
 
-    bool begin();
+    bool begin(const char* path = nullptr);
 
     void run();
 
@@ -175,6 +175,7 @@ public:
 #endif
 
 private:
+    char        m_basePath[16];
     UpdateServerClass m_httpUpdater;
     DNSServer   m_dnsServer;
     fs::FS*     m_filesystem;
@@ -185,6 +186,7 @@ private:
 	uint32_t	m_timeout = 10000;
 
     // Default handler for all URIs not defined above, use it to read files from filesystem
+    bool checkDir(const char *dirname, uint8_t levels);
     void doWifiConnection();
     void doRestart();
     void replyOK();
@@ -200,6 +202,7 @@ private:
     void handleScanNetworks();
     const char* getContentType(const char* filename);
     bool captivePortal();
+
 
     // edit page, in usefull in some situation, but if you need to provide only a web interface, you can disable
 #ifdef INCLUDE_EDIT_HTM

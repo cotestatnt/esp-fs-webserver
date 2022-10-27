@@ -3,6 +3,7 @@
 FSWebServer::FSWebServer(fs::FS &fs, WebServerClass& server){
     m_filesystem = &fs;
     webserver = &server;
+    m_basePath[0] = '\0';
 }
 
 WebServerClass* FSWebServer::getRequest() {
@@ -23,20 +24,49 @@ void FSWebServer::addHandler(const Uri &uri, WebServerClass::THandlerFunction ha
     webserver->on(uri, HTTP_ANY, handler);
 }
 
-bool FSWebServer::begin() {
-    File root = m_filesystem->open("/", "r");
-    if(root) {
-        m_fsOK = true;
-        File root = m_filesystem->open("/", "r");
-        File file = root.openNextFile();
-        while (file){
-            const char* fileName = file.name();
-            size_t fileSize = file.size();
-            Serial.printf("FS File: %s, size: %lu\n", fileName, (long unsigned)fileSize);
-            file = root.openNextFile();
-        }
-        Serial.println();
+
+// List all files saved in the selected filesystem
+bool FSWebServer::checkDir(const char *dirname, uint8_t levels)
+{
+  File root = m_filesystem->open(dirname);
+  if (!root)
+  {
+    DebugPrintln("- failed to open directory\n");
+    return false;
+  }
+  if (!root.isDirectory())
+  {
+    DebugPrintln(" - not a directory\n");
+    return false;
+  }
+  File file = root.openNextFile();
+  while (file)
+  {
+    if (file.isDirectory())
+    {
+      char dir[16];
+      strcpy(dir, "/");
+      strcat(dir, file.name());
+      DebugPrintf("DIR : %s\n", dir);
+      checkDir(dir, levels - 1);
     }
+    else
+    {
+      DebugPrintf("  FILE: %s\tSIZE: %d\n", file.name(), file.size());
+    }
+    file = root.openNextFile();
+  }
+  return true;
+}
+
+bool FSWebServer::begin(const char* path ) {
+    DebugPrintln("\nList the files of webserver: ");
+    if(path != nullptr)
+        strcpy(m_basePath, path);
+    else
+        strcpy(m_basePath, "/");
+
+    m_fsOK = checkDir(m_basePath, 2);
 
 #ifdef INCLUDE_EDIT_HTM
     webserver->on("/status", HTTP_GET, std::bind(&FSWebServer::handleStatus, this));
@@ -77,7 +107,7 @@ bool FSWebServer::begin() {
 #endif
     webserver->setContentLength(50);
     webserver->begin();
-    
+
     return true;
 }
 
@@ -127,7 +157,7 @@ IPAddress FSWebServer::startWiFi(uint32_t timeout, const char* apSSID, const cha
 		uint32_t startTime = millis();
 		while (WiFi.status() != WL_CONNECTED ){
 			delay(500);
-			Serial.print(".");		
+			Serial.print(".");
 			if( WiFi.status() == WL_CONNECTED) {
 				ip = WiFi.localIP();
 				return ip;
@@ -135,14 +165,14 @@ IPAddress FSWebServer::startWiFi(uint32_t timeout, const char* apSSID, const cha
 			// If no connection after a while go in Access Point mode
 			if (millis() - startTime > m_timeout) break;
 		}
-	} 
+	}
 
     if( apSSID != nullptr && apPsw != nullptr )
 	  setAPmode(apSSID, apPsw);
     else
 	  setAPmode("ESP_AP", "123456789");
-  
-	WiFi.begin(); 
+
+	WiFi.begin();
     ip = WiFi.softAPIP();
     Serial.print(F("\nAP mode.\nServer IP address: "));
     Serial.println(ip);
@@ -232,7 +262,7 @@ void FSWebServer::doWifiConnection(){
 		webserver->send(500, "text/plain", resp);
 		return;
 	}
-	
+
     if(ssid.length() && pass.length()) {
         // Try to connect to new ssid
 		Serial.print("\nConnecting to ");
@@ -248,7 +278,7 @@ void FSWebServer::doWifiConnection(){
         }
         // reply to client
         if (WiFi.status() == WL_CONNECTED ) {
-			//WiFi.softAPdisconnect();			
+			//WiFi.softAPdisconnect();
 			IPAddress ip = WiFi.localIP();
             Serial.print("\nConnected to Wifi! IP address: ");
             Serial.println(ip);
@@ -359,12 +389,14 @@ void FSWebServer::handleIndex(){
     Read the given file from the filesystem and stream it back to the client
 */
 bool FSWebServer::handleFileRead(const String &uri) {
-  String path = uri;
+  String path = m_basePath;
+  path += uri;
   DebugPrintln("handleFileRead: " + path);
   if (path.endsWith("/")) {
     path += "index.htm";
   }
   String pathWithGz = path + ".gz";
+
   if (m_filesystem->exists(pathWithGz) || m_filesystem->exists(path)) {
     if (m_filesystem->exists(pathWithGz)) {
       path += ".gz";

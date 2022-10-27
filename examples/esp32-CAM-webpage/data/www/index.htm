@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+  <title>ESP32-CAM-WEBPAGE.ino</title>
+
+  <!-- Cyustom page styling -->
+  <link rel="stylesheet" href="styles.css" />
+
+</head>
+  <body>
+    <main>
+      <div id="page-wrapper" class="clearfix">
+        <h1>ESP32-CAM web interface</h1><br>
+        
+        <form action="#" method="POST" id="file-form">
+          <h2 id="image-name">filename</h2>
+          <div class="field">
+            <!-- The preview image -->
+            <img id="image-content" style="width:100%">
+            
+            <!-- The Modal -->
+            <div id="modal-container" class="modal">
+              <span class="close">&times;</span>
+              <img class="modal-content" id="modal-image">
+              <div id="caption"></div>
+            </div>
+          </div>
+          
+          <button id="get-new">Get new image</button>
+          <div style="float: right">
+            <label for="interval">Set interval (seconds):</label>
+            <input type="number" id="interval" name="interval" style="width: 75px" value=300 title="Set 0 to disable">
+            <button id="set-interval" title="Set 0 to disable">Set interval</button>
+          </div>
+        </form>
+    
+        <div id="files">
+          <h2>Select image</h2>
+          <ul id="file-list"></ul>
+          <input type="button" onclick="deleteAll()" value="Delete All" class="delete-all">  
+        </div>
+        
+        
+      </div>
+    </main>
+    
+    <script src="app.js"></script>
+    
+  </body>
+</html>
