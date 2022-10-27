@@ -28,7 +28,7 @@ void FSWebServer::addHandler(const Uri &uri, WebServerClass::THandlerFunction ha
 // List all files saved in the selected filesystem
 bool FSWebServer::checkDir(const char *dirname, uint8_t levels)
 {
-  File root = m_filesystem->open(dirname);
+  File root = m_filesystem->open(dirname, "r");
   if (!root)
   {
     DebugPrintln("- failed to open directory\n");
