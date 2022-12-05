@@ -186,7 +186,7 @@ private:
 	uint32_t	m_timeout = 10000;
 
     // Default handler for all URIs not defined above, use it to read files from filesystem
-    bool checkDir(const char *dirname, uint8_t levels);
+    bool checkDir(char *dirname, uint8_t levels);
     void doWifiConnection();
     void doRestart();
     void replyOK();
