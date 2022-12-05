@@ -26,8 +26,10 @@ void FSWebServer::addHandler(const Uri &uri, WebServerClass::THandlerFunction ha
 
 
 // List all files saved in the selected filesystem
-bool FSWebServer::checkDir(const char *dirname, uint8_t levels)
+bool FSWebServer::checkDir(char *dirname, uint8_t levels)
 {
+  if (dirname[0] != '/')
+    dirname[0] = '/';
   File root = m_filesystem->open(dirname, "r");
   if (!root)
   {
@@ -62,9 +64,7 @@ bool FSWebServer::checkDir(const char *dirname, uint8_t levels)
 bool FSWebServer::begin(const char* path ) {
     DebugPrintln("\nList the files of webserver: ");
     if(path != nullptr)
-        strcpy(m_basePath, path);
-    else
-        strcpy(m_basePath, "/");
+      strcpy(m_basePath, path);
 
     m_fsOK = checkDir(m_basePath, 2);
 
@@ -213,6 +213,7 @@ void FSWebServer::handleRequest(){
 #endif
     // First try to find and return the requested file from the filesystem,
     // and if it fails, return a 404 page with debug information
+    //Serial.print("urlDecode: ");
     //Serial.println(_url);
     if (handleFileRead(_url))
         return;
@@ -390,7 +391,8 @@ void FSWebServer::handleIndex(){
 */
 bool FSWebServer::handleFileRead(const String &uri) {
   String path = m_basePath;
-  path += uri;
+  path = uri;
+  
   DebugPrintln("handleFileRead: " + path);
   if (path.endsWith("/")) {
     path += "index.htm";
