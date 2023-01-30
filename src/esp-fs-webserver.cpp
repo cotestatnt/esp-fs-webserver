@@ -254,14 +254,16 @@ void FSWebServer::doWifiConnection(){
 	}
 
 	if(WiFi.status() == WL_CONNECTED) {
-        IPAddress ip = WiFi.localIP();
-        String resp = "WiFi already connected!\n";
-        resp += "Try to load from <a href='http://";
-        for (int i=0; i<4; i++)
-            resp += i  ? "." + String(ip[i]) : String(ip[i]);
-        resp += "/setup'>new LAN address</a>";
-		webserver->send(500, "text/plain", resp);
-		return;
+        WiFi.disconnect();
+        delay(100);
+        // IPAddress ip = WiFi.localIP();
+        // String resp = "WiFi already connected!\n";
+        // resp += "Try to load from <a href='http://";
+        // for (int i=0; i<4; i++)
+        //     resp += i  ? "." + String(ip[i]) : String(ip[i]);
+        // resp += "/setup'>new LAN address</a>";
+		// webserver->send(500, "text/plain", resp);
+		// return;
 	}
 
     if(ssid.length() && pass.length()) {
@@ -304,14 +306,17 @@ void FSWebServer::doWifiConnection(){
 #if defined(ESP8266)
 				struct station_config stationConf;
 				wifi_station_get_config_default(&stationConf);
+        // Clear previuos configuration
+        memset(&stationConf, 0, sizeof(stationConf));
 				os_memcpy(&stationConf.ssid, ssid.c_str(), ssid.length());
 				os_memcpy(&stationConf.password, pass.c_str(), pass.length());
 				wifi_set_opmode( STATION_MODE );
 				wifi_station_set_config(&stationConf);
-
 #elif defined(ESP32)
 				wifi_config_t stationConf;
 				esp_wifi_get_config(WIFI_IF_STA, &stationConf);
+        // Clear previuos configuration
+        memset(&stationConf, 0, sizeof(stationConf));
 				memcpy(&stationConf.sta.ssid, ssid.c_str(), ssid.length());
 				memcpy(&stationConf.sta.password, pass.c_str(), pass.length());
 				esp_wifi_set_config(WIFI_IF_STA, &stationConf);
@@ -319,7 +324,7 @@ void FSWebServer::doWifiConnection(){
 			}
         }
         else
-            webserver->send(500, "text/plain", "Connection error, maybe the password is wrong?");
+          webserver->send(500, "text/plain", "Connection error, maybe the password is wrong?");
     }
     webserver->send(500, "text/plain", "Wrong credentials provided");
 }
@@ -392,7 +397,7 @@ void FSWebServer::handleIndex(){
 bool FSWebServer::handleFileRead(const String &uri) {
   String path = m_basePath;
   path = uri;
-  
+
   DebugPrintln("handleFileRead: " + path);
   if (path.endsWith("/")) {
     path += "index.htm";

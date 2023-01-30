@@ -102,9 +102,12 @@ public:
 
     // Add custom option to config webpage (type of parameter will be deduced from variable itself)
     template <typename T>
-    inline void addOption(const char* label, T val, bool hidden = false,  double min=MIN_F, double max=MAX_F, double step=1) {
-        StaticJsonDocument<2048> doc;
+    inline void addOption(const char* label, T val, bool hidden = false,  double d_min=MIN_F, double d_max=MAX_F, double step=1) {
         File file = m_filesystem->open("/config.json", "r");
+        int sz = file.size()*1.33;
+        int docSize = max(sz, 2048);
+        DynamicJsonDocument doc((size_t)docSize);
+        // DynamicJsonDocument doc(2048);
         if (file) {
             // If file is present, load actual configuration
             DeserializationError error = deserializeJson(doc, file);
@@ -120,16 +123,17 @@ public:
             DebugPrintln(F("File not found, will be created new configuration file"));
         }
 
+
         String key = label;
         if (hidden)
             key += "-hidden";
 
         // if min, max, step != from default, treat this as object in order to set other properties
-        if (min != MIN_F || max != MAX_F || step != 1.0) {
+        if (d_min != MIN_F || d_max != MAX_F || step != 1.0) {
             JsonObject obj  = doc.createNestedObject(key);
             obj["value"] = static_cast<T>(val);
-            obj["min"] = min;
-            obj["max"] = max;
+            obj["min"] = d_min;
+            obj["max"] = d_max;
             obj["step"] = step;
         }
         else
@@ -144,15 +148,16 @@ public:
 
     // Add custom "numeric-only" option to config webpage
     template <typename T>
-    inline void addOption(const char* label, T val, double min, double max, double step) {
-        addOption( label, val, false,  min, max, step);
+    inline void addOption(const char* label, T val, double d_min, double d_max, double step) {
+        addOption( label, val, false, d_min, d_max, step);
     }
 
     // Get current value for a specific custom option (true on success)
     template <typename T>
     bool getOptionValue(const char* label, T& variable) {
-        StaticJsonDocument<2048> doc;
         File file = m_filesystem->open("/config.json", "r");
+        DynamicJsonDocument doc(file.size() *1.33);
+
         if (file) {
             DeserializationError error = deserializeJson(doc, file);
             if (error) {
@@ -171,6 +176,7 @@ public:
         else
             variable = doc[label].as<T>();
         return true;
+
     }
 #endif
 
