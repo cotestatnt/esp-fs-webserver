@@ -39,7 +39,7 @@ using UpdateServerClass = HTTPUpdateServer;
 
 #ifndef DEBUG_ESP_PORT
 #define DBG_OUTPUT_PORT Serial
-#define DEBUG_MODE_WS true
+#define DEBUG_MODE_WS false
 #else
 #define DBG_OUTPUT_PORT DEBUG_ESP_PORT
 #endif
@@ -52,8 +52,8 @@ using UpdateServerClass = HTTPUpdateServer;
 #else
 #define DebugPrint(x)
 #define DebugPrintln(x)
-#define DebugPrintf(x)
-#define DebugPrintf_P(x)
+#define DebugPrintf(x, ...)
+#define DebugPrintf_P(x, ...)
 #endif
 
 enum
@@ -98,6 +98,10 @@ public:
     inline void addOptionBox(const char* boxTitle) {
         addOption("param-box", boxTitle, false);
     }
+
+    // inline void addHTML(const char* html) {
+    //     addOption("raw-html", html, true);
+    // }
 
     inline void addJavascript(const char* script) {
         addOption("raw-javascript", script, true);
@@ -207,8 +211,6 @@ public:
             var = doc[label].as<T>();
         return true;
     }
-
-
 
     template <typename T>
     bool saveOptionValue(const char *label, T val)

@@ -1,3 +1,5 @@
+If you like this work, please consider [sponsoring this project!](https://paypal.me/cotesta)
+
 
 # esp-fs-webserver
 From **FSBrowser.ino** example to **esp-fs-webserver** Arduino library
@@ -20,6 +22,13 @@ Thanks to the built-in **/edit** page (enabled by default), is possible upload, 
 ## WiFi manager
 I've added also another built-in page **/setup**, also enabled by default, with which it is possible to set the WiFi credentials and other freely configurable parameters.
 
-<img src="https://user-images.githubusercontent.com/27758688/148923310-060d58e7-6589-4487-9b0e-78b8e504af99.png" height="800" />
+![image](https://user-images.githubusercontent.com/27758688/218732999-e22fe092-cbc9-40d6-a34b-38282fbd60e2.png)
+
+This web page can be injected also with custom HTML and Javascript code in order to create very smart and powerful web application.
+
+In the image below, for example, the HTML and Javascript code to provision the devices in the well-known [ThingsBoard IoT platform](https://thingsboard.io/) has been added at runtime starting from the Arduino sketch (check example customHTML.ino).
+
+![image](https://user-images.githubusercontent.com/27758688/218733394-9cd7af3e-257e-4798-98b0-b8d426e07848.png)
+
 
 
