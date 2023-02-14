@@ -1,0 +1,77 @@
+/*@import "bulma/css/bulma.min.css";*/
+
+html {
+  background-color: #edf0f3;
+  margin-top:20px;
+}
+
+body {
+  margin: auto;
+  max-width: 800px;
+}
+
+body.waiting * { 
+  cursor: wait; 
+}
+
+.icon {
+  width: 24px;
+  height: 24px;
+  margin-right: 10px;
+}
+
+.logo {
+  display: inline-flex;
+}
+
+#logo-svg {
+  margin: auto;
+}
+
+#logo-name {
+  margin-left: 10px;
+  font-size: 2.5em;
+}
+
+.password {
+  margin: 16px -40px 0;
+  cursor: pointer;
+}
+
+.lbl {
+  margin: auto;
+}
+
+.button-row {
+	display: inline-flex;
+	margin: auto;
+	width: 100%;
+}
+
+.button{
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  margin-left: 20px;
+  margin-right: 20px;
+}
+
+
+.btn-right {
+  margin-left: auto;
+  width: 45%;
+}
+
+
+.hidden {
+  display: none;
+}
+
+.table {
+  width: 90%;
+  margin: auto;
+}
+
+.table td {
+  vertical-align: middle;
+}
