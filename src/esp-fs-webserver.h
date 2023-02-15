@@ -99,9 +99,11 @@ public:
         addOption("param-box", boxTitle, false);
     }
 
-    // inline void addHTML(const char* html) {
-    //     addOption("raw-html", html, true);
-    // }
+    inline void addHTML(const char* html, const char* id) {
+        String elementId = "raw-html";
+        elementId += id;
+        addOption(elementId.c_str(), html, false);
+    }
 
     inline void addJavascript(const char* script) {
         addOption("raw-javascript", script, true);

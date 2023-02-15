@@ -168,7 +168,7 @@ void setup() {
   myWebServer.addOption(STRING_LABEL, stringVar);
   myWebServer.addOption(BOOL_LABEL, boolVar);
   myWebServer.addOptionBox("Custom HTML");
-  myWebServer.addOption("raw-html-button", custom_html);
+  myWebServer.addHTML(custom_html, "custom-html");
   myWebServer.addJavascript(custom_script);
 
   if (myWebServer.begin()) {
