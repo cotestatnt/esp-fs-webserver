@@ -95,14 +95,32 @@ public:
     WebServerClass *getRequest();
 
 #ifdef INCLUDE_SETUP_HTM
+
+#define MIN_F -3.4028235E+38
+#define MAX_F 3.4028235E+38
+
+    // inline bool loadOptions() {
+    //     return m_varList.loadValues(m_filesystem, "/config.json");
+    // }
+
+    // inline bool saveOptions() {
+    //     return m_varList.saveValues(m_filesystem, "/config.json");
+    // }
+
     inline void addOptionBox(const char* boxTitle) {
         addOption("param-box", boxTitle, false);
     }
 
     inline void addHTML(const char* html, const char* id) {
-        String elementId = "raw-html";
+        String elementId = "raw-html-";
         elementId += id;
         addOption(elementId.c_str(), html, false);
+    }
+
+    inline void addCSS(const char* css, const char* id) {
+        String elementId = "raw-css-";
+        elementId += id;
+        addOption(elementId.c_str(), css, false);
     }
 
     inline void addJavascript(const char* script) {
@@ -116,12 +134,18 @@ public:
         addOption(label, val, hidden);
     }
 
-#define MIN_F -3.4028235E+38
-#define MAX_F 3.4028235E+38
+    // Add custom option to config webpage (float values)
+    template <typename T>
+    inline void addOption(const char *label, T val, double d_min, double d_max, double step)
+    {
+        addOption(label, val, false, d_min, d_max, step);
+    }
+
 
     // Add custom option to config webpage (type of parameter will be deduced from variable itself)
     template <typename T>
-    inline void addOption(const char *label, T val, bool hidden = false, double d_min = MIN_F, double d_max = MAX_F, double step = 1)
+    inline void addOption(const char *label, T val, bool hidden = false,
+                    double d_min = MIN_F, double d_max = MAX_F, double step = 1.0)
     {
         File file = m_filesystem->open("/config.json", "r");
         int sz = file.size() * 1.33;
@@ -147,6 +171,7 @@ public:
         }
 
         numOptions++ ;
+
         String key = label;
         if (hidden)
             key += "-hidden";
@@ -179,12 +204,7 @@ public:
         file.close();
     }
 
-    // Add custom option to config webpage (float values)
-    template <typename T>
-    inline void addOption(const char *label, T val, double d_min, double d_max, double step)
-    {
-        addOption(label, val, false, d_min, d_max, step);
-    }
+
 
     // Get current value for a specific custom option (true on success)
     template <typename T>

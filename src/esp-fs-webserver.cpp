@@ -5,7 +5,6 @@ FSWebServer::FSWebServer(fs::FS &fs, WebServerClass &server)
     m_filesystem = &fs;
     webserver = &server;
     m_basePath[0] = '\0';
-
 }
 
 WebServerClass *FSWebServer::getRequest()

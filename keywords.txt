@@ -11,6 +11,7 @@ startWiFi			    KEYWORD2
 getRequest		    KEYWORD2
 addOptionBox  	  KEYWORD2
 addJavascript			KEYWORD2
+addHTML     			KEYWORD2
 addOption		      KEYWORD2
 getOptionValue	  KEYWORD2
 saveOptionValue	  KEYWORD2
