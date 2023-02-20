@@ -1,18 +1,19 @@
 <!DOCTYPE html>
 <html>
-
 <head>
     <meta charset=utf-8 />
     <title>esp-fs-webserver</title>
     <meta content="width=device-width, initial-scale=1" name=viewport />
     <link href=style.css rel=stylesheet type=text/css />
 </head>
-
 <body class=body>
     <main id=main-box>
         <header class="ctn header">
             <div class=title>
-                <div id=svg-logo></div>
+                <input type="file" onchange="uploadLogo()" class="inputfile" id="logo-file" />
+                <label for="logo-file" class="svg-button">
+                    <div id=svg-logo title='Click to upload your logo file'></div>
+                </label>
                 <h1 id=name-logo class=heading>ESP WebServer</h1>
             </div>
             <div class=topnav id=top-nav>
@@ -55,7 +56,6 @@
                         <input type=password placeholder="Enter your WiFi password"
                             id=password autocomplete=current-password data-ms-member="password" />
                     </div>
-
                 </form>
             </div>
             <div class="btn-bar ">
@@ -98,23 +98,14 @@
                     <svg id=close-modal width=14 height=14 viewBox="0 0 14 14" fill=none></svg>
                 </div>
             </a>
-            <div class=d-modal-title>
-                <h2 id=message-title></h2>
-            </div>
-            <div class=d-modal-content>
-                <p id=message-body></p>
-            </div>
+            <div class=d-modal-title><h2 id=message-title></h2></div>
+            <div class=d-modal-content><p id=message-body></p></div>
             <div class=btn-bar>
-                <a id=ok-modal class="btn hide" onclick=closeModalMessage(true)>
-                    <span>OK</span>
-                </a>
-                <a id=close-modal class="btn" onclick=closeModalMessage(false)>
-                    <span>Close</span>
-                </a>
+                <a id=ok-modal class="btn hide" onclick=closeModalMessage(true)><span>OK</span></a>
+                <a id=close-modal class="btn" onclick=closeModalMessage(false)><span>Close</span></a>
             </div>
         </div>
     </details>
     <script src=app.js></script>
 </body>
-
 </html>

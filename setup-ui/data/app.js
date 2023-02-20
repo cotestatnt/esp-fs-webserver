@@ -1,5 +1,5 @@
 svgLogo ='<svg width=64px height=64px viewBox="0 0 28 28"><path d="M12.926 19.324a7.6 7.6 0 0 0-2.983-6.754 7.44 7.44 0 0 0-3.828-1.554.697.697 0 0 1-.606-.731.674.674 0 0 1 .743-.617 8.97 8.97 0 0 1 8 9.805 7.828 7.828 0 0 1-.298 1.542l1.989.56a11.039 11.039 0 0 0 1.714-.651 12.159 12.159 0 0 0 .217-2.343A12.57 12.57 0 0 0 7.212 6.171a5.53 5.53 0 0 0-2 0 4.354 4.354 0 0 0-2.16 1.337 4.274 4.274 0 0 0 1.909 6.856 9.896 9.896 0 0 0 1.074.195 4.011 4.011 0 0 1 3.337 3.954 3.965 3.965 0 0 1-.64 2.16l1.371.88a10.182 10.182 0 0 0 2.057.342 7.52 7.52 0 0 0 .754-2.628m.16 4.73A13.073 13.073 0 0 1 .001 10.983 12.982 12.982 0 0 1 3.83 1.737l.743.697a12.067 12.067 0 0 0 0 17.141 12.067 12.067 0 0 0 17.141 0l.697.697a12.97 12.97 0 0 1-9.336 3.726M24 10.993A10.993 10.993 0 0 0 12.949 0l-1.143.057-.252.732a18.912 18.912 0 0 1 11.588 11.576l.731-.263c0-.366.069-.732.069-1.143m-1.269 5.165A17.53 17.53 0 0 0 7.818 1.27a11.119 11.119 0 0 0-2.457 1.77v1.635A13.919 13.919 0 0 1 19.268 18.57h1.634a11.713 11.713 0 0 0 1.771-2.446M7.92 17.884a1.691 1.691 0 1 1-1.69-1.691 1.691 1.691 0 0 1 1.69 1.691" /></svg>';
-const svgMenu = '<path d="M3,6H21V8H3V6M3,11H21V13H3V11M3,16H21V18H3V16Z"/>'
+const svgMenu = '<path d="M3,6H21V8H3V6M3,11H21V13H3V11M3,16H21V18H3V16Z"/>';
 const svgLock =  '<svg height="16pt" viewBox="0 0 512 512"><path d="m336 512h-288c-26.453125 0-48-21.523438-48-48v-224c0-26.476562 21.546875-48 48-48h288c26.453125 0 48 21.523438 48 48v224c0 26.476562-21.546875 48-48 48zm-288-288c-8.8125 0-16 7.167969-16 16v224c0 8.832031 7.1875 16 16 16h288c8.8125 0 16-7.167969 16-16v-224c0-8.832031-7.1875-16-16-16zm0 0"/><path d="m304 224c-8.832031 0-16-7.167969-16-16v-80c0-52.929688-43.070312-96-96-96s-96 43.070312-96 96v80c0 8.832031-7.167969 16-16 16s-16-7.167969-16-16v-80c0-70.59375 57.40625-128 128-128s128 57.40625 128 128v80c0 8.832031-7.167969 16-16 16zm0 0"/></svg>';
 const svgUnlock = '<svg height="16pt" viewBox="0 0 512 512"><path d="m336 512h-288c-26.453125 0-48-21.523438-48-48v-224c0-26.476562 21.546875-48 48-48h288c26.453125 0 48 21.523438 48 48v224c0 26.476562-21.546875 48-48 48zm-288-288c-8.8125 0-16 7.167969-16 16v224c0 8.832031 7.1875 16 16 16h288c8.8125 0 16-7.167969 16-16v-224c0-8.832031-7.1875-16-16-16zm0 0"/><path d="m80 224c-8.832031 0-16-7.167969-16-16v-80c0-70.59375 57.40625-128 128-128s128 57.40625 128 128c0 8.832031-7.167969 16-16 16s-16-7.167969-16-16c0-52.929688-43.070312-96-96-96s-96 43.070312-96 96v80c0 8.832031-7.167969 16-16 16zm0 0"/></svg>';
 const svgScan = '<path d="M12 12C9.97 12 8.1 12.67 6.6 13.8L4.8 11.4C6.81 9.89 9.3 9 12 9S17.19 9.89 19.2 11.4L18.74 12C18.66 12 18.58 12 18.5 12C17.43 12 16.42 12.26 15.53 12.72C14.45 12.26 13.26 12 12 12M21 9L22.8 6.6C19.79 4.34 16.05 3 12 3S4.21 4.34 1.2 6.6L3 9C5.5 7.12 8.62 6 12 6S18.5 7.12 21 9M12 15C10.65 15 9.4 15.45 8.4 16.2L12 21L12.34 20.54C12.13 19.9 12 19.22 12 18.5C12 17.24 12.36 16.08 13 15.08C12.66 15.03 12.33 15 12 15M18 14.5C15.79 14.5 14 16.29 14 18.5S15.79 22.5 18 22.5C19.68 22.5 21.12 21.47 21.71 20H20C19.54 20.61 18.82 21 18 21C16.62 21 15.5 19.88 15.5 18.5S16.62 16 18 16C18.69 16 19.32 16.28 19.77 16.73L18 18.5H22V14.5L20.83 15.67C20.11 14.95 19.11 14.5 18 14.5Z" />';
@@ -105,6 +105,18 @@ function getParameters() {
 
     options = data;
     listParameters(options);
+
+    // Read logo from file if present, otherwise use inline svg;
+    if (options['logo-file-hidden']) {
+      svgLogo = '';
+      $('svg-logo').innerHTML = '<img class=logo src="' + options['logo-file-hidden'] + '"/>';
+      $('svg-logo').setAttribute('title', '');
+      $('logo-file').setAttribute('type', 'number');
+    }
+    else {
+      $('svg-logo').innerHTML = svgLogo;
+      $('svg-logo').setAttribute('title', 'Click to upload your logo file');
+    }
   });
 }
 
@@ -151,9 +163,7 @@ function listParameters (params) {
       return;
     }
 
-    else if(key.startsWith('svg-logo')) {
-      svgLogo = '';
-      $('svg-logo').innerHTML = value;
+    else if(key.startsWith('logo-file')) {
       return;
     }
 
@@ -206,6 +216,7 @@ function listParameters (params) {
         lbl.appendChild(dv);
         lbl.appendChild(sp);
         pBox.appendChild(lbl);
+        addInputListener(el);
       }
       else {
         el.value = val;
@@ -240,8 +251,6 @@ function listParameters (params) {
     }
 
     if(key.endsWith('-hidden'))  {
-      console.log(key);
-      console.log(el);
       el.classList.add('hide');
     }
   });
@@ -367,7 +376,6 @@ function openModalMessage(title, msg, fn) {
   $('modal-message').open = true;
   $('main-box').style.filter = "blur(3px)";
   if (typeof fn != 'undefined') {
-    console.log(fn);
     closeCallback = fn;
     $('ok-modal').classList.remove('hide');
   }
@@ -393,19 +401,31 @@ function restartESP() {
   });
 }
 
+function uploadLogo() {
+  var file = $('logo-file').files[0];
+  var reader = new FileReader();
+
+  reader.onload = async () => {
+    const formData = new FormData();
+    formData.append('image', file);
+    try {
+      const response = await fetch('/edit', {
+        method: 'POST',
+        body: formData,
+      });
+      options = {...options, 'logo-file-hidden': file.name};
+      saveParameters();
+    }
+    catch (error) {
+      console.error(error);
+    }
+  };
+
+  reader.readAsDataURL(file);
+
+}
+
 // Initializes the app.
-
-// Read logo from file if present, otherwise use inline svg;
-fetch('logo.svg')
-.then( () => {
-  svgLogo = '';
-  $('svg-logo').innerHTML = '<img class=logo src="/logo.svg"/>';
-})
-.catch( () => {
-  $('svg-logo').innerHTML = svgLogo;
-});
-
-
 $('svg-menu').innerHTML = svgMenu;
 $('svg-eye').innerHTML = svgEye;
 $('svg-no-eye').innerHTML = svgNoEye;

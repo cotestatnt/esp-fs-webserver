@@ -1,3 +1,12 @@
+.inputfile {
+	width: 10px;
+	height: 10px;
+	opacity: 0;
+	overflow: hidden;
+	position: absolute;
+	z-index: -1;
+}
+
 .loader,.loader:before,.loader:after {border-radius: 50%;width: 2em;height: 2em;-webkit-animation-fill-mode: both;animation-fill-mode: both;-webkit-animation: load7 1.8s infinite ease-in-out;animation: load7 1.8s infinite ease-in-out;}
 .loader {color: #333;font-size: 10px;margin-left: auto;margin-right: auto;position: relative;text-indent: -9999em;z-index: 999;-webkit-transform: translateZ(0);-ms-transform: translateZ(0);transform: translateZ(0);-webkit-animation-delay: -0.16s;animation-delay: -0.16s;}
 .loader:before,.loader:after {content: '';position: absolute;top: 0;}
