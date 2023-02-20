@@ -35,70 +35,14 @@ WebServer server(80);
 FSWebServer myWebServer(FILESYSTEM, server);
 
 
-static const char custom_html[] PROGMEM = R"EOF(
-<style>
-  pre {
-      font-family: Monaco,Menlo,Consolas,"Courier New",monospace;
-      color: #333;
-      line-height: 20px;
-      background-color: #f5f5f5;
-      border: 1px solid rgba(0,0,0,0.15);
-      border-radius: 6px;
-      overflow-y: scroll;
-      min-height: 350px;
-      font-size: 85%;
-  }
-  .select {
-    width: 15%;
-    height:40px;
-    padding-top: 10px;
-    padding-left: 20px;
-    border:1px solid #ccc;
-    border-radius: 6px;
-    box-shadow: 0 1px 2px 0 rgba(220, 220, 230, 0.5);
-  }
-</style>
-
-<form class=form>
-  <div class=tf-wrapper>
-    <label for=httpmethod class=input-label>Method</label>
-    <select class="select" id="httpmethod">
-      <option>GET</option>
-      <option>POST</option>
-    </select>
-    <label for=url class=input-label>Endpoint</label>
-    <input type=text placeholder="https://httpbin.org/" id=url value="https://httpbin.org/" />
-  </div>
-  <br>
-  <a id=fetch class="btn">
-    <span>Fecth url</span>
-  </a>
-  <br>
-  <pre id=payload></pre>
-</form>
-)EOF";
-
-static const char custom_script[] PROGMEM = R"EOF(
-function fetchEndpoint() {
-  var mt = $('httpmethod').options[$('httpmethod').selectedIndex].text
-  var url = $('url').value + mt.toLowerCase();
-  var bd = (mt != 'GET') ? 'body: ""' : '';
-
-  var options = {
-    method: mt,
-    bd
-  };
-
-  fetch(url, options)
-  .then(response => response.text())
-  .then(txt => {
-    $('payload').innerHTML = txt;
-  });
-}
-
-$('fetch').addEventListener('click', fetchEndpoint);
-)EOF";
-
+/*
+* Include the custom HTML, CSS and Javascript to be injected in /setup webpage.
+* HTML code will be injected according to the order of options declaration.
+* CSS and JavaScript will be appended to the end of body in order to work properly.
+* In this manner, is also possible override the default element styles
+* like for example background color, margins, paddings etc etc
+*/
+#include "customElements.h"
 
 ////////////////////////////////  Filesystem  /////////////////////////////////////////
 void startFilesystem() {
@@ -144,6 +88,22 @@ bool loadOptions() {
   return false;
 }
 
+/*   Call this if you need to save parameters from the sketch side
+bool saveOptions() {
+  if (FILESYSTEM.exists("/config.json")) {
+    myWebServer.saveOptionValue(LED_LABEL, ledPin);
+    myWebServer.saveOptionValue(BOOL_LABEL, boolVar);
+    myWebServer.saveOptionValue(LONG_LABEL, longVar);
+    myWebServer.saveOptionValue(FLOAT_LABEL, floatVar);
+    myWebServer.saveOptionValue(STRING_LABEL, stringVar);
+    return true;
+  }
+  else
+    Serial.println(F("File \"config.json\" not exist"));
+  return false;
+}
+*/
+
 
 void setup() {
   Serial.begin(115200);
@@ -169,6 +129,7 @@ void setup() {
   myWebServer.addOption(BOOL_LABEL, boolVar);
   myWebServer.addOptionBox("Custom HTML");
   myWebServer.addHTML(custom_html, "custom-html");
+  myWebServer.addCSS(custom_css);
   myWebServer.addJavascript(custom_script);
 
   if (myWebServer.begin()) {

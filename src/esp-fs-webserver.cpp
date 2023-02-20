@@ -313,15 +313,10 @@ void FSWebServer::doWifiConnection()
             String serverLoc = F("http://");
             for (int i = 0; i < 4; i++)
                 serverLoc += i ? "." + String(ip[i]) : String(ip[i]);
-            serverLoc += "/";
 
             String resp = "Restart ESP and then reload this page from <a href='";
             resp += serverLoc;
-            resp += "/setup'>the new LAN address</a> or from <a href='http://";
-            resp += WiFi.getHostname();
-            resp += "/setup'>http://";
-            resp += WiFi.getHostname();
-            resp += ".local/setup</a>";
+            resp += "/setup'>the new LAN address</a>";
 
             webserver->send(200, "text/plain", resp);
             m_apmode = false;
@@ -421,6 +416,25 @@ void FSWebServer::handleScanNetworks()
 
 
 #ifdef INCLUDE_SETUP_HTM
+void FSWebServer::removeWhiteSpaces(const char* input, char* tr)
+{
+  char pr = 0x00;
+  char ch;
+
+  int j = 0;
+  for (int i=0; i<strlen(input); i++) {
+    ch = input[i];
+    if (ch != '\n' && ch != '\r' && ch != '\t') {
+      if (ch == ' ' && pr == ' ') {
+        continue;
+      }
+      tr[j++] = ch;
+    }
+    pr = ch;
+  }
+  tr[j] = '\0';
+}
+
 void FSWebServer::handleSetup()
 {
     webserver->sendHeader(PSTR("Content-Encoding"), "gzip");

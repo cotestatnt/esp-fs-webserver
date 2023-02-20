@@ -25,7 +25,7 @@ a:active,a:hover{outline:0;}
 b{font-weight:700;}
 h1{font-size:38px;}
 h2{font-size:24px;}
-
+.logo{width: 100%;}
 .lbl-wifi {text-align: right;padding:0px}
 hr {padding: 0;}
 .input-label{color:#015293;position:relative;left:8px;bottom:-7px;z-index:2;display:inline-block;margin-bottom:0;padding-right:7px;padding-left:6px;border-style:solid;border-width:1px;border-color:#dcdce5;border-radius:6px;background-color:#fff;font-size:13.5px;line-height:17px;font-weight:500;}

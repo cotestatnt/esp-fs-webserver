@@ -31,4 +31,3 @@ In the image below, for example, the HTML and Javascript code to provision the d
 ![image](https://user-images.githubusercontent.com/27758688/218733394-9cd7af3e-257e-4798-98b0-b8d426e07848.png)
 
 
-

@@ -114,17 +114,21 @@ public:
     inline void addHTML(const char* html, const char* id) {
         String elementId = "raw-html-";
         elementId += id;
-        addOption(elementId.c_str(), html, false);
+        char trimmed[strlen(html)];
+        removeWhiteSpaces(html, trimmed);
+        addOption(elementId.c_str(), trimmed, false);
     }
 
-    inline void addCSS(const char* css, const char* id) {
-        String elementId = "raw-css-";
-        elementId += id;
-        addOption(elementId.c_str(), css, false);
+    inline void addCSS(const char* css) {
+        char trimmed[strlen(css)];
+        removeWhiteSpaces(css, trimmed);
+        addOption("raw-css", trimmed, false);
     }
 
     inline void addJavascript(const char* script) {
-        addOption("raw-javascript", script, true);
+        char trimmed[strlen(script)];
+        removeWhiteSpaces(script, trimmed);
+        addOption("raw-javascript", trimmed, true);
     }
 
     // Only for backward-compatibility
@@ -284,6 +288,7 @@ private:
     void getIpAddress();
     void handleRequest();
 #ifdef INCLUDE_SETUP_HTM
+    void removeWhiteSpaces(const char* input, char* tr);
     void handleSetup();
     uint8_t numOptions = 0;
 #endif
