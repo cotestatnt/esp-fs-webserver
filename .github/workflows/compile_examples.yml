@@ -49,7 +49,7 @@ jobs:
       run: |
         pio lib -g install \
         https://github.com/bblanchon/ArduinoJson \
-        https://github.com/cotestatnt/esp-fs-webserver>1.1.9 \
+        https://github.com/cotestatnt/esp-fs-webserver>1.2.0 \
         https://github.com/Links2004/arduinoWebSockets
         
     - name: Run PlatformIO Examples
