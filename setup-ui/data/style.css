@@ -1,12 +1,4 @@
-.inputfile {
-	width: 10px;
-	height: 10px;
-	opacity: 0;
-	overflow: hidden;
-	position: absolute;
-	z-index: -1;
-}
-
+.inputfile {width: 10px;height: 10px;opacity: 0;overflow: hidden;position: absolute;z-index: -1;}
 .loader,.loader:before,.loader:after {border-radius: 50%;width: 2em;height: 2em;-webkit-animation-fill-mode: both;animation-fill-mode: both;-webkit-animation: load7 1.8s infinite ease-in-out;animation: load7 1.8s infinite ease-in-out;}
 .loader {color: #333;font-size: 10px;margin-left: auto;margin-right: auto;position: relative;text-indent: -9999em;z-index: 999;-webkit-transform: translateZ(0);-ms-transform: translateZ(0);transform: translateZ(0);-webkit-animation-delay: -0.16s;animation-delay: -0.16s;}
 .loader:before,.loader:after {content: '';position: absolute;top: 0;}
@@ -25,22 +17,21 @@ tr:hover{filter: brightness(85%);}
 .topnav a.active{background-color:#56c080;color:white;}
 .topnav .icon{display:none;}
 *{box-sizing:border-box;}
+.logo{width: 100%;}
+.lbl-wifi {text-align: right;padding:0}
 html{font-family:sans-serif;}
 details,header,main,summary{display:block;}
 .table{width:90%;margin:auto;border-collapse:collapse;border-spacing:0;}
 a{background-color:transparent;}
 a:active,a:hover{outline:0;}
-
 b{font-weight:700;}
 h1{font-size:38px;}
 h2{font-size:24px;}
-.logo{width: 100%;}
-.lbl-wifi {text-align: right;padding:0px}
 hr {padding: 0;}
 .input-label{color:#015293;position:relative;left:8px;bottom:-7px;z-index:2;display:inline-block;margin-bottom:0;padding-right:7px;padding-left:6px;border-style:solid;border-width:1px;border-color:#dcdce5;border-radius:6px;background-color:#fff;font-size:13.5px;line-height:17px;font-weight:500;}
 input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus,input:-webkit-autofill:active{-webkit-box-shadow:0 0 0 30px #fff inset!important;}
 input[type='checkbox']{box-sizing:border-box;padding:0;}
-input[type='text'], input[type='number'], input[type='password'] {
+input[type='text'], input[type='number'], input[type='password'], select{
   height:40px;
   width:100%;
   padding-top: 10px;
@@ -54,22 +45,11 @@ input[type='text'], input[type='number'], input[type='password'] {
 
 input::placeholder{color:#5e5e5e;}
 input:hover{border-color:rgba(0, 0, 0, 0.8);box-shadow:0 1px 4px 0 rgba(220, 220, 229, 0.9);}
-input:focus{border-color:#3898EC;outline:0;}
+input:focus, select:focus {border-color:#3898EC;outline:0;}
 
 .ctn:before,
-.ctn:after {
-  content: " ";
-  display: table;
-  grid-column-start: 1;
-  grid-row-start: 1;
-  grid-column-end: 2;
-  grid-row-end: 2;
-}
-
-.ctn:after {
-  clear: both;
-}
-
+.ctn:after {content: " ";display: table;grid-column-start: 1;grid-row-start: 1;grid-column-end: 2;grid-row-end: 2;}
+.ctn:after {clear: both;}
 .ctn {
   display: block;
   max-width: 940px;

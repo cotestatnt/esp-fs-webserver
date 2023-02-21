@@ -416,6 +416,52 @@ void FSWebServer::handleScanNetworks()
 
 
 #ifdef INCLUDE_SETUP_HTM
+
+void FSWebServer::addDropdownList(const char *label, const char** array, size_t size) {
+    File file = m_filesystem->open("/config.json", "r");
+    int sz = file.size() * 1.33;
+    int docSize = max(sz, 2048);
+    DynamicJsonDocument doc((size_t)docSize);
+    if (file)
+    {
+        // If file is present, load actual configuration
+        DeserializationError error = deserializeJson(doc, file);
+        if (error)
+        {
+            DebugPrintln(F("Failed to deserialize file, may be corrupted"));
+            DebugPrintln(error.c_str());
+            file.close();
+            return;
+        }
+        file.close();
+    }
+    else
+    {
+        DebugPrintln(F("File not found, will be created new configuration file"));
+    }
+
+    numOptions++ ;
+
+    // If key is present in json, we don't need to create it.
+    if (doc.containsKey(label))
+        return;
+
+    JsonObject obj = doc.createNestedObject(label);
+    obj["selected"] = array[0];     // first element selected as default
+    JsonArray arr = obj.createNestedArray("values");
+    for (int i=0; i<size; i++) {
+        arr.add(array[i]);
+    }
+
+    file = m_filesystem->open("/config.json", "w");
+    if (serializeJsonPretty(doc, file) == 0)
+    {
+        DebugPrintln(F("Failed to write to file"));
+    }
+    file.close();
+}
+
+
 void FSWebServer::removeWhiteSpaces(const char* input, char* tr)
 {
   char pr = 0x00;

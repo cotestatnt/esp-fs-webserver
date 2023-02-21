@@ -17,12 +17,20 @@ uint32_t longVar = 1234567890;
 float floatVar = 15.5F;
 String stringVar = "Test option String";
 
+// In order to show a dropdown list box in /setup page
+// we need a list ef values and a variable to store the selected option
+#define LIST_SIZE  7
+const char* dropdownList[LIST_SIZE] = {
+  "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"};
+String dropdownSelected;
+
 // Var labels (in /setup webpage)
 #define LED_LABEL "The LED pin number"
 #define BOOL_LABEL "A bool variable"
 #define LONG_LABEL "A long variable"
-#define FLOAT_LABEL "A float varible"
+#define FLOAT_LABEL "A float variable"
 #define STRING_LABEL "A String variable"
+#define DROPDOWN_LABEL "A dropdown listbox"
 
 // Timezone definition to get properly time from NTP server
 #define MYTZ "CET-1CEST,M3.5.0,M10.5.0/3"
@@ -36,14 +44,15 @@ WebServer server(80);
 
 FSWebServer myWebServer(FILESYSTEM, server);
 
-
 static const char save_btn_htm[] PROGMEM = R"EOF(
 <div class="btn-bar">
-  <a class="btn" onclick="reload();">Reload options</a>
+  <a class="btn" id="reload-btn">Reload options</a>
 </div>
 )EOF";
 
 static const char button_script[] PROGMEM = R"EOF(
+/* Add click listener to button */
+document.getElementById('reload-btn').addEventListener('click', reload);
 function reload() {
   console.log('Reload configuration options');
   fetch('/reload')
@@ -91,13 +100,15 @@ bool loadOptions() {
     myWebServer.getOptionValue(LONG_LABEL, longVar);
     myWebServer.getOptionValue(FLOAT_LABEL, floatVar);
     myWebServer.getOptionValue(STRING_LABEL, stringVar);
+    myWebServer.getOptionValue(DROPDOWN_LABEL, dropdownSelected);
 
-    Serial.println();
+    Serial.println("\nThis are the current values stored: \n");
     Serial.printf("LED pin value: %d\n", ledPin);
-    Serial.printf("Bool value: %d\n", boolVar);
-    Serial.printf("Long value: %ld\n",longVar);
+    Serial.printf("Bool value: %s\n", boolVar ? "true" : "false");
+    Serial.printf("Long value: %lu\n",longVar);
     Serial.printf("Float value: %d.%d\n", (int)floatVar, (int)(floatVar*1000)%1000);
-    Serial.println(stringVar);
+    Serial.printf("String value: %s\n", stringVar.c_str());
+    Serial.printf("Dropdown selected value: %s\n\n", dropdownSelected.c_str());
     return true;
   }
   else
@@ -106,20 +117,21 @@ bool loadOptions() {
 }
 
 void saveOptions() {
-  myWebServer.saveOptionValue(LED_LABEL, ledPin);
-  myWebServer.saveOptionValue(BOOL_LABEL, boolVar);
-  myWebServer.saveOptionValue(LONG_LABEL, longVar);
-  myWebServer.saveOptionValue(FLOAT_LABEL, floatVar);
-  myWebServer.saveOptionValue(STRING_LABEL, stringVar);
+  // myWebServer.saveOptionValue(LED_LABEL, ledPin);
+  // myWebServer.saveOptionValue(BOOL_LABEL, boolVar);
+  // myWebServer.saveOptionValue(LONG_LABEL, longVar);
+  // myWebServer.saveOptionValue(FLOAT_LABEL, floatVar);
+  // myWebServer.saveOptionValue(STRING_LABEL, stringVar);
+  // myWebServer.saveOptionValue(DROPDOWN_LABEL, dropdownSelected);
   Serial.println(F("Application options saved."));
 }
 
 ////////////////////////////  HTTP Request Handlers  ////////////////////////////////////
 void handleLoadOptions() {
   WebServerClass* webRequest = myWebServer.getRequest();
-  loadOptions();
-  Serial.println(F("Application option loaded after web request"));
   webRequest->send(200, "text/plain", "Options loaded");
+  loadOptions();
+  Serial.println("Application option loaded after web request");
 }
 
 
@@ -144,12 +156,15 @@ void setup() {
 
   // Configure /setup page and start Web Server
   myWebServer.addOptionBox("My Options");
+
+  myWebServer.addOption(BOOL_LABEL, boolVar);
   myWebServer.addOption(LED_LABEL, ledPin);
   myWebServer.addOption(LONG_LABEL, longVar);
-  myWebServer.addOption(FLOAT_LABEL, floatVar, 0.0, 100.0, 0.01);
+  myWebServer.addOption(FLOAT_LABEL, floatVar, 1.0, 100.0, 0.01);
   myWebServer.addOption(STRING_LABEL, stringVar);
-  myWebServer.addOption(BOOL_LABEL, boolVar);
-  myWebServer.addOption("raw-html-button", save_btn_htm);
+  myWebServer.addDropdownList(DROPDOWN_LABEL, dropdownList, LIST_SIZE);
+
+  myWebServer.addHTML(save_btn_htm, "buttons");
   myWebServer.addJavascript(button_script);
 
   if (myWebServer.begin()) {
@@ -169,4 +184,5 @@ void loop() {
     saveOptions();
     delay(1000);
   }
+
 }

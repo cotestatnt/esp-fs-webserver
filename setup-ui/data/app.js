@@ -113,10 +113,6 @@ function getParameters() {
       $('svg-logo').setAttribute('title', '');
       $('logo-file').setAttribute('type', 'number');
     }
-    else {
-      $('svg-logo').innerHTML = svgLogo;
-      $('svg-logo').setAttribute('title', 'Click to upload your logo file');
-    }
   });
 }
 
@@ -199,6 +195,7 @@ function listParameters (params) {
       let lbl = document.createElement('label');
       el = document.createElement('input');
       el.setAttribute('id', key);
+      el.setAttribute('type', 'text');
 
       // Set input property (id, type and value). Check first if is boolean
       if (typeof(val) === "boolean"){
@@ -211,7 +208,6 @@ function listParameters (params) {
         let sp = document.createElement('span');
         sp.classList.add('toggle-label');
         sp.textContent = key;
-
         lbl.appendChild(el);
         lbl.appendChild(dv);
         lbl.appendChild(sp);
@@ -224,26 +220,37 @@ function listParameters (params) {
         lbl.setAttribute('label-for', key);
         lbl.classList.add('input-label');
         lbl.textContent = key;
+        if (typeof(val) === "number")
+          el.setAttribute('type', 'number');
 
-        if (typeof(val) === "string") {
-          el.setAttribute('type', 'text');
-        }
-        if (typeof(val) === "number") {
-          el.setAttribute('type', 'number');
-        }
         if (typeof(val) === "object" ) {
-          var num = Math.round(val.value  * (1/val.step)) / (1/val.step);
-          el.setAttribute('type', 'number');
-          el.setAttribute('step', val.step);
-          el.setAttribute('min', val.min);
-          el.setAttribute('max', val.max);
-          el.value = Number(num).toFixed(3);
+          // This is a select/option
+          if (val.values) {
+            el = document.createElement('select');
+            el.setAttribute('id', key);
+            val.values.forEach((a) => {
+              var opt = document.createElement('option');
+              opt.textContent = a;
+              opt.value = a;
+              el.appendChild(opt);
+            })
+            el.value = val.selected;
+            pBox.appendChild(el);
+          }
+
+          // This is a float value
+          else {
+            var num = Math.round(val.value  * (1/val.step)) / (1/val.step);
+            el.setAttribute('type', 'number');
+            el.setAttribute('step', val.step);
+            el.setAttribute('min', val.min);
+            el.setAttribute('max', val.max);
+            el.value = Number(num).toFixed(3);
+          }
         }
         addInputListener(el);
-
         var d  = document.createElement('div');
         d.classList.add('tf-wrapper');
-
         d.appendChild(lbl);
         d.appendChild(el);
         pBox.appendChild(d);
@@ -258,9 +265,10 @@ function listParameters (params) {
 
 function addInputListener(item) {
   // Add event listener to option inputs
-  item.addEventListener('change', () => {
-    if (item.type  === "number")
-      if (item.getAttribute("step")) {
+
+  if (item.type  === "number") {
+    item.addEventListener('change', () => {
+       if (item.getAttribute("step")) {
         var obj = {};
         obj.value = Math.round(item.value  * (1/item.step)) / (1/item.step);
         obj.step = item.getAttribute("step");
@@ -270,13 +278,30 @@ function addInputListener(item) {
       }
       else
         options[item.id] = parseInt(item.value);
+    });
+    return;
+  }
 
-    if(item.type === "text")
+  if(item.type === "text") {
+    item.addEventListener('change', () => {
       options[item.id] = item.value;
+    });
+    return;
+  }
 
-    if(item.type === "checkbox")
+  if(item.type === "checkbox") {
+    item.addEventListener('change', () => {
       options[item.id] = item.checked;
-  });
+    });
+    return;
+  }
+
+  if(item.type === 'select-one'){
+    item.addEventListener('change', (e) => {
+      options[e.target.id].selected = e.target.value;
+    });
+    return;
+  }
 }
 
 
@@ -290,11 +315,6 @@ function saveParameters() {
   // POST data using the Fetch API
   fetch('/edit', {
     method: 'POST',
-    headers: {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'PUT,POST,GET,OPTIONS',
-                'Access-Control-Allow-Headers': '*'
-             },
     body: formData
   })
 
@@ -394,7 +414,7 @@ function closeModalMessage(do_cb) {
 function restartESP() {
   var url = new URL("http://" + `${window.location.hostname}` + "/restart");
   fetch(url)
-  .then(response => response.json())
+  .then(response => response.text())
   .then(data => {
     closeModalMessage();
     openModalMessage('Restart!', '<br>ESP restarted. Please wait a little and then reload this page.<br>');
@@ -420,9 +440,7 @@ function uploadLogo() {
       console.error(error);
     }
   };
-
   reader.readAsDataURL(file);
-
 }
 
 // Initializes the app.
@@ -434,6 +452,8 @@ $('svg-connect').innerHTML = svgConnect;
 $('svg-save').innerHTML = svgSave;
 $('svg-restart').innerHTML = svgRestart;
 $('close-modal').innerHTML = svgCloseModal;
+$('svg-logo').innerHTML = svgLogo;
+$('svg-logo').setAttribute('title', 'Click to upload your logo file');
 
 $('hum-btn').addEventListener('click', showMenu);
 $('scan-wifi').addEventListener('click', getWiFiList);
@@ -455,5 +475,3 @@ $('password').addEventListener('input', (event) => {
   else
     $('connect-wifi').disabled = false;
 });
-
-

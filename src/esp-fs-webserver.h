@@ -131,6 +131,8 @@ public:
         addOption("raw-javascript", trimmed, true);
     }
 
+    void addDropdownList(const char *label, const char** array, size_t size);
+
     // Only for backward-compatibility
     template <typename T>
     inline void addOption(fs::FS &fs, const char *label, T val, bool hidden = false)
@@ -155,7 +157,6 @@ public:
         int sz = file.size() * 1.33;
         int docSize = max(sz, 2048);
         DynamicJsonDocument doc((size_t)docSize);
-        // DynamicJsonDocument doc(2048);
         if (file)
         {
             // If file is present, load actual configuration
@@ -180,6 +181,18 @@ public:
         if (hidden)
             key += "-hidden";
 
+        // Univoque key name
+        if (key.equals("param-box")) {
+            key += numOptions ;
+        }
+        if (key.equals("raw-javascript")) {
+            key += numOptions ;
+        }
+
+        // If key is present in json, we don't need to create it.
+        if (doc.containsKey(key.c_str()))
+            return;
+
         // if min, max, step != from default, treat this as object in order to set other properties
         if (d_min != MIN_F || d_max != MAX_F || step != 1.0)
         {
@@ -190,13 +203,6 @@ public:
             obj["step"] = step;
         }
         else {
-            // Univoque key name
-            if (key.equals("param-box")) {
-                key += numOptions ;
-            }
-            if (key.equals("raw-javascript")) {
-                key += numOptions ;
-            }
             doc[key] = static_cast<T>(val);
         }
 
@@ -233,6 +239,8 @@ public:
 
         if (doc[label]["value"])
             var = doc[label]["value"].as<T>();
+        else if (doc[label]["selected"])
+            var = doc[label]["selected"].as<T>();
         else
             var = doc[label].as<T>();
         return true;
@@ -261,6 +269,8 @@ public:
 
         if (doc[label]["value"])
             doc[label]["value"] = val;
+        else if (doc[label]["selected"])
+            doc[label]["selected"] = val;
         else
             doc[label] = val;
         return true;
