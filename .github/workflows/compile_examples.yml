@@ -47,10 +47,9 @@ jobs:
         pip install --upgrade platformio
     - name: Install 3rd party dependecies
       run: |
-        pio upgrade \
         pio lib -g install \
         https://github.com/bblanchon/ArduinoJson \
-        https://github.com/cotestatnt/esp-fs-webserver \
+        https://github.com/cotestatnt/esp-fs-webserver>1.1.9 \
         https://github.com/Links2004/arduinoWebSockets
         
     - name: Run PlatformIO Examples
