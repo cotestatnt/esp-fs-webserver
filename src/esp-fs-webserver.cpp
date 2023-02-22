@@ -254,35 +254,21 @@ void FSWebServer::doWifiConnection()
     bool persistent = true;
     WiFi.mode(WIFI_AP_STA);
 
-    if (webserver->hasArg("ssid"))
-    {
-        ssid = webserver->arg("ssid");
-    }
-
-    if (webserver->hasArg("password"))
-    {
-        pass = webserver->arg("password");
-    }
-
-    if (webserver->hasArg("persistent"))
-    {
-        String pers = webserver->arg("persistent");
-        if (pers.equals("false"))
-        {
-            persistent = false;
-        }
-    }
+    String json = webserver->arg("plain");
+    DynamicJsonDocument data(256);
+    DeserializationError error = deserializeJson(data, json);
+    ssid = data["ssid"].as<String>();
+    pass = data["password"].as<String>();
+    persistent = data["persistent"].as<bool>();
 
     if (WiFi.status() == WL_CONNECTED)
     {
-
         IPAddress ip = WiFi.localIP();
         String resp = "ESP is currently connected to a WiFi network.<br><br>"
         "Actual connection will be closed and a new attempt will be done with <b>";
         resp += ssid;
         resp += "</b> WiFi network.";
         webserver->send(200, "text/plain", resp);
-
         delay(500);
         Serial.println("Disconnect from current WiFi network");
         WiFi.disconnect();
