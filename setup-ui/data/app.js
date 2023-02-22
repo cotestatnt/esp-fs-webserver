@@ -327,21 +327,19 @@ function saveParameters() {
 
 
 function doConnection() {
-  $('loader').classList.remove('hide');
-  var httpCode;
-  var formData = new FormData();
-  formData.append('ssid',  $('ssid').value );
-  formData.append('password',  $('password').value);
-  formData.append('persistent', $('persistent').checked);
 
-  var params = `ssid=${$('ssid').value}&password=${$('password').value}&persistent=${$('persistent').checked}`;
-  fetch('/connect', {
+  var formdata = new FormData();
+  formdata.append("ssid", $('ssid').value);
+  formdata.append("password", $('password').value);
+  formdata.append("persistent", $('persistent').checked);
+  var requestOptions = {
     method: 'POST',
-    redirect: 'follow',
-    headers: {"Content-Type": "application/x-www-form-urlencoded"},
-    body: params
-  })
+    body: formdata,
+    redirect: 'follow'
+  };
 
+  $('loader').classList.remove('hide');
+  fetch('/connect', requestOptions)
   .then(function(response){
     httpCode = response.status;
     return response.text();

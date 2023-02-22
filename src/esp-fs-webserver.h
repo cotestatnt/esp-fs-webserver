@@ -99,14 +99,6 @@ public:
 #define MIN_F -3.4028235E+38
 #define MAX_F 3.4028235E+38
 
-    // inline bool loadOptions() {
-    //     return m_varList.loadValues(m_filesystem, "/config.json");
-    // }
-
-    // inline bool saveOptions() {
-    //     return m_varList.saveValues(m_filesystem, "/config.json");
-    // }
-
     inline void addOptionBox(const char* boxTitle) {
         addOption("param-box", boxTitle, false);
     }
@@ -114,21 +106,21 @@ public:
     inline void addHTML(const char* html, const char* id) {
         String elementId = "raw-html-";
         elementId += id;
-        char trimmed[strlen(html)];
-        removeWhiteSpaces(html, trimmed);
-        addOption(elementId.c_str(), trimmed, false);
+        String trimmed = html;
+        removeWhiteSpaces(trimmed);
+        addOption(elementId.c_str(), trimmed.c_str(), false);
     }
 
     inline void addCSS(const char* css) {
-        char trimmed[strlen(css)];
-        removeWhiteSpaces(css, trimmed);
-        addOption("raw-css", trimmed, false);
+        String trimmed = css;
+        removeWhiteSpaces(trimmed);
+        addOption("raw-css", trimmed.c_str(), false);
     }
 
     inline void addJavascript(const char* script) {
-        char trimmed[strlen(script)];
-        removeWhiteSpaces(script, trimmed);
-        addOption("raw-javascript", trimmed, true);
+        String trimmed = script;
+        removeWhiteSpaces(trimmed);
+        addOption("raw-javascript", trimmed.c_str(), true);
     }
 
     void addDropdownList(const char *label, const char** array, size_t size);
@@ -298,7 +290,7 @@ private:
     void getIpAddress();
     void handleRequest();
 #ifdef INCLUDE_SETUP_HTM
-    void removeWhiteSpaces(const char* input, char* tr);
+    void removeWhiteSpaces(String& str);
     void handleSetup();
     uint8_t numOptions = 0;
 #endif
