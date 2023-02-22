@@ -462,23 +462,23 @@ void FSWebServer::addDropdownList(const char *label, const char** array, size_t 
 }
 
 
-void FSWebServer::removeWhiteSpaces(const char* input, char* tr)
-{
-  char pr = 0x00;
-  char ch;
-
-  int j = 0;
-  for (int i=0; i<strlen(input); i++) {
-    ch = input[i];
-    if (ch != '\n' && ch != '\r' && ch != '\t') {
-      if (ch == ' ' && pr == ' ') {
-        continue;
-      }
-      tr[j++] = ch;
+void FSWebServer::removeWhiteSpaces(String& str) {
+    const char noChars[] = {'\n', '\r', '\t'};
+    int pos = -1;
+    // Remove non printable characters
+    for (int i=0; i< sizeof(noChars); i++) {
+        pos = str.indexOf(noChars[i]);
+        while (pos > -1) {
+            str.replace(String(noChars[i]), "");
+            pos = str.indexOf(noChars[i]);
+        }
     }
-    pr = ch;
-  }
-  tr[j] = '\0';
+    // Remove doubles spaces
+    pos = str.indexOf("  ");
+    while (pos > -1) {
+        str.replace("  ", " ");
+        pos = str.indexOf("  ");
+    }
 }
 
 void FSWebServer::handleSetup()
