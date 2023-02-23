@@ -49,12 +49,13 @@ jobs:
       run: | 
         pio lib -g install \
         https://github.com/bblanchon/ArduinoJson \
-        https://github.com/cotestatnt/esp-fs-webserver \
+        https://github.com/cotestatnt/esp-fs-webserver.git \
         https://github.com/Links2004/arduinoWebSockets
         
     - name: Run PlatformIO Examples
       run: |
-        pio ci --board=nodemcuv2 
+        pio ci --board=nodemcuv2 \
+        --lib=examples/customHTML/**.h \
       env:
         PLATFORMIO_CI_SRC: ${{ matrix.example }}
 
@@ -95,11 +96,12 @@ jobs:
       run: | 
         pio lib -g install \
         https://github.com/bblanchon/ArduinoJson \
-        https://github.com/cotestatnt/esp-fs-webserver \
+        https://github.com/cotestatnt/esp-fs-webserver.git \
         https://github.com/Links2004/arduinoWebSockets
        
     - name: Run PlatformIO Examples
       run: |
-        pio ci --board=esp32dev
+        pio ci --board=esp32dev \
+        --lib=examples/customHTML/**.h \
       env:
         PLATFORMIO_CI_SRC: ${{ matrix.example }}
