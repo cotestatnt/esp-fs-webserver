@@ -99,6 +99,17 @@ public:
 #define MIN_F -3.4028235E+38
 #define MAX_F 3.4028235E+38
 
+    inline bool clearOptions() {
+        File file = m_filesystem->open("/config.json", "r");
+        if (file)
+        {
+            file.close();
+            m_filesystem->remove("/config.json");
+            return true;
+        }
+        return false;
+    }
+
     inline void addOptionBox(const char* boxTitle) {
         addOption("param-box", boxTitle, false);
     }

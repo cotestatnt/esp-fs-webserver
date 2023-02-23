@@ -68,7 +68,8 @@ input:focus, select:focus {border-color:#3898EC;outline:0;}
   background-color: hsla(0, 0%, 100%, 0.8);
   box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
 }
-
+footer {text-align:center;font-size:12px;margin:40px}
+#about {color: lightgray}
 .body{padding-right:20px;padding-left:20px;border-radius:10px;background-color:#edf0f3;background-clip:border-box;}
 .title{display:flex;justify-content:center;align-items:center;flex:1;}
 .heading-2{padding-right:20px;padding-left:20px;font-weight:400;text-align: center;}

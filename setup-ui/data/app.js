@@ -327,7 +327,6 @@ function saveParameters() {
 
 
 function doConnection() {
-
   var formdata = new FormData();
   formdata.append("ssid", $('ssid').value);
   formdata.append("password", $('password').value);
