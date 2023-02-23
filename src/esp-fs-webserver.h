@@ -129,9 +129,9 @@ public:
     }
 
     inline void addJavascript(const char* script) {
-        String trimmed = script;
-        removeWhiteSpaces(trimmed);
-        addOption("raw-javascript", trimmed.c_str(), true);
+        //String trimmed = script;
+        // removeWhiteSpaces(trimmed);
+        addOption("raw-javascript", script, true);
     }
 
     void addDropdownList(const char *label, const char** array, size_t size);
