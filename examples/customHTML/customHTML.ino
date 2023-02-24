@@ -19,7 +19,7 @@ String stringVar = "Test option String";
 #define LED_LABEL "The LED pin number"
 #define BOOL_LABEL "A bool variable"
 #define LONG_LABEL "A long variable"
-#define FLOAT_LABEL "A float varible"
+#define FLOAT_LABEL "A float variable"
 #define STRING_LABEL "A String variable"
 
 // Timezone definition to get properly time from NTP server
@@ -125,10 +125,10 @@ void setup() {
   myWebServer.addOption(LED_LABEL, ledPin);
   myWebServer.addOption(LONG_LABEL, longVar);
   myWebServer.addOption(FLOAT_LABEL, floatVar, 0.0, 100.0, 0.01);
-  myWebServer.addOption(STRING_LABEL, stringVar);
+  myWebServer.addOption(STRING_LABEL, stringVar.c_str());
   myWebServer.addOption(BOOL_LABEL, boolVar);
   myWebServer.addOptionBox("Custom HTML");
-  myWebServer.addHTML(custom_html, "custom-html");
+  myWebServer.addHTML(custom_html, "fetch-test");
   myWebServer.addCSS(custom_css);
   myWebServer.addJavascript(custom_script);
 

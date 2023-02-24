@@ -8,15 +8,15 @@ static const char custom_html[] PROGMEM = R"EOF(
 <form class=form>
   <div class=tf-wrapper>
     <label for=httpmethod class=input-label>Method</label>
-    <select class="select" id="httpmethod">
+    <select class='select' id='httpmethod'>
       <option>GET</option>
       <option>POST</option>
     </select>
     <label for=url class=input-label>Endpoint</label>
-    <input type=text placeholder="https://httpbin.org/" id=url value="https://httpbin.org/" />
+    <input type=text placeholder='https://httpbin.org/' id=url value='https://httpbin.org/' />
   </div>
   <br>
-  <a id=fetch class="btn">
+  <a id=fetch class='btn'>
     <span>Fecth url</span>
   </a>
   <br>
@@ -32,8 +32,8 @@ static const char custom_html[] PROGMEM = R"EOF(
 * for example the background color of body will be ovverrided with a different color
 */
 static const char custom_css[] PROGMEM = R"EOF(
-pre {
-    font-family: Monaco,Menlo,Consolas,"Courier New",monospace;
+pre{
+    font-family: Monaco,Menlo,Consolas,'Courier New',monospace;
     color: #333;
     line-height: 20px;
     background-color: #f5f5f5;
@@ -43,7 +43,7 @@ pre {
     min-height: 350px;
     font-size: 85%;
 }
-.select {
+.select{
   width: 25%;
   height:40px;
   padding-top: 10px;
@@ -52,8 +52,8 @@ pre {
   border-radius: 6px;
   box-shadow: 0 1px 2px 0 rgba(220, 220, 230, 0.5);
 }
-.body {
-  background-color : cadetblue;
+.body{
+  background-color: cadetblue;
 }
 )EOF";
 
@@ -64,7 +64,7 @@ pre {
 * with id='fetch' (added as HTML). The listener will execute the function 'fetchEndpoint'
 * in order to fetch a remote resource and show the response in a text box.
 *
-* The instruction $('<id-name>') is a "Jquery like" selector already defined 
+* The instruction $('<id-name>') is a "Jquery like" selector already defined
 * so you can use for your purposes:
 *      var $ = function(el) {
 *        return document.getElementById(el);
@@ -75,12 +75,10 @@ function fetchEndpoint() {
   var mt = $('httpmethod').options[$('httpmethod').selectedIndex].text;
   var url = $('url').value + mt.toLowerCase();
   var bd = (mt != 'GET') ? 'body: ""' : '';
-
   var options = {
     method: mt,
     bd
   };
-
   fetch(url, options)
   .then(response => response.text())
   .then(txt => {

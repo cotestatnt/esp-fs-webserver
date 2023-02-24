@@ -117,21 +117,21 @@ public:
     inline void addHTML(const char* html, const char* id) {
         String elementId = "raw-html-";
         elementId += id;
+
         String trimmed = html;
         removeWhiteSpaces(trimmed);
-        addOption(elementId.c_str(), trimmed.c_str(), false);
+        addOption(elementId.c_str(), trimmed, false);
     }
 
     inline void addCSS(const char* css) {
         String trimmed = css;
         removeWhiteSpaces(trimmed);
-        addOption("raw-css", trimmed.c_str(), false);
+        addOption("raw-css", trimmed, false);
     }
 
     inline void addJavascript(const char* script) {
-        //String trimmed = script;
-        // removeWhiteSpaces(trimmed);
-        addOption("raw-javascript", script, true);
+        String trimmed = script;        // TO-DO: ESP8266 don't handle properly PROGMEM strings
+        addOption("raw-javascript", trimmed, true);
     }
 
     void addDropdownList(const char *label, const char** array, size_t size);
@@ -191,6 +191,8 @@ public:
         if (key.equals("raw-javascript")) {
             key += numOptions ;
         }
+
+
 
         // If key is present in json, we don't need to create it.
         if (doc.containsKey(key.c_str()))
