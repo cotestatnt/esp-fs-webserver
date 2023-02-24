@@ -125,7 +125,7 @@ void setup() {
   myWebServer.addOption(LED_LABEL, ledPin);
   myWebServer.addOption(LONG_LABEL, longVar);
   myWebServer.addOption(FLOAT_LABEL, floatVar, 0.0, 100.0, 0.01);
-  myWebServer.addOption(STRING_LABEL, stringVar.c_str());
+  myWebServer.addOption(STRING_LABEL, stringVar);
   myWebServer.addOption(BOOL_LABEL, boolVar);
   myWebServer.addOptionBox("Custom HTML");
   myWebServer.addHTML(custom_html, "fetch-test");
