@@ -105,13 +105,13 @@ bool loadOptions() {
     longVar = doc[LONG_LABEL];
     floatVar = doc[FLOAT_LABEL]["value"];
     stringVar = doc[STRING_LABEL].as<String>();
-	
-	tb_deviceToken = doc[TB_DEVICE_TOKEN].as<String>();
+
+    tb_deviceToken = doc[TB_DEVICE_TOKEN].as<String>();
     tb_device_key = doc[TB_DEVICE_KEY].as<String>();
     tb_secret_key = doc[TB_SECRET_KEY].as<String>();
     tb_serverIP = doc[TB_SERVER].as<String>();
     tb_port = doc[TB_PORT];
-	
+
     file.close();
 
     Serial.println();
