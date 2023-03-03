@@ -4,7 +4,7 @@ FSWebServer::FSWebServer(fs::FS &fs, WebServerClass &server)
 {
     m_filesystem = &fs;
     webserver = &server;
-    m_basePath[0] = '\0';
+    // m_basePath[0] = '\0';
 }
 
 WebServerClass *FSWebServer::getRequest()
@@ -68,10 +68,21 @@ bool FSWebServer::checkDir(char *dirname, uint8_t levels)
 bool FSWebServer::begin(const char *path)
 {
     DebugPrintln("\nList the files of webserver: ");
-    if (path != nullptr)
-        strcpy(m_basePath, path);
+    File root = m_filesystem->open("/setup", "r");
+    if (!root)
+    {
+        DebugPrintln("Failed to open /setup directory. Create new folder\n");
+        m_filesystem->mkdir("/setup");
+        ESP.restart();
+    }
+    m_fsOK = checkDir("/", 2);
 
-    m_fsOK = checkDir(m_basePath, 2);
+    // Backward compatibility, move config.json to new path
+    root = m_filesystem->open("/config.json", "r");
+    if(root) {
+        root.close();
+        m_filesystem->rename("/config.json", CONFIG_FILE);
+    }
 
 #ifdef INCLUDE_EDIT_HTM
     webserver->on("/status", HTTP_GET, std::bind(&FSWebServer::handleStatus, this));
@@ -221,16 +232,11 @@ void FSWebServer::handleRequest()
         replyToCLient(ERROR, PSTR(FS_INIT_ERROR));
         return;
     }
-#if defined(ESP32)
-    String _url = WebServer::urlDecode(webserver->uri());
-#elif defined(ESP8266)
-    String _url = ESP8266WebServer::urlDecode(webserver->uri());
-#endif
+
+    String _url = WebServerClass::urlDecode(webserver->uri());
     // First try to find and return the requested file from the filesystem,
     // and if it fails, return a 404 page with debug information
-    // Serial.print("urlDecode: ");
-    // Serial.println(_url);
-    if (handleFileRead(_url))
+    if (handleFileRead(_url.c_str()))
         return;
     else
         replyToCLient(NOT_FOUND, PSTR(FILE_NOT_FOUND));
@@ -417,8 +423,91 @@ void FSWebServer::handleScanNetworks()
 
 #ifdef INCLUDE_SETUP_HTM
 
+bool FSWebServer::clearOptions() {
+    File file = m_filesystem->open(CONFIG_FILE, "r");
+    if (file) {
+        file.close();
+        m_filesystem->remove(CONFIG_FILE);
+        return true;
+    }
+    return false;
+}
+
+/*
+* In order to keep config.json file small and clean, custom HTML, CSS and Javascript
+* will be saved as file. The related option will contain the path to this file
+*/
+bool FSWebServer::optionToFile(const char* filename, const char* str, bool overWrite) {
+    // Check if file is already saved
+    File file = m_filesystem->open(filename, "r");
+    if (file && !overWrite) {
+        file.close();
+        return true;
+    }
+    // Create or overwrite option file
+    else {
+        file = m_filesystem->open(filename, "w");
+        if (file) {
+            file.print(str);
+            file.close();
+            return true;
+        }
+        else {
+            DebugPrintf("Error writing file %s\n", filename);
+        }
+    }
+    return false;
+}
+
+/*
+* Add an option which contain "raw" HTML code to be injected in /setup page
+* Th HTML code will be written in a file with named as option id
+*/
+void FSWebServer::addHTML(const char* html, const char* id, bool overWrite) {
+    String elementId = "raw-html-";
+    elementId += id;
+    String path = "/setup/";
+    path += elementId;
+    path += ".htm";
+#if defined(ESP8266)
+    String content = html;
+    optionToFile(path.c_str(), content.c_str(), overWrite);
+#else
+    optionToFile(path.c_str(), html, overWrite);
+#endif
+    addOption(elementId.c_str(), path.c_str(), false);
+}
+
+/*
+* Add an option which contain "raw" CSS style to be injected in /setup page
+* Th CSS code will be written in a file with named as option raw-css.css
+*/
+void FSWebServer::addCSS(const char* css, bool overWrite) {
+#if defined(ESP8266)
+    String content = css;
+    optionToFile("/setup/raw-css.css", content.c_str(), overWrite);
+#else
+    optionToFile("/setup/raw-css.css", css, overWrite);
+#endif
+    addOption("raw-css", "/setup/raw-css.css", true);
+}
+
+/*
+* Add an option which contain "raw" JS script to be injected in /setup page
+* Th JS code will be written in a file with named as option raw-javascript.js
+*/
+void FSWebServer::addJavascript(const char* script, bool overWrite) {
+    #if defined(ESP8266)
+    String content = script;
+    optionToFile("/setup/raw-javascript.js", content.c_str(), overWrite);
+    #else
+    optionToFile("/setup/raw-javascript.js", script, overWrite);
+    #endif
+    addOption("raw-javascript", "/setup/raw-javascript.js", true);
+}
+
 void FSWebServer::addDropdownList(const char *label, const char** array, size_t size) {
-    File file = m_filesystem->open("/config.json", "r");
+    File file = m_filesystem->open(CONFIG_FILE, "r");
     int sz = file.size() * 1.33;
     int docSize = max(sz, 2048);
     DynamicJsonDocument doc((size_t)docSize);
@@ -453,7 +542,7 @@ void FSWebServer::addDropdownList(const char *label, const char** array, size_t 
         arr.add(array[i]);
     }
 
-    file = m_filesystem->open("/config.json", "w");
+    file = m_filesystem->open(CONFIG_FILE, "w");
     if (serializeJsonPretty(doc, file) == 0)
     {
         DebugPrintln(F("Failed to write to file"));
@@ -509,11 +598,9 @@ void FSWebServer::handleIndex()
 /*
     Read the given file from the filesystem and stream it back to the client
 */
-bool FSWebServer::handleFileRead(const String &uri)
+bool FSWebServer::handleFileRead(const char* uri)
 {
-    String path = m_basePath;
-    path = uri;
-
+    String path = uri;
     DebugPrintln("handleFileRead: " + path);
     if (path.endsWith("/"))
     {

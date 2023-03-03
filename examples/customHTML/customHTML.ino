@@ -1,18 +1,16 @@
 #include <esp-fs-webserver.h>   // https://github.com/cotestatnt/esp-fs-webserver
-
 #include <FS.h>
 #include <LittleFS.h>
 #define FILESYSTEM LittleFS
 
-#ifndef LED_BUILTIN
-#define LED_BUILTIN 2
-#endif
+struct tm sysTime;
 
 // Test "options" values
 uint8_t ledPin = LED_BUILTIN;
 bool boolVar = true;
 uint32_t longVar = 1234567890;
 float floatVar = 15.5F;
+
 String stringVar = "Test option String";
 
 // Var labels (in /setup webpage)
@@ -59,7 +57,7 @@ void startFilesystem() {
     Serial.println();
   }
   else {
-    Serial.println("ERROR on mounting filesystem. It will be formmatted!");
+    Serial.println(F("ERROR on mounting filesystem. It will be formmatted!"));
     FILESYSTEM.format();
     ESP.restart();
   }
@@ -67,13 +65,27 @@ void startFilesystem() {
 
 
 ////////////////////  Load application options from filesystem  ////////////////////
+/*
+* Unlike what was done in customOptions.ino, in this example
+* the variables are read (and written) all at once using the ArduinoJon library
+*/
 bool loadOptions() {
-  if (FILESYSTEM.exists("/config.json")) {
-    myWebServer.getOptionValue(LED_LABEL, ledPin);
-    myWebServer.getOptionValue(BOOL_LABEL, boolVar);
-    myWebServer.getOptionValue(LONG_LABEL, longVar);
-    myWebServer.getOptionValue(FLOAT_LABEL, floatVar);
-    myWebServer.getOptionValue(STRING_LABEL, stringVar);
+  if (FILESYSTEM.exists(myWebServer.configFile())) {
+    File file = FILESYSTEM.open(myWebServer.configFile(), "r");
+    DynamicJsonDocument doc(file.size() * 1.33);
+    if (!file)
+      return false;
+
+    DeserializationError error = deserializeJson(doc, file);
+    if (error)
+      return false;
+
+    ledPin = doc[LED_LABEL];
+    boolVar = doc[BOOL_LABEL];
+    longVar = doc[LONG_LABEL];
+    floatVar = doc[FLOAT_LABEL]["value"];
+    stringVar = doc[STRING_LABEL].as<String>();
+    file.close();
 
     Serial.println();
     Serial.printf("LED pin value: %d\n", ledPin);
@@ -84,25 +96,36 @@ bool loadOptions() {
     return true;
   }
   else
-    Serial.println(F("File \"config.json\" not exist"));
+    Serial.println(F("Configuration file not exist"));
   return false;
 }
 
-/*   Call this if you need to save parameters from the sketch side
-bool saveOptions() {
-  if (FILESYSTEM.exists("/config.json")) {
-    myWebServer.saveOptionValue(LED_LABEL, ledPin);
-    myWebServer.saveOptionValue(BOOL_LABEL, boolVar);
-    myWebServer.saveOptionValue(LONG_LABEL, longVar);
-    myWebServer.saveOptionValue(FLOAT_LABEL, floatVar);
-    myWebServer.saveOptionValue(STRING_LABEL, stringVar);
-    return true;
-  }
-  else
-    Serial.println(F("File \"config.json\" not exist"));
-  return false;
-}
-*/
+//   Call this if you need to save parameters from the sketch side
+// bool saveOptions() {
+//   if (FILESYSTEM.exists(myWebServer.configFile())) {
+//     File file = FILESYSTEM.open(myWebServer.configFile(), "w");
+//     if (!file)
+//       return false;
+
+//     DynamicJsonDocument doc(file.size() * 1.33);
+//     // Deserialize first, otherwise unhandled or hidden options will be lost
+//     DeserializationError error = deserializeJson(doc, file);
+//     if (error)
+//       return false;
+
+//     doc[LED_LABEL] = ledPin;
+//     doc[BOOL_LABEL] = boolVar;
+//     doc[LONG_LABEL] = longVar;
+//     doc[FLOAT_LABEL]["value"] = floatVar;
+//     doc[STRING_LABEL] = stringVar;
+//     serializeJsonPretty(doc, file);
+//     file.close();
+//     return true;
+//   }
+//   else
+//     Serial.println(F("Configuration file not exist"));
+//   return false;
+// }
 
 
 void setup() {
@@ -124,11 +147,15 @@ void setup() {
   myWebServer.addOptionBox("My Options");
   myWebServer.addOption(LED_LABEL, ledPin);
   myWebServer.addOption(LONG_LABEL, longVar);
+  // Float fields can be configured with min, max and step propertiess
   myWebServer.addOption(FLOAT_LABEL, floatVar, 0.0, 100.0, 0.01);
   myWebServer.addOption(STRING_LABEL, stringVar);
   myWebServer.addOption(BOOL_LABEL, boolVar);
+  
   myWebServer.addOptionBox("Custom HTML");
-  myWebServer.addHTML(custom_html, "fetch-test");
+  // How many times you need (for example in different option box)
+  myWebServer.addHTML(custom_html, "fetch-test", /*overwite*/ true);
+  // Only once (CSS and Javascript will be appended to head and body)
   myWebServer.addCSS(custom_css);
   myWebServer.addJavascript(custom_script);
 

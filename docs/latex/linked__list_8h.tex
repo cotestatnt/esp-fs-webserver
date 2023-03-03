@@ -1,0 +1,155 @@
+\hypertarget{linked__list_8h}{}\doxysection{src/linked\+\_\+list.h File Reference}
+\label{linked__list_8h}\index{src/linked\_list.h@{src/linked\_list.h}}
+{\ttfamily \#include $<$Arduino\+Json.\+h$>$}\newline
+{\ttfamily \#include $<$FS.\+h$>$}\newline
+Include dependency graph for linked\+\_\+list.\+h\+:
+% FIG 0
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_var_node}{Var\+Node}}
+\item 
+class \mbox{\hyperlink{class_variable_list}{Variable\+List}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{linked__list_8h_ab095b1ffa740c9b6385eb9bd3f7b5d65}{VAR\+\_\+\+NAME}}(name)~\#name
+\item 
+\#define \mbox{\hyperlink{linked__list_8h_aa8e0ba3b368dd0b2329250544929c135}{Debug\+Print}}(x)
+\item 
+\#define \mbox{\hyperlink{linked__list_8h_a72641a738b7438a623b30b2bed3f0865}{Debug\+Println}}(x)
+\item 
+\#define \mbox{\hyperlink{linked__list_8h_af0cbd3adb9ca3a22d52dd4ea65d82bee}{Debug\+Printf}}(x, ...)
+\item 
+\#define \mbox{\hyperlink{linked__list_8h_a80d71f6b1a4adaaf461c57902c4155ba}{Debug\+Printf\+\_\+P}}(x, ...)
+\end{DoxyCompactItemize}
+\doxysubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \{ \newline
+\mbox{\hyperlink{linked__list_8h_adf764cbdea00d65edcd07bb9953ad2b7a4618cf21306b3c647741afa7ebefcab8}{CHAR}}
+, \mbox{\hyperlink{linked__list_8h_adf764cbdea00d65edcd07bb9953ad2b7aa128cc25ea26621e08b18387b0fcb01c}{UCHAR}}
+, \mbox{\hyperlink{linked__list_8h_adf764cbdea00d65edcd07bb9953ad2b7a44e4077701c46ead6b3173a2d32d3d70}{CHAR\+\_\+\+PT}}
+, \mbox{\hyperlink{linked__list_8h_adf764cbdea00d65edcd07bb9953ad2b7ae663dbb8f8244e122acb5bd6b2c216e1}{BOOL}}
+, \newline
+\mbox{\hyperlink{linked__list_8h_adf764cbdea00d65edcd07bb9953ad2b7afd5a5f51ce25953f3db2c7e93eb7864a}{INT}}
+, \mbox{\hyperlink{linked__list_8h_adf764cbdea00d65edcd07bb9953ad2b7aaee055c4a5aba7d55774e4f1c01dacea}{LONG}}
+, \mbox{\hyperlink{linked__list_8h_adf764cbdea00d65edcd07bb9953ad2b7a4756f5bbd9f28d6b8905f32024b57398}{UINT}}
+, \mbox{\hyperlink{linked__list_8h_adf764cbdea00d65edcd07bb9953ad2b7a574bf5ec73e28138b997d24464adb70c}{ULONG}}
+, \newline
+\mbox{\hyperlink{linked__list_8h_adf764cbdea00d65edcd07bb9953ad2b7a9cf4a0866224b0bb4a7a895da27c9c4c}{FLOAT}}
+, \mbox{\hyperlink{linked__list_8h_adf764cbdea00d65edcd07bb9953ad2b7a33465d1d419b1074fb259ef444609e92}{DOUBLE}}
+, \mbox{\hyperlink{linked__list_8h_adf764cbdea00d65edcd07bb9953ad2b7aee847e634a4297b274316de8a8ca9921}{STRING}}
+ \}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{linked__list_8h_aa8e0ba3b368dd0b2329250544929c135}\label{linked__list_8h_aa8e0ba3b368dd0b2329250544929c135}} 
+\index{linked\_list.h@{linked\_list.h}!DebugPrint@{DebugPrint}}
+\index{DebugPrint@{DebugPrint}!linked\_list.h@{linked\_list.h}}
+\doxysubsubsection{\texorpdfstring{DebugPrint}{DebugPrint}}
+{\footnotesize\ttfamily \#define Debug\+Print(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})}
+
+
+
+Definition at line \mbox{\hyperlink{linked__list_8h_source_l00016}{16}} of file \mbox{\hyperlink{linked__list_8h_source}{linked\+\_\+list.\+h}}.
+
+\mbox{\Hypertarget{linked__list_8h_af0cbd3adb9ca3a22d52dd4ea65d82bee}\label{linked__list_8h_af0cbd3adb9ca3a22d52dd4ea65d82bee}} 
+\index{linked\_list.h@{linked\_list.h}!DebugPrintf@{DebugPrintf}}
+\index{DebugPrintf@{DebugPrintf}!linked\_list.h@{linked\_list.h}}
+\doxysubsubsection{\texorpdfstring{DebugPrintf}{DebugPrintf}}
+{\footnotesize\ttfamily \#define Debug\+Printf(\begin{DoxyParamCaption}\item[{}]{x,  }\item[{}]{... }\end{DoxyParamCaption})}
+
+
+
+Definition at line \mbox{\hyperlink{linked__list_8h_source_l00018}{18}} of file \mbox{\hyperlink{linked__list_8h_source}{linked\+\_\+list.\+h}}.
+
+\mbox{\Hypertarget{linked__list_8h_a80d71f6b1a4adaaf461c57902c4155ba}\label{linked__list_8h_a80d71f6b1a4adaaf461c57902c4155ba}} 
+\index{linked\_list.h@{linked\_list.h}!DebugPrintf\_P@{DebugPrintf\_P}}
+\index{DebugPrintf\_P@{DebugPrintf\_P}!linked\_list.h@{linked\_list.h}}
+\doxysubsubsection{\texorpdfstring{DebugPrintf\_P}{DebugPrintf\_P}}
+{\footnotesize\ttfamily \#define Debug\+Printf\+\_\+P(\begin{DoxyParamCaption}\item[{}]{x,  }\item[{}]{... }\end{DoxyParamCaption})}
+
+
+
+Definition at line \mbox{\hyperlink{linked__list_8h_source_l00019}{19}} of file \mbox{\hyperlink{linked__list_8h_source}{linked\+\_\+list.\+h}}.
+
+\mbox{\Hypertarget{linked__list_8h_a72641a738b7438a623b30b2bed3f0865}\label{linked__list_8h_a72641a738b7438a623b30b2bed3f0865}} 
+\index{linked\_list.h@{linked\_list.h}!DebugPrintln@{DebugPrintln}}
+\index{DebugPrintln@{DebugPrintln}!linked\_list.h@{linked\_list.h}}
+\doxysubsubsection{\texorpdfstring{DebugPrintln}{DebugPrintln}}
+{\footnotesize\ttfamily \#define Debug\+Println(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})}
+
+
+
+Definition at line \mbox{\hyperlink{linked__list_8h_source_l00017}{17}} of file \mbox{\hyperlink{linked__list_8h_source}{linked\+\_\+list.\+h}}.
+
+\mbox{\Hypertarget{linked__list_8h_ab095b1ffa740c9b6385eb9bd3f7b5d65}\label{linked__list_8h_ab095b1ffa740c9b6385eb9bd3f7b5d65}} 
+\index{linked\_list.h@{linked\_list.h}!VAR\_NAME@{VAR\_NAME}}
+\index{VAR\_NAME@{VAR\_NAME}!linked\_list.h@{linked\_list.h}}
+\doxysubsubsection{\texorpdfstring{VAR\_NAME}{VAR\_NAME}}
+{\footnotesize\ttfamily \#define VAR\+\_\+\+NAME(\begin{DoxyParamCaption}\item[{}]{name }\end{DoxyParamCaption})~\#name}
+
+
+
+Definition at line \mbox{\hyperlink{linked__list_8h_source_l00001}{1}} of file \mbox{\hyperlink{linked__list_8h_source}{linked\+\_\+list.\+h}}.
+
+
+
+\doxysubsection{Enumeration Type Documentation}
+\mbox{\Hypertarget{linked__list_8h_adf764cbdea00d65edcd07bb9953ad2b7}\label{linked__list_8h_adf764cbdea00d65edcd07bb9953ad2b7}} 
+\doxysubsubsection{\texorpdfstring{anonymous enum}{anonymous enum}}
+{\footnotesize\ttfamily anonymous enum}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{CHAR@{CHAR}!linked\_list.h@{linked\_list.h}}\index{linked\_list.h@{linked\_list.h}!CHAR@{CHAR}}}\mbox{\Hypertarget{linked__list_8h_adf764cbdea00d65edcd07bb9953ad2b7a4618cf21306b3c647741afa7ebefcab8}\label{linked__list_8h_adf764cbdea00d65edcd07bb9953ad2b7a4618cf21306b3c647741afa7ebefcab8}} 
+CHAR&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{UCHAR@{UCHAR}!linked\_list.h@{linked\_list.h}}\index{linked\_list.h@{linked\_list.h}!UCHAR@{UCHAR}}}\mbox{\Hypertarget{linked__list_8h_adf764cbdea00d65edcd07bb9953ad2b7aa128cc25ea26621e08b18387b0fcb01c}\label{linked__list_8h_adf764cbdea00d65edcd07bb9953ad2b7aa128cc25ea26621e08b18387b0fcb01c}} 
+UCHAR&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{CHAR\_PT@{CHAR\_PT}!linked\_list.h@{linked\_list.h}}\index{linked\_list.h@{linked\_list.h}!CHAR\_PT@{CHAR\_PT}}}\mbox{\Hypertarget{linked__list_8h_adf764cbdea00d65edcd07bb9953ad2b7a44e4077701c46ead6b3173a2d32d3d70}\label{linked__list_8h_adf764cbdea00d65edcd07bb9953ad2b7a44e4077701c46ead6b3173a2d32d3d70}} 
+CHAR\+\_\+\+PT&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{BOOL@{BOOL}!linked\_list.h@{linked\_list.h}}\index{linked\_list.h@{linked\_list.h}!BOOL@{BOOL}}}\mbox{\Hypertarget{linked__list_8h_adf764cbdea00d65edcd07bb9953ad2b7ae663dbb8f8244e122acb5bd6b2c216e1}\label{linked__list_8h_adf764cbdea00d65edcd07bb9953ad2b7ae663dbb8f8244e122acb5bd6b2c216e1}} 
+BOOL&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{INT@{INT}!linked\_list.h@{linked\_list.h}}\index{linked\_list.h@{linked\_list.h}!INT@{INT}}}\mbox{\Hypertarget{linked__list_8h_adf764cbdea00d65edcd07bb9953ad2b7afd5a5f51ce25953f3db2c7e93eb7864a}\label{linked__list_8h_adf764cbdea00d65edcd07bb9953ad2b7afd5a5f51ce25953f3db2c7e93eb7864a}} 
+INT&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{LONG@{LONG}!linked\_list.h@{linked\_list.h}}\index{linked\_list.h@{linked\_list.h}!LONG@{LONG}}}\mbox{\Hypertarget{linked__list_8h_adf764cbdea00d65edcd07bb9953ad2b7aaee055c4a5aba7d55774e4f1c01dacea}\label{linked__list_8h_adf764cbdea00d65edcd07bb9953ad2b7aaee055c4a5aba7d55774e4f1c01dacea}} 
+LONG&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{UINT@{UINT}!linked\_list.h@{linked\_list.h}}\index{linked\_list.h@{linked\_list.h}!UINT@{UINT}}}\mbox{\Hypertarget{linked__list_8h_adf764cbdea00d65edcd07bb9953ad2b7a4756f5bbd9f28d6b8905f32024b57398}\label{linked__list_8h_adf764cbdea00d65edcd07bb9953ad2b7a4756f5bbd9f28d6b8905f32024b57398}} 
+UINT&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{ULONG@{ULONG}!linked\_list.h@{linked\_list.h}}\index{linked\_list.h@{linked\_list.h}!ULONG@{ULONG}}}\mbox{\Hypertarget{linked__list_8h_adf764cbdea00d65edcd07bb9953ad2b7a574bf5ec73e28138b997d24464adb70c}\label{linked__list_8h_adf764cbdea00d65edcd07bb9953ad2b7a574bf5ec73e28138b997d24464adb70c}} 
+ULONG&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{FLOAT@{FLOAT}!linked\_list.h@{linked\_list.h}}\index{linked\_list.h@{linked\_list.h}!FLOAT@{FLOAT}}}\mbox{\Hypertarget{linked__list_8h_adf764cbdea00d65edcd07bb9953ad2b7a9cf4a0866224b0bb4a7a895da27c9c4c}\label{linked__list_8h_adf764cbdea00d65edcd07bb9953ad2b7a9cf4a0866224b0bb4a7a895da27c9c4c}} 
+FLOAT&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{DOUBLE@{DOUBLE}!linked\_list.h@{linked\_list.h}}\index{linked\_list.h@{linked\_list.h}!DOUBLE@{DOUBLE}}}\mbox{\Hypertarget{linked__list_8h_adf764cbdea00d65edcd07bb9953ad2b7a33465d1d419b1074fb259ef444609e92}\label{linked__list_8h_adf764cbdea00d65edcd07bb9953ad2b7a33465d1d419b1074fb259ef444609e92}} 
+DOUBLE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{STRING@{STRING}!linked\_list.h@{linked\_list.h}}\index{linked\_list.h@{linked\_list.h}!STRING@{STRING}}}\mbox{\Hypertarget{linked__list_8h_adf764cbdea00d65edcd07bb9953ad2b7aee847e634a4297b274316de8a8ca9921}\label{linked__list_8h_adf764cbdea00d65edcd07bb9953ad2b7aee847e634a4297b274316de8a8ca9921}} 
+STRING&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line \mbox{\hyperlink{linked__list_8h_source_l00023}{23}} of file \mbox{\hyperlink{linked__list_8h_source}{linked\+\_\+list.\+h}}.
+

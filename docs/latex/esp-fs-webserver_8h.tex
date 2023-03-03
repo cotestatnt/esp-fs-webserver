@@ -1,0 +1,239 @@
+\hypertarget{esp-fs-webserver_8h}{}\doxysection{src/esp-\/fs-\/webserver.h File Reference}
+\label{esp-fs-webserver_8h}\index{src/esp-\/fs-\/webserver.h@{src/esp-\/fs-\/webserver.h}}
+{\ttfamily \#include $<$Arduino.\+h$>$}\newline
+{\ttfamily \#include $<$memory$>$}\newline
+{\ttfamily \#include $<$typeinfo$>$}\newline
+{\ttfamily \#include $<$base64.\+h$>$}\newline
+{\ttfamily \#include $<$FS.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}edit\+\_\+htm.\+h\char`\"{}}\newline
+{\ttfamily \#include $<$Arduino\+Json.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}setup\+\_\+htm.\+h\char`\"{}}\newline
+{\ttfamily \#include $<$DNSServer.\+h$>$}\newline
+Include dependency graph for esp-\/fs-\/webserver.h\+:
+% FIG 0
+This graph shows which files directly or indirectly include this file\+:
+% FIG 1
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+class \mbox{\hyperlink{class_f_s_web_server}{FSWeb\+Server}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{esp-fs-webserver_8h_ae92972bc41fce3a9583281053eb25f4c}{INCLUDE\+\_\+\+EDIT\+\_\+\+HTM}}
+\item 
+\#define \mbox{\hyperlink{esp-fs-webserver_8h_a8ac0fcedf7b71a510c4d8287f9ecdb94}{INCLUDE\+\_\+\+SETUP\+\_\+\+HTM}}
+\item 
+\#define \mbox{\hyperlink{esp-fs-webserver_8h_ad04364871efb11788ea94d5f5417072c}{ARDUINOJSON\+\_\+\+USE\+\_\+\+LONG\+\_\+\+LONG}}~1
+\item 
+\#define \mbox{\hyperlink{esp-fs-webserver_8h_a8329fe5b96ea951b0d6342dab3c944fd}{DBG\+\_\+\+OUTPUT\+\_\+\+PORT}}~Serial
+\item 
+\#define \mbox{\hyperlink{esp-fs-webserver_8h_a67c45a6cec3370ceb4383b3813f22979}{DEBUG\+\_\+\+MODE\+\_\+\+WS}}~false
+\item 
+\#define \mbox{\hyperlink{esp-fs-webserver_8h_aa8e0ba3b368dd0b2329250544929c135}{Debug\+Print}}(x)
+\item 
+\#define \mbox{\hyperlink{esp-fs-webserver_8h_a72641a738b7438a623b30b2bed3f0865}{Debug\+Println}}(x)
+\item 
+\#define \mbox{\hyperlink{esp-fs-webserver_8h_af0cbd3adb9ca3a22d52dd4ea65d82bee}{Debug\+Printf}}(x, ...)
+\item 
+\#define \mbox{\hyperlink{esp-fs-webserver_8h_a80d71f6b1a4adaaf461c57902c4155ba}{Debug\+Printf\+\_\+P}}(x, ...)
+\item 
+\#define \mbox{\hyperlink{esp-fs-webserver_8h_aa7e166aadcdb04b319d121550669a24f}{TEXT\+\_\+\+PLAIN}}~\char`\"{}text/plain\char`\"{}
+\item 
+\#define \mbox{\hyperlink{esp-fs-webserver_8h_a53cebbc0731fee09f9592a2721834cf5}{FS\+\_\+\+INIT\+\_\+\+ERROR}}~\char`\"{}FS INIT ERROR\char`\"{}
+\item 
+\#define \mbox{\hyperlink{esp-fs-webserver_8h_a775241e32b7ccb12e344ae23aa2db6b1}{FILE\+\_\+\+NOT\+\_\+\+FOUND}}~\char`\"{}File\+Not\+Found\char`\"{}
+\item 
+\#define \mbox{\hyperlink{esp-fs-webserver_8h_ac1def8be266a4c2e2b4561b6d6af3c36}{MIN\+\_\+F}}~-\/3.\+4028235E+38
+\item 
+\#define \mbox{\hyperlink{esp-fs-webserver_8h_a4cbdbe9b7f8e2757f49434127d9f1cb3}{MAX\+\_\+F}}~3.\+4028235E+38
+\end{DoxyCompactItemize}
+\doxysubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \{ \newline
+\mbox{\hyperlink{esp-fs-webserver_8h_a06fc87d81c62e9abb8790b6e5713c55ba7db209a18c6374183567534787dccc1b}{MSG\+\_\+\+OK}}
+, \mbox{\hyperlink{esp-fs-webserver_8h_a06fc87d81c62e9abb8790b6e5713c55ba945d6010d321d9fe75cbba7b6f37f3b5}{CUSTOM}}
+, \mbox{\hyperlink{esp-fs-webserver_8h_a06fc87d81c62e9abb8790b6e5713c55bacdaa2919bac56fe1090eb3dbb9526472}{NOT\+\_\+\+FOUND}}
+, \mbox{\hyperlink{esp-fs-webserver_8h_a06fc87d81c62e9abb8790b6e5713c55baef4e18cf5dacaf9d0cb90c72663a1b60}{BAD\+\_\+\+REQUEST}}
+, \newline
+\mbox{\hyperlink{esp-fs-webserver_8h_a06fc87d81c62e9abb8790b6e5713c55ba2fd6f336d08340583bd620a7f5694c90}{ERROR}}
+ \}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{esp-fs-webserver_8h_ad04364871efb11788ea94d5f5417072c}\label{esp-fs-webserver_8h_ad04364871efb11788ea94d5f5417072c}} 
+\index{esp-\/fs-\/webserver.h@{esp-\/fs-\/webserver.h}!ARDUINOJSON\_USE\_LONG\_LONG@{ARDUINOJSON\_USE\_LONG\_LONG}}
+\index{ARDUINOJSON\_USE\_LONG\_LONG@{ARDUINOJSON\_USE\_LONG\_LONG}!esp-\/fs-\/webserver.h@{esp-\/fs-\/webserver.h}}
+\doxysubsubsection{\texorpdfstring{ARDUINOJSON\_USE\_LONG\_LONG}{ARDUINOJSON\_USE\_LONG\_LONG}}
+{\footnotesize\ttfamily \#define ARDUINOJSON\+\_\+\+USE\+\_\+\+LONG\+\_\+\+LONG~1}
+
+
+
+Definition at line \mbox{\hyperlink{esp-fs-webserver_8h_source_l00017}{17}} of file \mbox{\hyperlink{esp-fs-webserver_8h_source}{esp-\/fs-\/webserver.\+h}}.
+
+\mbox{\Hypertarget{esp-fs-webserver_8h_a8329fe5b96ea951b0d6342dab3c944fd}\label{esp-fs-webserver_8h_a8329fe5b96ea951b0d6342dab3c944fd}} 
+\index{esp-\/fs-\/webserver.h@{esp-\/fs-\/webserver.h}!DBG\_OUTPUT\_PORT@{DBG\_OUTPUT\_PORT}}
+\index{DBG\_OUTPUT\_PORT@{DBG\_OUTPUT\_PORT}!esp-\/fs-\/webserver.h@{esp-\/fs-\/webserver.h}}
+\doxysubsubsection{\texorpdfstring{DBG\_OUTPUT\_PORT}{DBG\_OUTPUT\_PORT}}
+{\footnotesize\ttfamily \#define DBG\+\_\+\+OUTPUT\+\_\+\+PORT~Serial}
+
+
+
+Definition at line \mbox{\hyperlink{esp-fs-webserver_8h_source_l00041}{41}} of file \mbox{\hyperlink{esp-fs-webserver_8h_source}{esp-\/fs-\/webserver.\+h}}.
+
+\mbox{\Hypertarget{esp-fs-webserver_8h_a67c45a6cec3370ceb4383b3813f22979}\label{esp-fs-webserver_8h_a67c45a6cec3370ceb4383b3813f22979}} 
+\index{esp-\/fs-\/webserver.h@{esp-\/fs-\/webserver.h}!DEBUG\_MODE\_WS@{DEBUG\_MODE\_WS}}
+\index{DEBUG\_MODE\_WS@{DEBUG\_MODE\_WS}!esp-\/fs-\/webserver.h@{esp-\/fs-\/webserver.h}}
+\doxysubsubsection{\texorpdfstring{DEBUG\_MODE\_WS}{DEBUG\_MODE\_WS}}
+{\footnotesize\ttfamily \#define DEBUG\+\_\+\+MODE\+\_\+\+WS~false}
+
+
+
+Definition at line \mbox{\hyperlink{esp-fs-webserver_8h_source_l00042}{42}} of file \mbox{\hyperlink{esp-fs-webserver_8h_source}{esp-\/fs-\/webserver.\+h}}.
+
+\mbox{\Hypertarget{esp-fs-webserver_8h_aa8e0ba3b368dd0b2329250544929c135}\label{esp-fs-webserver_8h_aa8e0ba3b368dd0b2329250544929c135}} 
+\index{esp-\/fs-\/webserver.h@{esp-\/fs-\/webserver.h}!DebugPrint@{DebugPrint}}
+\index{DebugPrint@{DebugPrint}!esp-\/fs-\/webserver.h@{esp-\/fs-\/webserver.h}}
+\doxysubsubsection{\texorpdfstring{DebugPrint}{DebugPrint}}
+{\footnotesize\ttfamily \#define Debug\+Print(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})}
+
+
+
+Definition at line \mbox{\hyperlink{esp-fs-webserver_8h_source_l00053}{53}} of file \mbox{\hyperlink{esp-fs-webserver_8h_source}{esp-\/fs-\/webserver.\+h}}.
+
+\mbox{\Hypertarget{esp-fs-webserver_8h_af0cbd3adb9ca3a22d52dd4ea65d82bee}\label{esp-fs-webserver_8h_af0cbd3adb9ca3a22d52dd4ea65d82bee}} 
+\index{esp-\/fs-\/webserver.h@{esp-\/fs-\/webserver.h}!DebugPrintf@{DebugPrintf}}
+\index{DebugPrintf@{DebugPrintf}!esp-\/fs-\/webserver.h@{esp-\/fs-\/webserver.h}}
+\doxysubsubsection{\texorpdfstring{DebugPrintf}{DebugPrintf}}
+{\footnotesize\ttfamily \#define Debug\+Printf(\begin{DoxyParamCaption}\item[{}]{x,  }\item[{}]{... }\end{DoxyParamCaption})}
+
+
+
+Definition at line \mbox{\hyperlink{esp-fs-webserver_8h_source_l00055}{55}} of file \mbox{\hyperlink{esp-fs-webserver_8h_source}{esp-\/fs-\/webserver.\+h}}.
+
+\mbox{\Hypertarget{esp-fs-webserver_8h_a80d71f6b1a4adaaf461c57902c4155ba}\label{esp-fs-webserver_8h_a80d71f6b1a4adaaf461c57902c4155ba}} 
+\index{esp-\/fs-\/webserver.h@{esp-\/fs-\/webserver.h}!DebugPrintf\_P@{DebugPrintf\_P}}
+\index{DebugPrintf\_P@{DebugPrintf\_P}!esp-\/fs-\/webserver.h@{esp-\/fs-\/webserver.h}}
+\doxysubsubsection{\texorpdfstring{DebugPrintf\_P}{DebugPrintf\_P}}
+{\footnotesize\ttfamily \#define Debug\+Printf\+\_\+P(\begin{DoxyParamCaption}\item[{}]{x,  }\item[{}]{... }\end{DoxyParamCaption})}
+
+
+
+Definition at line \mbox{\hyperlink{esp-fs-webserver_8h_source_l00056}{56}} of file \mbox{\hyperlink{esp-fs-webserver_8h_source}{esp-\/fs-\/webserver.\+h}}.
+
+\mbox{\Hypertarget{esp-fs-webserver_8h_a72641a738b7438a623b30b2bed3f0865}\label{esp-fs-webserver_8h_a72641a738b7438a623b30b2bed3f0865}} 
+\index{esp-\/fs-\/webserver.h@{esp-\/fs-\/webserver.h}!DebugPrintln@{DebugPrintln}}
+\index{DebugPrintln@{DebugPrintln}!esp-\/fs-\/webserver.h@{esp-\/fs-\/webserver.h}}
+\doxysubsubsection{\texorpdfstring{DebugPrintln}{DebugPrintln}}
+{\footnotesize\ttfamily \#define Debug\+Println(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})}
+
+
+
+Definition at line \mbox{\hyperlink{esp-fs-webserver_8h_source_l00054}{54}} of file \mbox{\hyperlink{esp-fs-webserver_8h_source}{esp-\/fs-\/webserver.\+h}}.
+
+\mbox{\Hypertarget{esp-fs-webserver_8h_a775241e32b7ccb12e344ae23aa2db6b1}\label{esp-fs-webserver_8h_a775241e32b7ccb12e344ae23aa2db6b1}} 
+\index{esp-\/fs-\/webserver.h@{esp-\/fs-\/webserver.h}!FILE\_NOT\_FOUND@{FILE\_NOT\_FOUND}}
+\index{FILE\_NOT\_FOUND@{FILE\_NOT\_FOUND}!esp-\/fs-\/webserver.h@{esp-\/fs-\/webserver.h}}
+\doxysubsubsection{\texorpdfstring{FILE\_NOT\_FOUND}{FILE\_NOT\_FOUND}}
+{\footnotesize\ttfamily \#define FILE\+\_\+\+NOT\+\_\+\+FOUND~\char`\"{}File\+Not\+Found\char`\"{}}
+
+
+
+Definition at line \mbox{\hyperlink{esp-fs-webserver_8h_source_l00069}{69}} of file \mbox{\hyperlink{esp-fs-webserver_8h_source}{esp-\/fs-\/webserver.\+h}}.
+
+\mbox{\Hypertarget{esp-fs-webserver_8h_a53cebbc0731fee09f9592a2721834cf5}\label{esp-fs-webserver_8h_a53cebbc0731fee09f9592a2721834cf5}} 
+\index{esp-\/fs-\/webserver.h@{esp-\/fs-\/webserver.h}!FS\_INIT\_ERROR@{FS\_INIT\_ERROR}}
+\index{FS\_INIT\_ERROR@{FS\_INIT\_ERROR}!esp-\/fs-\/webserver.h@{esp-\/fs-\/webserver.h}}
+\doxysubsubsection{\texorpdfstring{FS\_INIT\_ERROR}{FS\_INIT\_ERROR}}
+{\footnotesize\ttfamily \#define FS\+\_\+\+INIT\+\_\+\+ERROR~\char`\"{}FS INIT ERROR\char`\"{}}
+
+
+
+Definition at line \mbox{\hyperlink{esp-fs-webserver_8h_source_l00068}{68}} of file \mbox{\hyperlink{esp-fs-webserver_8h_source}{esp-\/fs-\/webserver.\+h}}.
+
+\mbox{\Hypertarget{esp-fs-webserver_8h_ae92972bc41fce3a9583281053eb25f4c}\label{esp-fs-webserver_8h_ae92972bc41fce3a9583281053eb25f4c}} 
+\index{esp-\/fs-\/webserver.h@{esp-\/fs-\/webserver.h}!INCLUDE\_EDIT\_HTM@{INCLUDE\_EDIT\_HTM}}
+\index{INCLUDE\_EDIT\_HTM@{INCLUDE\_EDIT\_HTM}!esp-\/fs-\/webserver.h@{esp-\/fs-\/webserver.h}}
+\doxysubsubsection{\texorpdfstring{INCLUDE\_EDIT\_HTM}{INCLUDE\_EDIT\_HTM}}
+{\footnotesize\ttfamily \#define INCLUDE\+\_\+\+EDIT\+\_\+\+HTM}
+
+
+
+Definition at line \mbox{\hyperlink{esp-fs-webserver_8h_source_l00010}{10}} of file \mbox{\hyperlink{esp-fs-webserver_8h_source}{esp-\/fs-\/webserver.\+h}}.
+
+\mbox{\Hypertarget{esp-fs-webserver_8h_a8ac0fcedf7b71a510c4d8287f9ecdb94}\label{esp-fs-webserver_8h_a8ac0fcedf7b71a510c4d8287f9ecdb94}} 
+\index{esp-\/fs-\/webserver.h@{esp-\/fs-\/webserver.h}!INCLUDE\_SETUP\_HTM@{INCLUDE\_SETUP\_HTM}}
+\index{INCLUDE\_SETUP\_HTM@{INCLUDE\_SETUP\_HTM}!esp-\/fs-\/webserver.h@{esp-\/fs-\/webserver.h}}
+\doxysubsubsection{\texorpdfstring{INCLUDE\_SETUP\_HTM}{INCLUDE\_SETUP\_HTM}}
+{\footnotesize\ttfamily \#define INCLUDE\+\_\+\+SETUP\+\_\+\+HTM}
+
+
+
+Definition at line \mbox{\hyperlink{esp-fs-webserver_8h_source_l00015}{15}} of file \mbox{\hyperlink{esp-fs-webserver_8h_source}{esp-\/fs-\/webserver.\+h}}.
+
+\mbox{\Hypertarget{esp-fs-webserver_8h_a4cbdbe9b7f8e2757f49434127d9f1cb3}\label{esp-fs-webserver_8h_a4cbdbe9b7f8e2757f49434127d9f1cb3}} 
+\index{esp-\/fs-\/webserver.h@{esp-\/fs-\/webserver.h}!MAX\_F@{MAX\_F}}
+\index{MAX\_F@{MAX\_F}!esp-\/fs-\/webserver.h@{esp-\/fs-\/webserver.h}}
+\doxysubsubsection{\texorpdfstring{MAX\_F}{MAX\_F}}
+{\footnotesize\ttfamily \#define MAX\+\_\+F~3.\+4028235E+38}
+
+
+
+Definition at line \mbox{\hyperlink{esp-fs-webserver_8h_source_l00100}{100}} of file \mbox{\hyperlink{esp-fs-webserver_8h_source}{esp-\/fs-\/webserver.\+h}}.
+
+\mbox{\Hypertarget{esp-fs-webserver_8h_ac1def8be266a4c2e2b4561b6d6af3c36}\label{esp-fs-webserver_8h_ac1def8be266a4c2e2b4561b6d6af3c36}} 
+\index{esp-\/fs-\/webserver.h@{esp-\/fs-\/webserver.h}!MIN\_F@{MIN\_F}}
+\index{MIN\_F@{MIN\_F}!esp-\/fs-\/webserver.h@{esp-\/fs-\/webserver.h}}
+\doxysubsubsection{\texorpdfstring{MIN\_F}{MIN\_F}}
+{\footnotesize\ttfamily \#define MIN\+\_\+F~-\/3.\+4028235E+38}
+
+
+
+Definition at line \mbox{\hyperlink{esp-fs-webserver_8h_source_l00099}{99}} of file \mbox{\hyperlink{esp-fs-webserver_8h_source}{esp-\/fs-\/webserver.\+h}}.
+
+\mbox{\Hypertarget{esp-fs-webserver_8h_aa7e166aadcdb04b319d121550669a24f}\label{esp-fs-webserver_8h_aa7e166aadcdb04b319d121550669a24f}} 
+\index{esp-\/fs-\/webserver.h@{esp-\/fs-\/webserver.h}!TEXT\_PLAIN@{TEXT\_PLAIN}}
+\index{TEXT\_PLAIN@{TEXT\_PLAIN}!esp-\/fs-\/webserver.h@{esp-\/fs-\/webserver.h}}
+\doxysubsubsection{\texorpdfstring{TEXT\_PLAIN}{TEXT\_PLAIN}}
+{\footnotesize\ttfamily \#define TEXT\+\_\+\+PLAIN~\char`\"{}text/plain\char`\"{}}
+
+
+
+Definition at line \mbox{\hyperlink{esp-fs-webserver_8h_source_l00067}{67}} of file \mbox{\hyperlink{esp-fs-webserver_8h_source}{esp-\/fs-\/webserver.\+h}}.
+
+
+
+\doxysubsection{Enumeration Type Documentation}
+\mbox{\Hypertarget{esp-fs-webserver_8h_a06fc87d81c62e9abb8790b6e5713c55b}\label{esp-fs-webserver_8h_a06fc87d81c62e9abb8790b6e5713c55b}} 
+\doxysubsubsection{\texorpdfstring{anonymous enum}{anonymous enum}}
+{\footnotesize\ttfamily anonymous enum}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MSG\_OK@{MSG\_OK}!esp-\/fs-\/webserver.h@{esp-\/fs-\/webserver.h}}\index{esp-\/fs-\/webserver.h@{esp-\/fs-\/webserver.h}!MSG\_OK@{MSG\_OK}}}\mbox{\Hypertarget{esp-fs-webserver_8h_a06fc87d81c62e9abb8790b6e5713c55ba7db209a18c6374183567534787dccc1b}\label{esp-fs-webserver_8h_a06fc87d81c62e9abb8790b6e5713c55ba7db209a18c6374183567534787dccc1b}} 
+MSG\+\_\+\+OK&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{CUSTOM@{CUSTOM}!esp-\/fs-\/webserver.h@{esp-\/fs-\/webserver.h}}\index{esp-\/fs-\/webserver.h@{esp-\/fs-\/webserver.h}!CUSTOM@{CUSTOM}}}\mbox{\Hypertarget{esp-fs-webserver_8h_a06fc87d81c62e9abb8790b6e5713c55ba945d6010d321d9fe75cbba7b6f37f3b5}\label{esp-fs-webserver_8h_a06fc87d81c62e9abb8790b6e5713c55ba945d6010d321d9fe75cbba7b6f37f3b5}} 
+CUSTOM&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{NOT\_FOUND@{NOT\_FOUND}!esp-\/fs-\/webserver.h@{esp-\/fs-\/webserver.h}}\index{esp-\/fs-\/webserver.h@{esp-\/fs-\/webserver.h}!NOT\_FOUND@{NOT\_FOUND}}}\mbox{\Hypertarget{esp-fs-webserver_8h_a06fc87d81c62e9abb8790b6e5713c55bacdaa2919bac56fe1090eb3dbb9526472}\label{esp-fs-webserver_8h_a06fc87d81c62e9abb8790b6e5713c55bacdaa2919bac56fe1090eb3dbb9526472}} 
+NOT\+\_\+\+FOUND&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{BAD\_REQUEST@{BAD\_REQUEST}!esp-\/fs-\/webserver.h@{esp-\/fs-\/webserver.h}}\index{esp-\/fs-\/webserver.h@{esp-\/fs-\/webserver.h}!BAD\_REQUEST@{BAD\_REQUEST}}}\mbox{\Hypertarget{esp-fs-webserver_8h_a06fc87d81c62e9abb8790b6e5713c55baef4e18cf5dacaf9d0cb90c72663a1b60}\label{esp-fs-webserver_8h_a06fc87d81c62e9abb8790b6e5713c55baef4e18cf5dacaf9d0cb90c72663a1b60}} 
+BAD\+\_\+\+REQUEST&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{ERROR@{ERROR}!esp-\/fs-\/webserver.h@{esp-\/fs-\/webserver.h}}\index{esp-\/fs-\/webserver.h@{esp-\/fs-\/webserver.h}!ERROR@{ERROR}}}\mbox{\Hypertarget{esp-fs-webserver_8h_a06fc87d81c62e9abb8790b6e5713c55ba2fd6f336d08340583bd620a7f5694c90}\label{esp-fs-webserver_8h_a06fc87d81c62e9abb8790b6e5713c55ba2fd6f336d08340583bd620a7f5694c90}} 
+ERROR&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line \mbox{\hyperlink{esp-fs-webserver_8h_source_l00059}{59}} of file \mbox{\hyperlink{esp-fs-webserver_8h_source}{esp-\/fs-\/webserver.\+h}}.
+

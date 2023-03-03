@@ -1,0 +1,291 @@
+\hypertarget{class_f_s_web_server}{}\doxysection{FSWeb\+Server Class Reference}
+\label{class_f_s_web_server}\index{FSWebServer@{FSWebServer}}
+
+
+{\ttfamily \#include $<$esp-\/fs-\/webserver.\+h$>$}
+
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{class_f_s_web_server_ab3fa5bb30e9898b17be1716503c4f746}{FSWeb\+Server}} (fs\+::\+FS \&fs, Web\+Server\+Class \&server)
+\item 
+bool \mbox{\hyperlink{class_f_s_web_server_acddb94f1439465aff5fea34f822f9cb4}{begin}} (const char $\ast$path=nullptr)
+\item 
+void \mbox{\hyperlink{class_f_s_web_server_a29c9d209cf8943bb5c9cee597a1019cc}{run}} ()
+\item 
+void \mbox{\hyperlink{class_f_s_web_server_ab221d6302b2710fd3702bf6b293eb814}{add\+Handler}} (const Uri \&uri, HTTPMethod method, Web\+Server\+Class\+::\+THandler\+Function fn)
+\item 
+void \mbox{\hyperlink{class_f_s_web_server_af8226e5ac2f5579e09920e6a47ee4a16}{add\+Handler}} (const Uri \&uri, Web\+Server\+Class\+::\+THandler\+Function handler)
+\item 
+void \mbox{\hyperlink{class_f_s_web_server_aca526a0eef6c176720326d7244553352}{set\+Captive\+Webage}} (const char $\ast$url)
+\item 
+IPAddress \mbox{\hyperlink{class_f_s_web_server_a570fcf86522cac2371933240fcecc821}{set\+APmode}} (const char $\ast$ssid, const char $\ast$psk)
+\item 
+IPAddress \mbox{\hyperlink{class_f_s_web_server_a19c8683db5bcc169702eba2fc88000e3}{start\+Wi\+Fi}} (uint32\+\_\+t timeout, const char $\ast$ap\+SSID, const char $\ast$ap\+Psw)
+\item 
+Web\+Server\+Class $\ast$ \mbox{\hyperlink{class_f_s_web_server_ac79a26ff8eb0f7789200b49d3d3e4d87}{get\+Request}} ()
+\item 
+bool \mbox{\hyperlink{class_f_s_web_server_a2f0ab5fb6dd6429128972345343f3aca}{clear\+Options}} ()
+\item 
+void \mbox{\hyperlink{class_f_s_web_server_a3693142a82729e0b49d7ed2c098b031d}{add\+Option\+Box}} (const char $\ast$box\+Title)
+\item 
+void \mbox{\hyperlink{class_f_s_web_server_aac06573f458d72e060634b14c9660c78}{add\+HTML}} (const char $\ast$html, const char $\ast$id)
+\item 
+void \mbox{\hyperlink{class_f_s_web_server_a6d57635e9e86a0a05625b925205096ad}{add\+CSS}} (const char $\ast$css)
+\item 
+void \mbox{\hyperlink{class_f_s_web_server_a6594d341d985d1f37314a19684d1e1ec}{add\+Javascript}} (const char $\ast$script)
+\item 
+void \mbox{\hyperlink{class_f_s_web_server_a2e447054d17ee0c785e8f86ae00b69f0}{add\+Dropdown\+List}} (const char $\ast$label, const char $\ast$$\ast$array, size\+\_\+t size)
+\item 
+{\footnotesize template$<$typename T $>$ }\\void \mbox{\hyperlink{class_f_s_web_server_a89b5332de11db06663137c07568d2b15}{add\+Option}} (fs\+::\+FS \&fs, const char $\ast$label, T val, bool hidden=false)
+\item 
+{\footnotesize template$<$typename T $>$ }\\void \mbox{\hyperlink{class_f_s_web_server_a21791adcbd8ac1657476b24c799e920a}{add\+Option}} (const char $\ast$label, T val, double d\+\_\+min, double d\+\_\+max, double step)
+\item 
+{\footnotesize template$<$typename T $>$ }\\void \mbox{\hyperlink{class_f_s_web_server_a564f6b406b6ee0196124a9e9e7b271b9}{add\+Option}} (const char $\ast$label, T val, bool hidden=false, double d\+\_\+min=\mbox{\hyperlink{esp-fs-webserver_8h_ac1def8be266a4c2e2b4561b6d6af3c36}{MIN\+\_\+F}}, double d\+\_\+max=\mbox{\hyperlink{esp-fs-webserver_8h_a4cbdbe9b7f8e2757f49434127d9f1cb3}{MAX\+\_\+F}}, double step=1.\+0)
+\item 
+{\footnotesize template$<$typename T $>$ }\\bool \mbox{\hyperlink{class_f_s_web_server_a1fccb194dcd5d9ea19479fe0e44d6011}{get\+Option\+Value}} (const char $\ast$label, T \&var)
+\item 
+{\footnotesize template$<$typename T $>$ }\\bool \mbox{\hyperlink{class_f_s_web_server_ad7b59fada3a0ae2752d4742a38fe7f19}{save\+Option\+Value}} (const char $\ast$label, T val)
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+Web\+Server\+Class $\ast$ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+
+
+Definition at line \mbox{\hyperlink{esp-fs-webserver_8h_source_l00071}{71}} of file \mbox{\hyperlink{esp-fs-webserver_8h_source}{esp-\/fs-\/webserver.\+h}}.
+
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{class_f_s_web_server_ab3fa5bb30e9898b17be1716503c4f746}\label{class_f_s_web_server_ab3fa5bb30e9898b17be1716503c4f746}} 
+\index{FSWebServer@{FSWebServer}!FSWebServer@{FSWebServer}}
+\index{FSWebServer@{FSWebServer}!FSWebServer@{FSWebServer}}
+\doxysubsubsection{\texorpdfstring{FSWebServer()}{FSWebServer()}}
+{\footnotesize\ttfamily FSWeb\+Server\+::\+FSWeb\+Server (\begin{DoxyParamCaption}\item[{fs\+::\+FS \&}]{fs,  }\item[{Web\+Server\+Class \&}]{server }\end{DoxyParamCaption})}
+
+
+
+Definition at line \mbox{\hyperlink{esp-fs-webserver_8cpp_source_l00003}{3}} of file \mbox{\hyperlink{esp-fs-webserver_8cpp_source}{esp-\/fs-\/webserver.\+cpp}}.
+
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{class_f_s_web_server_a6d57635e9e86a0a05625b925205096ad}\label{class_f_s_web_server_a6d57635e9e86a0a05625b925205096ad}} 
+\index{FSWebServer@{FSWebServer}!addCSS@{addCSS}}
+\index{addCSS@{addCSS}!FSWebServer@{FSWebServer}}
+\doxysubsubsection{\texorpdfstring{addCSS()}{addCSS()}}
+{\footnotesize\ttfamily void FSWeb\+Server\+::add\+CSS (\begin{DoxyParamCaption}\item[{const char $\ast$}]{css }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Definition at line \mbox{\hyperlink{esp-fs-webserver_8h_source_l00126}{126}} of file \mbox{\hyperlink{esp-fs-webserver_8h_source}{esp-\/fs-\/webserver.\+h}}.
+
+\mbox{\Hypertarget{class_f_s_web_server_a2e447054d17ee0c785e8f86ae00b69f0}\label{class_f_s_web_server_a2e447054d17ee0c785e8f86ae00b69f0}} 
+\index{FSWebServer@{FSWebServer}!addDropdownList@{addDropdownList}}
+\index{addDropdownList@{addDropdownList}!FSWebServer@{FSWebServer}}
+\doxysubsubsection{\texorpdfstring{addDropdownList()}{addDropdownList()}}
+{\footnotesize\ttfamily void FSWeb\+Server\+::add\+Dropdown\+List (\begin{DoxyParamCaption}\item[{const char $\ast$}]{label,  }\item[{const char $\ast$$\ast$}]{array,  }\item[{size\+\_\+t}]{size }\end{DoxyParamCaption})}
+
+
+
+Definition at line \mbox{\hyperlink{esp-fs-webserver_8cpp_source_l00420}{420}} of file \mbox{\hyperlink{esp-fs-webserver_8cpp_source}{esp-\/fs-\/webserver.\+cpp}}.
+
+\mbox{\Hypertarget{class_f_s_web_server_ab221d6302b2710fd3702bf6b293eb814}\label{class_f_s_web_server_ab221d6302b2710fd3702bf6b293eb814}} 
+\index{FSWebServer@{FSWebServer}!addHandler@{addHandler}}
+\index{addHandler@{addHandler}!FSWebServer@{FSWebServer}}
+\doxysubsubsection{\texorpdfstring{addHandler()}{addHandler()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily void FSWeb\+Server\+::add\+Handler (\begin{DoxyParamCaption}\item[{const Uri \&}]{uri,  }\item[{HTTPMethod}]{method,  }\item[{Web\+Server\+Class\+::\+THandler\+Function}]{fn }\end{DoxyParamCaption})}
+
+
+
+Definition at line \mbox{\hyperlink{esp-fs-webserver_8cpp_source_l00022}{22}} of file \mbox{\hyperlink{esp-fs-webserver_8cpp_source}{esp-\/fs-\/webserver.\+cpp}}.
+
+\mbox{\Hypertarget{class_f_s_web_server_af8226e5ac2f5579e09920e6a47ee4a16}\label{class_f_s_web_server_af8226e5ac2f5579e09920e6a47ee4a16}} 
+\index{FSWebServer@{FSWebServer}!addHandler@{addHandler}}
+\index{addHandler@{addHandler}!FSWebServer@{FSWebServer}}
+\doxysubsubsection{\texorpdfstring{addHandler()}{addHandler()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily void FSWeb\+Server\+::add\+Handler (\begin{DoxyParamCaption}\item[{const Uri \&}]{uri,  }\item[{Web\+Server\+Class\+::\+THandler\+Function}]{handler }\end{DoxyParamCaption})}
+
+
+
+Definition at line \mbox{\hyperlink{esp-fs-webserver_8cpp_source_l00027}{27}} of file \mbox{\hyperlink{esp-fs-webserver_8cpp_source}{esp-\/fs-\/webserver.\+cpp}}.
+
+\mbox{\Hypertarget{class_f_s_web_server_aac06573f458d72e060634b14c9660c78}\label{class_f_s_web_server_aac06573f458d72e060634b14c9660c78}} 
+\index{FSWebServer@{FSWebServer}!addHTML@{addHTML}}
+\index{addHTML@{addHTML}!FSWebServer@{FSWebServer}}
+\doxysubsubsection{\texorpdfstring{addHTML()}{addHTML()}}
+{\footnotesize\ttfamily void FSWeb\+Server\+::add\+HTML (\begin{DoxyParamCaption}\item[{const char $\ast$}]{html,  }\item[{const char $\ast$}]{id }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Definition at line \mbox{\hyperlink{esp-fs-webserver_8h_source_l00117}{117}} of file \mbox{\hyperlink{esp-fs-webserver_8h_source}{esp-\/fs-\/webserver.\+h}}.
+
+\mbox{\Hypertarget{class_f_s_web_server_a6594d341d985d1f37314a19684d1e1ec}\label{class_f_s_web_server_a6594d341d985d1f37314a19684d1e1ec}} 
+\index{FSWebServer@{FSWebServer}!addJavascript@{addJavascript}}
+\index{addJavascript@{addJavascript}!FSWebServer@{FSWebServer}}
+\doxysubsubsection{\texorpdfstring{addJavascript()}{addJavascript()}}
+{\footnotesize\ttfamily void FSWeb\+Server\+::add\+Javascript (\begin{DoxyParamCaption}\item[{const char $\ast$}]{script }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Definition at line \mbox{\hyperlink{esp-fs-webserver_8h_source_l00132}{132}} of file \mbox{\hyperlink{esp-fs-webserver_8h_source}{esp-\/fs-\/webserver.\+h}}.
+
+\mbox{\Hypertarget{class_f_s_web_server_a564f6b406b6ee0196124a9e9e7b271b9}\label{class_f_s_web_server_a564f6b406b6ee0196124a9e9e7b271b9}} 
+\index{FSWebServer@{FSWebServer}!addOption@{addOption}}
+\index{addOption@{addOption}!FSWebServer@{FSWebServer}}
+\doxysubsubsection{\texorpdfstring{addOption()}{addOption()}\hspace{0.1cm}{\footnotesize\ttfamily [1/3]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+void FSWeb\+Server\+::add\+Option (\begin{DoxyParamCaption}\item[{const char $\ast$}]{label,  }\item[{T}]{val,  }\item[{bool}]{hidden = {\ttfamily false},  }\item[{double}]{d\+\_\+min = {\ttfamily \mbox{\hyperlink{esp-fs-webserver_8h_ac1def8be266a4c2e2b4561b6d6af3c36}{MIN\+\_\+F}}},  }\item[{double}]{d\+\_\+max = {\ttfamily \mbox{\hyperlink{esp-fs-webserver_8h_a4cbdbe9b7f8e2757f49434127d9f1cb3}{MAX\+\_\+F}}},  }\item[{double}]{step = {\ttfamily 1.0} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Definition at line \mbox{\hyperlink{esp-fs-webserver_8h_source_l00156}{156}} of file \mbox{\hyperlink{esp-fs-webserver_8h_source}{esp-\/fs-\/webserver.\+h}}.
+
+\mbox{\Hypertarget{class_f_s_web_server_a21791adcbd8ac1657476b24c799e920a}\label{class_f_s_web_server_a21791adcbd8ac1657476b24c799e920a}} 
+\index{FSWebServer@{FSWebServer}!addOption@{addOption}}
+\index{addOption@{addOption}!FSWebServer@{FSWebServer}}
+\doxysubsubsection{\texorpdfstring{addOption()}{addOption()}\hspace{0.1cm}{\footnotesize\ttfamily [2/3]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+void FSWeb\+Server\+::add\+Option (\begin{DoxyParamCaption}\item[{const char $\ast$}]{label,  }\item[{T}]{val,  }\item[{double}]{d\+\_\+min,  }\item[{double}]{d\+\_\+max,  }\item[{double}]{step }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Definition at line \mbox{\hyperlink{esp-fs-webserver_8h_source_l00148}{148}} of file \mbox{\hyperlink{esp-fs-webserver_8h_source}{esp-\/fs-\/webserver.\+h}}.
+
+\mbox{\Hypertarget{class_f_s_web_server_a89b5332de11db06663137c07568d2b15}\label{class_f_s_web_server_a89b5332de11db06663137c07568d2b15}} 
+\index{FSWebServer@{FSWebServer}!addOption@{addOption}}
+\index{addOption@{addOption}!FSWebServer@{FSWebServer}}
+\doxysubsubsection{\texorpdfstring{addOption()}{addOption()}\hspace{0.1cm}{\footnotesize\ttfamily [3/3]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+void FSWeb\+Server\+::add\+Option (\begin{DoxyParamCaption}\item[{fs\+::\+FS \&}]{fs,  }\item[{const char $\ast$}]{label,  }\item[{T}]{val,  }\item[{bool}]{hidden = {\ttfamily false} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Definition at line \mbox{\hyperlink{esp-fs-webserver_8h_source_l00141}{141}} of file \mbox{\hyperlink{esp-fs-webserver_8h_source}{esp-\/fs-\/webserver.\+h}}.
+
+\mbox{\Hypertarget{class_f_s_web_server_a3693142a82729e0b49d7ed2c098b031d}\label{class_f_s_web_server_a3693142a82729e0b49d7ed2c098b031d}} 
+\index{FSWebServer@{FSWebServer}!addOptionBox@{addOptionBox}}
+\index{addOptionBox@{addOptionBox}!FSWebServer@{FSWebServer}}
+\doxysubsubsection{\texorpdfstring{addOptionBox()}{addOptionBox()}}
+{\footnotesize\ttfamily void FSWeb\+Server\+::add\+Option\+Box (\begin{DoxyParamCaption}\item[{const char $\ast$}]{box\+Title }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Definition at line \mbox{\hyperlink{esp-fs-webserver_8h_source_l00113}{113}} of file \mbox{\hyperlink{esp-fs-webserver_8h_source}{esp-\/fs-\/webserver.\+h}}.
+
+\mbox{\Hypertarget{class_f_s_web_server_acddb94f1439465aff5fea34f822f9cb4}\label{class_f_s_web_server_acddb94f1439465aff5fea34f822f9cb4}} 
+\index{FSWebServer@{FSWebServer}!begin@{begin}}
+\index{begin@{begin}!FSWebServer@{FSWebServer}}
+\doxysubsubsection{\texorpdfstring{begin()}{begin()}}
+{\footnotesize\ttfamily bool FSWeb\+Server\+::begin (\begin{DoxyParamCaption}\item[{const char $\ast$}]{path = {\ttfamily nullptr} }\end{DoxyParamCaption})}
+
+
+
+Definition at line \mbox{\hyperlink{esp-fs-webserver_8cpp_source_l00068}{68}} of file \mbox{\hyperlink{esp-fs-webserver_8cpp_source}{esp-\/fs-\/webserver.\+cpp}}.
+
+\mbox{\Hypertarget{class_f_s_web_server_a2f0ab5fb6dd6429128972345343f3aca}\label{class_f_s_web_server_a2f0ab5fb6dd6429128972345343f3aca}} 
+\index{FSWebServer@{FSWebServer}!clearOptions@{clearOptions}}
+\index{clearOptions@{clearOptions}!FSWebServer@{FSWebServer}}
+\doxysubsubsection{\texorpdfstring{clearOptions()}{clearOptions()}}
+{\footnotesize\ttfamily bool FSWeb\+Server\+::clear\+Options (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Definition at line \mbox{\hyperlink{esp-fs-webserver_8h_source_l00102}{102}} of file \mbox{\hyperlink{esp-fs-webserver_8h_source}{esp-\/fs-\/webserver.\+h}}.
+
+\mbox{\Hypertarget{class_f_s_web_server_a1fccb194dcd5d9ea19479fe0e44d6011}\label{class_f_s_web_server_a1fccb194dcd5d9ea19479fe0e44d6011}} 
+\index{FSWebServer@{FSWebServer}!getOptionValue@{getOptionValue}}
+\index{getOptionValue@{getOptionValue}!FSWebServer@{FSWebServer}}
+\doxysubsubsection{\texorpdfstring{getOptionValue()}{getOptionValue()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+bool FSWeb\+Server\+::get\+Option\+Value (\begin{DoxyParamCaption}\item[{const char $\ast$}]{label,  }\item[{T \&}]{var }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Definition at line \mbox{\hyperlink{esp-fs-webserver_8h_source_l00226}{226}} of file \mbox{\hyperlink{esp-fs-webserver_8h_source}{esp-\/fs-\/webserver.\+h}}.
+
+\mbox{\Hypertarget{class_f_s_web_server_ac79a26ff8eb0f7789200b49d3d3e4d87}\label{class_f_s_web_server_ac79a26ff8eb0f7789200b49d3d3e4d87}} 
+\index{FSWebServer@{FSWebServer}!getRequest@{getRequest}}
+\index{getRequest@{getRequest}!FSWebServer@{FSWebServer}}
+\doxysubsubsection{\texorpdfstring{getRequest()}{getRequest()}}
+{\footnotesize\ttfamily Web\+Server\+Class $\ast$ FSWeb\+Server\+::get\+Request (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Definition at line \mbox{\hyperlink{esp-fs-webserver_8cpp_source_l00010}{10}} of file \mbox{\hyperlink{esp-fs-webserver_8cpp_source}{esp-\/fs-\/webserver.\+cpp}}.
+
+\mbox{\Hypertarget{class_f_s_web_server_a29c9d209cf8943bb5c9cee597a1019cc}\label{class_f_s_web_server_a29c9d209cf8943bb5c9cee597a1019cc}} 
+\index{FSWebServer@{FSWebServer}!run@{run}}
+\index{run@{run}!FSWebServer@{FSWebServer}}
+\doxysubsubsection{\texorpdfstring{run()}{run()}}
+{\footnotesize\ttfamily void FSWeb\+Server\+::run (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Definition at line \mbox{\hyperlink{esp-fs-webserver_8cpp_source_l00015}{15}} of file \mbox{\hyperlink{esp-fs-webserver_8cpp_source}{esp-\/fs-\/webserver.\+cpp}}.
+
+\mbox{\Hypertarget{class_f_s_web_server_ad7b59fada3a0ae2752d4742a38fe7f19}\label{class_f_s_web_server_ad7b59fada3a0ae2752d4742a38fe7f19}} 
+\index{FSWebServer@{FSWebServer}!saveOptionValue@{saveOptionValue}}
+\index{saveOptionValue@{saveOptionValue}!FSWebServer@{FSWebServer}}
+\doxysubsubsection{\texorpdfstring{saveOptionValue()}{saveOptionValue()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+bool FSWeb\+Server\+::save\+Option\+Value (\begin{DoxyParamCaption}\item[{const char $\ast$}]{label,  }\item[{T}]{val }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Definition at line \mbox{\hyperlink{esp-fs-webserver_8h_source_l00255}{255}} of file \mbox{\hyperlink{esp-fs-webserver_8h_source}{esp-\/fs-\/webserver.\+h}}.
+
+\mbox{\Hypertarget{class_f_s_web_server_a570fcf86522cac2371933240fcecc821}\label{class_f_s_web_server_a570fcf86522cac2371933240fcecc821}} 
+\index{FSWebServer@{FSWebServer}!setAPmode@{setAPmode}}
+\index{setAPmode@{setAPmode}!FSWebServer@{FSWebServer}}
+\doxysubsubsection{\texorpdfstring{setAPmode()}{setAPmode()}}
+{\footnotesize\ttfamily IPAddress FSWeb\+Server\+::set\+APmode (\begin{DoxyParamCaption}\item[{const char $\ast$}]{ssid,  }\item[{const char $\ast$}]{psk }\end{DoxyParamCaption})}
+
+
+
+Definition at line \mbox{\hyperlink{esp-fs-webserver_8cpp_source_l00127}{127}} of file \mbox{\hyperlink{esp-fs-webserver_8cpp_source}{esp-\/fs-\/webserver.\+cpp}}.
+
+\mbox{\Hypertarget{class_f_s_web_server_aca526a0eef6c176720326d7244553352}\label{class_f_s_web_server_aca526a0eef6c176720326d7244553352}} 
+\index{FSWebServer@{FSWebServer}!setCaptiveWebage@{setCaptiveWebage}}
+\index{setCaptiveWebage@{setCaptiveWebage}!FSWebServer@{FSWebServer}}
+\doxysubsubsection{\texorpdfstring{setCaptiveWebage()}{setCaptiveWebage()}}
+{\footnotesize\ttfamily void FSWeb\+Server\+::set\+Captive\+Webage (\begin{DoxyParamCaption}\item[{const char $\ast$}]{url }\end{DoxyParamCaption})}
+
+
+
+Definition at line \mbox{\hyperlink{esp-fs-webserver_8cpp_source_l00121}{121}} of file \mbox{\hyperlink{esp-fs-webserver_8cpp_source}{esp-\/fs-\/webserver.\+cpp}}.
+
+\mbox{\Hypertarget{class_f_s_web_server_a19c8683db5bcc169702eba2fc88000e3}\label{class_f_s_web_server_a19c8683db5bcc169702eba2fc88000e3}} 
+\index{FSWebServer@{FSWebServer}!startWiFi@{startWiFi}}
+\index{startWiFi@{startWiFi}!FSWebServer@{FSWebServer}}
+\doxysubsubsection{\texorpdfstring{startWiFi()}{startWiFi()}}
+{\footnotesize\ttfamily IPAddress FSWeb\+Server\+::start\+Wi\+Fi (\begin{DoxyParamCaption}\item[{uint32\+\_\+t}]{timeout,  }\item[{const char $\ast$}]{ap\+SSID,  }\item[{const char $\ast$}]{ap\+Psw }\end{DoxyParamCaption})}
+
+
+
+Definition at line \mbox{\hyperlink{esp-fs-webserver_8cpp_source_l00139}{139}} of file \mbox{\hyperlink{esp-fs-webserver_8cpp_source}{esp-\/fs-\/webserver.\+cpp}}.
+
+
+
+\doxysubsection{Member Data Documentation}
+\mbox{\Hypertarget{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}\label{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}} 
+\index{FSWebServer@{FSWebServer}!webserver@{webserver}}
+\index{webserver@{webserver}!FSWebServer@{FSWebServer}}
+\doxysubsubsection{\texorpdfstring{webserver}{webserver}}
+{\footnotesize\ttfamily Web\+Server\+Class$\ast$ FSWeb\+Server\+::webserver}
+
+
+
+Definition at line \mbox{\hyperlink{esp-fs-webserver_8h_source_l00077}{77}} of file \mbox{\hyperlink{esp-fs-webserver_8h_source}{esp-\/fs-\/webserver.\+h}}.
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+src/\mbox{\hyperlink{esp-fs-webserver_8h}{esp-\/fs-\/webserver.\+h}}\item 
+src/\mbox{\hyperlink{esp-fs-webserver_8cpp}{esp-\/fs-\/webserver.\+cpp}}\end{DoxyCompactItemize}

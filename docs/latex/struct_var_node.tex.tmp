@@ -1,0 +1,26 @@
+\hypertarget{struct_var_node}{}\doxysection{Var\+Node Struct Reference}
+\label{struct_var_node}\index{VarNode@{VarNode}}
+
+
+Collaboration diagram for Var\+Node\+:
+% FIG 0
+\doxysubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{struct_var_node_a1806a4bee975015965499a5e1a5dbebc}\label{struct_var_node_a1806a4bee975015965499a5e1a5dbebc}} 
+uint8\+\_\+t {\bfseries type}
+\item 
+\mbox{\Hypertarget{struct_var_node_a41ea580f5c8c0c7c21db8ea840994406}\label{struct_var_node_a41ea580f5c8c0c7c21db8ea840994406}} 
+void $\ast$ {\bfseries var}
+\item 
+\mbox{\Hypertarget{struct_var_node_ac8afb82cce65c57eb17b74f05d28a0b0}\label{struct_var_node_ac8afb82cce65c57eb17b74f05d28a0b0}} 
+const char $\ast$ {\bfseries key}
+\item 
+\mbox{\Hypertarget{struct_var_node_ab5be95fdeb5982743d64bb524d5fea9a}\label{struct_var_node_ab5be95fdeb5982743d64bb524d5fea9a}} 
+\mbox{\hyperlink{struct_var_node}{Var\+Node}} $\ast$ {\bfseries next} = nullptr
+\end{DoxyCompactItemize}
+
+
+The documentation for this struct was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/linked\+\_\+list.\+h\end{DoxyCompactItemize}

@@ -17,6 +17,7 @@
 #define ARDUINOJSON_USE_LONG_LONG 1
 #include <ArduinoJson.h>
 #include "setup_htm.h"
+#define CONFIG_FILE "/setup/config.json"
 #endif
 
 #if defined(ESP8266)
@@ -37,12 +38,9 @@ using UpdateServerClass = HTTPUpdateServer;
 #endif
 #include <DNSServer.h>
 
-#ifndef DEBUG_ESP_PORT
+
 #define DBG_OUTPUT_PORT Serial
-#define DEBUG_MODE_WS false
-#else
-#define DBG_OUTPUT_PORT DEBUG_ESP_PORT
-#endif
+#define DEBUG_MODE_WS 0
 
 #if DEBUG_MODE_WS
 #define DebugPrint(x) DBG_OUTPUT_PORT.print(x)
@@ -95,46 +93,20 @@ public:
     WebServerClass *getRequest();
 
 #ifdef INCLUDE_SETUP_HTM
-
 #define MIN_F -3.4028235E+38
 #define MAX_F 3.4028235E+38
 
-    inline bool clearOptions() {
-        File file = m_filesystem->open("/config.json", "r");
-        if (file)
-        {
-            file.close();
-            m_filesystem->remove("/config.json");
-            return true;
-        }
-        return false;
-    }
+    inline const char* configFile() {return CONFIG_FILE; }
+
+    bool clearOptions();
+    void addHTML(const char* html, const char* id, bool overWrite = false) ;
+    void addCSS(const char* css, bool overWrite = false);
+    void addJavascript(const char* script, bool overWrite = false) ;
+    void addDropdownList(const char *label, const char** array, size_t size);
 
     inline void addOptionBox(const char* boxTitle) {
         addOption("param-box", boxTitle, false);
     }
-
-    inline void addHTML(const char* html, const char* id) {
-        String elementId = "raw-html-";
-        elementId += id;
-
-        String trimmed = html;
-        removeWhiteSpaces(trimmed);
-        addOption(elementId.c_str(), trimmed, false);
-    }
-
-    inline void addCSS(const char* css) {
-        String trimmed = css;
-        removeWhiteSpaces(trimmed);
-        addOption("raw-css", trimmed, false);
-    }
-
-    inline void addJavascript(const char* script) {
-        String trimmed = script;        // TO-DO: ESP8266 don't handle properly PROGMEM strings
-        addOption("raw-javascript", trimmed, true);
-    }
-
-    void addDropdownList(const char *label, const char** array, size_t size);
 
     // Only for backward-compatibility
     template <typename T>
@@ -156,7 +128,7 @@ public:
     inline void addOption(const char *label, T val, bool hidden = false,
                     double d_min = MIN_F, double d_max = MAX_F, double step = 1.0)
     {
-        File file = m_filesystem->open("/config.json", "r");
+        File file = m_filesystem->open(CONFIG_FILE, "r");
         int sz = file.size() * 1.33;
         int docSize = max(sz, 2048);
         DynamicJsonDocument doc((size_t)docSize);
@@ -211,7 +183,7 @@ public:
             doc[key] = static_cast<T>(val);
         }
 
-        file = m_filesystem->open("/config.json", "w");
+        file = m_filesystem->open(CONFIG_FILE, "w");
         if (serializeJsonPretty(doc, file) == 0)
         {
             DebugPrintln(F("Failed to write to file"));
@@ -225,7 +197,7 @@ public:
     template <typename T>
     bool getOptionValue(const char *label, T &var)
     {
-        File file = m_filesystem->open("/config.json", "r");
+        File file = m_filesystem->open(CONFIG_FILE, "r");
         DynamicJsonDocument doc(file.size() * 1.33);
         if (file)
         {
@@ -254,7 +226,7 @@ public:
     template <typename T>
     bool saveOptionValue(const char *label, T val)
     {
-        File file = m_filesystem->open("/config.json", "w");
+        File file = m_filesystem->open(CONFIG_FILE, "w");
         DynamicJsonDocument doc(file.size() * 1.33);
 
         if (file)
@@ -285,7 +257,7 @@ public:
 
 private:
 
-    char m_basePath[16];
+    // char m_basePath[16];
     UpdateServerClass m_httpUpdater;
     DNSServer m_dnsServer;
     fs::FS *m_filesystem;
@@ -303,12 +275,13 @@ private:
     void getIpAddress();
     void handleRequest();
 #ifdef INCLUDE_SETUP_HTM
+    bool optionToFile(const char* filename, const char* str, bool overWrite = false);
     void removeWhiteSpaces(String& str);
     void handleSetup();
     uint8_t numOptions = 0;
 #endif
     void handleIndex();
-    bool handleFileRead(const String &path);
+    bool handleFileRead(const char* path);
     void handleFileUpload();
     void replyToCLient(int msg_type, const char *msg);
     void checkForUnsupportedPath(String &filename, String &error);

@@ -1,0 +1,923 @@
+\hypertarget{esp-fs-webserver_8cpp_source}{}\doxysection{esp-\/fs-\/webserver.cpp}
+\label{esp-fs-webserver_8cpp_source}\index{src/esp-\/fs-\/webserver.cpp@{src/esp-\/fs-\/webserver.cpp}}
+\mbox{\hyperlink{esp-fs-webserver_8cpp}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00001}00001\ \textcolor{preprocessor}{\#include\ "{}\mbox{\hyperlink{esp-fs-webserver_8h}{esp-\/fs-\/webserver.h}}"{}}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00002}00002\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00003}\mbox{\hyperlink{class_f_s_web_server_ab3fa5bb30e9898b17be1716503c4f746}{00003}}\ \mbox{\hyperlink{class_f_s_web_server_ab3fa5bb30e9898b17be1716503c4f746}{FSWebServer::FSWebServer}}(fs::FS\ \&fs,\ WebServerClass\ \&server)}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00004}00004\ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00005}00005\ \ \ \ \ m\_filesystem\ =\ \&fs;}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00006}00006\ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}\ =\ \&server;}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00007}00007\ \ \ \ \ m\_basePath[0]\ =\ \textcolor{charliteral}{'\(\backslash\)0'};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00008}00008\ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00009}00009\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00010}\mbox{\hyperlink{class_f_s_web_server_ac79a26ff8eb0f7789200b49d3d3e4d87}{00010}}\ WebServerClass\ *\mbox{\hyperlink{class_f_s_web_server_ac79a26ff8eb0f7789200b49d3d3e4d87}{FSWebServer::getRequest}}()}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00011}00011\ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00012}00012\ \ \ \ \ \textcolor{keywordflow}{return}\ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00013}00013\ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00014}00014\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00015}\mbox{\hyperlink{class_f_s_web_server_a29c9d209cf8943bb5c9cee597a1019cc}{00015}}\ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{class_f_s_web_server_a29c9d209cf8943bb5c9cee597a1019cc}{FSWebServer::run}}()}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00016}00016\ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00017}00017\ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>handleClient();}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00018}00018\ \ \ \ \ \textcolor{keywordflow}{if}\ (m\_apmode)}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00019}00019\ \ \ \ \ \ \ \ \ m\_dnsServer.processNextRequest();}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00020}00020\ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00021}00021\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00022}\mbox{\hyperlink{class_f_s_web_server_ab221d6302b2710fd3702bf6b293eb814}{00022}}\ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{class_f_s_web_server_ab221d6302b2710fd3702bf6b293eb814}{FSWebServer::addHandler}}(\textcolor{keyword}{const}\ Uri\ \&uri,\ HTTPMethod\ method,\ WebServerClass::THandlerFunction\ fn)}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00023}00023\ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00024}00024\ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>on(uri,\ method,\ fn);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00025}00025\ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00026}00026\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00027}\mbox{\hyperlink{class_f_s_web_server_af8226e5ac2f5579e09920e6a47ee4a16}{00027}}\ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{class_f_s_web_server_ab221d6302b2710fd3702bf6b293eb814}{FSWebServer::addHandler}}(\textcolor{keyword}{const}\ Uri\ \&uri,\ WebServerClass::THandlerFunction\ handler)}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00028}00028\ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00029}00029\ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>on(uri,\ HTTP\_ANY,\ handler);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00030}00030\ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00031}00031\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00032}00032\ \textcolor{comment}{//\ List\ all\ files\ saved\ in\ the\ selected\ filesystem}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00033}00033\ \textcolor{keywordtype}{bool}\ FSWebServer::checkDir(\textcolor{keywordtype}{char}\ *dirname,\ uint8\_t\ levels)}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00034}00034\ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00035}00035\ \ \ \ \ \textcolor{keywordflow}{if}\ (dirname[0]\ !=\ \textcolor{charliteral}{'/'})}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00036}00036\ \ \ \ \ \ \ \ \ dirname[0]\ =\ \textcolor{charliteral}{'/'};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00037}00037\ \ \ \ \ File\ root\ =\ m\_filesystem-\/>open(dirname,\ \textcolor{stringliteral}{"{}r"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00038}00038\ \ \ \ \ \textcolor{keywordflow}{if}\ (!root)}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00039}00039\ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00040}00040\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{esp-fs-webserver_8h_a72641a738b7438a623b30b2bed3f0865}{DebugPrintln}}(\textcolor{stringliteral}{"{}-\/\ failed\ to\ open\ directory\(\backslash\)n"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00041}00041\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{false};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00042}00042\ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00043}00043\ \ \ \ \ \textcolor{keywordflow}{if}\ (!root.isDirectory())}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00044}00044\ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00045}00045\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{esp-fs-webserver_8h_a72641a738b7438a623b30b2bed3f0865}{DebugPrintln}}(\textcolor{stringliteral}{"{}\ -\/\ not\ a\ directory\(\backslash\)n"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00046}00046\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{false};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00047}00047\ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00048}00048\ \ \ \ \ File\ file\ =\ root.openNextFile();}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00049}00049\ \ \ \ \ \textcolor{keywordflow}{while}\ (file)}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00050}00050\ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00051}00051\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (file.isDirectory())}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00052}00052\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00053}00053\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{char}\ dir[16];}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00054}00054\ \ \ \ \ \ \ \ \ \ \ \ \ strcpy(dir,\ \textcolor{stringliteral}{"{}/"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00055}00055\ \ \ \ \ \ \ \ \ \ \ \ \ strcat(dir,\ file.name());}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00056}00056\ \ \ \ \ \ \ \ \ \ \ \ \ \mbox{\hyperlink{esp-fs-webserver_8h_af0cbd3adb9ca3a22d52dd4ea65d82bee}{DebugPrintf}}(\textcolor{stringliteral}{"{}DIR\ :\ \%s\(\backslash\)n"{}},\ dir);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00057}00057\ \ \ \ \ \ \ \ \ \ \ \ \ checkDir(dir,\ levels\ -\/\ 1);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00058}00058\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00059}00059\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00060}00060\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00061}00061\ \ \ \ \ \ \ \ \ \ \ \ \ \mbox{\hyperlink{esp-fs-webserver_8h_af0cbd3adb9ca3a22d52dd4ea65d82bee}{DebugPrintf}}(\textcolor{stringliteral}{"{}\ \ FILE:\ \%s\(\backslash\)tSIZE:\ \%d\(\backslash\)n"{}},\ file.name(),\ file.size());}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00062}00062\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00063}00063\ \ \ \ \ \ \ \ \ file\ =\ root.openNextFile();}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00064}00064\ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00065}00065\ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00066}00066\ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00067}00067\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00068}\mbox{\hyperlink{class_f_s_web_server_acddb94f1439465aff5fea34f822f9cb4}{00068}}\ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{class_f_s_web_server_acddb94f1439465aff5fea34f822f9cb4}{FSWebServer::begin}}(\textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *path)}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00069}00069\ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00070}00070\ \ \ \ \ \mbox{\hyperlink{esp-fs-webserver_8h_a72641a738b7438a623b30b2bed3f0865}{DebugPrintln}}(\textcolor{stringliteral}{"{}\(\backslash\)nList\ the\ files\ of\ webserver:\ "{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00071}00071\ \ \ \ \ \textcolor{keywordflow}{if}\ (path\ !=\ \textcolor{keyword}{nullptr})}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00072}00072\ \ \ \ \ \ \ \ \ strcpy(m\_basePath,\ path);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00073}00073\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00074}00074\ \ \ \ \ m\_fsOK\ =\ checkDir(m\_basePath,\ 2);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00075}00075\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00076}00076\ \textcolor{preprocessor}{\#ifdef\ INCLUDE\_EDIT\_HTM}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00077}00077\ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>on(\textcolor{stringliteral}{"{}/status"{}},\ HTTP\_GET,\ std::bind(\&FSWebServer::handleStatus,\ \textcolor{keyword}{this}));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00078}00078\ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>on(\textcolor{stringliteral}{"{}/list"{}},\ HTTP\_GET,\ std::bind(\&FSWebServer::handleFileList,\ \textcolor{keyword}{this}));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00079}00079\ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>on(\textcolor{stringliteral}{"{}/edit"{}},\ HTTP\_GET,\ std::bind(\&FSWebServer::handleGetEdit,\ \textcolor{keyword}{this}));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00080}00080\ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>on(\textcolor{stringliteral}{"{}/edit"{}},\ HTTP\_PUT,\ std::bind(\&FSWebServer::handleFileCreate,\ \textcolor{keyword}{this}));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00081}00081\ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>on(\textcolor{stringliteral}{"{}/edit"{}},\ HTTP\_DELETE,\ std::bind(\&FSWebServer::handleFileDelete,\ \textcolor{keyword}{this}));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00082}00082\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00083}00083\ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>onNotFound(std::bind(\&FSWebServer::handleRequest,\ \textcolor{keyword}{this}));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00084}00084\ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>on(\textcolor{stringliteral}{"{}/favicon.ico"{}},\ HTTP\_GET,\ std::bind(\&FSWebServer::replyOK,\ \textcolor{keyword}{this}));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00085}00085\ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>on(\textcolor{stringliteral}{"{}/"{}},\ HTTP\_GET,\ std::bind(\&FSWebServer::handleIndex,\ \textcolor{keyword}{this}));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00086}00086\ \textcolor{preprocessor}{\#ifdef\ INCLUDE\_SETUP\_HTM}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00087}00087\ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>on(\textcolor{stringliteral}{"{}/setup"{}},\ HTTP\_GET,\ std::bind(\&FSWebServer::handleSetup,\ \textcolor{keyword}{this}));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00088}00088\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00089}00089\ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>on(\textcolor{stringliteral}{"{}/scan"{}},\ HTTP\_GET,\ std::bind(\&FSWebServer::handleScanNetworks,\ \textcolor{keyword}{this}));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00090}00090\ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>on(\textcolor{stringliteral}{"{}/connect"{}},\ HTTP\_POST,\ std::bind(\&FSWebServer::doWifiConnection,\ \textcolor{keyword}{this}));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00091}00091\ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>on(\textcolor{stringliteral}{"{}/restart"{}},\ HTTP\_GET,\ std::bind(\&FSWebServer::doRestart,\ \textcolor{keyword}{this}));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00092}00092\ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>on(\textcolor{stringliteral}{"{}/ipaddress"{}},\ HTTP\_GET,\ std::bind(\&FSWebServer::getIpAddress,\ \textcolor{keyword}{this}));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00093}00093\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00094}00094\ \ \ \ \ \textcolor{comment}{//\ Captive\ Portal\ redirect}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00095}00095\ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>on(\textcolor{stringliteral}{"{}/redirect"{}},\ HTTP\_GET,\ std::bind(\&FSWebServer::captivePortal,\ \textcolor{keyword}{this}));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00096}00096\ \ \ \ \ \textcolor{comment}{//\ Windows}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00097}00097\ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>on(\textcolor{stringliteral}{"{}/connecttest.txt"{}},\ HTTP\_GET,\ std::bind(\&FSWebServer::captivePortal,\ \textcolor{keyword}{this}));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00098}00098\ \ \ \ \ \textcolor{comment}{//\ Apple}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00099}00099\ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>on(\textcolor{stringliteral}{"{}/hotspot-\/detect.html"{}},\ HTTP\_GET,\ std::bind(\&FSWebServer::captivePortal,\ \textcolor{keyword}{this}));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00100}00100\ \ \ \ \ \textcolor{comment}{//\ Android}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00101}00101\ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>on(\textcolor{stringliteral}{"{}/generate\_204"{}},\ HTTP\_GET,\ std::bind(\&FSWebServer::captivePortal,\ \textcolor{keyword}{this}));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00102}00102\ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>on(\textcolor{stringliteral}{"{}/gen\_204"{}},\ HTTP\_GET,\ std::bind(\&FSWebServer::captivePortal,\ \textcolor{keyword}{this}));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00103}00103\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00104}00104\ \ \ \ \ \textcolor{comment}{//\ Upload\ file}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00105}00105\ \ \ \ \ \textcolor{comment}{//\ -\/\ first\ callback\ is\ called\ after\ the\ request\ has\ ended\ with\ all\ parsed\ arguments}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00106}00106\ \ \ \ \ \textcolor{comment}{//\ -\/\ second\ callback\ handles\ file\ upload\ at\ that\ location}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00107}00107\ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>on(\textcolor{stringliteral}{"{}/edit"{}},\ HTTP\_POST,\ std::bind(\&FSWebServer::replyOK,\ \textcolor{keyword}{this}),\ std::bind(\&FSWebServer::handleFileUpload,\ \textcolor{keyword}{this}));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00108}00108\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00109}00109\ \ \ \ \ \textcolor{comment}{//\ OTA\ update\ via\ webbrowser}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00110}00110\ \ \ \ \ m\_httpUpdater.setup(\mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00111}00111\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00112}00112\ \textcolor{preprocessor}{\#ifdef\ ESP32}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00113}00113\ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>enableCrossOrigin(\textcolor{keyword}{true});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00114}00114\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00115}00115\ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>setContentLength(50);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00116}00116\ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>begin();}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00117}00117\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00118}00118\ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00119}00119\ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00120}00120\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00121}\mbox{\hyperlink{class_f_s_web_server_aca526a0eef6c176720326d7244553352}{00121}}\ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{class_f_s_web_server_aca526a0eef6c176720326d7244553352}{FSWebServer::setCaptiveWebage}}(\textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *url)}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00122}00122\ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00123}00123\ \ \ \ \ m\_apWebpage\ =\ (\textcolor{keywordtype}{char}\ *)realloc(m\_apWebpage,\ \textcolor{keyword}{sizeof}(url));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00124}00124\ \ \ \ \ strcpy(m\_apWebpage,\ url);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00125}00125\ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00126}00126\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00127}\mbox{\hyperlink{class_f_s_web_server_a570fcf86522cac2371933240fcecc821}{00127}}\ IPAddress\ \mbox{\hyperlink{class_f_s_web_server_a570fcf86522cac2371933240fcecc821}{FSWebServer::setAPmode}}(\textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *ssid,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *psk)}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00128}00128\ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00129}00129\ \ \ \ \ m\_apmode\ =\ \textcolor{keyword}{true};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00130}00130\ \ \ \ \ WiFi.mode(WIFI\_AP\_STA);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00131}00131\ \ \ \ \ WiFi.persistent(\textcolor{keyword}{false});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00132}00132\ \ \ \ \ WiFi.softAP(ssid,\ psk);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00133}00133\ \ \ \ \ \textcolor{comment}{/*\ Setup\ the\ DNS\ server\ redirecting\ all\ the\ domains\ to\ the\ apIP\ */}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00134}00134\ \ \ \ \ m\_dnsServer.setErrorReplyCode(DNSReplyCode::NoError);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00135}00135\ \ \ \ \ m\_dnsServer.start(53,\ \textcolor{stringliteral}{"{}*"{}},\ WiFi.softAPIP());}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00136}00136\ \ \ \ \ \textcolor{keywordflow}{return}\ WiFi.softAPIP();}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00137}00137\ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00138}00138\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00139}\mbox{\hyperlink{class_f_s_web_server_a19c8683db5bcc169702eba2fc88000e3}{00139}}\ IPAddress\ \mbox{\hyperlink{class_f_s_web_server_a19c8683db5bcc169702eba2fc88000e3}{FSWebServer::startWiFi}}(uint32\_t\ timeout,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *apSSID,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *apPsw)}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00140}00140\ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00141}00141\ \ \ \ \ IPAddress\ ip;}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00142}00142\ \ \ \ \ m\_timeout\ =\ timeout;}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00143}00143\ \ \ \ \ WiFi.mode(WIFI\_STA);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00144}00144\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00145}00145\ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *\_ssid;}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00146}00146\ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *\_pass;}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00147}00147\ \textcolor{preprocessor}{\#if\ defined(ESP8266)}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00148}00148\ \ \ \ \ \textcolor{keyword}{struct\ }station\_config\ conf;}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00149}00149\ \ \ \ \ wifi\_station\_get\_config\_default(\&conf);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00150}00150\ \ \ \ \ \_ssid\ =\ \textcolor{keyword}{reinterpret\_cast<}\textcolor{keyword}{const\ }\textcolor{keywordtype}{char}\ *\textcolor{keyword}{>}(conf.ssid);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00151}00151\ \ \ \ \ \_pass\ =\ \textcolor{keyword}{reinterpret\_cast<}\textcolor{keyword}{const\ }\textcolor{keywordtype}{char}\ *\textcolor{keyword}{>}(conf.password);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00152}00152\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00153}00153\ \textcolor{preprocessor}{\#elif\ defined(ESP32)}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00154}00154\ \ \ \ \ wifi\_config\_t\ conf;}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00155}00155\ \ \ \ \ esp\_wifi\_get\_config(WIFI\_IF\_STA,\ \&conf);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00156}00156\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00157}00157\ \ \ \ \ \_ssid\ =\ \textcolor{keyword}{reinterpret\_cast<}\textcolor{keyword}{const\ }\textcolor{keywordtype}{char}\ *\textcolor{keyword}{>}(conf.sta.ssid);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00158}00158\ \ \ \ \ \_pass\ =\ \textcolor{keyword}{reinterpret\_cast<}\textcolor{keyword}{const\ }\textcolor{keywordtype}{char}\ *\textcolor{keyword}{>}(conf.sta.password);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00159}00159\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00160}00160\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00161}00161\ \ \ \ \ \textcolor{keywordflow}{if}\ (strlen(\_ssid)\ \&\&\ strlen(\_pass))}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00162}00162\ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00163}00163\ \ \ \ \ \ \ \ \ WiFi.begin(\_ssid,\ \_pass);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00164}00164\ \ \ \ \ \ \ \ \ Serial.print(F(\textcolor{stringliteral}{"{}Connecting\ to\ "{}}));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00165}00165\ \ \ \ \ \ \ \ \ Serial.println(\_ssid);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00166}00166\ \ \ \ \ \ \ \ \ uint32\_t\ startTime\ =\ millis();}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00167}00167\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{while}\ (WiFi.status()\ !=\ WL\_CONNECTED)}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00168}00168\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00169}00169\ \ \ \ \ \ \ \ \ \ \ \ \ delay(500);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00170}00170\ \ \ \ \ \ \ \ \ \ \ \ \ Serial.print(\textcolor{stringliteral}{"{}."{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00171}00171\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (WiFi.status()\ ==\ WL\_CONNECTED)}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00172}00172\ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00173}00173\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ ip\ =\ WiFi.localIP();}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00174}00174\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ ip;}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00175}00175\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00176}00176\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ If\ no\ connection\ after\ a\ while\ go\ in\ Access\ Point\ mode}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00177}00177\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (millis()\ -\/\ startTime\ >\ m\_timeout)}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00178}00178\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{break};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00179}00179\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00180}00180\ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00181}00181\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00182}00182\ \ \ \ \ \textcolor{keywordflow}{if}\ (apSSID\ !=\ \textcolor{keyword}{nullptr}\ \&\&\ apPsw\ !=\ \textcolor{keyword}{nullptr})}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00183}00183\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a570fcf86522cac2371933240fcecc821}{setAPmode}}(apSSID,\ apPsw);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00184}00184\ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00185}00185\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a570fcf86522cac2371933240fcecc821}{setAPmode}}(\textcolor{stringliteral}{"{}ESP\_AP"{}},\ \textcolor{stringliteral}{"{}123456789"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00186}00186\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00187}00187\ \ \ \ \ WiFi.begin();}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00188}00188\ \ \ \ \ ip\ =\ WiFi.softAPIP();}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00189}00189\ \ \ \ \ Serial.print(F(\textcolor{stringliteral}{"{}\(\backslash\)nAP\ mode.\(\backslash\)nServer\ IP\ address:\ "{}}));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00190}00190\ \ \ \ \ Serial.println(ip);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00191}00191\ \ \ \ \ Serial.println();}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00192}00192\ \ \ \ \ \textcolor{keywordflow}{return}\ ip;}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00193}00193\ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00194}00194\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00196}00196\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00200}00200\ \textcolor{keywordtype}{bool}\ FSWebServer::captivePortal()}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00201}00201\ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00202}00202\ \ \ \ \ IPAddress\ ip\ =\ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>client().localIP();}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00203}00203\ \ \ \ \ \textcolor{keywordtype}{char}\ serverLoc[\textcolor{keyword}{sizeof}(\textcolor{stringliteral}{"{}https:://255.255.255.255/"{}})\ +\ \textcolor{keyword}{sizeof}(m\_apWebpage)\ +\ 1];}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00204}00204\ \ \ \ \ snprintf(serverLoc,\ \textcolor{keyword}{sizeof}(serverLoc),\ \textcolor{stringliteral}{"{}http://\%d.\%d.\%d.\%d\%s"{}},\ ip[0],\ ip[1],\ ip[2],\ ip[3],\ m\_apWebpage);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00205}00205\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00206}00206\ \ \ \ \ \textcolor{comment}{//\ redirect\ if\ hostheader\ not\ server\ ip,\ prevent\ redirect\ loops}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00207}00207\ \ \ \ \ \textcolor{keywordflow}{if}\ (strcmp(serverLoc,\ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>hostHeader().c\_str()))}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00208}00208\ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00209}00209\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>sendHeader(F(\textcolor{stringliteral}{"{}Location"{}}),\ serverLoc,\ \textcolor{keyword}{true});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00210}00210\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>send(302,\ F(\textcolor{stringliteral}{"{}text/html"{}}),\ \textcolor{stringliteral}{"{}"{}});\ \textcolor{comment}{//\ Empty\ content\ inhibits\ Content-\/length\ header\ so\ we\ have\ to\ close\ the\ socket\ ourselves.}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00211}00211\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>client().stop();\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ Stop\ is\ needed\ because\ we\ sent\ no\ content\ length}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00212}00212\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00213}00213\ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00214}00214\ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{false};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00215}00215\ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00216}00216\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00217}00217\ \textcolor{keywordtype}{void}\ FSWebServer::handleRequest()}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00218}00218\ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00219}00219\ \ \ \ \ \textcolor{keywordflow}{if}\ (!m\_fsOK)}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00220}00220\ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00221}00221\ \ \ \ \ \ \ \ \ replyToCLient(\mbox{\hyperlink{esp-fs-webserver_8h_a06fc87d81c62e9abb8790b6e5713c55ba2fd6f336d08340583bd620a7f5694c90}{ERROR}},\ PSTR(\mbox{\hyperlink{esp-fs-webserver_8h_a53cebbc0731fee09f9592a2721834cf5}{FS\_INIT\_ERROR}}));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00222}00222\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00223}00223\ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00224}00224\ \textcolor{preprocessor}{\#if\ defined(ESP32)}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00225}00225\ \ \ \ \ String\ \_url\ =\ WebServer::urlDecode(\mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>uri());}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00226}00226\ \textcolor{preprocessor}{\#elif\ defined(ESP8266)}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00227}00227\ \ \ \ \ String\ \_url\ =\ ESP8266WebServer::urlDecode(\mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>uri());}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00228}00228\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00229}00229\ \ \ \ \ \textcolor{comment}{//\ First\ try\ to\ find\ and\ return\ the\ requested\ file\ from\ the\ filesystem,}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00230}00230\ \ \ \ \ \textcolor{comment}{//\ and\ if\ it\ fails,\ return\ a\ 404\ page\ with\ debug\ information}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00231}00231\ \ \ \ \ \textcolor{comment}{//\ Serial.print("{}urlDecode:\ "{});}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00232}00232\ \ \ \ \ \textcolor{comment}{//\ Serial.println(\_url);}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00233}00233\ \ \ \ \ \textcolor{keywordflow}{if}\ (handleFileRead(\_url))}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00234}00234\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00235}00235\ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00236}00236\ \ \ \ \ \ \ \ \ replyToCLient(\mbox{\hyperlink{esp-fs-webserver_8h_a06fc87d81c62e9abb8790b6e5713c55bacdaa2919bac56fe1090eb3dbb9526472}{NOT\_FOUND}},\ PSTR(\mbox{\hyperlink{esp-fs-webserver_8h_a775241e32b7ccb12e344ae23aa2db6b1}{FILE\_NOT\_FOUND}}));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00237}00237\ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00238}00238\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00239}00239\ \textcolor{keywordtype}{void}\ FSWebServer::getIpAddress()}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00240}00240\ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00241}00241\ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>send(200,\ \textcolor{stringliteral}{"{}text/json"{}},\ WiFi.localIP().toString());}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00242}00242\ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00243}00243\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00244}00244\ \textcolor{keywordtype}{void}\ FSWebServer::doRestart()}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00245}00245\ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00246}00246\ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>send(200,\ \textcolor{stringliteral}{"{}text/json"{}},\ \textcolor{stringliteral}{"{}Going\ to\ restart\ ESP"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00247}00247\ \ \ \ \ delay(500);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00248}00248\ \ \ \ \ ESP.restart();}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00249}00249\ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00250}00250\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00251}00251\ \textcolor{keywordtype}{void}\ FSWebServer::doWifiConnection()}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00252}00252\ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00253}00253\ \ \ \ \ String\ ssid,\ pass;}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00254}00254\ \ \ \ \ \textcolor{keywordtype}{bool}\ persistent\ =\ \textcolor{keyword}{true};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00255}00255\ \ \ \ \ WiFi.mode(WIFI\_AP\_STA);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00256}00256\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00257}00257\ \ \ \ \ \textcolor{keywordflow}{if}\ (\mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>hasArg(\textcolor{stringliteral}{"{}ssid"{}}))}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00258}00258\ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00259}00259\ \ \ \ \ \ \ \ \ ssid\ =\ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>arg(\textcolor{stringliteral}{"{}ssid"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00260}00260\ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00261}00261\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00262}00262\ \ \ \ \ \textcolor{keywordflow}{if}\ (\mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>hasArg(\textcolor{stringliteral}{"{}password"{}}))}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00263}00263\ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00264}00264\ \ \ \ \ \ \ \ \ pass\ =\ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>arg(\textcolor{stringliteral}{"{}password"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00265}00265\ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00266}00266\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00267}00267\ \ \ \ \ \textcolor{keywordflow}{if}\ (\mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>hasArg(\textcolor{stringliteral}{"{}persistent"{}}))}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00268}00268\ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00269}00269\ \ \ \ \ \ \ \ \ String\ pers\ =\ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>arg(\textcolor{stringliteral}{"{}persistent"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00270}00270\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (pers.equals(\textcolor{stringliteral}{"{}false"{}}))}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00271}00271\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00272}00272\ \ \ \ \ \ \ \ \ \ \ \ \ persistent\ =\ \textcolor{keyword}{false};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00273}00273\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00274}00274\ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00275}00275\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00276}00276\ \ \ \ \ \textcolor{keywordflow}{if}\ (WiFi.status()\ ==\ WL\_CONNECTED)}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00277}00277\ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00278}00278\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00279}00279\ \ \ \ \ \ \ \ \ IPAddress\ ip\ =\ WiFi.localIP();}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00280}00280\ \ \ \ \ \ \ \ \ String\ resp\ =\ \textcolor{stringliteral}{"{}ESP\ is\ currently\ connected\ to\ a\ WiFi\ network.<br><br>"{}}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00281}00281\ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}Actual\ connection\ will\ be\ closed\ and\ a\ new\ attempt\ will\ be\ done\ with\ <b>"{}};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00282}00282\ \ \ \ \ \ \ \ \ resp\ +=\ ssid;}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00283}00283\ \ \ \ \ \ \ \ \ resp\ +=\ \textcolor{stringliteral}{"{}</b>\ WiFi\ network."{}};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00284}00284\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>send(200,\ \textcolor{stringliteral}{"{}text/plain"{}},\ resp);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00285}00285\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00286}00286\ \ \ \ \ \ \ \ \ delay(500);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00287}00287\ \ \ \ \ \ \ \ \ Serial.println(\textcolor{stringliteral}{"{}Disconnect\ from\ current\ WiFi\ network"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00288}00288\ \ \ \ \ \ \ \ \ WiFi.disconnect();}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00289}00289\ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00290}00290\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00291}00291\ \ \ \ \ \textcolor{keywordflow}{if}\ (ssid.length()\ \&\&\ pass.length())}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00292}00292\ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00293}00293\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ Try\ to\ connect\ to\ new\ ssid}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00294}00294\ \ \ \ \ \ \ \ \ Serial.print(\textcolor{stringliteral}{"{}\(\backslash\)nConnecting\ to\ "{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00295}00295\ \ \ \ \ \ \ \ \ Serial.println(ssid);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00296}00296\ \ \ \ \ \ \ \ \ WiFi.begin(ssid.c\_str(),\ pass.c\_str());}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00297}00297\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00298}00298\ \ \ \ \ \ \ \ \ uint32\_t\ beginTime\ =\ millis();}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00299}00299\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{while}\ (WiFi.status()\ !=\ WL\_CONNECTED)}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00300}00300\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00301}00301\ \ \ \ \ \ \ \ \ \ \ \ \ delay(500);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00302}00302\ \ \ \ \ \ \ \ \ \ \ \ \ Serial.print(\textcolor{stringliteral}{"{}*.*"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00303}00303\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (millis()\ -\/\ beginTime\ >\ m\_timeout)}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00304}00304\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{break};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00305}00305\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00306}00306\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ reply\ to\ client}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00307}00307\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (WiFi.status()\ ==\ WL\_CONNECTED)}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00308}00308\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00309}00309\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ WiFi.softAPdisconnect();}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00310}00310\ \ \ \ \ \ \ \ \ \ \ \ \ IPAddress\ ip\ =\ WiFi.localIP();}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00311}00311\ \ \ \ \ \ \ \ \ \ \ \ \ Serial.print(\textcolor{stringliteral}{"{}\(\backslash\)nConnected\ to\ Wifi!\ IP\ address:\ "{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00312}00312\ \ \ \ \ \ \ \ \ \ \ \ \ Serial.println(ip);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00313}00313\ \ \ \ \ \ \ \ \ \ \ \ \ String\ serverLoc\ =\ F(\textcolor{stringliteral}{"{}http://"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00314}00314\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{int}\ i\ =\ 0;\ i\ <\ 4;\ i++)}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00315}00315\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ serverLoc\ +=\ i\ ?\ \textcolor{stringliteral}{"{}."{}}\ +\ String(ip[i])\ :\ String(ip[i]);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00316}00316\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00317}00317\ \ \ \ \ \ \ \ \ \ \ \ \ String\ resp\ =\ \textcolor{stringliteral}{"{}Restart\ ESP\ and\ then\ reload\ this\ page\ from\ <a\ href='"{}};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00318}00318\ \ \ \ \ \ \ \ \ \ \ \ \ resp\ +=\ serverLoc;}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00319}00319\ \ \ \ \ \ \ \ \ \ \ \ \ resp\ +=\ \textcolor{stringliteral}{"{}/setup'>the\ new\ LAN\ address</a>"{}};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00320}00320\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00321}00321\ \ \ \ \ \ \ \ \ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>send(200,\ \textcolor{stringliteral}{"{}text/plain"{}},\ resp);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00322}00322\ \ \ \ \ \ \ \ \ \ \ \ \ m\_apmode\ =\ \textcolor{keyword}{false};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00323}00323\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00324}00324\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ Store\ current\ WiFi\ configuration\ in\ flash}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00325}00325\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (persistent)}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00326}00326\ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00327}00327\ \textcolor{preprocessor}{\#if\ defined(ESP8266)}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00328}00328\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{struct\ }station\_config\ stationConf;}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00329}00329\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ wifi\_station\_get\_config\_default(\&stationConf);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00330}00330\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ Clear\ previuos\ configuration}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00331}00331\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ memset(\&stationConf,\ 0,\ \textcolor{keyword}{sizeof}(stationConf));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00332}00332\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ os\_memcpy(\&stationConf.ssid,\ ssid.c\_str(),\ ssid.length());}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00333}00333\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ os\_memcpy(\&stationConf.password,\ pass.c\_str(),\ pass.length());}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00334}00334\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ wifi\_set\_opmode(STATION\_MODE);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00335}00335\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ wifi\_station\_set\_config(\&stationConf);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00336}00336\ \textcolor{preprocessor}{\#elif\ defined(ESP32)}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00337}00337\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ wifi\_config\_t\ stationConf;}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00338}00338\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ esp\_wifi\_get\_config(WIFI\_IF\_STA,\ \&stationConf);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00339}00339\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ Clear\ previuos\ configuration}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00340}00340\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ memset(\&stationConf,\ 0,\ \textcolor{keyword}{sizeof}(stationConf));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00341}00341\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ memcpy(\&stationConf.sta.ssid,\ ssid.c\_str(),\ ssid.length());}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00342}00342\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ memcpy(\&stationConf.sta.password,\ pass.c\_str(),\ pass.length());}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00343}00343\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ esp\_wifi\_set\_config(WIFI\_IF\_STA,\ \&stationConf);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00344}00344\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00345}00345\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00346}00346\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}\ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00347}00347\ \textcolor{preprocessor}{\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \#if\ defined(ESP8266)}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00348}00348\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{struct\ }station\_config\ stationConf;}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00349}00349\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ wifi\_station\_get\_config\_default(\&stationConf);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00350}00350\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ Clear\ previuos\ configuration}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00351}00351\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ memset(\&stationConf,\ 0,\ \textcolor{keyword}{sizeof}(stationConf));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00352}00352\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ wifi\_station\_set\_config(\&stationConf);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00353}00353\ \textcolor{preprocessor}{\#elif\ defined(ESP32)}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00354}00354\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ wifi\_config\_t\ stationConf;}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00355}00355\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ esp\_wifi\_get\_config(WIFI\_IF\_STA,\ \&stationConf);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00356}00356\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ Clear\ previuos\ configuration}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00357}00357\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ memset(\&stationConf,\ 0,\ \textcolor{keyword}{sizeof}(stationConf));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00358}00358\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ esp\_wifi\_set\_config(WIFI\_IF\_STA,\ \&stationConf);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00359}00359\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00360}00360\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00361}00361\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00362}00362\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00363}00363\ \ \ \ \ \ \ \ \ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>send(500,\ \textcolor{stringliteral}{"{}text/plain"{}},\ \textcolor{stringliteral}{"{}Connection\ error,\ maybe\ the\ password\ is\ wrong?"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00364}00364\ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00365}00365\ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>send(500,\ \textcolor{stringliteral}{"{}text/plain"{}},\ \textcolor{stringliteral}{"{}Wrong\ credentials\ provided"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00366}00366\ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00367}00367\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00368}00368\ \textcolor{keywordtype}{void}\ FSWebServer::setCrossOrigin()}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00369}00369\ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00370}00370\ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>sendHeader(F(\textcolor{stringliteral}{"{}Access-\/Control-\/Allow-\/Origin"{}}),\ F(\textcolor{stringliteral}{"{}*"{}}));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00371}00371\ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>sendHeader(F(\textcolor{stringliteral}{"{}Access-\/Control-\/Max-\/Age"{}}),\ F(\textcolor{stringliteral}{"{}600"{}}));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00372}00372\ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>sendHeader(F(\textcolor{stringliteral}{"{}Access-\/Control-\/Allow-\/Methods"{}}),\ F(\textcolor{stringliteral}{"{}PUT,POST,GET,OPTIONS"{}}));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00373}00373\ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>sendHeader(F(\textcolor{stringliteral}{"{}Access-\/Control-\/Allow-\/Headers"{}}),\ F(\textcolor{stringliteral}{"{}*"{}}));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00374}00374\ \};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00375}00375\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00376}00376\ \textcolor{keywordtype}{void}\ FSWebServer::handleScanNetworks()}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00377}00377\ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00378}00378\ \ \ \ \ String\ jsonList\ =\ \textcolor{stringliteral}{"{}["{}};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00379}00379\ \ \ \ \ \mbox{\hyperlink{esp-fs-webserver_8h_aa8e0ba3b368dd0b2329250544929c135}{DebugPrint}}(\textcolor{stringliteral}{"{}Scanning\ WiFi\ networks..."{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00380}00380\ \ \ \ \ \textcolor{keywordtype}{int}\ n\ =\ WiFi.scanNetworks();}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00381}00381\ \ \ \ \ \mbox{\hyperlink{esp-fs-webserver_8h_a72641a738b7438a623b30b2bed3f0865}{DebugPrintln}}(\textcolor{stringliteral}{"{}\ complete."{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00382}00382\ \ \ \ \ \textcolor{keywordflow}{if}\ (n\ ==\ 0)}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00383}00383\ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00384}00384\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{esp-fs-webserver_8h_a72641a738b7438a623b30b2bed3f0865}{DebugPrintln}}(\textcolor{stringliteral}{"{}no\ networks\ found"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00385}00385\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>send(200,\ \textcolor{stringliteral}{"{}text/json"{}},\ \textcolor{stringliteral}{"{}[]"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00386}00386\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00387}00387\ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00388}00388\ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00389}00389\ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00390}00390\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{esp-fs-webserver_8h_aa8e0ba3b368dd0b2329250544929c135}{DebugPrint}}(n);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00391}00391\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{esp-fs-webserver_8h_a72641a738b7438a623b30b2bed3f0865}{DebugPrintln}}(\textcolor{stringliteral}{"{}\ networks\ found:"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00392}00392\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00393}00393\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{int}\ i\ =\ 0;\ i\ <\ n;\ ++i)}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00394}00394\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00395}00395\ \ \ \ \ \ \ \ \ \ \ \ \ String\ ssid\ =\ WiFi.SSID(i);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00396}00396\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{int}\ rssi\ =\ WiFi.RSSI(i);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00397}00397\ \textcolor{preprocessor}{\#if\ defined(ESP8266)}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00398}00398\ \ \ \ \ \ \ \ \ \ \ \ \ String\ security\ =\ WiFi.encryptionType(i)\ ==\ AUTH\_OPEN\ ?\ \textcolor{stringliteral}{"{}none"{}}\ :\ \textcolor{stringliteral}{"{}enabled"{}};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00399}00399\ \textcolor{preprocessor}{\#elif\ defined(ESP32)}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00400}00400\ \ \ \ \ \ \ \ \ \ \ \ \ String\ security\ =\ WiFi.encryptionType(i)\ ==\ WIFI\_AUTH\_OPEN\ ?\ \textcolor{stringliteral}{"{}none"{}}\ :\ \textcolor{stringliteral}{"{}enabled"{}};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00401}00401\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00402}00402\ \ \ \ \ \ \ \ \ \ \ \ \ jsonList\ +=\ \textcolor{stringliteral}{"{}\{\(\backslash\)"{}ssid\(\backslash\)"{}:\(\backslash\)"{}"{}};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00403}00403\ \ \ \ \ \ \ \ \ \ \ \ \ jsonList\ +=\ ssid;}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00404}00404\ \ \ \ \ \ \ \ \ \ \ \ \ jsonList\ +=\ \textcolor{stringliteral}{"{}\(\backslash\)"{},\(\backslash\)"{}strength\(\backslash\)"{}:\(\backslash\)"{}"{}};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00405}00405\ \ \ \ \ \ \ \ \ \ \ \ \ jsonList\ +=\ rssi;}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00406}00406\ \ \ \ \ \ \ \ \ \ \ \ \ jsonList\ +=\ \textcolor{stringliteral}{"{}\(\backslash\)"{},\(\backslash\)"{}security\(\backslash\)"{}:"{}};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00407}00407\ \ \ \ \ \ \ \ \ \ \ \ \ jsonList\ +=\ security\ ==\ \textcolor{stringliteral}{"{}none"{}}\ ?\ \textcolor{stringliteral}{"{}false"{}}\ :\ \textcolor{stringliteral}{"{}true"{}};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00408}00408\ \ \ \ \ \ \ \ \ \ \ \ \ jsonList\ +=\ ssid.equals(WiFi.SSID())\ ?\ \textcolor{stringliteral}{"{},\(\backslash\)"{}selected\(\backslash\)"{}:\ true"{}}\ :\ \textcolor{stringliteral}{"{}"{}};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00409}00409\ \ \ \ \ \ \ \ \ \ \ \ \ jsonList\ +=\ i\ <\ n\ -\/\ 1\ ?\ \textcolor{stringliteral}{"{}\},"{}}\ :\ \textcolor{stringliteral}{"{}\}"{}};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00410}00410\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00411}00411\ \ \ \ \ \ \ \ \ jsonList\ +=\ \textcolor{stringliteral}{"{}]"{}};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00412}00412\ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00413}00413\ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>send(200,\ \textcolor{stringliteral}{"{}text/json"{}},\ jsonList);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00414}00414\ \ \ \ \ \mbox{\hyperlink{esp-fs-webserver_8h_a72641a738b7438a623b30b2bed3f0865}{DebugPrintln}}(jsonList);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00415}00415\ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00416}00416\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00417}00417\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00418}00418\ \textcolor{preprocessor}{\#ifdef\ INCLUDE\_SETUP\_HTM}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00419}00419\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00420}\mbox{\hyperlink{class_f_s_web_server_a2e447054d17ee0c785e8f86ae00b69f0}{00420}}\ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{class_f_s_web_server_a2e447054d17ee0c785e8f86ae00b69f0}{FSWebServer::addDropdownList}}(\textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *label,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}**\ array,\ \textcolor{keywordtype}{size\_t}\ size)\ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00421}00421\ \ \ \ \ File\ file\ =\ m\_filesystem-\/>open(\textcolor{stringliteral}{"{}/config.json"{}},\ \textcolor{stringliteral}{"{}r"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00422}00422\ \ \ \ \ \textcolor{keywordtype}{int}\ sz\ =\ file.size()\ *\ 1.33;}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00423}00423\ \ \ \ \ \textcolor{keywordtype}{int}\ docSize\ =\ max(sz,\ 2048);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00424}00424\ \ \ \ \ DynamicJsonDocument\ doc((\textcolor{keywordtype}{size\_t})docSize);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00425}00425\ \ \ \ \ \textcolor{keywordflow}{if}\ (file)}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00426}00426\ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00427}00427\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ If\ file\ is\ present,\ load\ actual\ configuration}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00428}00428\ \ \ \ \ \ \ \ \ DeserializationError\ error\ =\ deserializeJson(doc,\ file);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00429}00429\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (error)}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00430}00430\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00431}00431\ \ \ \ \ \ \ \ \ \ \ \ \ \mbox{\hyperlink{esp-fs-webserver_8h_a72641a738b7438a623b30b2bed3f0865}{DebugPrintln}}(F(\textcolor{stringliteral}{"{}Failed\ to\ deserialize\ file,\ may\ be\ corrupted"{}}));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00432}00432\ \ \ \ \ \ \ \ \ \ \ \ \ \mbox{\hyperlink{esp-fs-webserver_8h_a72641a738b7438a623b30b2bed3f0865}{DebugPrintln}}(error.c\_str());}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00433}00433\ \ \ \ \ \ \ \ \ \ \ \ \ file.close();}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00434}00434\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00435}00435\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00436}00436\ \ \ \ \ \ \ \ \ file.close();}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00437}00437\ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00438}00438\ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00439}00439\ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00440}00440\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{esp-fs-webserver_8h_a72641a738b7438a623b30b2bed3f0865}{DebugPrintln}}(F(\textcolor{stringliteral}{"{}File\ not\ found,\ will\ be\ created\ new\ configuration\ file"{}}));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00441}00441\ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00442}00442\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00443}00443\ \ \ \ \ numOptions++\ ;}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00444}00444\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00445}00445\ \ \ \ \ \textcolor{comment}{//\ If\ key\ is\ present\ in\ json,\ we\ don't\ need\ to\ create\ it.}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00446}00446\ \ \ \ \ \textcolor{keywordflow}{if}\ (doc.containsKey(label))}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00447}00447\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00448}00448\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00449}00449\ \ \ \ \ JsonObject\ obj\ =\ doc.createNestedObject(label);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00450}00450\ \ \ \ \ obj[\textcolor{stringliteral}{"{}selected"{}}]\ =\ array[0];\ \ \ \ \ \textcolor{comment}{//\ first\ element\ selected\ as\ default}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00451}00451\ \ \ \ \ JsonArray\ arr\ =\ obj.createNestedArray(\textcolor{stringliteral}{"{}values"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00452}00452\ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{int}\ i=0;\ i<size;\ i++)\ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00453}00453\ \ \ \ \ \ \ \ \ arr.add(array[i]);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00454}00454\ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00455}00455\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00456}00456\ \ \ \ \ file\ =\ m\_filesystem-\/>open(\textcolor{stringliteral}{"{}/config.json"{}},\ \textcolor{stringliteral}{"{}w"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00457}00457\ \ \ \ \ \textcolor{keywordflow}{if}\ (serializeJsonPretty(doc,\ file)\ ==\ 0)}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00458}00458\ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00459}00459\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{esp-fs-webserver_8h_a72641a738b7438a623b30b2bed3f0865}{DebugPrintln}}(F(\textcolor{stringliteral}{"{}Failed\ to\ write\ to\ file"{}}));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00460}00460\ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00461}00461\ \ \ \ \ file.close();}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00462}00462\ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00463}00463\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00464}00464\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00465}00465\ \textcolor{keywordtype}{void}\ FSWebServer::removeWhiteSpaces(String\&\ str)\ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00466}00466\ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ noChars[]\ =\ \{\textcolor{charliteral}{'\(\backslash\)n'},\ \textcolor{charliteral}{'\(\backslash\)r'},\ \textcolor{charliteral}{'\(\backslash\)t'}\};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00467}00467\ \ \ \ \ \textcolor{keywordtype}{int}\ pos\ =\ -\/1;}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00468}00468\ \ \ \ \ \textcolor{comment}{//\ Remove\ non\ printable\ characters}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00469}00469\ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{int}\ i=0;\ i<\ \textcolor{keyword}{sizeof}(noChars);\ i++)\ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00470}00470\ \ \ \ \ \ \ \ \ pos\ =\ str.indexOf(noChars[i]);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00471}00471\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{while}\ (pos\ >\ -\/1)\ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00472}00472\ \ \ \ \ \ \ \ \ \ \ \ \ str.replace(String(noChars[i]),\ \textcolor{stringliteral}{"{}"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00473}00473\ \ \ \ \ \ \ \ \ \ \ \ \ pos\ =\ str.indexOf(noChars[i]);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00474}00474\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00475}00475\ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00476}00476\ \ \ \ \ \textcolor{comment}{//\ Remove\ doubles\ spaces}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00477}00477\ \ \ \ \ pos\ =\ str.indexOf(\textcolor{stringliteral}{"{}\ \ "{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00478}00478\ \ \ \ \ \textcolor{keywordflow}{while}\ (pos\ >\ -\/1)\ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00479}00479\ \ \ \ \ \ \ \ \ str.replace(\textcolor{stringliteral}{"{}\ \ "{}},\ \textcolor{stringliteral}{"{}\ "{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00480}00480\ \ \ \ \ \ \ \ \ pos\ =\ str.indexOf(\textcolor{stringliteral}{"{}\ \ "{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00481}00481\ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00482}00482\ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00483}00483\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00484}00484\ \textcolor{keywordtype}{void}\ FSWebServer::handleSetup()}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00485}00485\ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00486}00486\ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>sendHeader(PSTR(\textcolor{stringliteral}{"{}Content-\/Encoding"{}}),\ \textcolor{stringliteral}{"{}gzip"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00487}00487\ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>send\_P(200,\ \textcolor{stringliteral}{"{}text/html"{}},\ SETUP\_HTML,\ \mbox{\hyperlink{setup__htm_8h_a2159cf372aa858c3860812ab7df87cc5}{SETUP\_HTML\_SIZE}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00488}00488\ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00489}00489\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00490}00490\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00491}00491\ \textcolor{keywordtype}{void}\ FSWebServer::handleIndex()}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00492}00492\ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00493}00493\ \ \ \ \ \textcolor{keywordflow}{if}\ (m\_filesystem-\/>exists(\textcolor{stringliteral}{"{}/index.htm"{}}))}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00494}00494\ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00495}00495\ \ \ \ \ \ \ \ \ handleFileRead(\textcolor{stringliteral}{"{}/index.htm"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00496}00496\ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00497}00497\ \ \ \ \ \textcolor{keywordflow}{else}\ \textcolor{keywordflow}{if}\ (m\_filesystem-\/>exists(\textcolor{stringliteral}{"{}/index.html"{}}))}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00498}00498\ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00499}00499\ \ \ \ \ \ \ \ \ handleFileRead(\textcolor{stringliteral}{"{}/index.html"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00500}00500\ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00501}00501\ \textcolor{preprocessor}{\#ifdef\ INCLUDE\_SETUP\_HTM}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00502}00502\ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00503}00503\ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00504}00504\ \ \ \ \ \ \ \ \ handleSetup();}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00505}00505\ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00506}00506\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00507}00507\ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00508}00508\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00509}00509\ \textcolor{comment}{/*}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00510}00510\ \textcolor{comment}{\ \ \ \ Read\ the\ given\ file\ from\ the\ filesystem\ and\ stream\ it\ back\ to\ the\ client}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00511}00511\ \textcolor{comment}{*/}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00512}00512\ \textcolor{keywordtype}{bool}\ FSWebServer::handleFileRead(\textcolor{keyword}{const}\ String\ \&uri)}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00513}00513\ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00514}00514\ \ \ \ \ String\ path\ =\ m\_basePath;}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00515}00515\ \ \ \ \ path\ =\ uri;}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00516}00516\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00517}00517\ \ \ \ \ \mbox{\hyperlink{esp-fs-webserver_8h_a72641a738b7438a623b30b2bed3f0865}{DebugPrintln}}(\textcolor{stringliteral}{"{}handleFileRead:\ "{}}\ +\ path);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00518}00518\ \ \ \ \ \textcolor{keywordflow}{if}\ (path.endsWith(\textcolor{stringliteral}{"{}/"{}}))}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00519}00519\ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00520}00520\ \ \ \ \ \ \ \ \ path\ +=\ \textcolor{stringliteral}{"{}index.htm"{}};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00521}00521\ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00522}00522\ \ \ \ \ String\ pathWithGz\ =\ path\ +\ \textcolor{stringliteral}{"{}.gz"{}};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00523}00523\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00524}00524\ \ \ \ \ \textcolor{keywordflow}{if}\ (m\_filesystem-\/>exists(pathWithGz)\ ||\ m\_filesystem-\/>exists(path))}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00525}00525\ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00526}00526\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (m\_filesystem-\/>exists(pathWithGz))}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00527}00527\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00528}00528\ \ \ \ \ \ \ \ \ \ \ \ \ path\ +=\ \textcolor{stringliteral}{"{}.gz"{}};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00529}00529\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00530}00530\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *contentType\ =\ getContentType(path.c\_str());}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00531}00531\ \ \ \ \ \ \ \ \ File\ file\ =\ m\_filesystem-\/>open(path,\ \textcolor{stringliteral}{"{}r"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00532}00532\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (\mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>streamFile(file,\ contentType)\ !=\ file.size())}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00533}00533\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00534}00534\ \ \ \ \ \ \ \ \ \ \ \ \ \mbox{\hyperlink{esp-fs-webserver_8h_a72641a738b7438a623b30b2bed3f0865}{DebugPrintln}}(PSTR(\textcolor{stringliteral}{"{}Sent\ less\ data\ than\ expected!"{}}));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00535}00535\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ webserver-\/>stop();}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00536}00536\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00537}00537\ \ \ \ \ \ \ \ \ file.close();}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00538}00538\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00539}00539\ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00540}00540\ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{false};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00541}00541\ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00542}00542\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00543}00543\ \textcolor{comment}{/*}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00544}00544\ \textcolor{comment}{\ \ \ \ Handle\ a\ file\ upload\ request}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00545}00545\ \textcolor{comment}{*/}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00546}00546\ \textcolor{keywordtype}{void}\ FSWebServer::handleFileUpload()}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00547}00547\ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00548}00548\ \ \ \ \ \textcolor{keywordflow}{if}\ (\mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>uri()\ !=\ \textcolor{stringliteral}{"{}/edit"{}})}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00549}00549\ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00550}00550\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00551}00551\ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00552}00552\ \ \ \ \ HTTPUpload\ \&upload\ =\ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>upload();}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00553}00553\ \ \ \ \ \textcolor{keywordflow}{if}\ (upload.status\ ==\ UPLOAD\_FILE\_START)}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00554}00554\ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00555}00555\ \ \ \ \ \ \ \ \ String\ filename\ =\ upload.filename;}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00556}00556\ \ \ \ \ \ \ \ \ String\ result;}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00557}00557\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ Make\ sure\ paths\ always\ start\ with\ "{}/"{}}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00558}00558\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (!filename.startsWith(\textcolor{stringliteral}{"{}/"{}}))}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00559}00559\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00560}00560\ \ \ \ \ \ \ \ \ \ \ \ \ filename\ =\ \textcolor{stringliteral}{"{}/"{}}\ +\ filename;}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00561}00561\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00562}00562\ \ \ \ \ \ \ \ \ checkForUnsupportedPath(filename,\ result);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00563}00563\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (result.length()\ >\ 0)}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00564}00564\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00565}00565\ \ \ \ \ \ \ \ \ \ \ \ \ replyToCLient(\mbox{\hyperlink{esp-fs-webserver_8h_a06fc87d81c62e9abb8790b6e5713c55ba2fd6f336d08340583bd620a7f5694c90}{ERROR}},\ PSTR(\textcolor{stringliteral}{"{}INVALID\ FILENAME"{}}));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00566}00566\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00567}00567\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00568}00568\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00569}00569\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{esp-fs-webserver_8h_a80d71f6b1a4adaaf461c57902c4155ba}{DebugPrintf\_P}}(PSTR(\textcolor{stringliteral}{"{}handleFileUpload\ Name:\ \%s\(\backslash\)n"{}}),\ filename.c\_str());}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00570}00570\ \ \ \ \ \ \ \ \ m\_uploadFile\ =\ m\_filesystem-\/>open(filename,\ \textcolor{stringliteral}{"{}w"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00571}00571\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (!m\_uploadFile)}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00572}00572\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00573}00573\ \ \ \ \ \ \ \ \ \ \ \ \ replyToCLient(\mbox{\hyperlink{esp-fs-webserver_8h_a06fc87d81c62e9abb8790b6e5713c55ba2fd6f336d08340583bd620a7f5694c90}{ERROR}},\ PSTR(\textcolor{stringliteral}{"{}CREATE\ FAILED"{}}));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00574}00574\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00575}00575\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00576}00576\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{esp-fs-webserver_8h_a80d71f6b1a4adaaf461c57902c4155ba}{DebugPrintf\_P}}(PSTR(\textcolor{stringliteral}{"{}Upload:\ START,\ filename:\ \%s\(\backslash\)n"{}}),\ filename.c\_str());}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00577}00577\ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00578}00578\ \ \ \ \ \textcolor{keywordflow}{else}\ \textcolor{keywordflow}{if}\ (upload.status\ ==\ UPLOAD\_FILE\_WRITE)}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00579}00579\ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00580}00580\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (m\_uploadFile)}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00581}00581\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00582}00582\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{size\_t}\ bytesWritten\ =\ m\_uploadFile.write(upload.buf,\ upload.currentSize);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00583}00583\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (bytesWritten\ !=\ upload.currentSize)}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00584}00584\ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00585}00585\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ replyToCLient(\mbox{\hyperlink{esp-fs-webserver_8h_a06fc87d81c62e9abb8790b6e5713c55ba2fd6f336d08340583bd620a7f5694c90}{ERROR}},\ PSTR(\textcolor{stringliteral}{"{}WRITE\ FAILED"{}}));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00586}00586\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00587}00587\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00588}00588\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00589}00589\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{esp-fs-webserver_8h_a80d71f6b1a4adaaf461c57902c4155ba}{DebugPrintf\_P}}(PSTR(\textcolor{stringliteral}{"{}Upload:\ WRITE,\ Bytes:\ \%d\(\backslash\)n"{}}),\ upload.currentSize);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00590}00590\ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00591}00591\ \ \ \ \ \textcolor{keywordflow}{else}\ \textcolor{keywordflow}{if}\ (upload.status\ ==\ UPLOAD\_FILE\_END)}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00592}00592\ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00593}00593\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (m\_uploadFile)}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00594}00594\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00595}00595\ \ \ \ \ \ \ \ \ \ \ \ \ m\_uploadFile.close();}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00596}00596\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00597}00597\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{esp-fs-webserver_8h_a80d71f6b1a4adaaf461c57902c4155ba}{DebugPrintf\_P}}(PSTR(\textcolor{stringliteral}{"{}Upload:\ END,\ Size:\ \%d\(\backslash\)n"{}}),\ upload.totalSize);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00598}00598\ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00599}00599\ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00600}00600\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00601}00601\ \textcolor{keywordtype}{void}\ FSWebServer::replyOK()}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00602}00602\ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00603}00603\ \ \ \ \ replyToCLient(OK,\ \textcolor{stringliteral}{"{}"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00604}00604\ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00605}00605\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00606}00606\ \textcolor{keywordtype}{void}\ FSWebServer::replyToCLient(\textcolor{keywordtype}{int}\ msg\_type\ =\ 0,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *msg\ =\ \textcolor{stringliteral}{"{}"{}})}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00607}00607\ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00608}00608\ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>sendHeader(\textcolor{stringliteral}{"{}Access-\/Control-\/Allow-\/Origin"{}},\ \textcolor{stringliteral}{"{}*"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00609}00609\ \ \ \ \ \textcolor{keywordflow}{switch}\ (msg\_type)}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00610}00610\ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00611}00611\ \ \ \ \ \textcolor{keywordflow}{case}\ OK:}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00612}00612\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>send(200,\ FPSTR(\mbox{\hyperlink{esp-fs-webserver_8h_aa7e166aadcdb04b319d121550669a24f}{TEXT\_PLAIN}}),\ \textcolor{stringliteral}{"{}"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00613}00613\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{break};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00614}00614\ \ \ \ \ \textcolor{keywordflow}{case}\ \mbox{\hyperlink{esp-fs-webserver_8h_a06fc87d81c62e9abb8790b6e5713c55ba945d6010d321d9fe75cbba7b6f37f3b5}{CUSTOM}}:}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00615}00615\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>send(200,\ FPSTR(\mbox{\hyperlink{esp-fs-webserver_8h_aa7e166aadcdb04b319d121550669a24f}{TEXT\_PLAIN}}),\ msg);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00616}00616\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{break};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00617}00617\ \ \ \ \ \textcolor{keywordflow}{case}\ \mbox{\hyperlink{esp-fs-webserver_8h_a06fc87d81c62e9abb8790b6e5713c55bacdaa2919bac56fe1090eb3dbb9526472}{NOT\_FOUND}}:}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00618}00618\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>send(404,\ FPSTR(\mbox{\hyperlink{esp-fs-webserver_8h_aa7e166aadcdb04b319d121550669a24f}{TEXT\_PLAIN}}),\ msg);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00619}00619\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{break};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00620}00620\ \ \ \ \ \textcolor{keywordflow}{case}\ \mbox{\hyperlink{esp-fs-webserver_8h_a06fc87d81c62e9abb8790b6e5713c55baef4e18cf5dacaf9d0cb90c72663a1b60}{BAD\_REQUEST}}:}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00621}00621\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>send(400,\ FPSTR(\mbox{\hyperlink{esp-fs-webserver_8h_aa7e166aadcdb04b319d121550669a24f}{TEXT\_PLAIN}}),\ msg);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00622}00622\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{break};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00623}00623\ \ \ \ \ \textcolor{keywordflow}{case}\ \mbox{\hyperlink{esp-fs-webserver_8h_a06fc87d81c62e9abb8790b6e5713c55ba2fd6f336d08340583bd620a7f5694c90}{ERROR}}:}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00624}00624\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>send(500,\ FPSTR(\mbox{\hyperlink{esp-fs-webserver_8h_aa7e166aadcdb04b319d121550669a24f}{TEXT\_PLAIN}}),\ msg);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00625}00625\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{break};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00626}00626\ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00627}00627\ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00628}00628\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00629}00629\ \textcolor{comment}{/*}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00630}00630\ \textcolor{comment}{\ \ \ \ Checks\ filename\ for\ character\ combinations\ that\ are\ not\ supported\ by\ FSBrowser\ (alhtough\ valid\ on\ SPIFFS).}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00631}00631\ \textcolor{comment}{\ \ \ \ Returns\ an\ empty\ String\ if\ supported,\ or\ detail\ of\ error(s)\ if\ unsupported}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00632}00632\ \textcolor{comment}{*/}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00633}00633\ \textcolor{keywordtype}{void}\ FSWebServer::checkForUnsupportedPath(String\ \&filename,\ String\ \&error)}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00634}00634\ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00635}00635\ \ \ \ \ \textcolor{keywordflow}{if}\ (!filename.startsWith(\textcolor{stringliteral}{"{}/"{}}))}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00636}00636\ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00637}00637\ \ \ \ \ \ \ \ \ error\ +=\ PSTR(\textcolor{stringliteral}{"{}\ !!\ NO\_LEADING\_SLASH\ !!\ "{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00638}00638\ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00639}00639\ \ \ \ \ \textcolor{keywordflow}{if}\ (filename.indexOf(\textcolor{stringliteral}{"{}//"{}})\ !=\ -\/1)}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00640}00640\ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00641}00641\ \ \ \ \ \ \ \ \ error\ +=\ PSTR(\textcolor{stringliteral}{"{}\ !!\ DOUBLE\_SLASH\ !!\ "{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00642}00642\ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00643}00643\ \ \ \ \ \textcolor{keywordflow}{if}\ (filename.endsWith(\textcolor{stringliteral}{"{}/"{}}))}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00644}00644\ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00645}00645\ \ \ \ \ \ \ \ \ error\ +=\ PSTR(\textcolor{stringliteral}{"{}\ !\ TRAILING\_SLASH\ !\ "{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00646}00646\ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00647}00647\ \ \ \ \ \mbox{\hyperlink{esp-fs-webserver_8h_a72641a738b7438a623b30b2bed3f0865}{DebugPrintln}}(filename);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00648}00648\ \ \ \ \ \mbox{\hyperlink{esp-fs-webserver_8h_a72641a738b7438a623b30b2bed3f0865}{DebugPrintln}}(error);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00649}00649\ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00650}00650\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00651}00651\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *FSWebServer::getContentType(\textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *filename)}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00652}00652\ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00653}00653\ \ \ \ \ \textcolor{keywordflow}{if}\ (\mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>hasArg(\textcolor{stringliteral}{"{}download"{}}))}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00654}00654\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ PSTR(\textcolor{stringliteral}{"{}application/octet-\/stream"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00655}00655\ \ \ \ \ \textcolor{keywordflow}{else}\ \textcolor{keywordflow}{if}\ (strstr(filename,\ \textcolor{stringliteral}{"{}.htm"{}}))}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00656}00656\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ PSTR(\textcolor{stringliteral}{"{}text/html"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00657}00657\ \ \ \ \ \textcolor{keywordflow}{else}\ \textcolor{keywordflow}{if}\ (strstr(filename,\ \textcolor{stringliteral}{"{}.html"{}}))}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00658}00658\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ PSTR(\textcolor{stringliteral}{"{}text/html"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00659}00659\ \ \ \ \ \textcolor{keywordflow}{else}\ \textcolor{keywordflow}{if}\ (strstr(filename,\ \textcolor{stringliteral}{"{}.css"{}}))}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00660}00660\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ PSTR(\textcolor{stringliteral}{"{}text/css"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00661}00661\ \ \ \ \ \textcolor{keywordflow}{else}\ \textcolor{keywordflow}{if}\ (strstr(filename,\ \textcolor{stringliteral}{"{}.sass"{}}))}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00662}00662\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ PSTR(\textcolor{stringliteral}{"{}text/css"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00663}00663\ \ \ \ \ \textcolor{keywordflow}{else}\ \textcolor{keywordflow}{if}\ (strstr(filename,\ \textcolor{stringliteral}{"{}.js"{}}))}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00664}00664\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ PSTR(\textcolor{stringliteral}{"{}application/javascript"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00665}00665\ \ \ \ \ \textcolor{keywordflow}{else}\ \textcolor{keywordflow}{if}\ (strstr(filename,\ \textcolor{stringliteral}{"{}.png"{}}))}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00666}00666\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ PSTR(\textcolor{stringliteral}{"{}image/png"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00667}00667\ \ \ \ \ \textcolor{keywordflow}{else}\ \textcolor{keywordflow}{if}\ (strstr(filename,\ \textcolor{stringliteral}{"{}.svg"{}}))}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00668}00668\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ PSTR(\textcolor{stringliteral}{"{}image/svg+xml"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00669}00669\ \ \ \ \ \textcolor{keywordflow}{else}\ \textcolor{keywordflow}{if}\ (strstr(filename,\ \textcolor{stringliteral}{"{}.gif"{}}))}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00670}00670\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ PSTR(\textcolor{stringliteral}{"{}image/gif"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00671}00671\ \ \ \ \ \textcolor{keywordflow}{else}\ \textcolor{keywordflow}{if}\ (strstr(filename,\ \textcolor{stringliteral}{"{}.jpg"{}}))}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00672}00672\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ PSTR(\textcolor{stringliteral}{"{}image/jpeg"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00673}00673\ \ \ \ \ \textcolor{keywordflow}{else}\ \textcolor{keywordflow}{if}\ (strstr(filename,\ \textcolor{stringliteral}{"{}.ico"{}}))}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00674}00674\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ PSTR(\textcolor{stringliteral}{"{}image/x-\/icon"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00675}00675\ \ \ \ \ \textcolor{keywordflow}{else}\ \textcolor{keywordflow}{if}\ (strstr(filename,\ \textcolor{stringliteral}{"{}.xml"{}}))}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00676}00676\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ PSTR(\textcolor{stringliteral}{"{}text/xml"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00677}00677\ \ \ \ \ \textcolor{keywordflow}{else}\ \textcolor{keywordflow}{if}\ (strstr(filename,\ \textcolor{stringliteral}{"{}.pdf"{}}))}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00678}00678\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ PSTR(\textcolor{stringliteral}{"{}application/x-\/pdf"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00679}00679\ \ \ \ \ \textcolor{keywordflow}{else}\ \textcolor{keywordflow}{if}\ (strstr(filename,\ \textcolor{stringliteral}{"{}.zip"{}}))}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00680}00680\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ PSTR(\textcolor{stringliteral}{"{}application/x-\/zip"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00681}00681\ \ \ \ \ \textcolor{keywordflow}{else}\ \textcolor{keywordflow}{if}\ (strstr(filename,\ \textcolor{stringliteral}{"{}.gz"{}}))}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00682}00682\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ PSTR(\textcolor{stringliteral}{"{}application/x-\/gzip"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00683}00683\ \ \ \ \ \textcolor{keywordflow}{return}\ PSTR(\textcolor{stringliteral}{"{}text/plain"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00684}00684\ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00685}00685\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00686}00686\ \textcolor{comment}{//\ edit\ page,\ in\ usefull\ in\ some\ situation,\ but\ if\ you\ need\ to\ provide\ only\ a\ web\ interface,\ you\ can\ disable}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00687}00687\ \textcolor{preprocessor}{\#ifdef\ INCLUDE\_EDIT\_HTM}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00688}00688\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00689}00689\ \textcolor{comment}{/*}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00690}00690\ \textcolor{comment}{\ \ \ \ Return\ the\ list\ of\ files\ in\ the\ directory\ specified\ by\ the\ "{}dir"{}\ query\ string\ parameter.}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00691}00691\ \textcolor{comment}{\ \ \ \ Also\ demonstrates\ the\ use\ of\ chuncked\ responses.}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00692}00692\ \textcolor{comment}{*/}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00693}00693\ \textcolor{keywordtype}{void}\ FSWebServer::handleFileList()}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00694}00694\ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00695}00695\ \ \ \ \ \textcolor{keywordflow}{if}\ (!\mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>hasArg(\textcolor{stringliteral}{"{}dir"{}}))}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00696}00696\ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00697}00697\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ replyToCLient(\mbox{\hyperlink{esp-fs-webserver_8h_a06fc87d81c62e9abb8790b6e5713c55baef4e18cf5dacaf9d0cb90c72663a1b60}{BAD\_REQUEST}},\ \textcolor{stringliteral}{"{}DIR\ ARG\ MISSING"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00698}00698\ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00699}00699\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00700}00700\ \ \ \ \ String\ path\ =\ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>arg(\textcolor{stringliteral}{"{}dir"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00701}00701\ \ \ \ \ \mbox{\hyperlink{esp-fs-webserver_8h_a72641a738b7438a623b30b2bed3f0865}{DebugPrintln}}(\textcolor{stringliteral}{"{}handleFileList:\ "{}}\ +\ path);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00702}00702\ \ \ \ \ \textcolor{keywordflow}{if}\ (path\ !=\ \textcolor{stringliteral}{"{}/"{}}\ \&\&\ !m\_filesystem-\/>exists(path))}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00703}00703\ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00704}00704\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ replyToCLient(\mbox{\hyperlink{esp-fs-webserver_8h_a06fc87d81c62e9abb8790b6e5713c55baef4e18cf5dacaf9d0cb90c72663a1b60}{BAD\_REQUEST}},\ \textcolor{stringliteral}{"{}BAD\ PATH"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00705}00705\ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00706}00706\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00707}00707\ \ \ \ \ File\ root\ =\ m\_filesystem-\/>open(path,\ \textcolor{stringliteral}{"{}r"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00708}00708\ \ \ \ \ path\ =\ String();}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00709}00709\ \ \ \ \ String\ output;}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00710}00710\ \ \ \ \ output.reserve(256);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00711}00711\ \ \ \ \ output\ =\ \textcolor{stringliteral}{"{}["{}};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00712}00712\ \ \ \ \ \textcolor{keywordflow}{if}\ (root.isDirectory())}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00713}00713\ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00714}00714\ \ \ \ \ \ \ \ \ File\ file\ =\ root.openNextFile();}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00715}00715\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{while}\ (file)}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00716}00716\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00717}00717\ \ \ \ \ \ \ \ \ \ \ \ \ String\ filename\ =\ file.name();}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00718}00718\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (filename.lastIndexOf(\textcolor{stringliteral}{"{}/"{}})\ >\ -\/1)}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00719}00719\ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00720}00720\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ filename.remove(0,\ filename.lastIndexOf(\textcolor{stringliteral}{"{}/"{}})\ +\ 1);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00721}00721\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00722}00722\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (output\ !=\ \textcolor{stringliteral}{"{}["{}})}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00723}00723\ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00724}00724\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ output\ +=\ \textcolor{charliteral}{','};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00725}00725\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00726}00726\ \ \ \ \ \ \ \ \ \ \ \ \ output\ +=\ \textcolor{stringliteral}{"{}\{\(\backslash\)"{}type\(\backslash\)"{}:\(\backslash\)"{}"{}};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00727}00727\ \ \ \ \ \ \ \ \ \ \ \ \ output\ +=\ (file.isDirectory())\ ?\ \textcolor{stringliteral}{"{}dir"{}}\ :\ \textcolor{stringliteral}{"{}file"{}};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00728}00728\ \ \ \ \ \ \ \ \ \ \ \ \ output\ +=\ \textcolor{stringliteral}{"{}\(\backslash\)"{},\(\backslash\)"{}size\(\backslash\)"{}:\(\backslash\)"{}"{}};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00729}00729\ \ \ \ \ \ \ \ \ \ \ \ \ output\ +=\ file.size();}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00730}00730\ \ \ \ \ \ \ \ \ \ \ \ \ output\ +=\ \textcolor{stringliteral}{"{}\(\backslash\)"{},\(\backslash\)"{}name\(\backslash\)"{}:\(\backslash\)"{}"{}};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00731}00731\ \ \ \ \ \ \ \ \ \ \ \ \ output\ +=\ filename;}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00732}00732\ \ \ \ \ \ \ \ \ \ \ \ \ output\ +=\ \textcolor{stringliteral}{"{}\(\backslash\)"{}\}"{}};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00733}00733\ \ \ \ \ \ \ \ \ \ \ \ \ file\ =\ root.openNextFile();}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00734}00734\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00735}00735\ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00736}00736\ \ \ \ \ output\ +=\ \textcolor{stringliteral}{"{}]"{}};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00737}00737\ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>send(200,\ \textcolor{stringliteral}{"{}text/json"{}},\ output);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00738}00738\ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00739}00739\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00740}00740\ \textcolor{comment}{/*}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00741}00741\ \textcolor{comment}{\ \ \ \ Handle\ the\ creation/rename\ of\ a\ new\ file}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00742}00742\ \textcolor{comment}{\ \ \ \ Operation\ \ \ \ \ \ |\ req.responseText}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00743}00743\ \textcolor{comment}{\ \ \ \ -\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/+-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00744}00744\ \textcolor{comment}{\ \ \ \ Create\ file\ \ \ \ |\ parent\ of\ created\ file}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00745}00745\ \textcolor{comment}{\ \ \ \ Create\ folder\ \ |\ parent\ of\ created\ folder}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00746}00746\ \textcolor{comment}{\ \ \ \ Rename\ file\ \ \ \ |\ parent\ of\ source\ file}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00747}00747\ \textcolor{comment}{\ \ \ \ Move\ file\ \ \ \ \ \ |\ parent\ of\ source\ file,\ or\ remaining\ ancestor}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00748}00748\ \textcolor{comment}{\ \ \ \ Rename\ folder\ \ |\ parent\ of\ source\ folder}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00749}00749\ \textcolor{comment}{\ \ \ \ Move\ folder\ \ \ \ |\ parent\ of\ source\ folder,\ or\ remaining\ ancestor}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00750}00750\ \textcolor{comment}{*/}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00751}00751\ \textcolor{keywordtype}{void}\ FSWebServer::handleFileCreate()}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00752}00752\ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00753}00753\ \ \ \ \ String\ path\ =\ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>arg(\textcolor{stringliteral}{"{}path"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00754}00754\ \ \ \ \ \textcolor{keywordflow}{if}\ (path.isEmpty())}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00755}00755\ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00756}00756\ \ \ \ \ \ \ \ \ replyToCLient(\mbox{\hyperlink{esp-fs-webserver_8h_a06fc87d81c62e9abb8790b6e5713c55baef4e18cf5dacaf9d0cb90c72663a1b60}{BAD\_REQUEST}},\ PSTR(\textcolor{stringliteral}{"{}PATH\ ARG\ MISSING"{}}));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00757}00757\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00758}00758\ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00759}00759\ \ \ \ \ \textcolor{keywordflow}{if}\ (path\ ==\ \textcolor{stringliteral}{"{}/"{}})}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00760}00760\ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00761}00761\ \ \ \ \ \ \ \ \ replyToCLient(\mbox{\hyperlink{esp-fs-webserver_8h_a06fc87d81c62e9abb8790b6e5713c55baef4e18cf5dacaf9d0cb90c72663a1b60}{BAD\_REQUEST}},\ PSTR(\textcolor{stringliteral}{"{}BAD\ PATH"{}}));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00762}00762\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00763}00763\ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00764}00764\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00765}00765\ \ \ \ \ String\ src\ =\ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>arg(\textcolor{stringliteral}{"{}src"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00766}00766\ \ \ \ \ \textcolor{keywordflow}{if}\ (src.isEmpty())}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00767}00767\ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00768}00768\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ No\ source\ specified:\ creation}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00769}00769\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{esp-fs-webserver_8h_a80d71f6b1a4adaaf461c57902c4155ba}{DebugPrintf\_P}}(PSTR(\textcolor{stringliteral}{"{}handleFileCreate:\ \%s\(\backslash\)n"{}}),\ path.c\_str());}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00770}00770\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (path.endsWith(\textcolor{stringliteral}{"{}/"{}}))}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00771}00771\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00772}00772\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ Create\ a\ folder}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00773}00773\ \ \ \ \ \ \ \ \ \ \ \ \ path.remove(path.length()\ -\/\ 1);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00774}00774\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (!m\_filesystem-\/>mkdir(path))}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00775}00775\ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00776}00776\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ replyToCLient(\mbox{\hyperlink{esp-fs-webserver_8h_a06fc87d81c62e9abb8790b6e5713c55ba2fd6f336d08340583bd620a7f5694c90}{ERROR}},\ PSTR(\textcolor{stringliteral}{"{}MKDIR\ FAILED"{}}));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00777}00777\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00778}00778\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00779}00779\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00780}00780\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00781}00781\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00782}00782\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ Create\ a\ file}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00783}00783\ \ \ \ \ \ \ \ \ \ \ \ \ File\ file\ =\ m\_filesystem-\/>open(path,\ \textcolor{stringliteral}{"{}w"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00784}00784\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (file)}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00785}00785\ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00786}00786\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ file.write(0);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00787}00787\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ file.close();}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00788}00788\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00789}00789\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00790}00790\ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00791}00791\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ replyToCLient(\mbox{\hyperlink{esp-fs-webserver_8h_a06fc87d81c62e9abb8790b6e5713c55ba2fd6f336d08340583bd620a7f5694c90}{ERROR}},\ PSTR(\textcolor{stringliteral}{"{}CREATE\ FAILED"{}}));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00792}00792\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00793}00793\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00794}00794\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00795}00795\ \ \ \ \ \ \ \ \ replyToCLient(\mbox{\hyperlink{esp-fs-webserver_8h_a06fc87d81c62e9abb8790b6e5713c55ba945d6010d321d9fe75cbba7b6f37f3b5}{CUSTOM}},\ path.c\_str());}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00796}00796\ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00797}00797\ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00798}00798\ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00799}00799\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ Source\ specified:\ rename}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00800}00800\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (src\ ==\ \textcolor{stringliteral}{"{}/"{}})}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00801}00801\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00802}00802\ \ \ \ \ \ \ \ \ \ \ \ \ replyToCLient(\mbox{\hyperlink{esp-fs-webserver_8h_a06fc87d81c62e9abb8790b6e5713c55baef4e18cf5dacaf9d0cb90c72663a1b60}{BAD\_REQUEST}},\ PSTR(\textcolor{stringliteral}{"{}BAD\ SRC"{}}));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00803}00803\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00804}00804\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00805}00805\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (!m\_filesystem-\/>exists(src))}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00806}00806\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00807}00807\ \ \ \ \ \ \ \ \ \ \ \ \ replyToCLient(\mbox{\hyperlink{esp-fs-webserver_8h_a06fc87d81c62e9abb8790b6e5713c55baef4e18cf5dacaf9d0cb90c72663a1b60}{BAD\_REQUEST}},\ PSTR(\textcolor{stringliteral}{"{}BSRC\ FILE\ NOT\ FOUND"{}}));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00808}00808\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00809}00809\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00810}00810\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00811}00811\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{esp-fs-webserver_8h_a80d71f6b1a4adaaf461c57902c4155ba}{DebugPrintf\_P}}(PSTR(\textcolor{stringliteral}{"{}handleFileCreate:\ \%s\ from\ \%s\(\backslash\)n"{}}),\ path.c\_str(),\ src.c\_str());}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00812}00812\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (path.endsWith(\textcolor{stringliteral}{"{}/"{}}))}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00813}00813\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00814}00814\ \ \ \ \ \ \ \ \ \ \ \ \ path.remove(path.length()\ -\/\ 1);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00815}00815\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00816}00816\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (src.endsWith(\textcolor{stringliteral}{"{}/"{}}))}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00817}00817\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00818}00818\ \ \ \ \ \ \ \ \ \ \ \ \ src.remove(src.length()\ -\/\ 1);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00819}00819\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00820}00820\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (!m\_filesystem-\/>rename(src,\ path))}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00821}00821\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00822}00822\ \ \ \ \ \ \ \ \ \ \ \ \ replyToCLient(\mbox{\hyperlink{esp-fs-webserver_8h_a06fc87d81c62e9abb8790b6e5713c55ba2fd6f336d08340583bd620a7f5694c90}{ERROR}},\ PSTR(\textcolor{stringliteral}{"{}RENAME\ FAILED"{}}));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00823}00823\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00824}00824\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00825}00825\ \ \ \ \ \ \ \ \ replyOK();}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00826}00826\ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00827}00827\ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00828}00828\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00829}00829\ \textcolor{comment}{/*}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00830}00830\ \textcolor{comment}{\ \ \ \ Handle\ a\ file\ deletion\ request}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00831}00831\ \textcolor{comment}{\ \ \ \ Operation\ \ \ \ \ \ |\ req.responseText}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00832}00832\ \textcolor{comment}{\ \ \ \ -\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/+-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00833}00833\ \textcolor{comment}{\ \ \ \ Delete\ file\ \ \ \ |\ parent\ of\ deleted\ file,\ or\ remaining\ ancestor}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00834}00834\ \textcolor{comment}{\ \ \ \ Delete\ folder\ \ |\ parent\ of\ deleted\ folder,\ or\ remaining\ ancestor}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00835}00835\ \textcolor{comment}{*/}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00836}00836\ \textcolor{keywordtype}{void}\ FSWebServer::handleFileDelete()}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00837}00837\ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00838}00838\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00839}00839\ \ \ \ \ String\ path\ =\ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>arg(0);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00840}00840\ \ \ \ \ \textcolor{keywordflow}{if}\ (path.isEmpty()\ ||\ path\ ==\ \textcolor{stringliteral}{"{}/"{}})}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00841}00841\ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00842}00842\ \ \ \ \ \ \ \ \ replyToCLient(\mbox{\hyperlink{esp-fs-webserver_8h_a06fc87d81c62e9abb8790b6e5713c55baef4e18cf5dacaf9d0cb90c72663a1b60}{BAD\_REQUEST}},\ PSTR(\textcolor{stringliteral}{"{}BAD\ PATH"{}}));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00843}00843\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00844}00844\ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00845}00845\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00846}00846\ \ \ \ \ \mbox{\hyperlink{esp-fs-webserver_8h_a80d71f6b1a4adaaf461c57902c4155ba}{DebugPrintf\_P}}(PSTR(\textcolor{stringliteral}{"{}handleFileDelete:\ \%s\(\backslash\)n"{}}),\ path.c\_str());}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00847}00847\ \ \ \ \ \textcolor{keywordflow}{if}\ (!m\_filesystem-\/>exists(path))}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00848}00848\ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00849}00849\ \ \ \ \ \ \ \ \ replyToCLient(\mbox{\hyperlink{esp-fs-webserver_8h_a06fc87d81c62e9abb8790b6e5713c55bacdaa2919bac56fe1090eb3dbb9526472}{NOT\_FOUND}},\ PSTR(\mbox{\hyperlink{esp-fs-webserver_8h_a775241e32b7ccb12e344ae23aa2db6b1}{FILE\_NOT\_FOUND}}));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00850}00850\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00851}00851\ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00852}00852\ \ \ \ \ \textcolor{comment}{//\ deleteRecursive(path);}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00853}00853\ \ \ \ \ File\ root\ =\ m\_filesystem-\/>open(path,\ \textcolor{stringliteral}{"{}r"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00854}00854\ \ \ \ \ \textcolor{comment}{//\ If\ it's\ a\ plain\ file,\ delete\ it}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00855}00855\ \ \ \ \ \textcolor{keywordflow}{if}\ (!root.isDirectory())}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00856}00856\ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00857}00857\ \ \ \ \ \ \ \ \ root.close();}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00858}00858\ \ \ \ \ \ \ \ \ m\_filesystem-\/>remove(path);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00859}00859\ \ \ \ \ \ \ \ \ replyOK();}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00860}00860\ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00861}00861\ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00862}00862\ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00863}00863\ \ \ \ \ \ \ \ \ m\_filesystem-\/>rmdir(path);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00864}00864\ \ \ \ \ \ \ \ \ replyOK();}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00865}00865\ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00866}00866\ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00867}00867\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00868}00868\ \textcolor{comment}{/*}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00869}00869\ \textcolor{comment}{\ \ \ \ This\ specific\ handler\ returns\ the\ edit.htm\ (or\ a\ gzipped\ version)\ from\ the\ /edit\ folder.}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00870}00870\ \textcolor{comment}{\ \ \ \ If\ the\ file\ is\ not\ present\ but\ the\ flag\ INCLUDE\_FALLBACK\_INDEX\_HTM\ has\ been\ set,\ falls\ back\ to\ the\ version}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00871}00871\ \textcolor{comment}{\ \ \ \ embedded\ in\ the\ program\ code.}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00872}00872\ \textcolor{comment}{\ \ \ \ Otherwise,\ fails\ with\ a\ 404\ page\ with\ debug\ information}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00873}00873\ \textcolor{comment}{*/}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00874}00874\ \textcolor{keywordtype}{void}\ FSWebServer::handleGetEdit()}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00875}00875\ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00876}00876\ \textcolor{preprocessor}{\#ifdef\ INCLUDE\_EDIT\_HTM}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00877}00877\ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>sendHeader(PSTR(\textcolor{stringliteral}{"{}Content-\/Encoding"{}}),\ \textcolor{stringliteral}{"{}gzip"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00878}00878\ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>send\_P(200,\ \textcolor{stringliteral}{"{}text/html"{}},\ edit\_htm\_gz,\ \textcolor{keyword}{sizeof}(edit\_htm\_gz));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00879}00879\ \textcolor{preprocessor}{\#else}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00880}00880\ \ \ \ \ replyToCLient(\mbox{\hyperlink{esp-fs-webserver_8h_a06fc87d81c62e9abb8790b6e5713c55bacdaa2919bac56fe1090eb3dbb9526472}{NOT\_FOUND}},\ PSTR(\textcolor{stringliteral}{"{}FILE\_NOT\_FOUND"{}}));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00881}00881\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00882}00882\ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00883}00883\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00884}00884\ \textcolor{comment}{/*}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00885}00885\ \textcolor{comment}{\ \ \ \ Return\ the\ FS\ type,\ status\ and\ size\ info}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00886}00886\ \textcolor{comment}{*/}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00887}00887\ \textcolor{keywordtype}{void}\ FSWebServer::handleStatus()}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00888}00888\ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00889}00889\ \ \ \ \ \mbox{\hyperlink{esp-fs-webserver_8h_a72641a738b7438a623b30b2bed3f0865}{DebugPrintln}}(PSTR(\textcolor{stringliteral}{"{}handleStatus"{}}));}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00890}00890\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00891}00891\ \ \ \ \ \textcolor{keywordtype}{size\_t}\ totalBytes\ =\ 1024;}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00892}00892\ \ \ \ \ \textcolor{keywordtype}{size\_t}\ usedBytes\ =\ 0;}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00893}00893\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00894}00894\ \textcolor{preprocessor}{\#ifdef\ ESP8266}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00895}00895\ \ \ \ \ FSInfo\ fs\_info;}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00896}00896\ \ \ \ \ m\_filesystem-\/>info(fs\_info);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00897}00897\ \ \ \ \ totalBytes\ =\ fs\_info.totalBytes;}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00898}00898\ \ \ \ \ usedBytes\ =\ fs\_info.usedBytes;}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00899}00899\ \textcolor{preprocessor}{\#elif\ defined(ESP32)}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00900}00900\ \ \ \ \ \textcolor{comment}{//\ totalBytes\ =\ m\_filesystem-\/>totalBytes();}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00901}00901\ \ \ \ \ \textcolor{comment}{//\ usedBytes\ =\ m\_filesystem-\/>usedBytes();}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00902}00902\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00903}00903\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00904}00904\ \ \ \ \ String\ json;}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00905}00905\ \ \ \ \ json.reserve(128);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00906}00906\ \ \ \ \ json\ =\ \textcolor{stringliteral}{"{}\{\(\backslash\)"{}type\(\backslash\)"{}:\(\backslash\)"{}Filesystem\(\backslash\)"{},\ \(\backslash\)"{}isOk\(\backslash\)"{}:"{}};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00907}00907\ \ \ \ \ \textcolor{keywordflow}{if}\ (m\_fsOK)}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00908}00908\ \ \ \ \ \{}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00909}00909\ \ \ \ \ \ \ \ \ json\ +=\ PSTR(\textcolor{stringliteral}{"{}\(\backslash\)"{}true\(\backslash\)"{},\ \(\backslash\)"{}totalBytes\(\backslash\)"{}:\(\backslash\)"{}"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00910}00910\ \ \ \ \ \ \ \ \ json\ +=\ totalBytes;}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00911}00911\ \ \ \ \ \ \ \ \ json\ +=\ PSTR(\textcolor{stringliteral}{"{}\(\backslash\)"{},\ \(\backslash\)"{}usedBytes\(\backslash\)"{}:\(\backslash\)"{}"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00912}00912\ \ \ \ \ \ \ \ \ json\ +=\ usedBytes;}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00913}00913\ \ \ \ \ \ \ \ \ json\ +=\ \textcolor{stringliteral}{"{}\(\backslash\)"{}"{}};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00914}00914\ \ \ \ \ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00915}00915\ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00916}00916\ \ \ \ \ \ \ \ \ json\ +=\ \textcolor{stringliteral}{"{}\(\backslash\)"{}false\(\backslash\)"{}"{}};}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00917}00917\ \ \ \ \ json\ +=\ PSTR(\textcolor{stringliteral}{"{},\(\backslash\)"{}unsupportedFiles\(\backslash\)"{}:\(\backslash\)"{}\(\backslash\)"{}\}"{}});}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00918}00918\ \ \ \ \ \mbox{\hyperlink{class_f_s_web_server_a2e6a2d103fc2b5e53f98746b5841caef}{webserver}}-\/>send(200,\ \textcolor{stringliteral}{"{}application/json"{}},\ json);}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00919}00919\ \}}
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00920}00920\ }
+\DoxyCodeLine{\Hypertarget{esp-fs-webserver_8cpp_source_l00921}00921\ \textcolor{preprocessor}{\#endif\ }\textcolor{comment}{//\ INCLUDE\_EDIT\_HTM}}
+
+\end{DoxyCode}

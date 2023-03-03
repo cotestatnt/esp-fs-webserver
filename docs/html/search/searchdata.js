@@ -1,0 +1,33 @@
+var indexSectionsWithContent =
+{
+  0: "abcdefgimnprstw",
+  1: "f",
+  2: "es",
+  3: "abcfgrs",
+  4: "pw",
+  5: "bcemn",
+  6: "adfimst"
+};
+
+var indexSectionNames =
+{
+  0: "all",
+  1: "classes",
+  2: "files",
+  3: "functions",
+  4: "variables",
+  5: "enumvalues",
+  6: "defines"
+};
+
+var indexSectionLabels =
+{
+  0: "All",
+  1: "Classes",
+  2: "Files",
+  3: "Functions",
+  4: "Variables",
+  5: "Enumerator",
+  6: "Macros"
+};
+

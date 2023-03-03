@@ -87,7 +87,7 @@ function listWifiNetworks(elems) {
 
 function getParameters() {
   $('loader').classList.remove('hide');
-  var url = new URL("http://" + `${window.location.hostname}` + "/config.json");
+  var url = new URL("http://" + `${window.location.hostname}` + "/setup/config.json");
   fetch(url)
   .then(response => response.json())
   .then(data => {
@@ -113,6 +113,16 @@ function getParameters() {
       $('svg-logo').setAttribute('title', '');
       $('logo-file').setAttribute('type', 'number');
     }
+  });
+}
+
+async function fromFile(f, m) {
+  return new Promise(resolve => {
+      fetch(f, { method: m })
+      .then(res => res.text())
+      .then((data) => {
+        resolve(data);
+      });
   });
 }
 
@@ -169,26 +179,34 @@ function listParameters (params) {
     }
 
     else if(key.startsWith('raw-css')) {
-      var css = document.createElement("style");
-      css.innerHTML = value.trim();
-      document.body.appendChild(css);
+      fromFile(value, 'HEAD').then(() => {
+        var css = document.createElement("link");
+        css.setAttribute('rel', 'stylesheet');
+        css.setAttribute('href', value);
+        document.head.appendChild(css);
+
+      });
       return;
     }
 
     else if(key.startsWith('raw-javascript')) {
-      var js = document.createElement("script");
-      js.innerHTML = value.trim();
-      document.body.appendChild(js);
+      fromFile(value, 'HEAD').then(() => {
+        var js = document.createElement("script");
+        js.setAttribute('src', value);
+        document.body.appendChild(js);
+      });
       return;
     }
 
     else if(key.startsWith('raw-html')) {
-      html = value.trim();
-      el = document.createElement('div');
-      el.setAttribute('id', 'row' + i)
-      el.style.width = '100%';
-      el.innerHTML = html;
-      pBox.appendChild(el);
+      fromFile(value, 'GET').then((res) => {
+        el = document.createElement('div');
+        el.setAttribute('id', 'row' + i)
+        el.style.width = '100%';
+        el.innerHTML = res;
+        pBox.appendChild(el);
+      });
+      return;
     }
     else {
       let val = value;
@@ -265,7 +283,6 @@ function listParameters (params) {
 
 function addInputListener(item) {
   // Add event listener to option inputs
-
   if (item.type  === "number") {
     item.addEventListener('change', () => {
        if (item.getAttribute("step")) {
@@ -310,7 +327,7 @@ function saveParameters() {
     type: 'application/json'
   });
   var formData = new FormData();
-  formData.append("data", myblob, '/config.json');
+  formData.append("data", myblob, '/setup/config.json');
 
   // POST data using the Fetch API
   fetch('/edit', {
