@@ -84,6 +84,15 @@ function listWifiNetworks(elems) {
   $("wifi-table").classList.remove("hide");
 }
 
+function getEspStatus() {
+  var url = new URL("http://" + `${window.location.hostname}` + "/status");
+  fetch(url)
+  .then(response => response.json())
+  .then(data => {
+    $('esp-mode').innerHTML = data.mode;
+    $('esp-ip').innerHTML = (data.ip & 255) + '.' + (data.ip>>8 & 255) +'.' + (data.ip>>16 & 255) + '.' + (data.ip>>>24);
+  });
+}
 
 function getParameters() {
   $('loader').classList.remove('hide');
@@ -113,6 +122,9 @@ function getParameters() {
       $('svg-logo').setAttribute('title', '');
       $('logo-file').setAttribute('type', 'number');
     }
+  })
+  .then( () => {
+    getEspStatus();
   });
 }
 

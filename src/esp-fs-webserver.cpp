@@ -962,7 +962,7 @@ void FSWebServer::handleGetEdit()
 {
 #ifdef INCLUDE_EDIT_HTM
     webserver->sendHeader(PSTR("Content-Encoding"), "gzip");
-    webserver->send_P(200, "text/html", edit_htm_gz, sizeof(edit_htm_gz));
+    webserver->send_P(200, "text/html", edit_htm_gz, EDIT_HTML_SIZE);
 #else
     replyToCLient(NOT_FOUND, PSTR("FILE_NOT_FOUND"));
 #endif
@@ -997,6 +997,10 @@ void FSWebServer::handleStatus()
         json += totalBytes;
         json += PSTR("\", \"usedBytes\":\"");
         json += usedBytes;
+        json += PSTR("\", \"mode\":\"");
+        json += WiFi.status() == WL_CONNECTED ? "Station" : "Access Point";
+        json += PSTR("\", \"ip\":\"");
+        json += WiFi.status() == WL_CONNECTED ? WiFi.localIP() : WiFi.softAPIP();
         json += "\"";
     }
     else
