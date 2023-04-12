@@ -279,8 +279,7 @@ void FSWebServer::doWifiConnection()
 
     if (WiFi.status() == WL_CONNECTED)
     {
-
-        IPAddress ip = WiFi.localIP();
+        // IPAddress ip = WiFi.localIP();
         String resp = "ESP is currently connected to a WiFi network.<br><br>"
         "Actual connection will be closed and a new attempt will be done with <b>";
         resp += ssid;
@@ -536,7 +535,7 @@ void FSWebServer::addDropdownList(const char *label, const char** array, size_t 
     JsonObject obj = doc.createNestedObject(label);
     obj["selected"] = array[0];     // first element selected as default
     JsonArray arr = obj.createNestedArray("values");
-    for (int i=0; i<size; i++) {
+    for (unsigned int i=0; i<size; i++) {
         arr.add(array[i]);
     }
 
@@ -553,7 +552,7 @@ void FSWebServer::removeWhiteSpaces(String& str) {
     const char noChars[] = {'\n', '\r', '\t'};
     int pos = -1;
     // Remove non printable characters
-    for (int i=0; i< sizeof(noChars); i++) {
+    for (unsigned int i=0; i< sizeof(noChars); i++) {
         pos = str.indexOf(noChars[i]);
         while (pos > -1) {
             str.replace(String(noChars[i]), "");
