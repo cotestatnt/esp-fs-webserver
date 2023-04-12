@@ -30,10 +30,8 @@ void FSWebServer::addHandler(const Uri &uri, WebServerClass::THandlerFunction ha
 }
 
 // List all files saved in the selected filesystem
-bool FSWebServer::checkDir(char *dirname, uint8_t levels)
+bool FSWebServer::checkDir(const char *dirname, uint8_t levels)
 {
-    if (dirname[0] != '/')
-        dirname[0] = '/';
     File root = m_filesystem->open(dirname, "r");
     if (!root)
     {
@@ -993,6 +991,7 @@ void FSWebServer::handleStatus()
     json = "{\"type\":\"Filesystem\", \"isOk\":";
     if (m_fsOK)
     {
+        uint32_t ip = (WiFi.status() == WL_CONNECTED) ? WiFi.localIP() : WiFi.softAPIP();
         json += PSTR("\"true\", \"totalBytes\":\"");
         json += totalBytes;
         json += PSTR("\", \"usedBytes\":\"");
@@ -1000,7 +999,7 @@ void FSWebServer::handleStatus()
         json += PSTR("\", \"mode\":\"");
         json += WiFi.status() == WL_CONNECTED ? "Station" : "Access Point";
         json += PSTR("\", \"ip\":\"");
-        json += WiFi.status() == WL_CONNECTED ? WiFi.localIP() : WiFi.softAPIP();
+        json += ip;
         json += "\"";
     }
     else
