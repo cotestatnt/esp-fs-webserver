@@ -145,7 +145,7 @@ IPAddress FSWebServer::setAPmode(const char *ssid, const char *psk)
     return WiFi.softAPIP();
 }
 
-IPAddress FSWebServer::startWiFi(uint32_t timeout, const char *apSSID, const char *apPsw)
+IPAddress FSWebServer::startWiFi(uint32_t timeout, const char *apSSID, const char *apPsw, CallbackF fn )
 {
     IPAddress ip;
     m_timeout = timeout;
@@ -175,7 +175,11 @@ IPAddress FSWebServer::startWiFi(uint32_t timeout, const char *apSSID, const cha
         uint32_t startTime = millis();
         while (WiFi.status() != WL_CONNECTED)
         {
-            delay(500);
+            // execute callback function during wifi connection
+            if (fn != nullptr)
+                fn();
+
+            delay(250);
             Serial.print(".");
             if (WiFi.status() == WL_CONNECTED)
             {

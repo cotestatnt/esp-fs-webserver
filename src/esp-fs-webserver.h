@@ -69,7 +69,7 @@ enum
 class FSWebServer
 {
 
-    // using CallbackF = std::function<void(void)>;
+    using CallbackF = std::function<void(void)>;
 
 public:
     WebServerClass *webserver;
@@ -88,7 +88,7 @@ public:
 
     IPAddress setAPmode(const char *ssid, const char *psk);
 
-    IPAddress startWiFi(uint32_t timeout, const char *apSSID, const char *apPsw);
+    IPAddress startWiFi(uint32_t timeout, const char *apSSID, const char *apPsw, CallbackF fn = nullptr);
 
     WebServerClass *getRequest();
 
@@ -163,8 +163,6 @@ public:
         if (key.equals("raw-javascript")) {
             key += numOptions ;
         }
-
-
 
         // If key is present in json, we don't need to create it.
         if (doc.containsKey(key.c_str()))

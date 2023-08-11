@@ -36,7 +36,7 @@ function showHidePassword() {
 */
 function getWiFiList() {
   $('loader').classList.remove('hide');
- var url = new URL("http://" + `${window.location.hostname}` + "/scan");
+ var url = new URL(`${window.location.protocol}` + "://" + `${window.location.hostname}` + "/scan");
   fetch(url)
   .then(response => response.json())
   .then(data => {
@@ -85,7 +85,7 @@ function listWifiNetworks(elems) {
 }
 
 function getEspStatus() {
-  var url = new URL("http://" + `${window.location.hostname}` + "/status");
+  var url = new URL(`${window.location.protocol}` + "://" + `${window.location.hostname}` + "/status");
   fetch(url)
   .then(response => response.json())
   .then(data => {
@@ -96,7 +96,7 @@ function getEspStatus() {
 
 function getParameters() {
   $('loader').classList.remove('hide');
-  var url = new URL("http://" + `${window.location.hostname}` + "/setup/config.json");
+  var url = new URL(`${window.location.protocol}` + "://" + `${window.location.hostname}` + "/setup/config.json");
   fetch(url)
   .then(response => response.json())
   .then(data => {
@@ -438,7 +438,7 @@ function closeModalMessage(do_cb) {
 
 
 function restartESP() {
-  var url = new URL("http://" + `${window.location.hostname}` + "/restart");
+  var url = new URL(`${window.location.protocol}` + "://" + `${window.location.hostname}` + "/restart");
   fetch(url)
   .then(response => response.text())
   .then(data => {
