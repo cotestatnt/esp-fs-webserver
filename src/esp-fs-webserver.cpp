@@ -14,6 +14,7 @@ WebServerClass *FSWebServer::getRequest()
 
 void FSWebServer::run()
 {
+    yield();
     webserver->handleClient();
     if (m_apmode)
         m_dnsServer.processNextRequest();
@@ -121,9 +122,9 @@ bool FSWebServer::begin(const char *path)
 #ifdef ESP32
     webserver->enableCrossOrigin(true);
 #endif
-    webserver->setContentLength(50);
+    webserver->enableDelay(false);
+    // webserver->setContentLength(50);
     webserver->begin();
-
     return true;
 }
 
@@ -1001,6 +1002,8 @@ void FSWebServer::handleStatus()
         json += usedBytes;
         json += PSTR("\", \"mode\":\"");
         json += WiFi.status() == WL_CONNECTED ? "Station" : "Access Point";
+        json += PSTR("\", \"ssid\":\"");
+        json += WiFi.SSID();
         json += PSTR("\", \"ip\":\"");
         json += ip;
         json += "\"";

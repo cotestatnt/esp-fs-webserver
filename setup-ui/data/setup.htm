@@ -1,18 +1,18 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset=utf-8 />
+    <meta charset=utf-8>
     <title>esp-fs-webserver</title>
-    <meta content="width=device-width, initial-scale=1" name=viewport />
-    <link href=style.css rel=stylesheet type=text/css />
+    <meta content="width=device-width, initial-scale=1" name=viewport>
+    <link href=style.css rel=stylesheet type=text/css>
 </head>
 <body class=body>
     <main id=main-box>
         <header class="ctn header">
             <div class=title>
-                <input type="file" onchange="uploadLogo()" class="inputfile" id="logo-file" />
+                <input type="file" onchange="uploadLogo()" class="inputfile" id="logo-file">
                 <label for="logo-file" class="svg-button">
-                    <div id=svg-logo title='Click to upload your logo file'></div>
+                    <span id=svg-logo title='Click to upload your logo file'></span>
                 </label>
                 <h1 id=name-logo class=heading>ESP WebServer</h1>
             </div>
@@ -29,8 +29,13 @@
         </header>
         <div id=wifi-box class="ctn opt-box">
             <h2 class=heading-2>Connect to WiFi</h2>
-			<div style='text-align: center' >ESP mode: <b><span id=esp-mode></span></b>, IP address: <b><span id=esp-ip></span></b></div>
+			      <div style='text-align: center' >ESP mode: <b>
+			        <span id=esp-mode></span></b>, SSID: <b>
+			        <span id=esp-ssid></span></b>, IP address: <b>
+			        <span id=esp-ip></span></b>
+			      </div>
             <div id=wifi-table class=hide>
+                <hr>
                 <table class=table>
                     <tbody id=wifi-list></tbody>
                 </table>
@@ -40,7 +45,7 @@
                 <form class=form>
                     <div class=tf-wrapper>
                         <label for=ssid class=input-label>SSID</label>
-                        <input type=text placeholder="Enter your WiFI SSID name" id="ssid" />
+                        <input type=text placeholder="Enter your WiFI SSID name" id="ssid">
                     </div>
                     <div class=tf-wrapper>
                         <label for=password class=input-label>Password</label>
@@ -53,16 +58,15 @@
                             </a>
                         </div>
                         <input type=password placeholder="Enter your WiFi password"
-                            id=password autocomplete=current-password data-ms-member="password" />
+                            id=password autocomplete=current-password data-ms-member="password">
                     </div>
                 </form>
             </div>
             <div class="btn-bar ">
                 <label class="toggle lbl-wifi">
-                    <hr>
                     <span class=toggle-label>Store WiFi credentials</span>
                     <input id=persistent type=checkbox class="t-check" checked>
-                    <div class=toggle-switch></div>
+                    <span class=toggle-switch></span>
                 </label>
                 <a id=scan-wifi class="btn">
                     <div class=svg><svg id=svg-scan fill=currentColor viewBox="0 0 24 24"></svg></div>
@@ -70,14 +74,11 @@
                 </a>
                 <a id=connect-wifi class="btn">
                     <div class=svg><svg id=svg-connect fill=currentColor viewBox="0 0 24 24"></svg></div>
-                    <span>Connect to <span id=ssid-name>SSID</span>
+                    <span>Connect to <span id=ssid-name>SSID</span></span>
                 </a>
             </div>
         </div>
         <div id=btn-box class="btn-bar hide">
-            <label class="toggle">
-                <hr>
-            </label>
             <a id=restart class="btn">
                 <div class=svg><svg id=svg-restart fill=currentColor viewBox="0 0 24 24"></svg></div>
                 <span>Restart ESP</span>
@@ -101,7 +102,7 @@
             <div class=d-modal-content><p id=message-body></p></div>
             <div class=btn-bar>
                 <a id=ok-modal class="btn hide" onclick=closeModalMessage(true)><span>OK</span></a>
-                <a id=close-modal class="btn" onclick=closeModalMessage(false)><span>Close</span></a>
+                <a id=close-modal-btn class="btn" onclick=closeModalMessage(false)><span>Close</span></a>
             </div>
         </div>
     </details>
