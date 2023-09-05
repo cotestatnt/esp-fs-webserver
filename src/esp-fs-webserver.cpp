@@ -121,8 +121,8 @@ bool FSWebServer::begin(const char *path)
 
 #ifdef ESP32
     webserver->enableCrossOrigin(true);
-#endif
     webserver->enableDelay(false);
+#endif
     // webserver->setContentLength(50);
     webserver->begin();
     return true;
