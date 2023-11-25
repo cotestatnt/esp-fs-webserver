@@ -1,15 +1,12 @@
 #include "esp-fs-webserver.h"
 
-FSWebServer::FSWebServer(fs::FS &fs, WebServerClass &server)
+FSWebServer::FSWebServer(fs::FS &fs, WebServerClass &server) :
+    m_apWebpage( "/setup" )
+    , m_apSsid("ESP_AP")
+    , m_apPsk("123456789")
 {
     m_filesystem = &fs;
     webserver = &server;
-    // m_basePath[0] = '\0';
-}
-
-WebServerClass *FSWebServer::getRequest()
-{
-    return webserver;
 }
 
 void FSWebServer::run()
@@ -64,7 +61,7 @@ bool FSWebServer::checkDir(const char *dirname, uint8_t levels)
     return true;
 }
 
-bool FSWebServer::begin(const char *path)
+bool FSWebServer::begin()
 {
     DebugPrintln("\nList the files of webserver: ");
     File root = m_filesystem->open("/setup", "r");
@@ -128,29 +125,39 @@ bool FSWebServer::begin(const char *path)
     return true;
 }
 
-void FSWebServer::setCaptiveWebage(const char *url)
+void FSWebServer::setAPWebPage(const char *url)
 {
     m_apWebpage = url;
 }
 
-IPAddress FSWebServer::setAPmode(const char *ssid, const char *psk)
+void FSWebServer::setAP(const char *ssid, const char *psk)
+{
+    m_apSsid = ssid;
+    m_apPsk = psk;
+}
+
+IPAddress FSWebServer::startAP()
 {
     m_apmode = true;
     WiFi.mode(WIFI_AP_STA);
     WiFi.persistent(false);
-    WiFi.softAP(ssid, psk);
+    WiFi.softAP(m_apSsid.c_str(), m_apPsk.c_str());
     /* Setup the DNS server redirecting all the domains to the apIP */
     m_dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
-    m_dnsServer.start(53, "*", WiFi.softAPIP());
-    return WiFi.softAPIP();
+    IPAddress ip = WiFi.softAPIP();
+    m_dnsServer.start(53, "*", ip);
+    WiFi.begin();   //???
+    ip = WiFi.softAPIP();
+    Serial.print(F("\nAP mode.\nServer IP address: "));
+    Serial.println(ip);
+    Serial.println();
+    return ip;
 }
 
-IPAddress FSWebServer::startWiFi(uint32_t timeout, const char *apSSID, const char *apPsw, CallbackF fn )
+IPAddress FSWebServer::startWiFi(uint32_t timeout, bool apFlag, CallbackF fn )
 {
-    IPAddress ip;
-    m_timeout = timeout;
-    WiFi.mode(WIFI_STA);
-
+    if( timeout > 0 )
+        m_timeout = timeout;    
     const char *_ssid;
     const char *_pass;
 #if defined(ESP8266)
@@ -158,51 +165,36 @@ IPAddress FSWebServer::startWiFi(uint32_t timeout, const char *apSSID, const cha
     wifi_station_get_config_default(&conf);
     _ssid = reinterpret_cast<const char *>(conf.ssid);
     _pass = reinterpret_cast<const char *>(conf.password);
-
 #elif defined(ESP32)
     wifi_config_t conf;
     esp_wifi_get_config(WIFI_IF_STA, &conf);
-
     _ssid = reinterpret_cast<const char *>(conf.sta.ssid);
     _pass = reinterpret_cast<const char *>(conf.sta.password);
 #endif
-
     if (strlen(_ssid) && strlen(_pass))
     {
+        m_apmode = false;
+        WiFi.mode(WIFI_STA);
         WiFi.begin(_ssid, _pass);
+        uint32_t startTime = millis();
         Serial.print(F("Connecting to "));
         Serial.println(_ssid);
-        uint32_t startTime = millis();
-        while (WiFi.status() != WL_CONNECTED)
+        while ( (WiFi.status() != WL_CONNECTED) && (timeout > 0 ) )
         {
             // execute callback function during wifi connection
             if (fn != nullptr)
                 fn();
-
             delay(250);
             Serial.print(".");
-            if (WiFi.status() == WL_CONNECTED)
-            {
-                ip = WiFi.localIP();
-                return ip;
-            }
-            // If no connection after a while go in Access Point mode
-            if (millis() - startTime > m_timeout)
+            // If no connection after a while break
+            if (millis() - startTime > timeout)
                 break;
         }
+        if ( (WiFi.status() == WL_CONNECTED) || apFlag )
+            return WiFi.localIP();
     }
-
-    if (apSSID != nullptr && apPsw != nullptr)
-        setAPmode(apSSID, apPsw);
-    else
-        setAPmode("ESP_AP", "123456789");
-
-    WiFi.begin();
-    ip = WiFi.softAPIP();
-    Serial.print(F("\nAP mode.\nServer IP address: "));
-    Serial.println(ip);
-    Serial.println();
-    return ip;
+    //start Access Point
+    return startAP();
 }
 
 ////////////////////////////////  WiFi  /////////////////////////////////////////
@@ -212,12 +204,11 @@ IPAddress FSWebServer::startWiFi(uint32_t timeout, const char *apSSID, const cha
  */
 bool FSWebServer::captivePortal()
 {
-    IPAddress ip = webserver->client().localIP();
-    char serverLoc[sizeof("https:://255.255.255.255/") + sizeof(m_apWebpage) + 1];
-    snprintf(serverLoc, sizeof(serverLoc), "http://%d.%d.%d.%d%s", ip[0], ip[1], ip[2], ip[3], m_apWebpage);
-
+    String serverLoc("https:://");
+    serverLoc += webserver->client().localIP().toString();
+    serverLoc += m_apWebpage;
     // redirect if hostheader not server ip, prevent redirect loops
-    if (strcmp(serverLoc, webserver->hostHeader().c_str()))
+    if (serverLoc != webserver->hostHeader())
     {
         webserver->sendHeader(F("Location"), serverLoc, true);
         webserver->send(302, F("text/html"), ""); // Empty content inhibits Content-length header so we have to close the socket ourselves.

@@ -68,15 +68,12 @@ enum
 
 class FSWebServer
 {
-
     using CallbackF = std::function<void(void)>;
 
 public:
-    WebServerClass *webserver;
-
     FSWebServer(fs::FS &fs, WebServerClass &server);
 
-    bool begin(const char *path = nullptr);
+    bool begin();
 
     void run();
 
@@ -84,13 +81,21 @@ public:
 
     void addHandler(const Uri &uri, WebServerClass::THandlerFunction handler);
 
-    void setCaptiveWebage(const char *url);
+    void setAPWebPage(const char *url);
+    void setAP(const char *ssid, const char *psk);
 
-    IPAddress setAPmode(const char *ssid, const char *psk);
+    IPAddress startAP();
 
-    IPAddress startWiFi(uint32_t timeout, const char *apSSID, const char *apPsw, CallbackF fn = nullptr);
+    IPAddress startWiFi(
+        uint32_t timeout            // if 0 - do not wait for wifi connections
+        , bool apFlag = false       // if true, start AP only if no credentials was found
+        , CallbackF fn = nullptr    // execute callback function during wifi connection
+        );
 
-    WebServerClass *getRequest();
+    void clearWifiCredentials();
+
+    WebServerClass* getWebServer(){ return webserver; }
+    uint32_t getTimeout() const { return m_timeout; }
 
 #ifdef INCLUDE_SETUP_HTM
 #define MIN_F -3.4028235E+38
@@ -254,21 +259,21 @@ public:
 #endif
 
 private:
-
-    // char m_basePath[16];
+    WebServerClass *webserver;
     UpdateServerClass m_httpUpdater;
     DNSServer m_dnsServer;
     fs::FS *m_filesystem;
     File m_uploadFile;
     bool m_fsOK = false;
     bool m_apmode = false;
-    const char *m_apWebpage = "/setup";
+    String m_apWebpage; //default "/setup";
+    String m_apSsid;
+    String m_apPsk;
     uint32_t m_timeout = 10000;
 
     // Default handler for all URIs not defined above, use it to read files from filesystem
     bool checkDir(const char *dirname, uint8_t levels);
     void doWifiConnection();
-    void clearWifiCredentials();
     void doRestart();
     void replyOK();
     void getIpAddress();
