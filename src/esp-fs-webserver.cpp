@@ -351,25 +351,30 @@ void FSWebServer::doWifiConnection()
 #endif
             }
             else {
-                #if defined(ESP8266)
-                struct station_config stationConf;
-                wifi_station_get_config_default(&stationConf);
-                // Clear previuos configuration
-                memset(&stationConf, 0, sizeof(stationConf));
-                wifi_station_set_config(&stationConf);
-#elif defined(ESP32)
-                wifi_config_t stationConf;
-                esp_wifi_get_config(WIFI_IF_STA, &stationConf);
-                // Clear previuos configuration
-                memset(&stationConf, 0, sizeof(stationConf));
-                esp_wifi_set_config(WIFI_IF_STA, &stationConf);
-#endif
+                this->clearWifiCredentials();                
             }
         }
         else
             webserver->send(500, "text/plain", "Connection error, maybe the password is wrong?");
     }
     webserver->send(500, "text/plain", "Wrong credentials provided");
+}
+
+void FSWebServer::clearWifiCredentials()
+{
+#if defined(ESP8266)
+    struct station_config stationConf;
+    wifi_station_get_config_default(&stationConf);
+    // Clear previuos configuration
+    memset(&stationConf, 0, sizeof(stationConf));
+    wifi_station_set_config(&stationConf);
+#elif defined(ESP32)
+    wifi_config_t stationConf;
+    esp_wifi_get_config(WIFI_IF_STA, &stationConf);
+    // Clear previuos configuration
+    memset(&stationConf, 0, sizeof(stationConf));
+    esp_wifi_set_config(WIFI_IF_STA, &stationConf);
+#endif
 }
 
 void FSWebServer::setCrossOrigin()

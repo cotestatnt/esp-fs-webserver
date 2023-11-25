@@ -268,6 +268,7 @@ private:
     // Default handler for all URIs not defined above, use it to read files from filesystem
     bool checkDir(const char *dirname, uint8_t levels);
     void doWifiConnection();
+    void clearWifiCredentials();
     void doRestart();
     void replyOK();
     void getIpAddress();
