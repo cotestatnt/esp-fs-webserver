@@ -130,8 +130,7 @@ bool FSWebServer::begin(const char *path)
 
 void FSWebServer::setCaptiveWebage(const char *url)
 {
-    m_apWebpage = (char *)realloc(m_apWebpage, sizeof(url));
-    strcpy(m_apWebpage, url);
+    m_apWebpage = url;
 }
 
 IPAddress FSWebServer::setAPmode(const char *ssid, const char *psk)

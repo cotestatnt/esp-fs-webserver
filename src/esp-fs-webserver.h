@@ -262,7 +262,7 @@ private:
     File m_uploadFile;
     bool m_fsOK = false;
     bool m_apmode = false;
-    char *m_apWebpage = (char *)"/setup";
+    const char *m_apWebpage = "/setup";
     uint32_t m_timeout = 10000;
 
     // Default handler for all URIs not defined above, use it to read files from filesystem
