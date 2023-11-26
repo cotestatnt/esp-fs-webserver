@@ -27,37 +27,25 @@ void FSWebServer::addHandler(const Uri &uri, WebServerClass::THandlerFunction ha
     webserver->on(uri, HTTP_ANY, handler);
 }
 
-// List all files saved in the selected filesystem
-bool FSWebServer::checkDir(const char *dirname, uint8_t levels)
+bool FSWebServer::checkDir(const char *dirname)
 {
-    File root = m_filesystem->open(dirname, "r");
-    if (!root)
-    {
-        DebugPrintln("- failed to open directory\n");
-        return false;
-    }
-    if (!root.isDirectory())
-    {
-        DebugPrintln(" - not a directory\n");
-        return false;
-    }
-    File file = root.openNextFile();
-    while (file)
-    {
-        if (file.isDirectory())
+    {   //scope for the root file
+        File root = m_filesystem->open(dirname, "r");
+        if (!root)
         {
-            char dir[16];
-            strcpy(dir, "/");
-            strcat(dir, file.name());
-            DebugPrintf("DIR : %s\n", dir);
-            checkDir(dir, levels - 1);
+            DebugPrintln("- failed to open directory\n");
+            return false;
         }
-        else
+        if (!root.isDirectory())
         {
-            DebugPrintf("  FILE: %s\tSIZE: %d\n", file.name(), file.size());
+            DebugPrintln(" - not a directory\n");
+            return false;
         }
-        file = root.openNextFile();
     }
+#if DEBUG_MODE_WS
+    // List all files saved in the selected filesystem
+    PrintDir(*m_filesystem, DBG_OUTPUT_PORT, dirname);    
+#endif
     return true;
 }
 
@@ -80,7 +68,7 @@ bool FSWebServer::begin()
         m_filesystem->rename("/config.json", CONFIG_FILE);
     }
 
-#ifdef INCLUDE_EDIT_HTM
+#ifdef ESP_FS_WS_EDIT
     webserver->on("/status", HTTP_GET, std::bind(&FSWebServer::handleStatus, this));
     webserver->on("/list", HTTP_GET, std::bind(&FSWebServer::handleFileList, this));
     webserver->on("/edit", HTTP_GET, std::bind(&FSWebServer::handleGetEdit, this));
@@ -90,7 +78,7 @@ bool FSWebServer::begin()
     webserver->onNotFound(std::bind(&FSWebServer::handleRequest, this));
     webserver->on("/favicon.ico", HTTP_GET, std::bind(&FSWebServer::replyOK, this));
     webserver->on("/", HTTP_GET, std::bind(&FSWebServer::handleIndex, this));
-#ifdef INCLUDE_SETUP_HTM
+#ifdef ESP_FS_WS_SETUP
     webserver->on("/setup", HTTP_GET, std::bind(&FSWebServer::handleSetup, this));
 #endif
     webserver->on("/scan", HTTP_GET, std::bind(&FSWebServer::handleScanNetworks, this));
@@ -418,7 +406,7 @@ void FSWebServer::handleScanNetworks()
 }
 
 
-#ifdef INCLUDE_SETUP_HTM
+#ifdef ESP_FS_WS_SETUP
 
 bool FSWebServer::clearOptions() {
     File file = m_filesystem->open(CONFIG_FILE, "r");
@@ -569,13 +557,18 @@ void FSWebServer::removeWhiteSpaces(String& str) {
 
 void FSWebServer::handleSetup()
 {
+#ifdef INCLUDE_SETUP_HTM
     webserver->sendHeader(PSTR("Content-Encoding"), "gzip");
     webserver->send_P(200, "text/html", SETUP_HTML, SETUP_HTML_SIZE);
-}
+#else
+    replyToCLient(NOT_FOUND, PSTR("FILE_NOT_FOUND"));
 #endif
+}
+#endif  //ESP_FS_WS_SETUP
 
 void FSWebServer::handleIndex()
 {
+    DebugPrintln("handleIndex");
     if (m_filesystem->exists("/index.htm"))
     {
         handleFileRead("/index.htm");
@@ -584,12 +577,10 @@ void FSWebServer::handleIndex()
     {
         handleFileRead("/index.html");
     }
-#ifdef INCLUDE_SETUP_HTM
     else
     {
         handleSetup();
     }
-#endif
 }
 
 /*
@@ -768,7 +759,7 @@ const char *FSWebServer::getContentType(const char *filename)
 }
 
 // edit page, in usefull in some situation, but if you need to provide only a web interface, you can disable
-#ifdef INCLUDE_EDIT_HTM
+#ifdef ESP_FS_WS_EDIT
 
 /*
     Return the list of files in the directory specified by the "dir" query string parameter.
@@ -1009,4 +1000,36 @@ void FSWebServer::handleStatus()
     webserver->send(200, "application/json", json);
 }
 
-#endif // INCLUDE_EDIT_HTM
+#endif // ESP_FS_WS_EDIT
+
+////////////////////////////////  Filesystem  /////////////////////////////////////////
+// List all files
+void PrintDir(fs::FS& fs, Print& p, const char* dirName, uint8_t level)
+{
+    File root = fs.open(dirName, "r");
+    if (!root)
+        return;
+    if (!root.isDirectory())
+        return;
+    File file = root.openNextFile();
+    while (file)
+    {
+        for (uint8_t lev = 0; lev < level; lev++)
+            p.print("  ");
+        if (file.isDirectory())
+        {
+            String dirStr;
+            if (strcmp(dirName, "/") != 0)
+                dirStr += dirName;
+            dirStr += "/";
+            dirStr += file.name();
+            p.printf("Dir: %s\n", dirStr.c_str());
+            PrintDir(fs, p, dirStr.c_str(), level + 1);
+        }
+        else
+        {
+            p.printf("File: %s\tsize: %d\n", file.name(), file.size());
+        }
+        file = root.openNextFile();
+    }
+}

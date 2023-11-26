@@ -7,17 +7,34 @@
 #include <base64.h>
 #include <FS.h>
 
-#define INCLUDE_EDIT_HTM
-#ifdef INCLUDE_EDIT_HTM
-#include "edit_htm.h"
+//default values
+#define ESP_FS_WS_EDIT      //has edit methods
+#define INCLUDE_EDIT_HTM    //included from progmem
+
+#define ESP_FS_WS_SETUP     //gas setup methods
+#define INCLUDE_SETUP_HTM   //included from progmem
+
+#define DBG_OUTPUT_PORT Serial
+#define DEBUG_MODE_WS 0
+
+#ifdef ESP_FS_WS_USER_H
+    //user can undef symbols
+    #include <esp_fs_ws_user.h>
 #endif
 
-#define INCLUDE_SETUP_HTM
-#ifdef INCLUDE_SETUP_HTM
-#define ARDUINOJSON_USE_LONG_LONG 1
-#include <ArduinoJson.h>
-#include "setup_htm.h"
-#define CONFIG_FILE "/setup/config.json"
+#ifdef ESP_FS_WS_EDIT
+    #ifdef INCLUDE_EDIT_HTM
+        #include "edit_htm.h"
+    #endif
+#endif
+
+#ifdef ESP_FS_WS_SETUP
+    #define ARDUINOJSON_USE_LONG_LONG 1
+    #include <ArduinoJson.h>
+    #define CONFIG_FILE "/setup/config.json"
+    #ifdef INCLUDE_SETUP_HTM
+        #include "setup_htm.h"
+    #endif
 #endif
 
 #if defined(ESP8266)
@@ -37,10 +54,6 @@ using WebServerClass = WebServer;
 using UpdateServerClass = HTTPUpdateServer;
 #endif
 #include <DNSServer.h>
-
-
-#define DBG_OUTPUT_PORT Serial
-#define DEBUG_MODE_WS 0
 
 #if DEBUG_MODE_WS
 #define DebugPrint(x) DBG_OUTPUT_PORT.print(x)
@@ -97,9 +110,9 @@ public:
     WebServerClass* getWebServer(){ return webserver; }
     uint32_t getTimeout() const { return m_timeout; }
 
-#ifdef INCLUDE_SETUP_HTM
-#define MIN_F -3.4028235E+38
-#define MAX_F 3.4028235E+38
+#ifdef ESP_FS_WS_SETUP
+    #define MIN_F -3.4028235E+38
+    #define MAX_F 3.4028235E+38
 
     inline const char* configFile() {return CONFIG_FILE; }
 
@@ -272,18 +285,20 @@ private:
     uint32_t m_timeout = 10000;
 
     // Default handler for all URIs not defined above, use it to read files from filesystem
-    bool checkDir(const char *dirname, uint8_t levels);
+    bool checkDir(const char *dirname);
     void doWifiConnection();
     void doRestart();
     void replyOK();
     void getIpAddress();
     void handleRequest();
-#ifdef INCLUDE_SETUP_HTM
+
+#ifdef ESP_FS_WS_SETUP
     bool optionToFile(const char* filename, const char* str, bool overWrite = false);
     void removeWhiteSpaces(String& str);
     void handleSetup();
     uint8_t numOptions = 0;
 #endif
+
     void handleIndex();
     bool handleFileRead(const char* path);
     void handleFileUpload();
@@ -295,14 +310,16 @@ private:
     bool captivePortal();
 
     // edit page, in usefull in some situation, but if you need to provide only a web interface, you can disable
-#ifdef INCLUDE_EDIT_HTM
+#ifdef ESP_FS_WS_EDIT
     void handleGetEdit();
     void handleFileCreate();
     void handleFileDelete();
     void handleStatus();
     void handleFileList();
 #endif
-
 };
+
+// List all files
+void PrintDir(fs::FS& fs, Print& p, const char* dirName, uint8_t level = 0);
 
 #endif
