@@ -8,31 +8,35 @@
 #include <FS.h>
 
 //default values
-#define ESP_FS_WS_EDIT      //has edit methods
-#define INCLUDE_EDIT_HTM    //included from progmem
-
-#define ESP_FS_WS_SETUP     //gas setup methods
-#define INCLUDE_SETUP_HTM   //included from progmem
-
-#define DBG_OUTPUT_PORT Serial
-#define DEBUG_MODE_WS 0
-
-#ifdef ESP_FS_WS_USER_H
-    //user can undef symbols
-    #include <esp_fs_ws_user.h>
+#ifndef ESP_FS_WS_EDIT
+    #define ESP_FS_WS_EDIT              1   //has edit methods
+    #ifndef ESP_FS_WS_EDIT_HTM
+        #define ESP_FS_WS_EDIT_HTM      1   //included from progmem
+    #endif
+#endif
+#ifndef ESP_FS_WS_SETUP
+    #define ESP_FS_WS_SETUP             1   //has setup methods
+    #ifndef ESP_FS_WS_SETUP_HTM
+        #define ESP_FS_WS_SETUP_HTM     1   //included from progmem
+    #endif
+#endif
+#ifndef DBG_OUTPUT_PORT
+    #define DBG_OUTPUT_PORT             Serial
+#endif
+#ifndef DEBUG_MODE_WS
+    #define DEBUG_MODE_WS               0
 #endif
 
-#ifdef ESP_FS_WS_EDIT
-    #ifdef INCLUDE_EDIT_HTM
+#if ESP_FS_WS_EDIT
+    #if ESP_FS_WS_EDIT_HTM
         #include "edit_htm.h"
     #endif
 #endif
-
-#ifdef ESP_FS_WS_SETUP
+#if ESP_FS_WS_SETUP
     #define ARDUINOJSON_USE_LONG_LONG 1
     #include <ArduinoJson.h>
     #define CONFIG_FILE "/setup/config.json"
-    #ifdef INCLUDE_SETUP_HTM
+    #if ESP_FS_WS_SETUP_HTM
         #include "setup_htm.h"
     #endif
 #endif
@@ -56,15 +60,17 @@ using UpdateServerClass = HTTPUpdateServer;
 #include <DNSServer.h>
 
 #if DEBUG_MODE_WS
+#pragma message("DEBUG_MODE_WS")
 #define DebugPrint(x) DBG_OUTPUT_PORT.print(x)
 #define DebugPrintln(x) DBG_OUTPUT_PORT.println(x)
 #define DebugPrintf(fmt, ...) DBG_OUTPUT_PORT.printf(fmt, ##__VA_ARGS__)
-#define DebugPrintf_P(fmt, ...) DBG_OUTPUT_PORT.printf_P(fmt, ##__VA_ARGS__)
+//#define DebugPrintf_P(fmt, ...) DBG_OUTPUT_PORT.printf_P(fmt, ##__VA_ARGS__)
+#define DebugPrintf_P(x, ...) ((void)0)
 #else
-#define DebugPrint(x)
-#define DebugPrintln(x)
-#define DebugPrintf(x, ...)
-#define DebugPrintf_P(x, ...)
+#define DebugPrint(x) ((void)0)
+#define DebugPrintln(x) ((void)0)
+#define DebugPrintf(x, ...) ((void)0)
+#define DebugPrintf_P(x, ...) ((void)0)
 #endif
 
 enum
@@ -107,10 +113,11 @@ public:
 
     void clearWifiCredentials();
 
-    WebServerClass* getWebServer(){ return webserver; }
-    uint32_t getTimeout() const { return m_timeout; }
+    inline WebServerClass* getWebServer(){ return webserver; }
+    inline uint32_t getTimeout() const { return m_timeout; }
+    inline bool getAPMode() const { return m_apmode; }
 
-#ifdef ESP_FS_WS_SETUP
+#if ESP_FS_WS_SETUP
     #define MIN_F -3.4028235E+38
     #define MAX_F 3.4028235E+38
 
@@ -292,7 +299,7 @@ private:
     void getIpAddress();
     void handleRequest();
 
-#ifdef ESP_FS_WS_SETUP
+#if ESP_FS_WS_SETUP
     bool optionToFile(const char* filename, const char* str, bool overWrite = false);
     void removeWhiteSpaces(String& str);
     void handleSetup();
@@ -310,7 +317,7 @@ private:
     bool captivePortal();
 
     // edit page, in usefull in some situation, but if you need to provide only a web interface, you can disable
-#ifdef ESP_FS_WS_EDIT
+#if ESP_FS_WS_EDIT
     void handleGetEdit();
     void handleFileCreate();
     void handleFileDelete();

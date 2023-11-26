@@ -33,12 +33,12 @@ bool FSWebServer::checkDir(const char *dirname)
         File root = m_filesystem->open(dirname, "r");
         if (!root)
         {
-            DebugPrintln("- failed to open directory\n");
+            DebugPrintln("- failed to open directory");
             return false;
         }
         if (!root.isDirectory())
         {
-            DebugPrintln(" - not a directory\n");
+            DebugPrintln(" - not a directory");
             return false;
         }
     }
@@ -51,15 +51,15 @@ bool FSWebServer::checkDir(const char *dirname)
 
 bool FSWebServer::begin()
 {
-    DebugPrintln("\nList the files of webserver: ");
+    DebugPrintln("List the files of webserver: ");
     File root = m_filesystem->open("/setup", "r");
     if (!root)
     {
-        DebugPrintln("Failed to open /setup directory. Create new folder\n");
+        DebugPrintln("Failed to open /setup directory. Create new folder");
         m_filesystem->mkdir("/setup");
         ESP.restart();
     }
-    m_fsOK = checkDir("/", 2);
+    m_fsOK = checkDir("/");
 
     // Backward compatibility, move config.json to new path
     root = m_filesystem->open("/config.json", "r");
@@ -68,7 +68,7 @@ bool FSWebServer::begin()
         m_filesystem->rename("/config.json", CONFIG_FILE);
     }
 
-#ifdef ESP_FS_WS_EDIT
+#if ESP_FS_WS_EDIT
     webserver->on("/status", HTTP_GET, std::bind(&FSWebServer::handleStatus, this));
     webserver->on("/list", HTTP_GET, std::bind(&FSWebServer::handleFileList, this));
     webserver->on("/edit", HTTP_GET, std::bind(&FSWebServer::handleGetEdit, this));
@@ -78,7 +78,7 @@ bool FSWebServer::begin()
     webserver->onNotFound(std::bind(&FSWebServer::handleRequest, this));
     webserver->on("/favicon.ico", HTTP_GET, std::bind(&FSWebServer::replyOK, this));
     webserver->on("/", HTTP_GET, std::bind(&FSWebServer::handleIndex, this));
-#ifdef ESP_FS_WS_SETUP
+#if ESP_FS_WS_SETUP
     webserver->on("/setup", HTTP_GET, std::bind(&FSWebServer::handleSetup, this));
 #endif
     webserver->on("/scan", HTTP_GET, std::bind(&FSWebServer::handleScanNetworks, this));
@@ -406,7 +406,7 @@ void FSWebServer::handleScanNetworks()
 }
 
 
-#ifdef ESP_FS_WS_SETUP
+#if ESP_FS_WS_SETUP
 
 bool FSWebServer::clearOptions() {
     File file = m_filesystem->open(CONFIG_FILE, "r");
@@ -557,7 +557,8 @@ void FSWebServer::removeWhiteSpaces(String& str) {
 
 void FSWebServer::handleSetup()
 {
-#ifdef INCLUDE_SETUP_HTM
+    DebugPrintln("handleSetup");
+#if ESP_FS_WS_SETUP_HTM
     webserver->sendHeader(PSTR("Content-Encoding"), "gzip");
     webserver->send_P(200, "text/html", SETUP_HTML, SETUP_HTML_SIZE);
 #else
@@ -759,7 +760,7 @@ const char *FSWebServer::getContentType(const char *filename)
 }
 
 // edit page, in usefull in some situation, but if you need to provide only a web interface, you can disable
-#ifdef ESP_FS_WS_EDIT
+#if ESP_FS_WS_EDIT
 
 /*
     Return the list of files in the directory specified by the "dir" query string parameter.
@@ -948,7 +949,7 @@ void FSWebServer::handleFileDelete()
 */
 void FSWebServer::handleGetEdit()
 {
-#ifdef INCLUDE_EDIT_HTM
+#if ESP_FS_WS_EDIT_HTM
     webserver->sendHeader(PSTR("Content-Encoding"), "gzip");
     webserver->send_P(200, "text/html", edit_htm_gz, EDIT_HTML_SIZE);
 #else
