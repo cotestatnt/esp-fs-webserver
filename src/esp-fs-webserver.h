@@ -14,17 +14,26 @@
         #define ESP_FS_WS_EDIT_HTM      1   //included from progmem
     #endif
 #endif
+
 #ifndef ESP_FS_WS_SETUP
     #define ESP_FS_WS_SETUP             1   //has setup methods
     #ifndef ESP_FS_WS_SETUP_HTM
         #define ESP_FS_WS_SETUP_HTM     1   //included from progmem
     #endif
 #endif
+
 #ifndef DBG_OUTPUT_PORT
     #define DBG_OUTPUT_PORT             Serial
 #endif
 #ifndef DEBUG_MODE_WS
     #define DEBUG_MODE_WS               0
+#endif
+
+#ifndef INFO_OUTPUT_PORT
+    #define INFO_OUTPUT_PORT            Serial
+#endif
+#ifndef INFO_MODE_WS
+    #define INFO_MODE_WS                1
 #endif
 
 #if ESP_FS_WS_EDIT
@@ -42,35 +51,41 @@
 #endif
 
 #if defined(ESP8266)
-#include <ESP8266WiFi.h>
-#include <ESP8266WebServer.h>
-#include <ESP8266mDNS.h>
-#include <ESP8266HTTPUpdateServer.h> // from Arduino core, OTA update via webbrowser
-using WebServerClass = ESP8266WebServer;
-using UpdateServerClass = ESP8266HTTPUpdateServer;
+    #include <ESP8266WiFi.h>
+    #include <ESP8266WebServer.h>
+    #include <ESP8266mDNS.h>
+    #include <ESP8266HTTPUpdateServer.h> // from Arduino core, OTA update via webbrowser
+    using WebServerClass = ESP8266WebServer;
+    using UpdateServerClass = ESP8266HTTPUpdateServer;
 #elif defined(ESP32)
-#include <esp_wifi.h>
-#include <WebServer.h>
-#include <WiFi.h>
-#include <ESPmDNS.h>
-#include <HTTPUpdateServer.h> // from Arduino core, OTA update via webbrowser
-using WebServerClass = WebServer;
-using UpdateServerClass = HTTPUpdateServer;
+    #include <esp_wifi.h>
+    #include <WebServer.h>
+    #include <WiFi.h>
+    #include <ESPmDNS.h>
+    #include <HTTPUpdateServer.h> // from Arduino core, OTA update via webbrowser
+    using WebServerClass = WebServer;
+    using UpdateServerClass = HTTPUpdateServer;
 #endif
 #include <DNSServer.h>
 
 #if DEBUG_MODE_WS
-#pragma message("DEBUG_MODE_WS")
-#define DebugPrint(x) DBG_OUTPUT_PORT.print(x)
-#define DebugPrintln(x) DBG_OUTPUT_PORT.println(x)
-#define DebugPrintf(fmt, ...) DBG_OUTPUT_PORT.printf(fmt, ##__VA_ARGS__)
-//#define DebugPrintf_P(fmt, ...) DBG_OUTPUT_PORT.printf_P(fmt, ##__VA_ARGS__)
-#define DebugPrintf_P(x, ...) ((void)0)
+    #define DebugPrint(...) DBG_OUTPUT_PORT.print(__VA_ARGS__)
+    #define DebugPrintln(...) DBG_OUTPUT_PORT.println(__VA_ARGS__)
+    #define DebugPrintf(...) DBG_OUTPUT_PORT.printf(__VA_ARGS__)
+    #define DebugPrintf_P(...) DBG_OUTPUT_PORT.printf_P(__VA_ARGS__)
 #else
-#define DebugPrint(x) ((void)0)
-#define DebugPrintln(x) ((void)0)
-#define DebugPrintf(x, ...) ((void)0)
-#define DebugPrintf_P(x, ...) ((void)0)
+    #define DebugPrint(...) ((void)0)
+    #define DebugPrintln(...) ((void)0)
+    #define DebugPrintf(...) ((void)0)
+    #define DebugPrintf_P(...) ((void)0)
+#endif
+
+#if INFO_MODE_WS
+    #define InfoPrint(...) INFO_OUTPUT_PORT.print(__VA_ARGS__)
+    #define InfoPrintln(...) INFO_OUTPUT_PORT.println(__VA_ARGS__)
+#else
+    #define InfoPrint(...) ((void)0)
+    #define InfoPrintln(...) ((void)0)
 #endif
 
 enum

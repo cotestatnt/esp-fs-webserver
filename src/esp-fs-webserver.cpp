@@ -42,9 +42,9 @@ bool FSWebServer::checkDir(const char *dirname)
             return false;
         }
     }
-#if DEBUG_MODE_WS
+#if INFO_MODE_WS
     // List all files saved in the selected filesystem
-    PrintDir(*m_filesystem, DBG_OUTPUT_PORT, dirname);    
+    PrintDir(*m_filesystem, INFO_OUTPUT_PORT, dirname);    
 #endif
     return true;
 }
@@ -136,9 +136,9 @@ IPAddress FSWebServer::startAP()
     m_dnsServer.start(53, "*", ip);
     WiFi.begin();   //???
     ip = WiFi.softAPIP();
-    Serial.print(F("\nAP mode.\nServer IP address: "));
-    Serial.println(ip);
-    Serial.println();
+    InfoPrintln(F("AP mode."));
+    InfoPrint(F("Server IP address: "));
+    InfoPrintln(ip);
     return ip;
 }
 
@@ -165,15 +165,15 @@ IPAddress FSWebServer::startWiFi(uint32_t timeout, bool apFlag, CallbackF fn )
         WiFi.mode(WIFI_STA);
         WiFi.begin(_ssid, _pass);
         uint32_t startTime = millis();
-        Serial.print(F("Connecting to "));
-        Serial.println(_ssid);
+        InfoPrint(F("Connecting to "));
+        InfoPrintln(_ssid);
         while ( (WiFi.status() != WL_CONNECTED) && (timeout > 0 ) )
         {
             // execute callback function during wifi connection
             if (fn != nullptr)
                 fn();
             delay(250);
-            Serial.print(".");
+            InfoPrint(".");
             // If no connection after a while break
             if (millis() - startTime > timeout)
                 break;
@@ -213,7 +213,6 @@ void FSWebServer::handleRequest()
         replyToCLient(ERROR, PSTR(FS_INIT_ERROR));
         return;
     }
-
     String _url = WebServerClass::urlDecode(webserver->uri());
     // First try to find and return the requested file from the filesystem,
     // and if it fails, return a 404 page with debug information
@@ -270,22 +269,22 @@ void FSWebServer::doWifiConnection()
         webserver->send(200, "text/plain", resp);
 
         delay(500);
-        Serial.println("Disconnect from current WiFi network");
+        InfoPrintln("Disconnect from current WiFi network");
         WiFi.disconnect();
     }
 
-    if (ssid.length() && pass.length())
-    {
+    if (ssid.length())
+    {   // pass could be empty
         // Try to connect to new ssid
-        Serial.print("\nConnecting to ");
-        Serial.println(ssid);
+        InfoPrint("Connecting to ");
+        InfoPrintln(ssid);
         WiFi.begin(ssid.c_str(), pass.c_str());
 
         uint32_t beginTime = millis();
         while (WiFi.status() != WL_CONNECTED)
         {
-            delay(500);
-            Serial.print("*.*");
+            delay(250);
+            InfoPrint(".");
             if (millis() - beginTime > m_timeout)
                 break;
         }
@@ -294,8 +293,8 @@ void FSWebServer::doWifiConnection()
         {
             // WiFi.softAPdisconnect();
             IPAddress ip = WiFi.localIP();
-            Serial.print("\nConnected to Wifi! IP address: ");
-            Serial.println(ip);
+            InfoPrint("Connected to Wifi! IP address: ");
+            InfoPrintln(ip);
             String serverLoc = F("http://");
             for (int i = 0; i < 4; i++)
                 serverLoc += i ? "." + String(ip[i]) : String(ip[i]);
