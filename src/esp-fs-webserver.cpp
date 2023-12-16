@@ -42,9 +42,9 @@ bool FSWebServer::checkDir(const char *dirname)
             return false;
         }
     }
-#if INFO_MODE_WS
+#if ESP_FS_WS_INFO_MODE
     // List all files saved in the selected filesystem
-    PrintDir(*m_filesystem, INFO_OUTPUT_PORT, dirname);    
+    PrintDir(*m_filesystem, ESP_FS_WS_INFO_OUTPUT, dirname);    
 #endif
     return true;
 }
@@ -65,7 +65,7 @@ bool FSWebServer::begin()
     root = m_filesystem->open("/config.json", "r");
     if(root) {
         root.close();
-        m_filesystem->rename("/config.json", CONFIG_FILE);
+        m_filesystem->rename("/config.json", ESP_FS_WS_CONFIG_FILE);
     }
 
 #if ESP_FS_WS_EDIT
@@ -408,10 +408,10 @@ void FSWebServer::handleScanNetworks()
 #if ESP_FS_WS_SETUP
 
 bool FSWebServer::clearOptions() {
-    File file = m_filesystem->open(CONFIG_FILE, "r");
+    File file = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "r");
     if (file) {
         file.close();
-        m_filesystem->remove(CONFIG_FILE);
+        m_filesystem->remove(ESP_FS_WS_CONFIG_FILE);
         return true;
     }
     return false;
@@ -491,7 +491,7 @@ void FSWebServer::addJavascript(const char* script, bool overWrite) {
 }
 
 void FSWebServer::addDropdownList(const char *label, const char** array, size_t size) {
-    File file = m_filesystem->open(CONFIG_FILE, "r");
+    File file = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "r");
     int sz = file.size() * 1.33;
     int docSize = max(sz, 2048);
     DynamicJsonDocument doc((size_t)docSize);
@@ -526,7 +526,7 @@ void FSWebServer::addDropdownList(const char *label, const char** array, size_t 
         arr.add(array[i]);
     }
 
-    file = m_filesystem->open(CONFIG_FILE, "w");
+    file = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "w");
     if (serializeJsonPretty(doc, file) == 0)
     {
         DebugPrintln(F("Failed to write to file"));

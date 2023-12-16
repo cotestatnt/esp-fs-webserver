@@ -22,18 +22,18 @@
     #endif
 #endif
 
-#ifndef DBG_OUTPUT_PORT
-    #define DBG_OUTPUT_PORT             Serial
+#ifndef ESP_FS_WS_DEBUG_OUTPUT
+    #define ESP_FS_WS_DEBUG_OUTPUT      Serial
 #endif
-#ifndef DEBUG_MODE_WS
-    #define DEBUG_MODE_WS               0
+#ifndef ESP_FS_WS_DEBUG_MODE
+    #define ESP_FS_WS_DEBUG_MODE        0
 #endif
 
-#ifndef INFO_OUTPUT_PORT
-    #define INFO_OUTPUT_PORT            Serial
+#ifndef ESP_FS_WS_INFO_OUTPUT
+    #define ESP_FS_WS_INFO_OUTPUT       Serial
 #endif
-#ifndef INFO_MODE_WS
-    #define INFO_MODE_WS                1
+#ifndef ESP_FS_WS_INFO_MODE
+    #define ESP_FS_WS_INFO_MODE         1
 #endif
 
 #if ESP_FS_WS_EDIT
@@ -44,7 +44,7 @@
 #if ESP_FS_WS_SETUP
     #define ARDUINOJSON_USE_LONG_LONG 1
     #include <ArduinoJson.h>
-    #define CONFIG_FILE "/setup/config.json"
+    #define ESP_FS_WS_CONFIG_FILE "/setup/config.json"
     #if ESP_FS_WS_SETUP_HTM
         #include "setup_htm.h"
     #endif
@@ -68,11 +68,11 @@
 #endif
 #include <DNSServer.h>
 
-#if DEBUG_MODE_WS
-    #define DebugPrint(...) DBG_OUTPUT_PORT.print(__VA_ARGS__)
-    #define DebugPrintln(...) DBG_OUTPUT_PORT.println(__VA_ARGS__)
-    #define DebugPrintf(...) DBG_OUTPUT_PORT.printf(__VA_ARGS__)
-    #define DebugPrintf_P(...) DBG_OUTPUT_PORT.printf_P(__VA_ARGS__)
+#if ESP_FS_WS_DEBUG_MODE
+    #define DebugPrint(...) ESP_FS_WS_DEBUG_OUTPUT.print(__VA_ARGS__)
+    #define DebugPrintln(...) ESP_FS_WS_DEBUG_OUTPUT.println(__VA_ARGS__)
+    #define DebugPrintf(...) ESP_FS_WS_DEBUG_OUTPUT.printf(__VA_ARGS__)
+    #define DebugPrintf_P(...) ESP_FS_WS_DEBUG_OUTPUT.printf_P(__VA_ARGS__)
 #else
     #define DebugPrint(...) ((void)0)
     #define DebugPrintln(...) ((void)0)
@@ -80,9 +80,9 @@
     #define DebugPrintf_P(...) ((void)0)
 #endif
 
-#if INFO_MODE_WS
-    #define InfoPrint(...) INFO_OUTPUT_PORT.print(__VA_ARGS__)
-    #define InfoPrintln(...) INFO_OUTPUT_PORT.println(__VA_ARGS__)
+#if ESP_FS_WS_INFO_MODE
+    #define InfoPrint(...) ESP_FS_WS_INFO_OUTPUT.print(__VA_ARGS__)
+    #define InfoPrintln(...) ESP_FS_WS_INFO_OUTPUT.println(__VA_ARGS__)
 #else
     #define InfoPrint(...) ((void)0)
     #define InfoPrintln(...) ((void)0)
@@ -136,7 +136,7 @@ public:
     #define MIN_F -3.4028235E+38
     #define MAX_F 3.4028235E+38
 
-    inline const char* configFile() {return CONFIG_FILE; }
+    inline const char* configFile() {return ESP_FS_WS_CONFIG_FILE; }
 
     bool clearOptions();
     void addHTML(const char* html, const char* id, bool overWrite = false) ;
@@ -168,7 +168,7 @@ public:
     inline void addOption(const char *label, T val, bool hidden = false,
                     double d_min = MIN_F, double d_max = MAX_F, double step = 1.0)
     {
-        File file = m_filesystem->open(CONFIG_FILE, "r");
+        File file = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "r");
         int sz = file.size() * 1.33;
         int docSize = max(sz, 2048);
         DynamicJsonDocument doc((size_t)docSize);
@@ -221,7 +221,7 @@ public:
             doc[key] = static_cast<T>(val);
         }
 
-        file = m_filesystem->open(CONFIG_FILE, "w");
+        file = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "w");
         if (serializeJsonPretty(doc, file) == 0)
         {
             DebugPrintln(F("Failed to write to file"));
@@ -235,7 +235,7 @@ public:
     template <typename T>
     bool getOptionValue(const char *label, T &var)
     {
-        File file = m_filesystem->open(CONFIG_FILE, "r");
+        File file = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "r");
         DynamicJsonDocument doc(file.size() * 1.33);
         if (file)
         {
@@ -264,7 +264,7 @@ public:
     template <typename T>
     bool saveOptionValue(const char *label, T val)
     {
-        File file = m_filesystem->open(CONFIG_FILE, "w");
+        File file = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "w");
         DynamicJsonDocument doc(file.size() * 1.33);
 
         if (file)
