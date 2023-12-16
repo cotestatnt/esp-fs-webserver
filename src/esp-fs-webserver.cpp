@@ -1,15 +1,12 @@
 #include "esp-fs-webserver.h"
 
-FSWebServer::FSWebServer(fs::FS &fs, WebServerClass &server)
+FSWebServer::FSWebServer(fs::FS &fs, WebServerClass &server) :
+    m_apWebpage( "/setup" )
+    , m_apSsid("ESP_AP")
+    , m_apPsk("123456789")
 {
     m_filesystem = &fs;
     webserver = &server;
-    // m_basePath[0] = '\0';
-}
-
-WebServerClass *FSWebServer::getRequest()
-{
-    return webserver;
 }
 
 void FSWebServer::run()
@@ -30,60 +27,48 @@ void FSWebServer::addHandler(const Uri &uri, WebServerClass::THandlerFunction ha
     webserver->on(uri, HTTP_ANY, handler);
 }
 
-// List all files saved in the selected filesystem
-bool FSWebServer::checkDir(const char *dirname, uint8_t levels)
+bool FSWebServer::checkDir(const char *dirname)
 {
-    File root = m_filesystem->open(dirname, "r");
-    if (!root)
-    {
-        DebugPrintln("- failed to open directory\n");
-        return false;
-    }
-    if (!root.isDirectory())
-    {
-        DebugPrintln(" - not a directory\n");
-        return false;
-    }
-    File file = root.openNextFile();
-    while (file)
-    {
-        if (file.isDirectory())
+    {   //scope for the root file
+        File root = m_filesystem->open(dirname, "r");
+        if (!root)
         {
-            char dir[16];
-            strcpy(dir, "/");
-            strcat(dir, file.name());
-            DebugPrintf("DIR : %s\n", dir);
-            checkDir(dir, levels - 1);
+            DebugPrintln("- failed to open directory");
+            return false;
         }
-        else
+        if (!root.isDirectory())
         {
-            DebugPrintf("  FILE: %s\tSIZE: %d\n", file.name(), file.size());
+            DebugPrintln(" - not a directory");
+            return false;
         }
-        file = root.openNextFile();
     }
+#if ESP_FS_WS_INFO_MODE
+    // List all files saved in the selected filesystem
+    PrintDir(*m_filesystem, ESP_FS_WS_INFO_OUTPUT, dirname);    
+#endif
     return true;
 }
 
-bool FSWebServer::begin(const char *path)
+bool FSWebServer::begin()
 {
-    DebugPrintln("\nList the files of webserver: ");
+    DebugPrintln("List the files of webserver: ");
     File root = m_filesystem->open("/setup", "r");
     if (!root)
     {
-        DebugPrintln("Failed to open /setup directory. Create new folder\n");
+        DebugPrintln("Failed to open /setup directory. Create new folder");
         m_filesystem->mkdir("/setup");
         ESP.restart();
     }
-    m_fsOK = checkDir("/", 2);
+    m_fsOK = checkDir("/");
 
     // Backward compatibility, move config.json to new path
     root = m_filesystem->open("/config.json", "r");
     if(root) {
         root.close();
-        m_filesystem->rename("/config.json", CONFIG_FILE);
+        m_filesystem->rename("/config.json", ESP_FS_WS_CONFIG_FILE);
     }
 
-#ifdef INCLUDE_EDIT_HTM
+#if ESP_FS_WS_EDIT
     webserver->on("/status", HTTP_GET, std::bind(&FSWebServer::handleStatus, this));
     webserver->on("/list", HTTP_GET, std::bind(&FSWebServer::handleFileList, this));
     webserver->on("/edit", HTTP_GET, std::bind(&FSWebServer::handleGetEdit, this));
@@ -93,7 +78,7 @@ bool FSWebServer::begin(const char *path)
     webserver->onNotFound(std::bind(&FSWebServer::handleRequest, this));
     webserver->on("/favicon.ico", HTTP_GET, std::bind(&FSWebServer::replyOK, this));
     webserver->on("/", HTTP_GET, std::bind(&FSWebServer::handleIndex, this));
-#ifdef INCLUDE_SETUP_HTM
+#if ESP_FS_WS_SETUP
     webserver->on("/setup", HTTP_GET, std::bind(&FSWebServer::handleSetup, this));
 #endif
     webserver->on("/scan", HTTP_GET, std::bind(&FSWebServer::handleScanNetworks, this));
@@ -128,30 +113,39 @@ bool FSWebServer::begin(const char *path)
     return true;
 }
 
-void FSWebServer::setCaptiveWebage(const char *url)
+void FSWebServer::setAPWebPage(const char *url)
 {
-    m_apWebpage = (char *)realloc(m_apWebpage, sizeof(url));
-    strcpy(m_apWebpage, url);
+    m_apWebpage = url;
 }
 
-IPAddress FSWebServer::setAPmode(const char *ssid, const char *psk)
+void FSWebServer::setAP(const char *ssid, const char *psk)
+{
+    m_apSsid = ssid;
+    m_apPsk = psk;
+}
+
+IPAddress FSWebServer::startAP()
 {
     m_apmode = true;
     WiFi.mode(WIFI_AP_STA);
     WiFi.persistent(false);
-    WiFi.softAP(ssid, psk);
+    WiFi.softAP(m_apSsid.c_str(), m_apPsk.c_str());
     /* Setup the DNS server redirecting all the domains to the apIP */
     m_dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
-    m_dnsServer.start(53, "*", WiFi.softAPIP());
-    return WiFi.softAPIP();
+    IPAddress ip = WiFi.softAPIP();
+    m_dnsServer.start(53, "*", ip);
+    WiFi.begin();   //???
+    ip = WiFi.softAPIP();
+    InfoPrintln(F("AP mode."));
+    InfoPrint(F("Server IP address: "));
+    InfoPrintln(ip);
+    return ip;
 }
 
-IPAddress FSWebServer::startWiFi(uint32_t timeout, const char *apSSID, const char *apPsw, CallbackF fn )
+IPAddress FSWebServer::startWiFi(uint32_t timeout, bool apFlag, CallbackF fn )
 {
-    IPAddress ip;
-    m_timeout = timeout;
-    WiFi.mode(WIFI_STA);
-
+    if( timeout > 0 )
+        m_timeout = timeout;    
     const char *_ssid;
     const char *_pass;
 #if defined(ESP8266)
@@ -159,51 +153,36 @@ IPAddress FSWebServer::startWiFi(uint32_t timeout, const char *apSSID, const cha
     wifi_station_get_config_default(&conf);
     _ssid = reinterpret_cast<const char *>(conf.ssid);
     _pass = reinterpret_cast<const char *>(conf.password);
-
 #elif defined(ESP32)
     wifi_config_t conf;
     esp_wifi_get_config(WIFI_IF_STA, &conf);
-
     _ssid = reinterpret_cast<const char *>(conf.sta.ssid);
     _pass = reinterpret_cast<const char *>(conf.sta.password);
 #endif
-
     if (strlen(_ssid) && strlen(_pass))
     {
+        m_apmode = false;
+        WiFi.mode(WIFI_STA);
         WiFi.begin(_ssid, _pass);
-        Serial.print(F("Connecting to "));
-        Serial.println(_ssid);
         uint32_t startTime = millis();
-        while (WiFi.status() != WL_CONNECTED)
+        InfoPrint(F("Connecting to "));
+        InfoPrintln(_ssid);
+        while ( (WiFi.status() != WL_CONNECTED) && (timeout > 0 ) )
         {
             // execute callback function during wifi connection
             if (fn != nullptr)
                 fn();
-
             delay(250);
-            Serial.print(".");
-            if (WiFi.status() == WL_CONNECTED)
-            {
-                ip = WiFi.localIP();
-                return ip;
-            }
-            // If no connection after a while go in Access Point mode
-            if (millis() - startTime > m_timeout)
+            InfoPrint(".");
+            // If no connection after a while break
+            if (millis() - startTime > timeout)
                 break;
         }
+        if ( (WiFi.status() == WL_CONNECTED) || apFlag )
+            return WiFi.localIP();
     }
-
-    if (apSSID != nullptr && apPsw != nullptr)
-        setAPmode(apSSID, apPsw);
-    else
-        setAPmode("ESP_AP", "123456789");
-
-    WiFi.begin();
-    ip = WiFi.softAPIP();
-    Serial.print(F("\nAP mode.\nServer IP address: "));
-    Serial.println(ip);
-    Serial.println();
-    return ip;
+    //start Access Point
+    return startAP();
 }
 
 ////////////////////////////////  WiFi  /////////////////////////////////////////
@@ -213,12 +192,11 @@ IPAddress FSWebServer::startWiFi(uint32_t timeout, const char *apSSID, const cha
  */
 bool FSWebServer::captivePortal()
 {
-    IPAddress ip = webserver->client().localIP();
-    char serverLoc[sizeof("https:://255.255.255.255/") + sizeof(m_apWebpage) + 1];
-    snprintf(serverLoc, sizeof(serverLoc), "http://%d.%d.%d.%d%s", ip[0], ip[1], ip[2], ip[3], m_apWebpage);
-
+    String serverLoc("https:://");
+    serverLoc += webserver->client().localIP().toString();
+    serverLoc += m_apWebpage;
     // redirect if hostheader not server ip, prevent redirect loops
-    if (strcmp(serverLoc, webserver->hostHeader().c_str()))
+    if (serverLoc != webserver->hostHeader())
     {
         webserver->sendHeader(F("Location"), serverLoc, true);
         webserver->send(302, F("text/html"), ""); // Empty content inhibits Content-length header so we have to close the socket ourselves.
@@ -235,7 +213,6 @@ void FSWebServer::handleRequest()
         replyToCLient(ERROR, PSTR(FS_INIT_ERROR));
         return;
     }
-
     String _url = WebServerClass::urlDecode(webserver->uri());
     // First try to find and return the requested file from the filesystem,
     // and if it fails, return a 404 page with debug information
@@ -292,22 +269,22 @@ void FSWebServer::doWifiConnection()
         webserver->send(200, "text/plain", resp);
 
         delay(500);
-        Serial.println("Disconnect from current WiFi network");
+        InfoPrintln("Disconnect from current WiFi network");
         WiFi.disconnect();
     }
 
-    if (ssid.length() && pass.length())
-    {
+    if (ssid.length())
+    {   // pass could be empty
         // Try to connect to new ssid
-        Serial.print("\nConnecting to ");
-        Serial.println(ssid);
+        InfoPrint("Connecting to ");
+        InfoPrintln(ssid);
         WiFi.begin(ssid.c_str(), pass.c_str());
 
         uint32_t beginTime = millis();
         while (WiFi.status() != WL_CONNECTED)
         {
-            delay(500);
-            Serial.print("*.*");
+            delay(250);
+            InfoPrint(".");
             if (millis() - beginTime > m_timeout)
                 break;
         }
@@ -316,8 +293,8 @@ void FSWebServer::doWifiConnection()
         {
             // WiFi.softAPdisconnect();
             IPAddress ip = WiFi.localIP();
-            Serial.print("\nConnected to Wifi! IP address: ");
-            Serial.println(ip);
+            InfoPrint("Connected to Wifi! IP address: ");
+            InfoPrintln(ip);
             String serverLoc = F("http://");
             for (int i = 0; i < 4; i++)
                 serverLoc += i ? "." + String(ip[i]) : String(ip[i]);
@@ -352,25 +329,30 @@ void FSWebServer::doWifiConnection()
 #endif
             }
             else {
-                #if defined(ESP8266)
-                struct station_config stationConf;
-                wifi_station_get_config_default(&stationConf);
-                // Clear previuos configuration
-                memset(&stationConf, 0, sizeof(stationConf));
-                wifi_station_set_config(&stationConf);
-#elif defined(ESP32)
-                wifi_config_t stationConf;
-                esp_wifi_get_config(WIFI_IF_STA, &stationConf);
-                // Clear previuos configuration
-                memset(&stationConf, 0, sizeof(stationConf));
-                esp_wifi_set_config(WIFI_IF_STA, &stationConf);
-#endif
+                this->clearWifiCredentials();                
             }
         }
         else
             webserver->send(500, "text/plain", "Connection error, maybe the password is wrong?");
     }
     webserver->send(500, "text/plain", "Wrong credentials provided");
+}
+
+void FSWebServer::clearWifiCredentials()
+{
+#if defined(ESP8266)
+    struct station_config stationConf;
+    wifi_station_get_config_default(&stationConf);
+    // Clear previuos configuration
+    memset(&stationConf, 0, sizeof(stationConf));
+    wifi_station_set_config(&stationConf);
+#elif defined(ESP32)
+    wifi_config_t stationConf;
+    esp_wifi_get_config(WIFI_IF_STA, &stationConf);
+    // Clear previuos configuration
+    memset(&stationConf, 0, sizeof(stationConf));
+    esp_wifi_set_config(WIFI_IF_STA, &stationConf);
+#endif
 }
 
 void FSWebServer::setCrossOrigin()
@@ -423,13 +405,13 @@ void FSWebServer::handleScanNetworks()
 }
 
 
-#ifdef INCLUDE_SETUP_HTM
+#if ESP_FS_WS_SETUP
 
 bool FSWebServer::clearOptions() {
-    File file = m_filesystem->open(CONFIG_FILE, "r");
+    File file = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "r");
     if (file) {
         file.close();
-        m_filesystem->remove(CONFIG_FILE);
+        m_filesystem->remove(ESP_FS_WS_CONFIG_FILE);
         return true;
     }
     return false;
@@ -509,7 +491,7 @@ void FSWebServer::addJavascript(const char* script, bool overWrite) {
 }
 
 void FSWebServer::addDropdownList(const char *label, const char** array, size_t size) {
-    File file = m_filesystem->open(CONFIG_FILE, "r");
+    File file = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "r");
     int sz = file.size() * 1.33;
     int docSize = max(sz, 2048);
     DynamicJsonDocument doc((size_t)docSize);
@@ -544,7 +526,7 @@ void FSWebServer::addDropdownList(const char *label, const char** array, size_t 
         arr.add(array[i]);
     }
 
-    file = m_filesystem->open(CONFIG_FILE, "w");
+    file = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "w");
     if (serializeJsonPretty(doc, file) == 0)
     {
         DebugPrintln(F("Failed to write to file"));
@@ -574,13 +556,19 @@ void FSWebServer::removeWhiteSpaces(String& str) {
 
 void FSWebServer::handleSetup()
 {
+    DebugPrintln("handleSetup");
+#if ESP_FS_WS_SETUP_HTM
     webserver->sendHeader(PSTR("Content-Encoding"), "gzip");
     webserver->send_P(200, "text/html", SETUP_HTML, SETUP_HTML_SIZE);
-}
+#else
+    replyToCLient(NOT_FOUND, PSTR("FILE_NOT_FOUND"));
 #endif
+}
+#endif  //ESP_FS_WS_SETUP
 
 void FSWebServer::handleIndex()
 {
+    DebugPrintln("handleIndex");
     if (m_filesystem->exists("/index.htm"))
     {
         handleFileRead("/index.htm");
@@ -589,12 +577,10 @@ void FSWebServer::handleIndex()
     {
         handleFileRead("/index.html");
     }
-#ifdef INCLUDE_SETUP_HTM
     else
     {
         handleSetup();
     }
-#endif
 }
 
 /*
@@ -773,7 +759,7 @@ const char *FSWebServer::getContentType(const char *filename)
 }
 
 // edit page, in usefull in some situation, but if you need to provide only a web interface, you can disable
-#ifdef INCLUDE_EDIT_HTM
+#if ESP_FS_WS_EDIT
 
 /*
     Return the list of files in the directory specified by the "dir" query string parameter.
@@ -962,7 +948,7 @@ void FSWebServer::handleFileDelete()
 */
 void FSWebServer::handleGetEdit()
 {
-#ifdef INCLUDE_EDIT_HTM
+#if ESP_FS_WS_EDIT_HTM
     webserver->sendHeader(PSTR("Content-Encoding"), "gzip");
     webserver->send_P(200, "text/html", edit_htm_gz, EDIT_HTML_SIZE);
 #else
@@ -1014,4 +1000,36 @@ void FSWebServer::handleStatus()
     webserver->send(200, "application/json", json);
 }
 
-#endif // INCLUDE_EDIT_HTM
+#endif // ESP_FS_WS_EDIT
+
+////////////////////////////////  Filesystem  /////////////////////////////////////////
+// List all files
+void PrintDir(fs::FS& fs, Print& p, const char* dirName, uint8_t level)
+{
+    File root = fs.open(dirName, "r");
+    if (!root)
+        return;
+    if (!root.isDirectory())
+        return;
+    File file = root.openNextFile();
+    while (file)
+    {
+        for (uint8_t lev = 0; lev < level; lev++)
+            p.print("  ");
+        if (file.isDirectory())
+        {
+            String dirStr;
+            if (strcmp(dirName, "/") != 0)
+                dirStr += dirName;
+            dirStr += "/";
+            dirStr += file.name();
+            p.printf("Dir: %s\n", dirStr.c_str());
+            PrintDir(fs, p, dirStr.c_str(), level + 1);
+        }
+        else
+        {
+            p.printf("File: %s\tsize: %d\n", file.name(), file.size());
+        }
+        file = root.openNextFile();
+    }
+}

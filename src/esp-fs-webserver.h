@@ -7,51 +7,85 @@
 #include <base64.h>
 #include <FS.h>
 
-#define INCLUDE_EDIT_HTM
-#ifdef INCLUDE_EDIT_HTM
-#include "edit_htm.h"
+//default values
+#ifndef ESP_FS_WS_EDIT
+    #define ESP_FS_WS_EDIT              1   //has edit methods
+    #ifndef ESP_FS_WS_EDIT_HTM
+        #define ESP_FS_WS_EDIT_HTM      1   //included from progmem
+    #endif
 #endif
 
-#define INCLUDE_SETUP_HTM
-#ifdef INCLUDE_SETUP_HTM
-#define ARDUINOJSON_USE_LONG_LONG 1
-#include <ArduinoJson.h>
-#include "setup_htm.h"
-#define CONFIG_FILE "/setup/config.json"
+#ifndef ESP_FS_WS_SETUP
+    #define ESP_FS_WS_SETUP             1   //has setup methods
+    #ifndef ESP_FS_WS_SETUP_HTM
+        #define ESP_FS_WS_SETUP_HTM     1   //included from progmem
+    #endif
+#endif
+
+#ifndef ESP_FS_WS_DEBUG_OUTPUT
+    #define ESP_FS_WS_DEBUG_OUTPUT      Serial
+#endif
+#ifndef ESP_FS_WS_DEBUG_MODE
+    #define ESP_FS_WS_DEBUG_MODE        0
+#endif
+
+#ifndef ESP_FS_WS_INFO_OUTPUT
+    #define ESP_FS_WS_INFO_OUTPUT       Serial
+#endif
+#ifndef ESP_FS_WS_INFO_MODE
+    #define ESP_FS_WS_INFO_MODE         1
+#endif
+
+#if ESP_FS_WS_EDIT
+    #if ESP_FS_WS_EDIT_HTM
+        #include "edit_htm.h"
+    #endif
+#endif
+#if ESP_FS_WS_SETUP
+    #define ARDUINOJSON_USE_LONG_LONG 1
+    #include <ArduinoJson.h>
+    #define ESP_FS_WS_CONFIG_FILE "/setup/config.json"
+    #if ESP_FS_WS_SETUP_HTM
+        #include "setup_htm.h"
+    #endif
 #endif
 
 #if defined(ESP8266)
-#include <ESP8266WiFi.h>
-#include <ESP8266WebServer.h>
-#include <ESP8266mDNS.h>
-#include <ESP8266HTTPUpdateServer.h> // from Arduino core, OTA update via webbrowser
-using WebServerClass = ESP8266WebServer;
-using UpdateServerClass = ESP8266HTTPUpdateServer;
+    #include <ESP8266WiFi.h>
+    #include <ESP8266WebServer.h>
+    #include <ESP8266mDNS.h>
+    #include <ESP8266HTTPUpdateServer.h> // from Arduino core, OTA update via webbrowser
+    using WebServerClass = ESP8266WebServer;
+    using UpdateServerClass = ESP8266HTTPUpdateServer;
 #elif defined(ESP32)
-#include <esp_wifi.h>
-#include <WebServer.h>
-#include <WiFi.h>
-#include <ESPmDNS.h>
-#include <HTTPUpdateServer.h> // from Arduino core, OTA update via webbrowser
-using WebServerClass = WebServer;
-using UpdateServerClass = HTTPUpdateServer;
+    #include <esp_wifi.h>
+    #include <WebServer.h>
+    #include <WiFi.h>
+    #include <ESPmDNS.h>
+    #include <HTTPUpdateServer.h> // from Arduino core, OTA update via webbrowser
+    using WebServerClass = WebServer;
+    using UpdateServerClass = HTTPUpdateServer;
 #endif
 #include <DNSServer.h>
 
-
-#define DBG_OUTPUT_PORT Serial
-#define DEBUG_MODE_WS 0
-
-#if DEBUG_MODE_WS
-#define DebugPrint(x) DBG_OUTPUT_PORT.print(x)
-#define DebugPrintln(x) DBG_OUTPUT_PORT.println(x)
-#define DebugPrintf(fmt, ...) DBG_OUTPUT_PORT.printf(fmt, ##__VA_ARGS__)
-#define DebugPrintf_P(fmt, ...) DBG_OUTPUT_PORT.printf_P(fmt, ##__VA_ARGS__)
+#if ESP_FS_WS_DEBUG_MODE
+    #define DebugPrint(...) ESP_FS_WS_DEBUG_OUTPUT.print(__VA_ARGS__)
+    #define DebugPrintln(...) ESP_FS_WS_DEBUG_OUTPUT.println(__VA_ARGS__)
+    #define DebugPrintf(...) ESP_FS_WS_DEBUG_OUTPUT.printf(__VA_ARGS__)
+    #define DebugPrintf_P(...) ESP_FS_WS_DEBUG_OUTPUT.printf_P(__VA_ARGS__)
 #else
-#define DebugPrint(x)
-#define DebugPrintln(x)
-#define DebugPrintf(x, ...)
-#define DebugPrintf_P(x, ...)
+    #define DebugPrint(...) ((void)0)
+    #define DebugPrintln(...) ((void)0)
+    #define DebugPrintf(...) ((void)0)
+    #define DebugPrintf_P(...) ((void)0)
+#endif
+
+#if ESP_FS_WS_INFO_MODE
+    #define InfoPrint(...) ESP_FS_WS_INFO_OUTPUT.print(__VA_ARGS__)
+    #define InfoPrintln(...) ESP_FS_WS_INFO_OUTPUT.println(__VA_ARGS__)
+#else
+    #define InfoPrint(...) ((void)0)
+    #define InfoPrintln(...) ((void)0)
 #endif
 
 enum
@@ -68,15 +102,12 @@ enum
 
 class FSWebServer
 {
-
     using CallbackF = std::function<void(void)>;
 
 public:
-    WebServerClass *webserver;
-
     FSWebServer(fs::FS &fs, WebServerClass &server);
 
-    bool begin(const char *path = nullptr);
+    bool begin();
 
     void run();
 
@@ -84,19 +115,28 @@ public:
 
     void addHandler(const Uri &uri, WebServerClass::THandlerFunction handler);
 
-    void setCaptiveWebage(const char *url);
+    void setAPWebPage(const char *url);
+    void setAP(const char *ssid, const char *psk);
 
-    IPAddress setAPmode(const char *ssid, const char *psk);
+    IPAddress startAP();
 
-    IPAddress startWiFi(uint32_t timeout, const char *apSSID, const char *apPsw, CallbackF fn = nullptr);
+    IPAddress startWiFi(
+        uint32_t timeout            // if 0 - do not wait for wifi connections
+        , bool apFlag = false       // if true, start AP only if no credentials was found
+        , CallbackF fn = nullptr    // execute callback function during wifi connection
+        );
 
-    WebServerClass *getRequest();
+    void clearWifiCredentials();
 
-#ifdef INCLUDE_SETUP_HTM
-#define MIN_F -3.4028235E+38
-#define MAX_F 3.4028235E+38
+    inline WebServerClass* getWebServer(){ return webserver; }
+    inline uint32_t getTimeout() const { return m_timeout; }
+    inline bool getAPMode() const { return m_apmode; }
 
-    inline const char* configFile() {return CONFIG_FILE; }
+#if ESP_FS_WS_SETUP
+    #define MIN_F -3.4028235E+38
+    #define MAX_F 3.4028235E+38
+
+    inline const char* configFile() {return ESP_FS_WS_CONFIG_FILE; }
 
     bool clearOptions();
     void addHTML(const char* html, const char* id, bool overWrite = false) ;
@@ -128,7 +168,7 @@ public:
     inline void addOption(const char *label, T val, bool hidden = false,
                     double d_min = MIN_F, double d_max = MAX_F, double step = 1.0)
     {
-        File file = m_filesystem->open(CONFIG_FILE, "r");
+        File file = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "r");
         int sz = file.size() * 1.33;
         int docSize = max(sz, 2048);
         DynamicJsonDocument doc((size_t)docSize);
@@ -181,7 +221,7 @@ public:
             doc[key] = static_cast<T>(val);
         }
 
-        file = m_filesystem->open(CONFIG_FILE, "w");
+        file = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "w");
         if (serializeJsonPretty(doc, file) == 0)
         {
             DebugPrintln(F("Failed to write to file"));
@@ -195,7 +235,7 @@ public:
     template <typename T>
     bool getOptionValue(const char *label, T &var)
     {
-        File file = m_filesystem->open(CONFIG_FILE, "r");
+        File file = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "r");
         DynamicJsonDocument doc(file.size() * 1.33);
         if (file)
         {
@@ -224,7 +264,7 @@ public:
     template <typename T>
     bool saveOptionValue(const char *label, T val)
     {
-        File file = m_filesystem->open(CONFIG_FILE, "w");
+        File file = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "w");
         DynamicJsonDocument doc(file.size() * 1.33);
 
         if (file)
@@ -254,30 +294,33 @@ public:
 #endif
 
 private:
-
-    // char m_basePath[16];
+    WebServerClass *webserver;
     UpdateServerClass m_httpUpdater;
     DNSServer m_dnsServer;
     fs::FS *m_filesystem;
     File m_uploadFile;
     bool m_fsOK = false;
     bool m_apmode = false;
-    char *m_apWebpage = (char *)"/setup";
+    String m_apWebpage; //default "/setup";
+    String m_apSsid;
+    String m_apPsk;
     uint32_t m_timeout = 10000;
 
     // Default handler for all URIs not defined above, use it to read files from filesystem
-    bool checkDir(const char *dirname, uint8_t levels);
+    bool checkDir(const char *dirname);
     void doWifiConnection();
     void doRestart();
     void replyOK();
     void getIpAddress();
     void handleRequest();
-#ifdef INCLUDE_SETUP_HTM
+
+#if ESP_FS_WS_SETUP
     bool optionToFile(const char* filename, const char* str, bool overWrite = false);
     void removeWhiteSpaces(String& str);
     void handleSetup();
     uint8_t numOptions = 0;
 #endif
+
     void handleIndex();
     bool handleFileRead(const char* path);
     void handleFileUpload();
@@ -289,14 +332,16 @@ private:
     bool captivePortal();
 
     // edit page, in usefull in some situation, but if you need to provide only a web interface, you can disable
-#ifdef INCLUDE_EDIT_HTM
+#if ESP_FS_WS_EDIT
     void handleGetEdit();
     void handleFileCreate();
     void handleFileDelete();
     void handleStatus();
     void handleFileList();
 #endif
-
 };
+
+// List all files
+void PrintDir(fs::FS& fs, Print& p, const char* dirName, uint8_t level = 0);
 
 #endif
