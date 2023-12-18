@@ -134,7 +134,7 @@ public:
     // Backward compatibilty
     IPAddress startWiFi(uint32_t timeout, const char* ssid, const char* psk, CallbackF fn = nullptr) {
         setAP(ssid, psk);
-        startWiFi(timeout, true, fn);
+        return startWiFi(timeout, true, fn);
     }
 
     /*

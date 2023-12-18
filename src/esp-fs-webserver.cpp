@@ -600,7 +600,11 @@ void FSWebServer::update_second() {
     String txt;
     if (Update.hasError()) {
         txt = "Error! ";
+        #if defined(ESP8266)
+        txt += Update.getErrorString();
+        #elif defined(ESP32)
         txt += Update.errorString();
+        #endif
     }
     else {
         txt = "Update completed successfully. The ESP32 will restart";
@@ -614,8 +618,16 @@ void FSWebServer::update_second() {
 
 void  FSWebServer::update_first() {
     static uint8_t otaDone = 0;
-    size_t fsize = UPDATE_SIZE_UNKNOWN;
-    if (webserver->hasArg("size")) fsize = webserver->arg("size").toInt();
+
+    size_t fsize;
+    if (webserver->hasArg("size"))
+        fsize = webserver->arg("size").toInt();
+    else {
+        webserver->send(500, "text/plain", "Request malformed: missing file size");
+        return;
+    }
+
+
     HTTPUpload& upload = webserver->upload();
     if (upload.status == UPLOAD_FILE_START) {
         Serial.printf("Receiving Update: %s, Size: %d\n", upload.filename.c_str(), fsize);
@@ -642,7 +654,11 @@ void  FSWebServer::update_first() {
             Serial.printf("Update Success: %u bytes\nRebooting...\n", upload.totalSize);
         }
         else {
+            #if defined(ESP8266)
+            Serial.printf("%s\n", Update.getErrorString());
+            #elif defined(ESP32)
             Serial.printf("%s\n", Update.errorString());
+            #endif
             otaDone = 0;
         }
     }
