@@ -188,7 +188,7 @@ void setup(){
   myWebServer.addOption(FILESYSTEM, "Option 1", option1.c_str());
   myWebServer.addOption(FILESYSTEM, "Option 2", option2);
   // Add custom page handlers
-  myWebServer.webserver->on("/led", HTTP_GET, handleLed);
+  myWebServer.addHandler("/led", HTTP_GET, handleLed);
 
   if (myWebServer.begin()) {
     DebugPrint(F("ESP Web Server started on IP Address: "));

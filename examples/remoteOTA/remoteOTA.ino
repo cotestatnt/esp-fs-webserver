@@ -172,6 +172,7 @@ void setup(){
 
   // Add handler as lambda function (just to show a different method)
   myWebServer.addHandler("/version", HTTP_GET, []() {
+    WebServerClass* request = myWebServer.getRequest();
     EEPROM.get(0, fw_version);
     if (fw_version[0] == 0xFF) // Still not stored in EEPROM (first run)
       strcpy(fw_version, "0.0.0");
@@ -182,7 +183,7 @@ void setup(){
     reply += "\"}";
 
     // Send to client actual firmware version and address where to check if new firmware available
-    myWebServer.webserver->send(200, "text/json", reply);
+    request->send(200, "text/json", reply);
   });
 
 
