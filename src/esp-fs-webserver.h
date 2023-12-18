@@ -131,11 +131,13 @@ public:
 
     void clearWifiCredentials();
 
-    // Backward compatibilty
+    // Backward compatibility
     IPAddress startWiFi(uint32_t timeout, const char* ssid, const char* psk, CallbackF fn = nullptr) {
         setAP(ssid, psk);
         return startWiFi(timeout, true, fn);
     }
+    inline WebServerClass* getRequest(){ return webserver; }
+    // Backward compatibility
 
     /*
     * Set current firmware version (shown in /setup webpage)
