@@ -65,8 +65,9 @@ void setup()
   }
   listDir(getFolder, 0);
 
-  // Try to connect to flash stored SSID, start AP if fails after timeout
-  IPAddress myIP = myWebServer.startWiFi(15000, "ESP32CAM", "123456789");
+  // Try to connect to stored SSID, start AP if fails after timeout
+  myWebServer.setAP("ESP_AP", "123456789");
+  IPAddress myIP = myWebServer.startWiFi(15000);
 
   // Add custom page handlers to webserver
   myWebServer.addHandler("/getPicture", getPicture);

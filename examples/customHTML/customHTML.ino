@@ -199,7 +199,8 @@ void setup() {
   myWebServer.addJavascript(custom_script, /*overwite*/ false);
 
   // Try to connect to stored SSID, start AP if fails after timeout
-  IPAddress myIP = myWebServer.startWiFi(15000, "ESP_AP", "123456789" );
+  myWebServer.setAP("ESP_AP", "123456789");
+  IPAddress myIP = myWebServer.startWiFi(15000);
 
   // Start webserver
   if (myWebServer.begin()) {

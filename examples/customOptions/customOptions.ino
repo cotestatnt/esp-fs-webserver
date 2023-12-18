@@ -143,7 +143,8 @@ void setup() {
   startFilesystem();
 
   // Try to connect to stored SSID, start AP if fails after timeout
-  IPAddress myIP = myWebServer.startWiFi(15000, "ESP8266_AP", "123456789" );
+  myWebServer.setAP("ESP_AP", "123456789");
+  IPAddress myIP = myWebServer.startWiFi(15000);
 
   // Load configuration (if not present, default will be created when webserver will start)
   if (loadOptions())

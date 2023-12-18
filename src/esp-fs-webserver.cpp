@@ -44,7 +44,7 @@ bool FSWebServer::checkDir(const char *dirname)
     }
 #if ESP_FS_WS_INFO_MODE
     // List all files saved in the selected filesystem
-    PrintDir(*m_filesystem, ESP_FS_WS_INFO_OUTPUT, dirname);    
+    PrintDir(*m_filesystem, ESP_FS_WS_INFO_OUTPUT, dirname);
 #endif
     return true;
 }
@@ -80,6 +80,8 @@ bool FSWebServer::begin()
     webserver->on("/", HTTP_GET, std::bind(&FSWebServer::handleIndex, this));
 #if ESP_FS_WS_SETUP
     webserver->on("/setup", HTTP_GET, std::bind(&FSWebServer::handleSetup, this));
+    webserver->on("/get_config", HTTP_GET, std::bind(&FSWebServer::getConfigFile, this));
+    webserver->on("/wifistatus", HTTP_GET, std::bind(&FSWebServer::getStatus, this));
 #endif
     webserver->on("/scan", HTTP_GET, std::bind(&FSWebServer::handleScanNetworks, this));
     webserver->on("/connect", HTTP_POST, std::bind(&FSWebServer::doWifiConnection, this));
@@ -90,6 +92,7 @@ bool FSWebServer::begin()
     webserver->on("/redirect", HTTP_GET, std::bind(&FSWebServer::captivePortal, this));
     // Windows
     webserver->on("/connecttest.txt", HTTP_GET, std::bind(&FSWebServer::captivePortal, this));
+    webserver->on("/www.msftconnecttest.com/redirect", HTTP_GET, std::bind(&FSWebServer::captivePortal, this));
     // Apple
     webserver->on("/hotspot-detect.html", HTTP_GET, std::bind(&FSWebServer::captivePortal, this));
     // Android
@@ -99,10 +102,17 @@ bool FSWebServer::begin()
     // Upload file
     // - first callback is called after the request has ended with all parsed arguments
     // - second callback handles file upload at that location
-    webserver->on("/edit", HTTP_POST, std::bind(&FSWebServer::replyOK, this), std::bind(&FSWebServer::handleFileUpload, this));
+    webserver->on("/edit", HTTP_POST,
+        std::bind(&FSWebServer::replyOK, this),
+        std::bind(&FSWebServer::handleFileUpload, this)
+    );
 
     // OTA update via webbrowser
-    m_httpUpdater.setup(webserver);
+    // m_httpUpdater.setup(webserver);
+    webserver->on("/update", HTTP_POST,
+        std::bind(&FSWebServer::update_second, this),
+        std::bind(&FSWebServer::update_first, this)
+    );
 
 #ifdef ESP32
     webserver->enableCrossOrigin(true);
@@ -126,6 +136,9 @@ void FSWebServer::setAP(const char *ssid, const char *psk)
 
 IPAddress FSWebServer::startAP()
 {
+    if (!m_apSsid.length() || !m_apPsk.length())
+        setAP("ESP_AP", "123456789");
+
     m_apmode = true;
     WiFi.mode(WIFI_AP_STA);
     WiFi.persistent(false);
@@ -145,19 +158,18 @@ IPAddress FSWebServer::startAP()
 IPAddress FSWebServer::startWiFi(uint32_t timeout, bool apFlag, CallbackF fn )
 {
     if( timeout > 0 )
-        m_timeout = timeout;    
-    const char *_ssid;
-    const char *_pass;
+        m_timeout = timeout;
+    WiFi.mode(WIFI_STA);
 #if defined(ESP8266)
     struct station_config conf;
     wifi_station_get_config_default(&conf);
-    _ssid = reinterpret_cast<const char *>(conf.ssid);
-    _pass = reinterpret_cast<const char *>(conf.password);
+    const char * _ssid = reinterpret_cast<const char *>(conf.ssid);
+    const char * _pass = reinterpret_cast<const char *>(conf.password);
 #elif defined(ESP32)
     wifi_config_t conf;
     esp_wifi_get_config(WIFI_IF_STA, &conf);
-    _ssid = reinterpret_cast<const char *>(conf.sta.ssid);
-    _pass = reinterpret_cast<const char *>(conf.sta.password);
+    const char * _ssid = reinterpret_cast<const char *>(conf.sta.ssid);
+    const char *_pass = reinterpret_cast<const char *>(conf.sta.password);
 #endif
     if (strlen(_ssid) && strlen(_pass))
     {
@@ -225,6 +237,11 @@ void FSWebServer::handleRequest()
 void FSWebServer::getIpAddress()
 {
     webserver->send(200, "text/json", WiFi.localIP().toString());
+}
+
+void FSWebServer::getConfigFile()
+{
+    webserver->send(200, "text/json", ESP_FS_WS_CONFIG_FILE);
 }
 
 void FSWebServer::doRestart()
@@ -329,7 +346,7 @@ void FSWebServer::doWifiConnection()
 #endif
             }
             else {
-                this->clearWifiCredentials();                
+                this->clearWifiCredentials();
             }
         }
         else
@@ -406,6 +423,18 @@ void FSWebServer::handleScanNetworks()
 
 
 #if ESP_FS_WS_SETUP
+
+void FSWebServer::getStatus() {
+    uint32_t ip = (WiFi.status() == WL_CONNECTED) ? WiFi.localIP() : WiFi.softAPIP();
+    String reply = "{\"firmware\": \"";
+    reply += m_version;
+    reply += "\", \"mode\":\"";
+    reply += WiFi.status() == WL_CONNECTED ? "Station" : "Access Point";
+    reply += "\", \"ip\":";
+    reply += ip;
+    reply += "}";
+    webserver->send(200, "application/json", reply);
+}
 
 bool FSWebServer::clearOptions() {
     File file = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "r");
@@ -564,6 +593,61 @@ void FSWebServer::handleSetup()
     replyToCLient(NOT_FOUND, PSTR("FILE_NOT_FOUND"));
 #endif
 }
+
+// the request handler is triggered after the upload has finished...
+// create the response, add header, and send response
+void FSWebServer::update_second() {
+    String txt;
+    if (Update.hasError()) {
+        txt = "Error! ";
+        txt += Update.errorString();
+    }
+    else {
+        txt = "Update completed successfully. The ESP32 will restart";
+    }
+    webserver->send((Update.hasError()) ? 500 : 200, "text/plain", txt);
+    if (!Update.hasError()) {
+        delay(500);
+        ESP.restart();
+    }
+}
+
+void  FSWebServer::update_first() {
+    static uint8_t otaDone = 0;
+    size_t fsize = UPDATE_SIZE_UNKNOWN;
+    if (webserver->hasArg("size")) fsize = webserver->arg("size").toInt();
+    HTTPUpload& upload = webserver->upload();
+    if (upload.status == UPLOAD_FILE_START) {
+        Serial.printf("Receiving Update: %s, Size: %d\n", upload.filename.c_str(), fsize);
+        if (!Update.begin(fsize)) {
+        otaDone = 0;
+        Update.printError(Serial);
+        }
+    }
+    else if (upload.status == UPLOAD_FILE_WRITE) {
+        if (Update.write(upload.buf, upload.currentSize) != upload.currentSize) {
+        Update.printError(Serial);
+    }
+    else {
+        static uint32_t pTime = millis();
+        if (millis() - pTime > 500) {
+            pTime = millis();
+            otaDone = 100 * Update.progress() / Update.size();
+            Serial.printf("OTA progress: %d%%\n", otaDone);
+        }
+    }
+    }
+    else if (upload.status == UPLOAD_FILE_END) {
+        if (Update.end(true)) {
+            Serial.printf("Update Success: %u bytes\nRebooting...\n", upload.totalSize);
+        }
+        else {
+            Serial.printf("%s\n", Update.errorString());
+            otaDone = 0;
+        }
+    }
+}
+
 #endif  //ESP_FS_WS_SETUP
 
 void FSWebServer::handleIndex()
@@ -675,7 +759,7 @@ void FSWebServer::handleFileUpload()
 
 void FSWebServer::replyOK()
 {
-    replyToCLient(OK, "");
+    replyToCLient(MSG_OK, "");
 }
 
 void FSWebServer::replyToCLient(int msg_type = 0, const char *msg = "")
@@ -683,7 +767,7 @@ void FSWebServer::replyToCLient(int msg_type = 0, const char *msg = "")
     webserver->sendHeader("Access-Control-Allow-Origin", "*");
     switch (msg_type)
     {
-    case OK:
+    case MSG_OK:
         webserver->send(200, FPSTR(TEXT_PLAIN), "");
         break;
     case CUSTOM:

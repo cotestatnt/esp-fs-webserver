@@ -150,7 +150,10 @@ void setup() {
     ESP.restart();
   }
   
-  IPAddress myIP = myWebServer.startWiFi(15000, "ESP32-AP", "123456789");  //timeout, AP SSID, AP password
+  // Try to connect to stored SSID, start AP if fails after timeout
+  myWebServer.setAP("ESP_AP", "123456789");
+  IPAddress myIP = myWebServer.startWiFi(15000);
+  
   if (WiFi.status() == WL_CONNECTED) {
     myIP = WiFi.localIP();
     Serial.print(F("\nConnected! IP address: "));

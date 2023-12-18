@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset=utf-8>
-    <title>esp-fs-webserver</title>
+    <title>ESP FS WebServer</title>
     <meta content="width=device-width, initial-scale=1" name=viewport>
     <link href=style.css rel=stylesheet type=text/css>
 </head>
@@ -12,14 +12,13 @@
             <div class=title>
                 <input type="file" onchange="uploadLogo()" class="inputfile" id="logo-file">
                 <label for="logo-file" class="svg-button">
-                    <span id=svg-logo title='Click to upload your logo file'></span>
+                    <span id=img-logo title='Click to upload your logo file'></span>
                 </label>
-                <h1 id=name-logo class=heading>ESP WebServer</h1>
+                <h1 id=name-logo class=heading>ESP FS WebServer</h1>
             </div>
             <div class=topnav id=top-nav>
-                <span id="nav-link">
-                    <a id=set-wifi class="a-link active" data-box="wifi-box">WiFi Setup</a>
-                </span>
+                <span id="nav-link"><a id=set-wifi class="a-link active" data-box="wifi-box">WiFi Setup</a></span>
+                <span id="upd-link"><a id=set-update class="a-link" data-box="update-box">Update</a></span>
                 <a class="a-link icon" id=hum-btn>
                     <div class=svg style=margin:-2px>
                         <svg id=svg-menu fill=currentColor viewBox="0 0 20 18"></svg>
@@ -29,11 +28,10 @@
         </header>
         <div id=wifi-box class="ctn opt-box">
             <h2 class=heading-2>Connect to WiFi</h2>
-			      <div style='text-align: center' >ESP mode: <b>
-			        <span id=esp-mode></span></b>, SSID: <b>
-			        <span id=esp-ssid></span></b>, IP address: <b>
-			        <span id=esp-ip></span></b>
-			      </div>
+            <div style='text-align: center' >ESP mode: <b>
+              <span id=esp-mode></span></b>, IP address: <b>
+              <span id=esp-ip></span></b>, Firmware: <span id=firmware></span>
+           </div>
             <div id=wifi-table class=hide>
                 <hr>
                 <table class=table>
@@ -61,13 +59,14 @@
                             id=password autocomplete=current-password data-ms-member="password">
                     </div>
                 </form>
-            </div>
-            <div class="btn-bar ">
                 <label class="toggle lbl-wifi">
                     <span class=toggle-label>Store WiFi credentials</span>
                     <input id=persistent type=checkbox class="t-check" checked>
                     <span class=toggle-switch></span>
                 </label>
+            </div>
+            <hr>
+            <div class="btn-bar ">
                 <a id=scan-wifi class="btn">
                     <div class=svg><svg id=svg-scan fill=currentColor viewBox="0 0 24 24"></svg></div>
                     <span>Scan WiFi networks</span>
@@ -78,7 +77,24 @@
                 </a>
             </div>
         </div>
+
+        <div id="update-box" class="ctn opt-box hide">
+          <h2 class="heading-2">Update Firmware</h2>
+            <form id=update-form class=form action="/update" method="post" enctype="multipart/form-data">
+              <label class="file">
+              <input type="file" id="file-input" aria-label="File browser">
+              <span class="file-custom"></span>
+              </label>
+              <a id=update-btn class=btn><span>Submit new firmware</span></a><br>
+            	<div class="progress-wrap" id="progress-wrap" data-progress-style="fill-back">
+            	  <div id="update-log"></div>
+            	  <div class="progress" id='progress-anim'></div>
+            	</div>
+            </form>
+        </div>
+
         <div id=btn-box class="btn-bar hide">
+            <span class="toggle"><hr></span>
             <a id=restart class="btn">
                 <div class=svg><svg id=svg-restart fill=currentColor viewBox="0 0 24 24"></svg></div>
                 <span>Restart ESP</span>
@@ -88,21 +104,23 @@
                 <span>Save configuration</span>
             </a>
         </div>
+
     </main>
+
     <div class="loader hide" id=loader>Loading...</div>
     <details id=modal-message>
         <summary></summary>
         <div class=d-modal>
             <a onclick=closeModalMessage()>
                 <div class=d-modal-close>
-                    <svg id=close-modal width=14 height=14 viewBox="0 0 14 14" fill=none></svg>
+                    <svg id=svg-close-modal width=14 height=14 viewBox="0 0 14 14" fill=none></svg>
                 </div>
             </a>
-            <div class=d-modal-title><h2 id=message-title></h2></div>
+            <div class=d-modal-title><h2 id=message-title>t</h2></div>
             <div class=d-modal-content><p id=message-body></p></div>
             <div class=btn-bar>
                 <a id=ok-modal class="btn hide" onclick=closeModalMessage(true)><span>OK</span></a>
-                <a id=close-modal-btn class="btn" onclick=closeModalMessage(false)><span>Close</span></a>
+                <a id=close-modal class="btn" onclick=closeModalMessage(false)><span>Close</span></a>
             </div>
         </div>
     </details>

@@ -59,6 +59,9 @@
     using UpdateServerClass = ESP8266HTTPUpdateServer;
 #elif defined(ESP32)
     #include <esp_wifi.h>
+    #include "esp_task_wdt.h"
+    #include "sys/stat.h"
+
     #include <WebServer.h>
     #include <WiFi.h>
     #include <ESPmDNS.h>
@@ -115,8 +118,8 @@ public:
 
     void addHandler(const Uri &uri, WebServerClass::THandlerFunction handler);
 
-    void setAPWebPage(const char *url);
-    void setAP(const char *ssid, const char *psk);
+    void setAPWebPage(const char *url);                 // point a custom setup webpage
+    void setAP(const char *ssid, const char *psk);      // set AP SSID and password
 
     IPAddress startAP();
 
@@ -128,6 +131,19 @@ public:
 
     void clearWifiCredentials();
 
+    // Backward compatibilty
+    IPAddress startWiFi(uint32_t timeout, const char* ssid, const char* psk, CallbackF fn = nullptr) {
+        setAP(ssid, psk);
+        startWiFi(timeout, true, fn);
+    }
+
+    /*
+    * Set current firmware version (shown in /setup webpage)
+    */
+    void setFirmwareVersion(char* version) {
+      strncpy(m_version, version, sizeof(m_version));
+    }
+
     inline WebServerClass* getWebServer(){ return webserver; }
     inline uint32_t getTimeout() const { return m_timeout; }
     inline bool getAPMode() const { return m_apmode; }
@@ -138,7 +154,7 @@ public:
 
     inline const char* configFile() {return ESP_FS_WS_CONFIG_FILE; }
 
-    bool clearOptions();
+    bool clearOptions();        // Clear config file
     void addHTML(const char* html, const char* id, bool overWrite = false) ;
     void addCSS(const char* css, bool overWrite = false);
     void addJavascript(const char* script, bool overWrite = false) ;
@@ -302,9 +318,11 @@ private:
     bool m_fsOK = false;
     bool m_apmode = false;
     String m_apWebpage; //default "/setup";
-    String m_apSsid;
-    String m_apPsk;
+    String m_apSsid = "";
+    String m_apPsk = "";
     uint32_t m_timeout = 10000;
+
+    char m_version[16] = {__TIME__};
 
     // Default handler for all URIs not defined above, use it to read files from filesystem
     bool checkDir(const char *dirname);
@@ -315,10 +333,14 @@ private:
     void handleRequest();
 
 #if ESP_FS_WS_SETUP
+    void getStatus() ;
+    void getConfigFile();
     bool optionToFile(const char* filename, const char* str, bool overWrite = false);
     void removeWhiteSpaces(String& str);
     void handleSetup();
     uint8_t numOptions = 0;
+    void update_second();
+    void update_first() ;
 #endif
 
     void handleIndex();
