@@ -581,7 +581,7 @@ void FSWebServer::update_second()
     if (Update.hasError()) {
         txt = "Error! ";
 #if defined(ESP8266)
-        txt += Update.getErrorString();
+        txt += Update.getErrorString().c_str();
 #elif defined(ESP32)
         txt += Update.errorString();
 #endif
@@ -630,7 +630,7 @@ void FSWebServer::update_first()
             Serial.printf("Update Success: %u bytes\nRebooting...\n", upload.totalSize);
         } else {
 #if defined(ESP8266)
-            Serial.printf("%s\n", Update.getErrorString());
+            Serial.printf("%s\n", Update.getErrorString().c_str());
 #elif defined(ESP32)
             Serial.printf("%s\n", Update.errorString());
 #endif
