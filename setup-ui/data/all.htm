@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset=utf-8>
+<title>ESP FS WebServer</title>
+<meta content="width=device-width, initial-scale=1" name=viewport>
+<style>
+  html{font-family:sans-serif;}body{padding:20px;background-color:darkslategray;}hr {padding: 0;}details,main,summary{display:block;}a{background-color:transparent;}a:active,a:hover{outline:0;}b{font-weight:700;}h1{font-size:36px;}h2{font-size:24px;}input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus,input:-webkit-autofill:active{-webkit-box-shadow:0 0 0 30px #fff inset!important;}input[type='checkbox']{box-sizing:border-box;padding:0;}input[type='text'], input[type='number'], input[type='password'], select {height:40px;width:90%;padding: 0px 0 0 20px;border:1px solid #ccc;border-radius: 6px;font-size: 16px;}input[type=file] {display: none;}input::placeholder{color:#5e5e5e;}input:hover{border-color:rgba(0, 0, 0, 0.8);box-shadow:0 1px 4px 0 rgba(220, 220, 229, 0.9);}input:focus, select:focus {border-color:#3898EC;outline:0;}input[type=number]:hover::-webkit-inner-spin-button {-webkit-appearance: none;-moz-appearance: textfield;}footer {text-align:center;font-size:12px;margin:40px}button,.btn{display:inline-flex;padding:10px 15px;background-color:#3898EC;color:#fff;border:0;cursor:pointer;min-width:40%;border-radius:5px;justify-content:center;}button:hover,.btn:hover{filter: brightness(85%);}ul {display: table;text-align: left;margin: 0 auto 10px auto;}.input-label{color: #015293;position: relative;left: 5%;bottom: -5px;border-style: dotted;border-width: 1px;border-radius: 6px;background-color: #fff;font-size: 13.5px;align-self: self-start;padding: 2px 10px 0 10px;}.loading {color: #ffffff9e;text-align: center}.loader{position: relative;height: auto;overflow: hidden;}.spinH{top: 50%;position: absolute;height: 8px;width: 8px;background: #ffffff2b;border-radius: 100%;}.spin-1H{animation: spinnerH 3s infinite linear;}.spin-2H{animation: spinnerH 3s 0.1s infinite linear;}.spin-3H{animation: spinnerH 3s 0.2s infinite linear;}.spin-4H{animation: spinnerH 3s 0.3s infinite linear;}@keyframes spinnerH{0% {transform: translateX(0) }20% {transform: translate(200px) }70% {transform: translateX(505px)}100% {transform: translateX(800px)}}.progress-wrap {text-align: center;position: relative;width: 60%;height: 25px;margin: 20px auto;background: #9e9e9e7d;font-size: 20px;transition: all 0.4s ease;}.progress-wrap:not(.active) {cursor: pointer;background:#9e9e9e00}.progress-wrap .progress {width: 0%;z-index: 5;background: #9e9e9ea1;opacity: 0;transition: all 0.3s ease;}.progress-wrap.active .progress {opacity: 1;animation: progress-anim 10s ease 0s;}.progress-wrap[data-progress-style='fill-back'] .progress {position: absolute;left: 0;top: 0;right: 0;bottom: 0;}.d-modal{border-radius: 10px;border-style: solid;border-width: 1px;border-color: #3333336e;background-color: hsl(199.53deg 18.3% 46.08% / 90%);box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;left: 50%;position: absolute;top: 50%;transform: translate(-50%, -50%);flex-direction: column;}.d-modal-title{color:#111827;padding:1.5em;position:relative;width:calc(100% - 4.5em);}.d-modal-content{border-top:1px solid #e0e0e0;padding:1.5em;overflow:auto;}.topnav{background-color:#333;overflow:hidden;width:fit-content;float:right;border-radius:5px;position: absolute;bottom: 5px;right: 20px;}.topnav a{float:left;display:block;color:#f2f2f2;text-align:center;padding:5px 10px;text-decoration:none;font-size:16px;}.topnav a:hover{filter: brightness(55%);cursor: pointer;}.topnav a.active{background-color:#56c080;color:white;}.topnav .icon{display:none;}.logo{width: 100%;}.lbl-wifi {text-align: center;}.table{width:90%;margin:auto;border-collapse:collapse;border-spacing:0;}.svg{display:flex;width:20px;margin-right:10px;}.svg-e{margin-top: 5px;}.output {color: white;}.title{display:flex;justify-content:center;float:left}.heading-2{font-weight:400;text-align: center;margin: 10px auto;}.form{padding:10px 0;width:75%;text-align:center;}.ctn:before, .ctn:after {content: " ";display: table;grid-column-start: 1;grid-row-start: 1;grid-column-end: 2;grid-row-end: 2;}.ctn:after {clear: both;}.ctn {display: block;max-width: 940px;margin: 10px auto 10px auto;padding: 10px 40px;clear: both;flex-direction: row;justify-content: center;flex-wrap: wrap;align-items: center;align-content: space-around;border-radius: 10px;border-style: solid;border-width: 1px;border-color: #3333336e;background-color: hsla(0, 0%, 100%, 0.8);box-shadow: rgba(0, 0, 0, 0.24) 0 3px 8px;position: relative;}.btn-bar{display:flex;margin-top:20px;padding:20px;justify-content:center;flex-wrap:wrap;grid-column-gap:30px;grid-row-gap:20px;}.tf-wrapper{position:relative;display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;width:100%;margin-bottom:12px;flex-direction:column;align-items:center;}.heading{margin-right:10px;margin-left:10px;}.hide,.show-hide.w--current{display:none;}.toggle{cursor: pointer;display: block;padding: 4px;width: fit-content;margin: 0px 0px 18px -10px;}.toggle-label{margin: 0 20px 0 20px;position: relative;top: 2px;}.toggle-switch{display:inline-block;background:#ccc;border-radius:16px;width:58px;height:32px;position:relative;vertical-align:middle;transition:background .25s;}.toggle-switch:before,.toggle-switch:after{content:"";}.toggle-switch:before{display:block;background:linear-gradient(to bottom, #fff 0%, #eee 100%);border-radius:50%;box-shadow:0 0 0 1px rgba(0, 0, 0, 0.25);width:24px;height:24px;position:absolute;top:4px;left:4px;transition:left .25s;}.toggle:hover .toggle-switch:before{background:linear-gradient(to bottom, #fff 0%, #fff 100%);box-shadow:0 0 0 1px rgba(0, 0, 0, 0.5);}.t-check:checked+.toggle-switch{background:#56c080;}.t-check:checked+.toggle-switch:before{left:30px;}.t-check{position:absolute;visibility:hidden;}.show-hide{max-width:100%;display:flex;background-color:#fff;font-size:13.5px;}.show-hide-wrap{position:absolute;left:auto;top:40%;right:4%;bottom:auto;z-index:4;cursor:pointer;}.firmware{display:flex;justify-content: center;}.fw-upload {display: inline-block;padding: 10px 20px;cursor: pointer;border-radius: 5px;margin-right:20px;background: dimgray;color: #fff;}.fw-upload:hover {filter: brightness(85%);}.btn, .submit {min-width: 30%;}#about {color: lightgray}@media screen and (max-width: 991px){.ctn{max-width:728px;}.ctn{position:relative;overflow:visible;max-width:95%;padding-right:20px;padding-left:20px;grid-column-gap:10px;grid-row-gap:10px;object-fit:contain;}.wifi-connect{padding-right:20px;padding-left:20px;}}@media screen and (max-width: 767px){.wifi-connect{padding-right:10px;padding-left:10px;}}@media screen and (max-width: 608px){h1{font-size:24px;}.btn-bar{margin-top:20px;flex-direction:column;}.topnav {margin-bottom: 5px;width:-webkit-fill-available;max-width: 60%}.topnav a{padding:5px 20px;}.topnav a:not(.active){display:none;}.topnav a.icon{float:right;display:block;}.topnav.responsive .icon{position:absolute;right:0;top:0;}.topnav.responsive a{float:none;display:block;text-align:left;}.hide-tiny{display:none;}}@media screen and (max-width: 479px){body{padding:2px;}.heading-2{margin-top:10px;padding:0}.form{padding:0;}.ctn{max-width:100%;padding:0 10px 0 10px;}}
+</style>
+</head>
+<body>
+<main id=main-box>
+<header class="ctn header">
+<div class=title>
+<div id=img-logo title='Click to upload your logo file'></div>
+<h1 id=name-logo class=heading>ESP FS WebServer</h1>
+</div>
+<div class=topnav id=top-nav>
+<span id="nav-link"><a id=set-wifi class="a-link active" data-box="wifi-box">WiFi Setup</a></span>
+<span id="upd-link"><a id=set-update class="a-link" data-box="update-box">Update & FS</a></span>
+<a class="a-link icon" id=hum-btn>
+<div class=svg style=margin:-2px >
+<svg id=svg-menu height="16pt" fill=currentColor viewBox="0 0 20 18"></svg>
+</div>
+</a>
+</div>
+</header>
+<div id=wifi-box class="ctn opt-box">
+<h2 class=heading-2>Connect to WiFi</h2>
+<div style='text-align: center' >ESP mode: <b>
+<span id=esp-mode></span></b>, IP address: <b>
+<span id=esp-ip></span></b>, Firmware: <span id=firmware></span>
+</div>
+<div id=wifi-table class=hide>
+<hr>
+<table class=table>
+<tbody id=wifi-list></tbody>
+</table>
+<br>
+</div>
+<div id=wifi>
+<div class=tf-wrapper>
+<label for=ssid class=input-label>SSID</label>
+<input type=text placeholder="Enter your WiFI SSID name" id="ssid">
+</div>
+<div class=tf-wrapper>
+<label for=password class=input-label>Password</label>
+<div class=show-hide-wrap id=show-hide-password>
+<a class="show-hide w--current" id=show-pass>
+<div class=svg><svg class=svg-e id=svg-eye viewBox="0 0 24 24"></svg></div>
+</a>
+<a class="show-hide" id=hide-pass>
+<div class=svg><svg class=svg-e id=svg-no-eye viewBox="0 0 24 24"></svg></div>
+</a>
+</div>
+<input type=password placeholder="Enter your WiFi password"
+id=password autocomplete=current-password data-ms-member="password">
+</div>
+<label class="input-label toggle">
+<input id=persistent type=checkbox class="t-check" checked>
+<div class=toggle-switch></div>
+<span class=toggle-label>Store WiFi credentials</span>
+</label>
+</div>
+<hr>
+<div class="btn-bar ">
+<a id=scan-wifi class="btn">
+<div class=svg><svg id=svg-scan fill=currentColor viewBox="0 0 24 24"></svg></div>
+<span>Scan WiFi networks</span>
+</a>
+<a id=connect-wifi class="btn">
+<div class=svg><svg id=svg-connect fill=currentColor viewBox="0 0 24 24"></svg></div>
+<span>Connect to <span id=ssid-name>SSID</span></span>
+</a>
+</div>
+</div>
+
+<div id="update-box" class="ctn opt-box hide">
+<h2 class="heading-2">Update ESP Firmware</h2>
+<div class=tf-wrapper>
+<form id=update-form class=form action="/update" method="post" enctype="multipart/form-data">
+<div class=firmware>
+<label for="file-input" id="fw-label" class="fw-upload">Select firmware binary file</label>
+<input id="file-input" type="file"/>
+<a id=update-btn class="btn submit">
+<div class=svg>
+<svg fill=currentColor viewBox="0 0 24 24"><path d="M9,16V10H5L12,3L19,10H15V16H9M5,20V18H19V20H5Z" /></svg>
+</div>
+<span>Submit!</span>
+</a><br>
+</div>
+<div class="progress-wrap" id="progress-wrap" data-progress-style="fill-back">
+<div id="update-log"></div>
+<div class="progress" id='progress-anim'></div>
+</div>
+</form>
+</div>
+
+<h2 class="heading-2">Load file to ESP FileSystem</h2>
+<div class=tf-wrapper>
+<form class=form action="/edit" method="post" enctype="multipart/form-data">
+<ul id="listing"></ul>
+<label for="picker" id="pick-label" class="fw-upload">Select the folder containing your files</label>
+<input type="file" id="picker" name="fileList" webkitdirectory multiple>
+<p>N.B.: if folder name is <b>"/data"</b>, the files will be uploaded at root "/" level </p>
+</form>
+</div>
+</div>
+<div id=btn-box class="btn-bar hide">
+<span><hr></span>
+<a id=restart class="btn">
+<div class=svg><svg id=svg-restart fill=currentColor viewBox="0 0 24 24"></svg></div>
+<span>Restart ESP</span>
+</a>
+<a id=save-params class="btn">
+<div class=svg><svg id=svg-save fill=currentColor viewBox="0 0 24 24"></svg></div>
+<span>Save configuration</span>
+</a>
+</div>
+</main>
+<div class="loader hide" id=loader>
+<div class="loading">Loading...</div>
+<div class="spinH spin-1H"></div>
+<div class="spinH spin-2H"></div>
+<div class="spinH spin-3H"></div>
+<div class="spinH spin-4H"></div>
+</div>
+<details id=modal-message>
+<summary></summary>
+<div class=d-modal>
+<div class=d-modal-title><h2 id=message-title>t</h2></div>
+<div class=d-modal-content><p id=message-body></p></div>
+<div class=btn-bar>
+<a id=ok-modal class="btn hide" onclick=closeModalMessage(true)><span>OK</span></a>
+<a id=close-modal class="btn" onclick=closeModalMessage(false)><span>Close</span></a>
+</div>
+</div>
+</details>
+<footer class=foot>
+<hr>
+<a id=about target=_blank rel=noopener href=https://github.com/cotestatnt/esp-fs-webserver>Created with https://github.com/cotestatnt/esp-fs-webserver</a>
+</footer>
+<script>
+const svgLogo='<svg fill="brown" height=120px viewBox="0 0 24 24"><path d="M5 3C3.9 3 3 3.9 3 5S2.1 7 1 7V9C2.1 9 3 9.9 3 11S3.9 13 5 13H7V11H5V10C5 8.9 4.1 8 3 8C4.1 8 5 7.1 5 6V5H7V3M11 3C12.1 3 13 3.9 13 5S13.9 7 15 7V9C13.9 9 13 9.9 13 11S12.1 13 11 13H9V11H11V10C11 8.9 11.9 8 13 8C11.9 8 11 7.1 11 6V5H9V3H11M22 6V18C22 19.11 21.11 20 20 20H4C2.9 20 2 19.11 2 18V15H4V18H20V6H17.03V4H20C21.11 4 22 4.89 22 6Z" /></svg>',svgLock='<svg height="16pt" viewBox="0 0 24 24"><path d="M12,17A2,2 0 0,0 14,15C14,13.89 13.1,13 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z" /></svg>',svgUnlock='<svgheight="16pt" viewBox="0 0 24 24"><path d="M18 1C15.24 1 13 3.24 13 6V8H4C2.9 8 2 8.89 2 10V20C2 21.11 2.9 22 4 22H16C17.11 22 18 21.11 18 20V10C18 8.9 17.11 8 16 8H15V6C15 4.34 16.34 3 18 3C19.66 3 21 4.34 21 6V8H23V6C23 3.24 20.76 1 18 1M10 13C11.1 13 12 13.89 12 15C12 16.11 11.11 17 10 17C8.9 17 8 16.11 8 15C8 13.9 8.9 13 10 13Z" /></svg>',svgScan='<path d="M12 20L8.4 15.2C9.4 14.45 10.65 14 12 14S14.6 14.45 15.6 15.2L12 20M4.8 10.4L6.6 12.8C8.1 11.67 9.97 11 12 11S15.9 11.67 17.4 12.8L19.2 10.4C17.19 8.89 14.7 8 12 8S6.81 8.89 4.8 10.4M12 2C7.95 2 4.21 3.34 1.2 5.6L3 8C5.5 6.12 8.62 5 12 5S18.5 6.12 21 8L22.8 5.6C19.79 3.34 16.05 2 12 2M7 24H9V22H7V24M15 24H17V22H15V24M11 24H13V22H11V24Z" /></svg>',svgConnect='<path d="M12,6C8.6,6 5.5,7.1 3,9L1.2,6.6C4.2,4.3 8,3 12,3C16,3 19.8,4.3 22.8,6.6L21,9C18.5,7.1 15.4,6 12,6M13,19C13,17.7 13.4,16.4 14.2,15.4C13.5,15.2 12.8,15 12,15C10.7,15 9.4,15.5 8.4,16.2L12,21L13,19.6C13,19.4 13,19.2 13,19M16.8,13.4C17.1,13.3 17.5,13.2 17.9,13.1L19.2,11.4C17.2,9.9 14.7,9 12,9C9.3,9 6.8,9.9 4.8,11.4L6.6,13.8C8.1,12.7 10,12 12,12C13.8,12 15.4,12.5 16.8,13.4M16.5,22.6L17.2,19.8L15,17.9L17.9,17.7L19,15L20.1,17.6L23,17.8L20.8,19.7L21.5,22.5L19,21.1L16.5,22.6Z" /></svg>',svgSave='<path d="M15,9H5V5H15M12,19A3,3 0 0,1 9,16A3,3 0 0,1 12,13A3,3 0 0,1 15,16A3,3 0 0,1 12,19M17,3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V7L17,3Z" />',svgRestart='<path d="M12,4C14.1,4 16.1,4.8 17.6,6.3C20.7,9.4 20.7,14.5 17.6,17.6C15.8,19.5 13.3,20.2 10.9,19.9L11.4,17.9C13.1,18.1 14.9,17.5 16.2,16.2C18.5,13.9 18.5,10.1 16.2,7.7C15.1,6.6 13.5,6 12,6V10.6L7,5.6L12,0.6V4M6.3,17.6C3.7,15 3.3,11 5.1,7.9L6.6,9.4C5.5,11.6 5.9,14.4 7.8,16.2C8.3,16.7 8.9,17.1 9.6,17.4L9,19.4C8,19 7.1,18.4 6.3,17.6Z" /></svg>',svgEye='<path d="M12 6.5c2.76 0 5 2.24 5 5 0 .51-.1 1-.24 1.46l3.06 3.06c1.39-1.23 2.49-2.77 3.18-4.53C21.27 7.11 17 4 12 4c-1.27 0-2.49.2-3.64.57l2.17 2.17c.47-.14.96-.24 1.47-.24zM2.71 3.16c-.39.39-.39 1.02 0 1.41l1.97 1.97C3.06 7.83 1.77 9.53 1 11.5 2.73 15.89 7 19 12 19c1.52 0 2.97-.3 4.31-.82l2.72 2.72c.39.39 1.02.39 1.41 0 .39-.39.39-1.02 0-1.41L4.13 3.16c-.39-.39-1.03-.39-1.42 0zM12 16.5c-2.76 0-5-2.24-5-5 0-.77.18-1.5.49-2.14l1.57 1.57c-.03.18-.06.37-.06.57 0 1.66 1.34 3 3 3 .2 0 .38-.03.57-.07L14.14 16c-.65.32-1.37.5-2.14.5zm2.97-5.33c-.15-1.4-1.25-2.49-2.64-2.64l2.64 2.64z" />',svgNoEye='<path d="M0 0h24v24H0V0z" fill="none"/><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>',svgMenu='<path d="M3,6H21V8H3V6M3,11H21V13H3V11M3,16H21V18H3V16Z"/>';var configFile,lastBox,options={},$=function(e){return document.getElementById(e)},newEl=function(e){return document.createElement(e)};function showHidePassword(){var e=$("password");"password"===e.type?(e.type="text",$("show-pass").classList.remove("w--current"),$("hide-pass").classList.add("w--current")):(e.type="password",$("show-pass").classList.add("w--current"),$("hide-pass").classList.remove("w--current"))}function getWiFiList(){$("loader").classList.remove("hide");var e=new URL(`http://${window.location.hostname}/scan`);fetch(e).then((e=>e.json())).then((e=>{listWifiNetworks(e),$("loader").classList.add("hide")}))}function selectWifi(e){try{$("select-"+e.target.parentNode.id).checked=!0}catch(t){$(e.target.id).checked=!0}$("ssid").value=this.cells[1].innerHTML,$("ssid-name").innerHTML=this.cells[1].innerHTML,$("password").focus()}function listWifiNetworks(e){const t=document.querySelector("#wifi-list");t.innerHTML="",e.forEach(((e,s)=>{var n=newEl("tr"),i="wifi-"+s;n.id=i,n.addEventListener("click",selectWifi),n.innerHTML=`<td><input type="radio" name="select" id="select-${i}"></td>`,n.innerHTML+=`<td id="ssid-${i}">${e.ssid}</td>`,n.innerHTML+='<td class="hide-tiny">'+e.strength+" dBm</td>",e.security?n.innerHTML+="<td>"+svgLock+"</td>":n.innerHTML+="<td>"+svgUnlock+"</td>",t.appendChild(n)})),$("wifi-table").classList.remove("hide")}function getEspStatus(){var e=new URL(`http://${window.location.hostname}/wifistatus`);fetch(e).then((e=>e.json())).then((e=>{$("esp-mode").innerHTML=e.mode,$("esp-ip").innerHTML=(255&e.ip)+"."+(e.ip>>8&255)+"."+(e.ip>>16&255)+"."+(e.ip>>>24),$("firmware").innerHTML=e.firmware}))}async function fetchFromFile(e,t){const s=await fetch(e,{method:t});return await s.text()}function getParameters(){$("loader").classList.remove("hide");var e=new URL(`http://${window.location.hostname}/get_config`);fetch(e).then((e=>e.text())).then((t=>{configFile=t,e=new URL(`http://${window.location.hostname}`+configFile),fetch(e).then((e=>e.json())).then((e=>{for(const t in e)if(e.hasOwnProperty(t)){if("name-logo"===t){$("name-logo").innerHTML=e[t].replace(/(<([^>]+)>)/gi,""),delete e[t];continue}if("img-logo"==t){fetch(e[t]).then((e=>e.text())).then((s=>{var n=e[t].replace(/[^\d_]/g,"").split("_"),i=newEl("img");i.classList.add("logo"),i.setAttribute("src","data:image/png;base64, "+s),i.setAttribute("style",`width:${n[0]}px;heigth:${n[1]}px`),$("img-logo").innerHTML="",$("img-logo").append(i),$("img-logo").setAttribute("type","number"),$("img-logo").setAttribute("title",""),delete e[t]}));continue}}listParameters(options=e),$("loader").classList.add("hide")})).then((()=>{getEspStatus()}))}))}function createNewBox(e,t){var s=newEl("div");s.setAttribute("id","option-box"+e),s.classList.add("ctn","opt-box","hide");var n=newEl("h2");n.classList.add("heading-2"),n.innerHTML=t,s.appendChild(n),$("main-box").appendChild(s);var i=newEl("a");return i.setAttribute("id","set-opt"+e),i.setAttribute("data-box","option-box"+e),i.classList.add("a-link"),i.innerHTML=t,i.addEventListener("click",switchPage),$("nav-link").appendChild(i),s}async function listParameters(e){var t;Object.keys(e)[0].startsWith("param-box")||(e={"param-box1":"Options",...e},options=e);var s=0;for(const a in e)if(s++,a.startsWith("param-box"))lastBox=createNewBox(s,e[a]);else if(a.startsWith("raw-css"))fetchFromFile(e[a],"HEAD").then((()=>{var t=newEl("link");t.setAttribute("rel","stylesheet"),t.setAttribute("href",e[a]),document.head.appendChild(t),delete e[a]}));else if(a.startsWith("raw-javascript"))fetchFromFile(e[a],"HEAD").then((()=>{var t=newEl("script");t.setAttribute("src",e[a]),document.body.appendChild(t),delete e[a]}));else if(a.startsWith("raw-html"))await fetchFromFile(e[a],"GET").then((e=>{(t=newEl("div")).setAttribute("id","row"+s),t.style.width="100%",t.innerHTML=e,lastBox.appendChild(t)}));else{{let s=newEl("label");if((t=newEl("input")).setAttribute("id",a),t.setAttribute("type","text"),"boolean"==typeof e[a]){t.setAttribute("type","checkbox"),t.classList.add("t-check","opt-input"),t.checked=e[a],s.classList.add("input-label","toggle");let n=newEl("div");n.classList.add("toggle-switch");let i=newEl("span");i.classList.add("toggle-label"),i.textContent=a,s.appendChild(t),s.appendChild(n),s.appendChild(i),addInputListener(t),lastBox.appendChild(s)}else{if(t.value=e[a],t.classList.add("opt-input"),s.setAttribute("label-for",a),s.classList.add("input-label"),s.textContent=a,"number"==typeof e[a]&&t.setAttribute("type","number"),"object"==typeof e[a])if(e[a].values)(t=newEl("select")).setAttribute("id",a),e[a].values.forEach((e=>{var s=newEl("option");s.textContent=e,s.value=e,t.appendChild(s)})),t.value=e[a].selected,lastBox.appendChild(t);else{var n=Math.round(e[a].value*(1/e[a].step))/(1/e[a].step);t.setAttribute("type","number"),t.setAttribute("step",e[a].step),t.setAttribute("min",e[a].min),t.setAttribute("max",e[a].max),t.value=Number(n).toFixed(3)}addInputListener(t);var i=newEl("div");i.classList.add("tf-wrapper"),i.appendChild(s),i.appendChild(t),lastBox.appendChild(i)}}a.endsWith("-hidden")&&t.classList.add("hide")}}function addInputListener(e){"number"!==e.type?"text"!==e.type?"checkbox"!==e.type?"select-one"!==e.type||e.addEventListener("change",(e=>{options[e.target.id].selected=e.target.value})):e.addEventListener("change",(()=>{options[e.id]=e.checked})):e.addEventListener("change",(()=>{options[e.id]=e.value})):e.addEventListener("change",(()=>{if(e.getAttribute("step")){var t={};t.value=Math.round(e.value*(1/e.step))/(1/e.step),t.step=e.getAttribute("step"),t.min=e.getAttribute("min"),t.max=e.getAttribute("max"),options[e.id]=t}else options[e.id]=parseInt(e.value)}))}function saveParameters(){var e=new Blob([JSON.stringify(options,null,2)],{type:"application/json"}),t=new FormData;t.append("data",e,configFile),fetch("/edit",{method:"POST",body:t}).then((e=>e.text())).then((e=>{openModalMessage("Save options",'<br><b>"'+configFile+'"</b> saved successfully on flash memory!<br><br>')}))}function doConnection(){var e=new FormData;e.append("ssid",$("ssid").value),e.append("password",$("password").value),e.append("persistent",$("persistent").checked);var t={method:"POST",body:e,redirect:"follow"};$("loader").classList.remove("hide"),fetch("/connect",t).then((function(e){return httpCode=e.status,e.text()})).then((function(e){200===httpCode?openModalMessage("Connect to WiFi","<br>"+e):openModalMessage("Error!","<br>Error on connection: <b>"+e+"</b><br><br>"),$("loader").classList.add("hide")}))}function switchPage(e){if($("top-nav").classList.remove("responsive"),document.querySelectorAll("a").forEach((e=>{e.classList.remove("active")})),e.target.classList.add("active"),document.querySelectorAll(".opt-box").forEach((e=>{e.classList.add("hide")})),$(e.target.getAttribute("data-box")).classList.remove("hide"),"set-wifi"!=e.target.id){var t=document.createDocumentFragment();t.appendChild($("btn-box")),$(e.target.getAttribute("data-box")).appendChild(t),$("btn-box").classList.remove("hide")}else $("btn-box").classList.add("hide")}function showMenu(){$("top-nav").classList.add("responsive")}var closeCallback=function(){};function openModalMessage(e,t,s){$("message-title").innerHTML=e,$("message-body").innerHTML=t,$("modal-message").open=!0,$("main-box").style.filter="blur(3px)",void 0!==s?(closeCallback=s,$("ok-modal").classList.remove("hide")):$("ok-modal").classList.add("hide")}function closeModalMessage(e){$("modal-message").open=!1,$("main-box").style.filter="",void 0!==closeCallback&&e&&closeCallback()}function restartESP(){var e=new URL(`http://${window.location.hostname}/reset`);fetch(e).then((e=>e.text())).then((e=>{closeModalMessage(),openModalMessage("Restart!","<br>ESP restarted. Please wait a little and then reload this page.<br>")}))}function handleSubmit(){let e=$("file-input");if(0===e.files.length)return void alert("please choose a file");var t=$("update-log"),s=$("loader"),n=$("progress-wrap");s.classList.remove("hide"),n.classList.add("active"),t.innerHTML="Update in progress";let i=new FormData;i.set("update",e.files[0]);var a=new XMLHttpRequest;a.open("POST","/update?size="+e.files[0].size),a.onload=function(e){s.classList.add("hide"),n.classList.remove("active"),200!=a.status?t.innerHTML=`Error ${a.status}: ${a.statusText}`:t.innerHTML=a.response},a.upload.addEventListener("progress",(e=>{let s=Math.round(e.loaded/e.total*100)+"%";e.lengthComputable&&($("progress-anim").style.width=s,t.innerHTML="Update in progress: "+s)})),a.send(i)}async function uploadFolder(e){let t=document.getElementById("listing");for(let n of Array.from(e.target.files)){let e=n.webkitRelativePath,i=document.createElement("li");i.textContent=e,t.appendChild(i);var s=new FileReader;s.onload=function(t){e.startsWith("data/")&&(e=e.replace("data/",""));var s=new FormData;s.set("data",n,"/"+e),fetch("/edit",{method:"POST",body:s}).then((e=>e.text()))},s.readAsText(n)}}$("svg-menu").innerHTML=svgMenu,$("svg-eye").innerHTML=svgEye,$("svg-no-eye").innerHTML=svgNoEye,$("svg-scan").innerHTML=svgScan,$("svg-connect").innerHTML=svgConnect,$("svg-save").innerHTML=svgSave,$("svg-restart").innerHTML=svgRestart,$("img-logo").innerHTML=svgLogo,$("hum-btn").addEventListener("click",showMenu),$("scan-wifi").addEventListener("click",getWiFiList),$("connect-wifi").addEventListener("click",doConnection),$("save-params").addEventListener("click",saveParameters),$("show-hide-password").addEventListener("click",showHidePassword),$("set-wifi").addEventListener("click",switchPage),$("set-update").addEventListener("click",switchPage),$("about").addEventListener("click",switchPage),$("restart").addEventListener("click",restartESP),$("picker").addEventListener("change",uploadFolder),$("update-btn").addEventListener("click",handleSubmit),$("file-input").addEventListener("change",(()=>{$("fw-label").innerHTML=$("file-input").files.item(0).name+" ("+$("file-input").files.item(0).size+" bytes)",$("fw-label").style.background="brown"})),window.addEventListener("load",getParameters),$("connect-wifi").disabled=!0,$("password").addEventListener("input",(e=>{0===$("password").value.length?$("connect-wifi").disabled=!0:$("connect-wifi").disabled=!1}));
+</script>
+</body>
+</html>

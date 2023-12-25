@@ -5,15 +5,18 @@
 * where the id value will be equal to the id parameter passed to the function addHTML(html_code, id).
 */
 static const char custom_html[] PROGMEM = R"EOF(
-<form class=form>
-  <div class=tf-wrapper>
-    <label for=httpmethod class=input-label>Method</label>
-    <select class='select' id='httpmethod'>
-      <option>GET</option>
-      <option>POST</option>
-    </select>
-    <label for=url class=input-label>Endpoint</label>
-    <input type=text placeholder='https://httpbin.org/' id=url value='https://httpbin.org/' />
+<form>
+  <div class="tf-wrapper left-align">
+    <div>
+      <label for=httpmethod class=input-label>Method</label>
+      <select class='select' id='httpmethod'>
+        <option>GET</option>
+        <option>POST</option>
+      </select>
+    
+      <label for=url class=input-label>Endpoint</label>
+      <input type=text placeholder='https://httpbin.org/' id=url value='https://httpbin.org/'/>
+    </div>
   </div>
   <br>
   <a id=fetch class='btn'>
@@ -43,17 +46,8 @@ pre{
     min-height: 350px;
     font-size: 85%;
 }
-.select{
-  width: 25%;
-  height:40px;
-  padding-top: 10px;
-  padding-left: 20px;
-  border:1px solid #ccc;
-  border-radius: 6px;
-  box-shadow: 0 1px 2px 0 rgba(220, 220, 230, 0.5);
-}
-.body{
-  background-color: cadetblue;
+.left-align{
+  align-items: baseline;
 }
 )EOF";
 

@@ -39,7 +39,7 @@ module.exports = {
 
     var resultString = '#define SETUP_HTML_SIZE ';
     resultString += dataLength + '\n'
-    resultString += 'const char SETUP_HTML[] PROGMEM = {\n  ';
+    resultString += 'static const unsigned char SETUP_HTML[] PROGMEM = {\n  ';
     resultString += stringConverter.convert(dataLength, 1, true, 16, data);
     resultString += '\n};';
     return resultString;

@@ -63,21 +63,10 @@ FSWebServer myWebServer(FILESYSTEM, server);
 #include "customElements.h"
 
 ////////////////////////////////  Filesystem  /////////////////////////////////////////
-void startFilesystem() {
+void startFilesystem(){
   // FILESYSTEM INIT
-  if ( FILESYSTEM.begin()) {
-    File root = FILESYSTEM.open("/", "r");
-    File file = root.openNextFile();
-    while (file) {
-      const char* fileName = file.name();
-      size_t fileSize = file.size();
-      Serial.printf("FS File: %s, size: %lu\n", fileName, (long unsigned)fileSize);
-      file = root.openNextFile();
-    }
-    Serial.println();
-  }
-  else {
-    Serial.println(F("ERROR on mounting filesystem. It will be formmatted!"));
+  if ( !FILESYSTEM.begin()){
+    Serial.println("ERROR on mounting filesystem. It will be formmatted!");
     FILESYSTEM.format();
     ESP.restart();
   }
@@ -127,7 +116,7 @@ bool loadOptions() {
   return false;
 }
 
-//   Call this if you need to save parameters from the sketch side
+// Call this if you need to save parameters from the sketch side
 // bool saveOptions() {
 //   if (FILESYSTEM.exists(myWebServer.configFile())) {
 //     File file = FILESYSTEM.open(myWebServer.configFile(), "w");
@@ -208,7 +197,6 @@ void setup() {
     Serial.println(myIP);
     Serial.println(F("Open /setup page to configure optional parameters"));
     Serial.println(F("Open /edit page to view and edit files"));
-    Serial.println(F("Open /update page to upload firmware and filesystem updates\n\n"));
   }
 }
 
