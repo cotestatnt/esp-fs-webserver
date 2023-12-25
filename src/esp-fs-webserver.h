@@ -44,7 +44,8 @@
 #if ESP_FS_WS_SETUP
     #define ARDUINOJSON_USE_LONG_LONG 1
     #include <ArduinoJson.h>
-    #define ESP_FS_WS_CONFIG_FILE "/setup/config.json"
+    #define ESP_FS_WS_CONFIG_FOLDER "/setup"
+    #define ESP_FS_WS_CONFIG_FILE ESP_FS_WS_CONFIG_FOLDER "/config.json"
     #if ESP_FS_WS_SETUP_HTM
         #include "setup_htm.h"
     #endif
@@ -343,6 +344,8 @@ private:
     uint8_t numOptions = 0;
     void update_second();
     void update_first() ;
+
+    bool createDirFromPath(const String& path);
 #endif
 
     void handleIndex();
@@ -366,6 +369,6 @@ private:
 };
 
 // List all files
-void PrintDir(fs::FS& fs, Print& p, const char* dirName, uint8_t level = 0);
+void PrintDir(fs::FS& fs, Print& p, const char* dirName, uint8_t level = 1);
 
 #endif

@@ -486,7 +486,6 @@ function handleSubmit() {
   req.send(formData);
 }
 
-
 $('update-btn').addEventListener('click', handleSubmit);
 
 // Initializes the app.

@@ -26,18 +26,7 @@ FSWebServer myWebServer(FILESYSTEM, server);
 ////////////////////////////////  Filesystem  /////////////////////////////////////////
 void startFilesystem(){
   // FILESYSTEM INIT
-  if ( FILESYSTEM.begin()){
-    File root = FILESYSTEM.open("/", "r");
-    File file = root.openNextFile();
-    while (file){
-      const char* fileName = file.name();
-      size_t fileSize = file.size();
-      Serial.printf("FS File: %s, size: %lu\n", fileName, (long unsigned)fileSize);
-      file = root.openNextFile();
-    }
-    Serial.println();
-  }
-  else {
+  if ( !FILESYSTEM.begin()){
     Serial.println("ERROR on mounting filesystem. It will be formmatted!");
     FILESYSTEM.format();
     ESP.restart();
@@ -69,6 +58,7 @@ void setup(){
   // Try to connect to stored SSID, start AP if fails after timeout
   myWebServer.setAP("ESP_AP", "123456789");
   IPAddress myIP = myWebServer.startWiFi(15000);
+  Serial.println("\n");
 
   // Add custom page handlers to webserver
   myWebServer.addHandler("/led", HTTP_GET, handleLed);
@@ -79,7 +69,6 @@ void setup(){
     Serial.println(myIP);
     Serial.println(F("Open /setup page to configure optional parameters"));
     Serial.println(F("Open /edit page to view and edit files"));
-    Serial.println(F("Open /update page to upload firmware and filesystem updates"));
   }
 
   pinMode(LED_BUILTIN, OUTPUT);
@@ -88,5 +77,4 @@ void setup(){
 
 void loop() {
   myWebServer.run();
-
 }

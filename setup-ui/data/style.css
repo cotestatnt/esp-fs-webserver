@@ -140,12 +140,3 @@ h1{font-size:30px;}
 .progress-wrap .progress {width: 0%;z-index: 5;	background: #9e9e9ea1;opacity: 0;	transition: all 0.3s ease;}
 .progress-wrap.active .progress {	opacity: 1;	animation: progress-anim 10s ease 0s;}
 .progress-wrap[data-progress-style='fill-back'] .progress {position: absolute;left: 0;top: 0;	right: 0;	bottom: 0;}
-
-/*@keyframes progress-anim {*/
-/*	0% {width: 0%;}*/
-/*	5% {width: 0%;}*/
-/*	10% {width: 15%;}*/
-/*	30% {width: 40%;}*/
-/*	50% {width: 55%;}*/
-/*	80% {width: 100%;}*/
-/*}*/

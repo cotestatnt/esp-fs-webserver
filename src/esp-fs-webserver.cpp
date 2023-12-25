@@ -1,7 +1,7 @@
 #include "esp-fs-webserver.h"
 
-FSWebServer::FSWebServer(fs::FS &fs, WebServerClass &server) :
-    m_apWebpage( "/setup" )
+FSWebServer::FSWebServer(fs::FS& fs, WebServerClass& server)
+    : m_apWebpage("/setup")
     , m_apSsid("ESP_AP")
     , m_apPsk("123456789")
 {
@@ -17,27 +17,25 @@ void FSWebServer::run()
         m_dnsServer.processNextRequest();
 }
 
-void FSWebServer::addHandler(const Uri &uri, HTTPMethod method, WebServerClass::THandlerFunction fn)
+void FSWebServer::addHandler(const Uri& uri, HTTPMethod method, WebServerClass::THandlerFunction fn)
 {
     webserver->on(uri, method, fn);
 }
 
-void FSWebServer::addHandler(const Uri &uri, WebServerClass::THandlerFunction handler)
+void FSWebServer::addHandler(const Uri& uri, WebServerClass::THandlerFunction handler)
 {
     webserver->on(uri, HTTP_ANY, handler);
 }
 
-bool FSWebServer::checkDir(const char *dirname)
+bool FSWebServer::checkDir(const char* dirname)
 {
-    {   //scope for the root file
+    { // scope for the root file
         File root = m_filesystem->open(dirname, "r");
-        if (!root)
-        {
+        if (!root) {
             DebugPrintln("- failed to open directory");
             return false;
         }
-        if (!root.isDirectory())
-        {
+        if (!root.isDirectory()) {
             DebugPrintln(" - not a directory");
             return false;
         }
@@ -52,18 +50,21 @@ bool FSWebServer::checkDir(const char *dirname)
 bool FSWebServer::begin()
 {
     DebugPrintln("List the files of webserver: ");
-    File root = m_filesystem->open("/setup", "r");
-    if (!root)
-    {
-        DebugPrintln("Failed to open /setup directory. Create new folder");
-        m_filesystem->mkdir("/setup");
+    File root = m_filesystem->open(ESP_FS_WS_CONFIG_FOLDER, "r");
+    if (!root) {
+        DebugPrintln("Failed to open " ESP_FS_WS_CONFIG_FOLDER " directory. Create new folder");
+        m_filesystem->mkdir(ESP_FS_WS_CONFIG_FOLDER);
+        // Create empty config file
+        File config = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "w");
+        config.println("{\"param-box0\":\"\"}");
+        config.close();
         ESP.restart();
     }
     m_fsOK = checkDir("/");
 
     // Backward compatibility, move config.json to new path
     root = m_filesystem->open("/config.json", "r");
-    if(root) {
+    if (root) {
         root.close();
         m_filesystem->rename("/config.json", ESP_FS_WS_CONFIG_FILE);
     }
@@ -104,15 +105,12 @@ bool FSWebServer::begin()
     // - second callback handles file upload at that location
     webserver->on("/edit", HTTP_POST,
         std::bind(&FSWebServer::replyOK, this),
-        std::bind(&FSWebServer::handleFileUpload, this)
-    );
+        std::bind(&FSWebServer::handleFileUpload, this));
 
     // OTA update via webbrowser
-    // m_httpUpdater.setup(webserver);
     webserver->on("/update", HTTP_POST,
         std::bind(&FSWebServer::update_second, this),
-        std::bind(&FSWebServer::update_first, this)
-    );
+        std::bind(&FSWebServer::update_first, this));
 
 #ifdef ESP32
     webserver->enableCrossOrigin(true);
@@ -123,12 +121,12 @@ bool FSWebServer::begin()
     return true;
 }
 
-void FSWebServer::setAPWebPage(const char *url)
+void FSWebServer::setAPWebPage(const char* url)
 {
     m_apWebpage = url;
 }
 
-void FSWebServer::setAP(const char *ssid, const char *psk)
+void FSWebServer::setAP(const char* ssid, const char* psk)
 {
     m_apSsid = ssid;
     m_apPsk = psk;
@@ -147,7 +145,7 @@ IPAddress FSWebServer::startAP()
     m_dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
     IPAddress ip = WiFi.softAPIP();
     m_dnsServer.start(53, "*", ip);
-    WiFi.begin();   //???
+    WiFi.begin(); //???
     ip = WiFi.softAPIP();
     InfoPrintln(F("AP mode."));
     InfoPrint(F("Server IP address: "));
@@ -155,32 +153,30 @@ IPAddress FSWebServer::startAP()
     return ip;
 }
 
-IPAddress FSWebServer::startWiFi(uint32_t timeout, bool apFlag, CallbackF fn )
+IPAddress FSWebServer::startWiFi(uint32_t timeout, bool apFlag, CallbackF fn)
 {
-    if( timeout > 0 )
+    if (timeout > 0)
         m_timeout = timeout;
     WiFi.mode(WIFI_STA);
 #if defined(ESP8266)
     struct station_config conf;
     wifi_station_get_config_default(&conf);
-    const char * _ssid = reinterpret_cast<const char *>(conf.ssid);
-    const char * _pass = reinterpret_cast<const char *>(conf.password);
+    const char* _ssid = reinterpret_cast<const char*>(conf.ssid);
+    const char* _pass = reinterpret_cast<const char*>(conf.password);
 #elif defined(ESP32)
     wifi_config_t conf;
     esp_wifi_get_config(WIFI_IF_STA, &conf);
-    const char * _ssid = reinterpret_cast<const char *>(conf.sta.ssid);
-    const char *_pass = reinterpret_cast<const char *>(conf.sta.password);
+    const char* _ssid = reinterpret_cast<const char*>(conf.sta.ssid);
+    const char* _pass = reinterpret_cast<const char*>(conf.sta.password);
 #endif
-    if (strlen(_ssid) && strlen(_pass))
-    {
+    if (strlen(_ssid) && strlen(_pass)) {
         m_apmode = false;
         WiFi.mode(WIFI_STA);
         WiFi.begin(_ssid, _pass);
         uint32_t startTime = millis();
         InfoPrint(F("Connecting to "));
         InfoPrintln(_ssid);
-        while ( (WiFi.status() != WL_CONNECTED) && (timeout > 0 ) )
-        {
+        while ((WiFi.status() != WL_CONNECTED) && (timeout > 0)) {
             // execute callback function during wifi connection
             if (fn != nullptr)
                 fn();
@@ -190,10 +186,10 @@ IPAddress FSWebServer::startWiFi(uint32_t timeout, bool apFlag, CallbackF fn )
             if (millis() - startTime > timeout)
                 break;
         }
-        if ( (WiFi.status() == WL_CONNECTED) || apFlag )
+        if ((WiFi.status() == WL_CONNECTED) || apFlag)
             return WiFi.localIP();
     }
-    //start Access Point
+    // start Access Point
     return startAP();
 }
 
@@ -208,11 +204,10 @@ bool FSWebServer::captivePortal()
     serverLoc += webserver->client().localIP().toString();
     serverLoc += m_apWebpage;
     // redirect if hostheader not server ip, prevent redirect loops
-    if (serverLoc != webserver->hostHeader())
-    {
+    if (serverLoc != webserver->hostHeader()) {
         webserver->sendHeader(F("Location"), serverLoc, true);
         webserver->send(302, F("text/html"), ""); // Empty content inhibits Content-length header so we have to close the socket ourselves.
-        webserver->client().stop();               // Stop is needed because we sent no content length
+        webserver->client().stop(); // Stop is needed because we sent no content length
         return true;
     }
     return false;
@@ -220,8 +215,7 @@ bool FSWebServer::captivePortal()
 
 void FSWebServer::handleRequest()
 {
-    if (!m_fsOK)
-    {
+    if (!m_fsOK) {
         replyToCLient(ERROR, PSTR(FS_INIT_ERROR));
         return;
     }
@@ -257,30 +251,25 @@ void FSWebServer::doWifiConnection()
     bool persistent = true;
     WiFi.mode(WIFI_AP_STA);
 
-    if (webserver->hasArg("ssid"))
-    {
+    if (webserver->hasArg("ssid")) {
         ssid = webserver->arg("ssid");
     }
 
-    if (webserver->hasArg("password"))
-    {
+    if (webserver->hasArg("password")) {
         pass = webserver->arg("password");
     }
 
-    if (webserver->hasArg("persistent"))
-    {
+    if (webserver->hasArg("persistent")) {
         String pers = webserver->arg("persistent");
-        if (pers.equals("false"))
-        {
+        if (pers.equals("false")) {
             persistent = false;
         }
     }
 
-    if (WiFi.status() == WL_CONNECTED)
-    {
+    if (WiFi.status() == WL_CONNECTED) {
         // IPAddress ip = WiFi.localIP();
         String resp = "ESP is currently connected to a WiFi network.<br><br>"
-        "Actual connection will be closed and a new attempt will be done with <b>";
+                      "Actual connection will be closed and a new attempt will be done with <b>";
         resp += ssid;
         resp += "</b> WiFi network.";
         webserver->send(200, "text/plain", resp);
@@ -290,24 +279,21 @@ void FSWebServer::doWifiConnection()
         WiFi.disconnect();
     }
 
-    if (ssid.length())
-    {   // pass could be empty
+    if (ssid.length()) { // pass could be empty
         // Try to connect to new ssid
         InfoPrint("Connecting to ");
         InfoPrintln(ssid);
         WiFi.begin(ssid.c_str(), pass.c_str());
 
         uint32_t beginTime = millis();
-        while (WiFi.status() != WL_CONNECTED)
-        {
+        while (WiFi.status() != WL_CONNECTED) {
             delay(250);
             InfoPrint(".");
             if (millis() - beginTime > m_timeout)
                 break;
         }
         // reply to client
-        if (WiFi.status() == WL_CONNECTED)
-        {
+        if (WiFi.status() == WL_CONNECTED) {
             // WiFi.softAPdisconnect();
             IPAddress ip = WiFi.localIP();
             InfoPrint("Connected to Wifi! IP address: ");
@@ -324,8 +310,7 @@ void FSWebServer::doWifiConnection()
             m_apmode = false;
 
             // Store current WiFi configuration in flash
-            if (persistent)
-            {
+            if (persistent) {
 #if defined(ESP8266)
                 struct station_config stationConf;
                 wifi_station_get_config_default(&stationConf);
@@ -344,12 +329,10 @@ void FSWebServer::doWifiConnection()
                 memcpy(&stationConf.sta.password, pass.c_str(), pass.length());
                 esp_wifi_set_config(WIFI_IF_STA, &stationConf);
 #endif
-            }
-            else {
+            } else {
                 this->clearWifiCredentials();
             }
-        }
-        else
+        } else
             webserver->send(500, "text/plain", "Connection error, maybe the password is wrong?");
     }
     webserver->send(500, "text/plain", "Wrong credentials provided");
@@ -386,19 +369,15 @@ void FSWebServer::handleScanNetworks()
     DebugPrint("Scanning WiFi networks...");
     int n = WiFi.scanNetworks();
     DebugPrintln(" complete.");
-    if (n == 0)
-    {
+    if (n == 0) {
         DebugPrintln("no networks found");
         webserver->send(200, "text/json", "[]");
         return;
-    }
-    else
-    {
+    } else {
         DebugPrint(n);
         DebugPrintln(" networks found:");
 
-        for (int i = 0; i < n; ++i)
-        {
+        for (int i = 0; i < n; ++i) {
             String ssid = WiFi.SSID(i);
             int rssi = WiFi.RSSI(i);
 #if defined(ESP8266)
@@ -421,10 +400,10 @@ void FSWebServer::handleScanNetworks()
     DebugPrintln(jsonList);
 }
 
-
 #if ESP_FS_WS_SETUP
 
-void FSWebServer::getStatus() {
+void FSWebServer::getStatus()
+{
     uint32_t ip = (WiFi.status() == WL_CONNECTED) ? WiFi.localIP() : WiFi.softAPIP();
     String reply = "{\"firmware\": \"";
     reply += m_version;
@@ -436,7 +415,8 @@ void FSWebServer::getStatus() {
     webserver->send(200, "application/json", reply);
 }
 
-bool FSWebServer::clearOptions() {
+bool FSWebServer::clearOptions()
+{
     File file = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "r");
     if (file) {
         file.close();
@@ -447,10 +427,11 @@ bool FSWebServer::clearOptions() {
 }
 
 /*
-* In order to keep config.json file small and clean, custom HTML, CSS and Javascript
-* will be saved as file. The related option will contain the path to this file
-*/
-bool FSWebServer::optionToFile(const char* filename, const char* str, bool overWrite) {
+ * In order to keep config.json file small and clean, custom HTML, CSS and Javascript
+ * will be saved as file. The related option will contain the path to this file
+ */
+bool FSWebServer::optionToFile(const char* filename, const char* str, bool overWrite)
+{
     // Check if file is already saved
     File file = m_filesystem->open(filename, "r");
     if (file && !overWrite) {
@@ -464,8 +445,7 @@ bool FSWebServer::optionToFile(const char* filename, const char* str, bool overW
             file.print(str);
             file.close();
             return true;
-        }
-        else {
+        } else {
             DebugPrintf("Error writing file %s\n", filename);
         }
     }
@@ -473,10 +453,11 @@ bool FSWebServer::optionToFile(const char* filename, const char* str, bool overW
 }
 
 /*
-* Add an option which contain "raw" HTML code to be injected in /setup page
-* Th HTML code will be written in a file with named as option id
-*/
-void FSWebServer::addHTML(const char* html, const char* id, bool overWrite) {
+ * Add an option which contain "raw" HTML code to be injected in /setup page
+ * Th HTML code will be written in a file with named as option id
+ */
+void FSWebServer::addHTML(const char* html, const char* id, bool overWrite)
+{
     String elementId = "raw-html-";
     elementId += id;
     String path = "/setup/";
@@ -492,10 +473,11 @@ void FSWebServer::addHTML(const char* html, const char* id, bool overWrite) {
 }
 
 /*
-* Add an option which contain "raw" CSS style to be injected in /setup page
-* Th CSS code will be written in a file with named as option raw-css.css
-*/
-void FSWebServer::addCSS(const char* css, bool overWrite) {
+ * Add an option which contain "raw" CSS style to be injected in /setup page
+ * Th CSS code will be written in a file with named as option raw-css.css
+ */
+void FSWebServer::addCSS(const char* css, bool overWrite)
+{
 #if defined(ESP8266)
     String content = css;
     optionToFile("/setup/raw-css.css", content.c_str(), overWrite);
@@ -506,69 +488,66 @@ void FSWebServer::addCSS(const char* css, bool overWrite) {
 }
 
 /*
-* Add an option which contain "raw" JS script to be injected in /setup page
-* Th JS code will be written in a file with named as option raw-javascript.js
-*/
-void FSWebServer::addJavascript(const char* script, bool overWrite) {
-    #if defined(ESP8266)
+ * Add an option which contain "raw" JS script to be injected in /setup page
+ * Th JS code will be written in a file with named as option raw-javascript.js
+ */
+void FSWebServer::addJavascript(const char* script, bool overWrite)
+{
+#if defined(ESP8266)
     String content = script;
     optionToFile("/setup/raw-javascript.js", content.c_str(), overWrite);
-    #else
+#else
     optionToFile("/setup/raw-javascript.js", script, overWrite);
-    #endif
+#endif
     addOption("raw-javascript", "/setup/raw-javascript.js", true);
 }
 
-void FSWebServer::addDropdownList(const char *label, const char** array, size_t size) {
+void FSWebServer::addDropdownList(const char* label, const char** array, size_t size)
+{
     File file = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "r");
     int sz = file.size() * 1.33;
     int docSize = max(sz, 2048);
     DynamicJsonDocument doc((size_t)docSize);
-    if (file)
-    {
+    if (file) {
         // If file is present, load actual configuration
         DeserializationError error = deserializeJson(doc, file);
-        if (error)
-        {
+        if (error) {
             DebugPrintln(F("Failed to deserialize file, may be corrupted"));
             DebugPrintln(error.c_str());
             file.close();
             return;
         }
         file.close();
-    }
-    else
-    {
+    } else {
         DebugPrintln(F("File not found, will be created new configuration file"));
     }
 
-    numOptions++ ;
+    numOptions++;
 
     // If key is present in json, we don't need to create it.
     if (doc.containsKey(label))
         return;
 
     JsonObject obj = doc.createNestedObject(label);
-    obj["selected"] = array[0];     // first element selected as default
+    obj["selected"] = array[0]; // first element selected as default
     JsonArray arr = obj.createNestedArray("values");
-    for (unsigned int i=0; i<size; i++) {
+    for (unsigned int i = 0; i < size; i++) {
         arr.add(array[i]);
     }
 
     file = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "w");
-    if (serializeJsonPretty(doc, file) == 0)
-    {
+    if (serializeJsonPretty(doc, file) == 0) {
         DebugPrintln(F("Failed to write to file"));
     }
     file.close();
 }
 
-
-void FSWebServer::removeWhiteSpaces(String& str) {
-    const char noChars[] = {'\n', '\r', '\t'};
+void FSWebServer::removeWhiteSpaces(String& str)
+{
+    const char noChars[] = { '\n', '\r', '\t' };
     int pos = -1;
     // Remove non printable characters
-    for (unsigned int i=0; i< sizeof(noChars); i++) {
+    for (unsigned int i = 0; i < sizeof(noChars); i++) {
         pos = str.indexOf(noChars[i]);
         while (pos > -1) {
             str.replace(String(noChars[i]), "");
@@ -596,17 +575,17 @@ void FSWebServer::handleSetup()
 
 // the request handler is triggered after the upload has finished...
 // create the response, add header, and send response
-void FSWebServer::update_second() {
+void FSWebServer::update_second()
+{
     String txt;
     if (Update.hasError()) {
         txt = "Error! ";
-        #if defined(ESP8266)
+#if defined(ESP8266)
         txt += Update.getErrorString();
-        #elif defined(ESP32)
+#elif defined(ESP32)
         txt += Update.errorString();
-        #endif
-    }
-    else {
+#endif
+    } else {
         txt = "Update completed successfully. The ESP32 will restart";
     }
     webserver->send((Update.hasError()) ? 500 : 200, "text/plain", txt);
@@ -616,7 +595,8 @@ void FSWebServer::update_second() {
     }
 }
 
-void  FSWebServer::update_first() {
+void FSWebServer::update_first()
+{
     static uint8_t otaDone = 0;
 
     size_t fsize;
@@ -627,58 +607,48 @@ void  FSWebServer::update_first() {
         return;
     }
 
-
     HTTPUpload& upload = webserver->upload();
     if (upload.status == UPLOAD_FILE_START) {
         Serial.printf("Receiving Update: %s, Size: %d\n", upload.filename.c_str(), fsize);
         if (!Update.begin(fsize)) {
-        otaDone = 0;
-        Update.printError(Serial);
+            otaDone = 0;
+            Update.printError(Serial);
         }
-    }
-    else if (upload.status == UPLOAD_FILE_WRITE) {
+    } else if (upload.status == UPLOAD_FILE_WRITE) {
         if (Update.write(upload.buf, upload.currentSize) != upload.currentSize) {
-        Update.printError(Serial);
-    }
-    else {
-        static uint32_t pTime = millis();
-        if (millis() - pTime > 500) {
-            pTime = millis();
-            otaDone = 100 * Update.progress() / Update.size();
-            Serial.printf("OTA progress: %d%%\n", otaDone);
+            Update.printError(Serial);
+        } else {
+            static uint32_t pTime = millis();
+            if (millis() - pTime > 500) {
+                pTime = millis();
+                otaDone = 100 * Update.progress() / Update.size();
+                Serial.printf("OTA progress: %d%%\n", otaDone);
+            }
         }
-    }
-    }
-    else if (upload.status == UPLOAD_FILE_END) {
+    } else if (upload.status == UPLOAD_FILE_END) {
         if (Update.end(true)) {
             Serial.printf("Update Success: %u bytes\nRebooting...\n", upload.totalSize);
-        }
-        else {
-            #if defined(ESP8266)
+        } else {
+#if defined(ESP8266)
             Serial.printf("%s\n", Update.getErrorString());
-            #elif defined(ESP32)
+#elif defined(ESP32)
             Serial.printf("%s\n", Update.errorString());
-            #endif
+#endif
             otaDone = 0;
         }
     }
 }
 
-#endif  //ESP_FS_WS_SETUP
+#endif // ESP_FS_WS_SETUP
 
 void FSWebServer::handleIndex()
 {
     DebugPrintln("handleIndex");
-    if (m_filesystem->exists("/index.htm"))
-    {
+    if (m_filesystem->exists("/index.htm")) {
         handleFileRead("/index.htm");
-    }
-    else if (m_filesystem->exists("/index.html"))
-    {
+    } else if (m_filesystem->exists("/index.html")) {
         handleFileRead("/index.html");
-    }
-    else
-    {
+    } else {
         handleSetup();
     }
 }
@@ -690,22 +660,18 @@ bool FSWebServer::handleFileRead(const char* uri)
 {
     String path = uri;
     DebugPrintln("handleFileRead: " + path);
-    if (path.endsWith("/"))
-    {
+    if (path.endsWith("/")) {
         path += "index.htm";
     }
     String pathWithGz = path + ".gz";
 
-    if (m_filesystem->exists(pathWithGz) || m_filesystem->exists(path))
-    {
-        if (m_filesystem->exists(pathWithGz))
-        {
+    if (m_filesystem->exists(pathWithGz) || m_filesystem->exists(path)) {
+        if (m_filesystem->exists(pathWithGz)) {
             path += ".gz";
         }
-        const char *contentType = getContentType(path.c_str());
+        const char* contentType = getContentType(path.c_str());
         File file = m_filesystem->open(path, "r");
-        if (webserver->streamFile(file, contentType) != file.size())
-        {
+        if (webserver->streamFile(file, contentType) != file.size()) {
             DebugPrintln(PSTR("Sent less data than expected!"));
             // webserver->stop();
         }
@@ -715,58 +681,71 @@ bool FSWebServer::handleFileRead(const char* uri)
     return false;
 }
 
+bool FSWebServer::createDirFromPath(const String& path)
+{
+    String dir;
+    int p1 = 0;
+    int p2 = 0;
+    while (p2 != -1) {
+        p2 = path.indexOf("/", p1 + 1);
+        dir += path.substring(p1, p2);
+
+        // Check if its a valid dir
+        if (dir.indexOf(".") == -1) {
+            if (!m_filesystem->exists(dir)) {
+                if (m_filesystem->mkdir(dir)) {
+                    DebugPrintf("Folder %s created\n", dir.c_str());
+                } else {
+                    DebugPrintf("Error. Folder %s not created\n", dir.c_str());
+                    return false;
+                }
+            }
+        }
+        p1 = p2;
+    }
+    return true;
+}
+
 /*
     Handle a file upload request
 */
 void FSWebServer::handleFileUpload()
 {
-    if (webserver->uri() != "/edit")
-    {
-        return;
-    }
-    HTTPUpload &upload = webserver->upload();
-    if (upload.status == UPLOAD_FILE_START)
-    {
+    HTTPUpload& upload = webserver->upload();
+    if (upload.status == UPLOAD_FILE_START) {
         String filename = upload.filename;
+
         String result;
         // Make sure paths always start with "/"
-        if (!filename.startsWith("/"))
-        {
+        if (!filename.startsWith("/")) {
             filename = "/" + filename;
         }
         checkForUnsupportedPath(filename, result);
-        if (result.length() > 0)
-        {
+        createDirFromPath(filename);
+
+        if (result.length() > 0) {
             replyToCLient(ERROR, PSTR("INVALID FILENAME"));
             return;
         }
 
         DebugPrintf_P(PSTR("handleFileUpload Name: %s\n"), filename.c_str());
         m_uploadFile = m_filesystem->open(filename, "w");
-        if (!m_uploadFile)
-        {
+        if (!m_uploadFile) {
             replyToCLient(ERROR, PSTR("CREATE FAILED"));
             return;
         }
         DebugPrintf_P(PSTR("Upload: START, filename: %s\n"), filename.c_str());
-    }
-    else if (upload.status == UPLOAD_FILE_WRITE)
-    {
-        if (m_uploadFile)
-        {
+    } else if (upload.status == UPLOAD_FILE_WRITE) {
+        if (m_uploadFile) {
             size_t bytesWritten = m_uploadFile.write(upload.buf, upload.currentSize);
-            if (bytesWritten != upload.currentSize)
-            {
+            if (bytesWritten != upload.currentSize) {
                 replyToCLient(ERROR, PSTR("WRITE FAILED"));
                 return;
             }
         }
         DebugPrintf_P(PSTR("Upload: WRITE, Bytes: %d\n"), upload.currentSize);
-    }
-    else if (upload.status == UPLOAD_FILE_END)
-    {
-        if (m_uploadFile)
-        {
+    } else if (upload.status == UPLOAD_FILE_END) {
+        if (m_uploadFile) {
             m_uploadFile.close();
         }
         DebugPrintf_P(PSTR("Upload: END, Size: %d\n"), upload.totalSize);
@@ -778,11 +757,10 @@ void FSWebServer::replyOK()
     replyToCLient(MSG_OK, "");
 }
 
-void FSWebServer::replyToCLient(int msg_type = 0, const char *msg = "")
+void FSWebServer::replyToCLient(int msg_type = 0, const char* msg = "")
 {
     webserver->sendHeader("Access-Control-Allow-Origin", "*");
-    switch (msg_type)
-    {
+    switch (msg_type) {
     case MSG_OK:
         webserver->send(200, FPSTR(TEXT_PLAIN), "");
         break;
@@ -805,25 +783,22 @@ void FSWebServer::replyToCLient(int msg_type = 0, const char *msg = "")
     Checks filename for character combinations that are not supported by FSBrowser (alhtough valid on SPIFFS).
     Returns an empty String if supported, or detail of error(s) if unsupported
 */
-void FSWebServer::checkForUnsupportedPath(String &filename, String &error)
+void FSWebServer::checkForUnsupportedPath(String& filename, String& error)
 {
-    if (!filename.startsWith("/"))
-    {
+    if (!filename.startsWith("/")) {
         error += PSTR(" !! NO_LEADING_SLASH !! ");
     }
-    if (filename.indexOf("//") != -1)
-    {
+    if (filename.indexOf("//") != -1) {
         error += PSTR(" !! DOUBLE_SLASH !! ");
     }
-    if (filename.endsWith("/"))
-    {
+    if (filename.endsWith("/")) {
         error += PSTR(" ! TRAILING_SLASH ! ");
     }
     DebugPrintln(filename);
     DebugPrintln(error);
 }
 
-const char *FSWebServer::getContentType(const char *filename)
+const char* FSWebServer::getContentType(const char* filename)
 {
     if (webserver->hasArg("download"))
         return PSTR("application/octet-stream");
@@ -867,15 +842,13 @@ const char *FSWebServer::getContentType(const char *filename)
 */
 void FSWebServer::handleFileList()
 {
-    if (!webserver->hasArg("dir"))
-    {
+    if (!webserver->hasArg("dir")) {
         return replyToCLient(BAD_REQUEST, "DIR ARG MISSING");
     }
 
     String path = webserver->arg("dir");
     DebugPrintln("handleFileList: " + path);
-    if (path != "/" && !m_filesystem->exists(path))
-    {
+    if (path != "/" && !m_filesystem->exists(path)) {
         return replyToCLient(BAD_REQUEST, "BAD PATH");
     }
 
@@ -884,18 +857,14 @@ void FSWebServer::handleFileList()
     String output;
     output.reserve(256);
     output = "[";
-    if (root.isDirectory())
-    {
+    if (root.isDirectory()) {
         File file = root.openNextFile();
-        while (file)
-        {
+        while (file) {
             String filename = file.name();
-            if (filename.lastIndexOf("/") > -1)
-            {
+            if (filename.lastIndexOf("/") > -1) {
                 filename.remove(0, filename.lastIndexOf("/") + 1);
             }
-            if (output != "[")
-            {
+            if (output != "[") {
                 output += ',';
             }
             output += "{\"type\":\"";
@@ -926,74 +895,57 @@ void FSWebServer::handleFileList()
 void FSWebServer::handleFileCreate()
 {
     String path = webserver->arg("path");
-    if (path.isEmpty())
-    {
+    if (path.isEmpty()) {
         replyToCLient(BAD_REQUEST, PSTR("PATH ARG MISSING"));
         return;
     }
-    if (path == "/")
-    {
+    if (path == "/") {
         replyToCLient(BAD_REQUEST, PSTR("BAD PATH"));
         return;
     }
 
     String src = webserver->arg("src");
-    if (src.isEmpty())
-    {
+    if (src.isEmpty()) {
         // No source specified: creation
         DebugPrintf_P(PSTR("handleFileCreate: %s\n"), path.c_str());
-        if (path.endsWith("/"))
-        {
+        if (path.endsWith("/")) {
             // Create a folder
             path.remove(path.length() - 1);
-            if (!m_filesystem->mkdir(path))
-            {
+            if (!m_filesystem->mkdir(path)) {
                 replyToCLient(ERROR, PSTR("MKDIR FAILED"));
                 return;
             }
-        }
-        else
-        {
+        } else {
             // Create a file
             File file = m_filesystem->open(path, "w");
-            if (file)
-            {
+            if (file) {
                 file.write(0);
                 file.close();
-            }
-            else
-            {
+            } else {
                 replyToCLient(ERROR, PSTR("CREATE FAILED"));
                 return;
             }
         }
         replyToCLient(CUSTOM, path.c_str());
-    }
-    else
-    {
+    } else {
         // Source specified: rename
-        if (src == "/")
-        {
+        if (src == "/") {
             replyToCLient(BAD_REQUEST, PSTR("BAD SRC"));
             return;
         }
-        if (!m_filesystem->exists(src))
-        {
+        if (!m_filesystem->exists(src)) {
             replyToCLient(BAD_REQUEST, PSTR("BSRC FILE NOT FOUND"));
             return;
         }
 
         DebugPrintf_P(PSTR("handleFileCreate: %s from %s\n"), path.c_str(), src.c_str());
-        if (path.endsWith("/"))
-        {
+        if (path.endsWith("/")) {
             path.remove(path.length() - 1);
         }
-        if (src.endsWith("/"))
-        {
+        if (src.endsWith("/")) {
             src.remove(src.length() - 1);
         }
-        if (!m_filesystem->rename(src, path))
-        {
+        if (!m_filesystem->rename(src, path)) {
             replyToCLient(ERROR, PSTR("RENAME FAILED"));
             return;
         }
@@ -1012,29 +964,24 @@ void FSWebServer::handleFileDelete()
 {
 
     String path = webserver->arg(0);
-    if (path.isEmpty() || path == "/")
-    {
+    if (path.isEmpty() || path == "/") {
         replyToCLient(BAD_REQUEST, PSTR("BAD PATH"));
         return;
     }
 
     DebugPrintf_P(PSTR("handleFileDelete: %s\n"), path.c_str());
-    if (!m_filesystem->exists(path))
-    {
+    if (!m_filesystem->exists(path)) {
         replyToCLient(NOT_FOUND, PSTR(FILE_NOT_FOUND));
         return;
     }
     // deleteRecursive(path);
     File root = m_filesystem->open(path, "r");
     // If it's a plain file, delete it
-    if (!root.isDirectory())
-    {
+    if (!root.isDirectory()) {
         root.close();
         m_filesystem->remove(path);
         replyOK();
-    }
-    else
-    {
+    } else {
         m_filesystem->rmdir(path);
         replyOK();
     }
@@ -1079,8 +1026,7 @@ void FSWebServer::handleStatus()
     String json;
     json.reserve(128);
     json = "{\"type\":\"Filesystem\", \"isOk\":";
-    if (m_fsOK)
-    {
+    if (m_fsOK) {
         uint32_t ip = (WiFi.status() == WL_CONNECTED) ? WiFi.localIP() : WiFi.softAPIP();
         json += PSTR("\"true\", \"totalBytes\":\"");
         json += totalBytes;
@@ -1093,8 +1039,7 @@ void FSWebServer::handleStatus()
         json += PSTR("\", \"ip\":\"");
         json += ip;
         json += "\"";
-    }
-    else
+    } else
         json += "\"false\"";
     json += PSTR(",\"unsupportedFiles\":\"\"}");
     webserver->send(200, "application/json", json);
@@ -1104,31 +1049,57 @@ void FSWebServer::handleStatus()
 
 ////////////////////////////////  Filesystem  /////////////////////////////////////////
 // List all files
-void PrintDir(fs::FS& fs, Print& p, const char* dirName, uint8_t level)
+// void PrintDir(fs::FS& fs, Print& p, const char* dirName, uint8_t level)
+// {
+//     File root = fs.open(dirName, "r");
+//     if (!root)
+//         return;
+//     if (!root.isDirectory())
+//         return;
+//     File file = root.openNextFile();
+//     while (file) {
+//         for (uint8_t lev = 0; lev < level; lev++)
+//             p.print("  ");
+//         if (file.isDirectory()) {
+//             String dirStr;
+//             if (strcmp(dirName, "/") != 0)
+//                 dirStr += dirName;
+//             dirStr += "/";
+//             dirStr += file.name();
+//             p.printf("%s\n", dirStr.c_str());
+//             PrintDir(fs, p, dirStr.c_str(), level + 1);
+//         } else {
+//             p.printf("|__ FILE: %s (%d bytes)\n",file.name(), file.size());
+//         }
+//         file = root.openNextFile();
+//     }
+// }
+
+
+void PrintDir(fs::FS& fs, Print& p, const char* dirName, uint8_t level) 
 {
+    p.printf("\nListing directory: %s\n", dirName);
     File root = fs.open(dirName, "r");
-    if (!root)
+    if(!root){
+        Serial.println("- failed to open directory");
         return;
-    if (!root.isDirectory())
+    }
+    if(!root.isDirectory()){
+        Serial.println(" - not a directory");
         return;
+    }
     File file = root.openNextFile();
-    while (file)
-    {
-        for (uint8_t lev = 0; lev < level; lev++)
-            p.print("  ");
-        if (file.isDirectory())
-        {
-            String dirStr;
-            if (strcmp(dirName, "/") != 0)
-                dirStr += dirName;
-            dirStr += "/";
-            dirStr += file.name();
-            p.printf("Dir: %s\n", dirStr.c_str());
-            PrintDir(fs, p, dirStr.c_str(), level + 1);
-        }
-        else
-        {
-            p.printf("File: %s\tsize: %d\n", file.name(), file.size());
+    while(file){
+        if(file.isDirectory()){
+            if(level){
+            #ifdef ESP32
+			  PrintDir(fs, Serial, file.path(), level - 1);
+			#elif defined(ESP8266)
+			  PrintDir(fs, Serial, file.fullName(), levels - 1);
+			#endif
+            }
+        } else {
+            p.printf("|__ %s \t(%d bytes)\n",file.name(), file.size());
         }
         file = root.openNextFile();
     }
