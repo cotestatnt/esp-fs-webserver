@@ -1095,7 +1095,7 @@ void PrintDir(fs::FS& fs, Print& p, const char* dirName, uint8_t level)
             #ifdef ESP32
 			  PrintDir(fs, Serial, file.path(), level - 1);
 			#elif defined(ESP8266)
-			  PrintDir(fs, Serial, file.fullName(), levels - 1);
+			  PrintDir(fs, Serial, file.fullName(), level - 1);
 			#endif
             }
         } else {
