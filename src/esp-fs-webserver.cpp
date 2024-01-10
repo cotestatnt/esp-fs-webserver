@@ -960,32 +960,79 @@ void FSWebServer::handleFileCreate()
     Delete file    | parent of deleted file, or remaining ancestor
     Delete folder  | parent of deleted folder, or remaining ancestor
 */
-void FSWebServer::handleFileDelete()
-{
 
-    String path = webserver->arg(0);
-    if (path.isEmpty() || path == "/") {
-        replyToCLient(BAD_REQUEST, PSTR("BAD PATH"));
-        return;
-    }
+void FSWebServer::deleteContent(String& path) {
+  File file = m_filesystem->open(path.c_str(), "r");
+  if (!file.isDirectory()) {
+    file.close();
+    m_filesystem->remove(path.c_str());
+    DebugPrintf("File %s deleted", path.c_str());
+    return;
+  }
 
-    DebugPrintf_P(PSTR("handleFileDelete: %s\n"), path.c_str());
-    if (!m_filesystem->exists(path)) {
-        replyToCLient(NOT_FOUND, PSTR(FILE_NOT_FOUND));
-        return;
+  file.rewindDirectory();
+  while (true) {
+    File entry = file.openNextFile();
+    if (!entry) {
+      break;
     }
-    // deleteRecursive(path);
-    File root = m_filesystem->open(path, "r");
-    // If it's a plain file, delete it
-    if (!root.isDirectory()) {
-        root.close();
-        m_filesystem->remove(path);
-        replyOK();
-    } else {
-        m_filesystem->rmdir(path);
-        replyOK();
+    String entryPath = path + "/" + entry.name();
+    if (entry.isDirectory()) {
+      entry.close();
+      deleteContent(entryPath);
     }
+    else {
+      entry.close();
+      m_filesystem->remove(entryPath.c_str());
+      DebugPrintf("File %s deleted", path.c_str());
+    }
+    yield();
+  }
+  m_filesystem->rmdir(path.c_str());
+  DebugPrintf("Folder %s removed", path.c_str());
+  file.close();
 }
+
+
+
+void FSWebServer::handleFileDelete() {
+    String path = webserver->arg(0);
+    if (path.isEmpty() || path == "/")  {
+        replyToCLient(BAD_REQUEST, PSTR("BAD PATH"));
+    }
+    if (!m_filesystem->exists(path))  {
+        replyToCLient(NOT_FOUND, PSTR(FILE_NOT_FOUND));
+    }
+    deleteContent(path);
+    replyOK();
+}
+
+// void FSWebServer::handleFileDelete()
+// {
+
+//     String path = webserver->arg(0);
+//     if (path.isEmpty() || path == "/") {
+//         replyToCLient(BAD_REQUEST, PSTR("BAD PATH"));
+//         return;
+//     }
+
+//     DebugPrintf_P(PSTR("handleFileDelete: %s\n"), path.c_str());
+//     if (!m_filesystem->exists(path)) {
+//         replyToCLient(NOT_FOUND, PSTR(FILE_NOT_FOUND));
+//         return;
+//     }
+//     // deleteRecursive(path);
+//     File root = m_filesystem->open(path, "r");
+//     // If it's a plain file, delete it
+//     if (!root.isDirectory()) {
+//         root.close();
+//         m_filesystem->remove(path);
+//         replyOK();
+//     } else {
+//         m_filesystem->rmdir(path);
+//         replyOK();
+//     }
+// }
 
 /*
     This specific handler returns the edit.htm (or a gzipped version) from the /edit folder.
@@ -1076,7 +1123,7 @@ void FSWebServer::handleStatus()
 // }
 
 
-void PrintDir(fs::FS& fs, Print& p, const char* dirName, uint8_t level) 
+void PrintDir(fs::FS& fs, Print& p, const char* dirName, uint8_t level)
 {
     p.printf("\nListing directory: %s\n", dirName);
     File root = fs.open(dirName, "r");

@@ -72,6 +72,7 @@
 #endif
 #include <DNSServer.h>
 
+#define ESP_FS_WS_DEBUG_MODE 1
 #if ESP_FS_WS_DEBUG_MODE
     #define DebugPrint(...) ESP_FS_WS_DEBUG_OUTPUT.print(__VA_ARGS__)
     #define DebugPrintln(...) ESP_FS_WS_DEBUG_OUTPUT.println(__VA_ARGS__)
@@ -360,6 +361,7 @@ private:
 
     // edit page, in usefull in some situation, but if you need to provide only a web interface, you can disable
 #if ESP_FS_WS_EDIT
+    void deleteContent(String& path) ;
     void handleGetEdit();
     void handleFileCreate();
     void handleFileDelete();
