@@ -129,7 +129,7 @@ void loop() {
   myWebServer.run();
 
   static uint32_t updateTime;
-  if (millis()- updateTime > 10000) {
+  if (millis()- updateTime > 30000) {
     updateTime = millis();
     appenRow();
   }
