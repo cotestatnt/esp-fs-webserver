@@ -142,6 +142,7 @@ public:
     inline WebServerClass*  getRequest()            { return webserver; }
     inline uint32_t         getTimeout()    const   { return m_timeout; }
     inline bool             getAPMode()     const   { return m_apmode;  }
+    inline const char*      getConfigFilepath()     { return ESP_FS_WS_CONFIG_FILE;}
 
 #if ESP_FS_WS_SETUP
     void addHTML(const char* h, const char* id, bool ow = false) {setup.addHTML(h, id, ow);}

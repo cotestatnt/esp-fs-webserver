@@ -79,8 +79,8 @@ void startFilesystem(){
 * the variables are read (and written) all at once using the ArduinoJon library
 */
 bool loadOptions() {
-  if (FILESYSTEM.exists(myWebServer.getConfigFile())) {
-    File file = FILESYSTEM.open(myWebServer.getConfigFile(), "r");
+  if (FILESYSTEM.exists(myWebServer.getConfigFilepath())) {
+    File file = FILESYSTEM.open(myWebServer.getConfigFilepath(), "r");
     DynamicJsonDocument doc(file.size() * 1.33);
     if (!file)
       return false;
