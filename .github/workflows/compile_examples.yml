@@ -48,7 +48,7 @@ jobs:
     - name: Install 3rd party dependecies
       run: | 
         pio lib -g install \
-        https://github.com/bblanchon/ArduinoJson \
+        https://github.com/bblanchon/ArduinoJson@6.21.5 \
         https://github.com/cotestatnt/esp-fs-webserver.git \
         https://github.com/Links2004/arduinoWebSockets
         
@@ -95,7 +95,7 @@ jobs:
     - name: Install 3rd party dependecies
       run: | 
         pio lib -g install \
-        https://github.com/bblanchon/ArduinoJson \
+        https://github.com/bblanchon/ArduinoJson@6.21.5 \
         https://github.com/cotestatnt/esp-fs-webserver.git \
         https://github.com/Links2004/arduinoWebSockets
        
