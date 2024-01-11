@@ -45,8 +45,7 @@ jobs:
         
     - name: Install 3rd party dependecies
       run: | 
-        pio lib -g install \
-        https://github.com/bblanchon/ArduinoJson@6.21.5 
+        pio lib -g install bblanchon/ArduinoJson@6.21.5
         
     - name: Create main file
       run: |
