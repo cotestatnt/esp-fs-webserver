@@ -182,10 +182,10 @@ void setup(){
   webSocket.onEvent(webSocketEvent);
 
   // Configure /setup page and start Web Server
-  myWebServer.addOption(FILESYSTEM, "AP mode", apMode);
-  myWebServer.addOption(FILESYSTEM, "LED Pin", ledPin);
-  myWebServer.addOption(FILESYSTEM, "Option 1", option1.c_str());
-  myWebServer.addOption(FILESYSTEM, "Option 2", option2);
+  myWebServer.addOption("AP mode", apMode);
+  myWebServer.addOption("LED Pin", ledPin);
+  myWebServer.addOption("Option 1", option1.c_str());
+  myWebServer.addOption("Option 2", option2);
   // Add custom page handlers
   myWebServer.addHandler("/led", HTTP_GET, handleLed);
 

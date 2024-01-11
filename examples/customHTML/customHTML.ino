@@ -79,8 +79,8 @@ void startFilesystem(){
 * the variables are read (and written) all at once using the ArduinoJon library
 */
 bool loadOptions() {
-  if (FILESYSTEM.exists(myWebServer.configFile())) {
-    File file = FILESYSTEM.open(myWebServer.configFile(), "r");
+  if (FILESYSTEM.exists(myWebServer.getConfigFile())) {
+    File file = FILESYSTEM.open(myWebServer.getConfigFile(), "r");
     DynamicJsonDocument doc(file.size() * 1.33);
     if (!file)
       return false;
@@ -106,7 +106,7 @@ bool loadOptions() {
     Serial.println();
     Serial.printf("LED pin value: %d\n", ledPin);
     Serial.printf("Bool value: %d\n", boolVar);
-    Serial.printf("Long value: %ld\n",longVar);
+    Serial.printf("Long value: %d\n", longVar);
     Serial.printf("Float value: %d.%d\n", (int)floatVar, (int)(floatVar*1000)%1000);
     Serial.println(stringVar);
     return true;

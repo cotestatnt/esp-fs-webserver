@@ -166,7 +166,7 @@ void setup() {
   myWebServer.addDropdownList(DROPDOWN_LABEL, dropdownList, LIST_SIZE);
 
   myWebServer.addHTML(save_btn_htm, "buttons");
-  myWebServer.addJavascript(button_script);
+  myWebServer.addJavascript(button_script, "script");
 
   if (myWebServer.begin()) {
     Serial.print(F("ESP Web Server started on IP Address: "));
