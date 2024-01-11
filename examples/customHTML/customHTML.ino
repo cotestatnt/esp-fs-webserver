@@ -184,8 +184,8 @@ void setup() {
   // How many times you need (for example one in different option box)
   myWebServer.addHTML(custom_html, "fetch-test", /*overwite*/ true);
   // Only once (CSS and Javascript will be appended to head and body)
-  myWebServer.addCSS(custom_css, /*overwite*/ false);
-  myWebServer.addJavascript(custom_script, /*overwite*/ false);
+  myWebServer.addCSS(custom_css, "css", /*overwite*/ false);
+  myWebServer.addJavascript(custom_script, "script", /*overwite*/ false);
 
   // Try to connect to stored SSID, start AP if fails after timeout
   myWebServer.setAP("ESP_AP", "123456789");

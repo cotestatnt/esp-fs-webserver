@@ -164,7 +164,7 @@ void setup(){
   IPAddress myIP = myWebServer.startWiFi(15000);
 
   // Configure /setup page and start Web Server
-  myWebServer.addOption(FILESYSTEM, "New firmware JSON", fimwareInfo);
+  myWebServer.addOption("New firmware JSON", fimwareInfo);
 
   // Add custom handlers to webserver
   myWebServer.addHandler("/led", HTTP_GET, handleLed);

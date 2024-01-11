@@ -42,18 +42,18 @@ WebSocketsServer webSocket = WebSocketsServer(81);
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length) {
   switch(type) {
     case WStype_DISCONNECTED:
-        DebugPrintf("[%u] Disconnected!\n", num);
+        log_info("[%u] Disconnected!\n", num);
         break;
     case WStype_CONNECTED:
         {
           IPAddress ip = webSocket.remoteIP(num);
-          DebugPrintf("[%u] Connected from %d.%d.%d.%d url: %s\n", num, ip[0], ip[1], ip[2], ip[3], payload);
+          log_info("[%u] Connected from %d.%d.%d.%d url: %s\n", num, ip[0], ip[1], ip[2], ip[3], payload);
           // send message to client
           webSocket.sendTXT(num, "{\"Connected\": true}");
         }
         break;
     case WStype_TEXT:
-        DebugPrintf("[%u] get Text: %s\n", num, payload);
+        log_info("[%u] get Text: %s\n", num, payload);
         // send message to client
         // webSocket.sendTXT(num, "message here");
 
@@ -61,7 +61,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
         // webSocket.broadcastTXT("message here");
         break;
     case WStype_BIN:
-        DebugPrintf("[%u] get binary length: %u\n", num, length);
+        log_info("[%u] get binary length: %u\n", num, length);
         break;
     default:
         break;
@@ -73,13 +73,13 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
 void getUpdatedtime(const uint32_t timeout)
 {
   uint32_t start = millis();
-  DebugPrint("Sync time...");
+  log_info("Sync time...");
   while (millis() - start < timeout  && Time.tm_year <= (1970 - 1900)) {
     time_t now = time(nullptr);
     Time = *localtime(&now);
     delay(5);
   }
-  DebugPrintln(" done.");
+  log_info(" done.");
 }
 
 
@@ -92,13 +92,12 @@ void startFilesystem(){
     while (file){
       const char* fileName = file.name();
       size_t fileSize = file.size();
-      DebugPrintf("FS File: %s, size: %lu\n", fileName, (long unsigned)fileSize);
+      log_info("FS File: %s, size: %lu\n", fileName, (long unsigned)fileSize);
       file = root.openNextFile();
     }
-    DebugPrintln();
   }
   else {
-    DebugPrintln("ERROR on mounting filesystem. It will be formmatted!");
+    log_info("ERROR on mounting filesystem. It will be formmatted!");
     FILESYSTEM.format();
     ESP.restart();
   }
@@ -126,21 +125,21 @@ void loadApplicationConfig() {
     DeserializationError error = deserializeJson(doc, file);
     file.close();
     if (!error) {
-      DebugPrintln(F("Deserializing JSON.."));
+      Serial.print(F("Deserializing JSON.."));
       apMode = doc["AP mode"];
       option1 = doc["Option 1"].as<String>();
       option2 = doc["Option 2"];
       ledPin = doc["LED Pin"];
     }
     else {
-      DebugPrintln(F("Failed to deserialize JSON. File could be corrupted"));
-      DebugPrintln(error.c_str());
+      Serial.print(F("Failed to deserialize JSON. File could be corrupted"));
+      Serial.println(error.c_str());
       saveApplicationConfig();
     }
   }
   else {
     saveApplicationConfig();
-    DebugPrintln(F("New file created with default values"));
+    Serial.println(F("New file created with default values"));
   }
 }
 
@@ -191,11 +190,11 @@ void setup(){
   myWebServer.addHandler("/led", HTTP_GET, handleLed);
 
   if (myWebServer.begin()) {
-    DebugPrint(F("ESP Web Server started on IP Address: "));
-    DebugPrintln(myIP);
-    DebugPrintln(F("Open /setup page to configure optional parameters"));
-    DebugPrintln(F("Open /edit page to view and edit files"));
-    DebugPrintln(F("Open /update page to upload firmware and filesystem updates"));
+    Serial.print(F("ESP Web Server started on IP Address: "));
+    Serial.println(myIP);
+    Serial.println(F("Open /setup page to configure optional parameters"));
+    Serial.println(F("Open /edit page to view and edit files"));
+    Serial.println(F("Open /update page to upload firmware and filesystem updates"));
   }
 
   // Start MDSN responder
@@ -209,8 +208,8 @@ void setup(){
     configTzTime(MYTZ, "time.google.com", "time.windows.com", "pool.ntp.org");
 #endif
     if (MDNS.begin(hostname)) {
-      DebugPrintln(F("MDNS responder started."));
-      DebugPrintf("You should be able to connect with address\t http://%s.local/\n", hostname);
+      Serial.println(F("MDNS responder started."));
+      Serial.printf("You should be able to connect with address\t http://%s.local/\n", hostname);
       // Add service to MDNS-SD
       MDNS.addService("http", "tcp", 80);
     }

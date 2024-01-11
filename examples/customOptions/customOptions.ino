@@ -105,7 +105,7 @@ bool loadOptions() {
     Serial.println("\nThis are the current values stored: \n");
     Serial.printf("LED pin value: %d\n", ledPin);
     Serial.printf("Bool value: %s\n", boolVar ? "true" : "false");
-    Serial.printf("Long value: %lu\n",longVar);
+    Serial.printf("Long value: %d\n",longVar);
     Serial.printf("Float value: %d.%d\n", (int)floatVar, (int)(floatVar*1000)%1000);
     Serial.printf("String value: %s\n", stringVar.c_str());
     Serial.printf("Dropdown selected value: %s\n\n", dropdownSelected.c_str());
