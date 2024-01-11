@@ -1,14 +1,5 @@
 #include "esp-fs-webserver.h"
 
-FSWebServer::FSWebServer(fs::FS& fs, WebServerClass& server)
-    : m_apWebpage("/setup")
-    , m_apSsid("ESP_AP")
-    , m_apPsk("123456789")
-{
-    m_filesystem = &fs;
-    webserver = &server;
-}
-
 void FSWebServer::run()
 {
     yield();
@@ -27,45 +18,23 @@ void FSWebServer::addHandler(const Uri& uri, WebServerClass::THandlerFunction ha
     webserver->on(uri, HTTP_ANY, handler);
 }
 
-bool FSWebServer::checkDir(const char* dirname)
-{
-    { // scope for the root file
-        File root = m_filesystem->open(dirname, "r");
-        if (!root) {
-            DebugPrintln("- failed to open directory");
-            return false;
-        }
-        if (!root.isDirectory()) {
-            DebugPrintln(" - not a directory");
-            return false;
-        }
-    }
-#if ESP_FS_WS_INFO_MODE
-    // List all files saved in the selected filesystem
-    PrintDir(*m_filesystem, ESP_FS_WS_INFO_OUTPUT, dirname);
-#endif
-    return true;
-}
-
 bool FSWebServer::begin()
 {
-    DebugPrintln("List the files of webserver: ");
-    File root = m_filesystem->open(ESP_FS_WS_CONFIG_FOLDER, "r");
-    if (!root) {
-        DebugPrintln("Failed to open " ESP_FS_WS_CONFIG_FOLDER " directory. Create new folder");
+    if (!m_filesystem->exists(ESP_FS_WS_CONFIG_FOLDER)) {
+        log_error("Failed to open " ESP_FS_WS_CONFIG_FOLDER " directory. Create new folder");
         m_filesystem->mkdir(ESP_FS_WS_CONFIG_FOLDER);
         // Create empty config file
         File config = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "w");
-        config.println("{\"param-box0\":\"\"}");
+        config.println("{\"wifi-box\":\"\"}");
         config.close();
         ESP.restart();
     }
-    m_fsOK = checkDir("/");
+    m_fsOK = true;
 
     // Backward compatibility, move config.json to new path
-    root = m_filesystem->open("/config.json", "r");
-    if (root) {
-        root.close();
+    File file = m_filesystem->open("/config.json", "r");
+    if (file) {
+        file.close();
         m_filesystem->rename("/config.json", ESP_FS_WS_CONFIG_FILE);
     }
 
@@ -87,6 +56,7 @@ bool FSWebServer::begin()
     webserver->on("/scan", HTTP_GET, std::bind(&FSWebServer::handleScanNetworks, this));
     webserver->on("/connect", HTTP_POST, std::bind(&FSWebServer::doWifiConnection, this));
     webserver->on("/restart", HTTP_GET, std::bind(&FSWebServer::doRestart, this));
+    webserver->on("/reset", HTTP_GET, std::bind(&FSWebServer::doRestart, this));
     webserver->on("/ipaddress", HTTP_GET, std::bind(&FSWebServer::getIpAddress, this));
 
     // Captive Portal redirect
@@ -145,18 +115,45 @@ IPAddress FSWebServer::startAP()
     m_dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
     IPAddress ip = WiFi.softAPIP();
     m_dnsServer.start(53, "*", ip);
-    WiFi.begin(); //???
+
     ip = WiFi.softAPIP();
-    InfoPrintln(F("AP mode."));
-    InfoPrint(F("Server IP address: "));
-    InfoPrintln(ip);
+    log_info("AP mode.\n Server IP address: %s", ip.toString().c_str());
     return ip;
 }
 
 IPAddress FSWebServer::startWiFi(uint32_t timeout, bool apFlag, CallbackF fn)
 {
+    IPAddress local_ip, subnet, gateway;
+    File file = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "r");
+    int sz = file.size() * 1.33;
+    int docSize = max(sz, 2048);
+    DynamicJsonDocument doc((size_t)docSize);
+    if (file) {
+        // If file is present, load actual configuration
+        DeserializationError error = deserializeJson(doc, file);
+        if (error) {
+            log_error("Failed to deserialize file, may be corrupted\n %s\n", error.c_str());
+            file.close();
+        }
+        file.close();
+        if (doc["dhcp"].as<bool>() == true) {
+            gateway.fromString(doc["gateway"].as<String>());
+            subnet.fromString(doc["subnet"].as<String>());
+            local_ip.fromString(doc["ip_address"].as<String>());
+            log_info("Manual config WiFi connection with IP: %s\n", local_ip.toString().c_str());
+            if (!WiFi.config(local_ip, gateway, subnet))
+                log_error("STA Failed to configure");
+            delay(100);
+        }
+    }
+    else {
+        log_error("File not found, will be created new configuration file");
+    }
+
     if (timeout > 0)
         m_timeout = timeout;
+
+    m_apmode = false;
     WiFi.mode(WIFI_STA);
 #if defined(ESP8266)
     struct station_config conf;
@@ -170,18 +167,16 @@ IPAddress FSWebServer::startWiFi(uint32_t timeout, bool apFlag, CallbackF fn)
     const char* _pass = reinterpret_cast<const char*>(conf.sta.password);
 #endif
     if (strlen(_ssid) && strlen(_pass)) {
-        m_apmode = false;
-        WiFi.mode(WIFI_STA);
+
         WiFi.begin(_ssid, _pass);
         uint32_t startTime = millis();
-        InfoPrint(F("Connecting to "));
-        InfoPrintln(_ssid);
+        log_info("Connecting to '%s'", _ssid);
         while ((WiFi.status() != WL_CONNECTED) && (timeout > 0)) {
             // execute callback function during wifi connection
             if (fn != nullptr)
                 fn();
-            delay(250);
-            InfoPrint(".");
+            delay(1000);
+            Serial.print(".");
             // If no connection after a while break
             if (millis() - startTime > timeout)
                 break;
@@ -200,7 +195,7 @@ IPAddress FSWebServer::startWiFi(uint32_t timeout, bool apFlag, CallbackF fn)
  */
 bool FSWebServer::captivePortal()
 {
-    String serverLoc("https:://");
+    String serverLoc("http://");
     serverLoc += webserver->client().localIP().toString();
     serverLoc += m_apWebpage;
     // redirect if hostheader not server ip, prevent redirect loops
@@ -247,9 +242,18 @@ void FSWebServer::doRestart()
 
 void FSWebServer::doWifiConnection()
 {
+    IPAddress local_ip, subnet, gateway;
     String ssid, pass;
     bool persistent = true;
+    bool config = false,  newSSID = false;
     WiFi.mode(WIFI_AP_STA);
+
+    if (webserver->hasArg("ip_address") && webserver->hasArg("subnet") && webserver->hasArg("gateway")) {
+        gateway.fromString(webserver->arg("gateway"));
+        subnet.fromString(webserver->arg("subnet"));
+        local_ip.fromString(webserver->arg("ip_address"));
+        config = true;
+    }
 
     if (webserver->hasArg("ssid")) {
         ssid = webserver->arg("ssid");
@@ -263,6 +267,7 @@ void FSWebServer::doWifiConnection()
         String pers = webserver->arg("persistent");
         if (pers.equals("false")) {
             persistent = false;
+            clearWifiCredentials();
         }
     }
 
@@ -275,37 +280,41 @@ void FSWebServer::doWifiConnection()
         webserver->send(200, "text/plain", resp);
 
         delay(500);
-        InfoPrintln("Disconnect from current WiFi network");
+        log_info("Disconnect from current WiFi network");
         WiFi.disconnect();
     }
 
     if (ssid.length()) { // pass could be empty
+
         // Try to connect to new ssid
-        InfoPrint("Connecting to ");
-        InfoPrintln(ssid);
+        log_info("Connecting to \"%s\"", ssid.c_str());
         WiFi.begin(ssid.c_str(), pass.c_str());
+
+        // Manual connection setup
+        if (config) {
+            log_info("Manual config WiFi connection with IP: %s", local_ip.toString().c_str());
+            if (!WiFi.config(local_ip, gateway, subnet))
+                log_error("STA Failed to configure");
+        }
 
         uint32_t beginTime = millis();
         while (WiFi.status() != WL_CONNECTED) {
-            delay(250);
-            InfoPrint(".");
+            delay(1000);
+            Serial.print(".");
             if (millis() - beginTime > m_timeout)
                 break;
         }
+
         // reply to client
         if (WiFi.status() == WL_CONNECTED) {
-            // WiFi.softAPdisconnect();
             IPAddress ip = WiFi.localIP();
-            InfoPrint("Connected to Wifi! IP address: ");
-            InfoPrintln(ip);
+            log_info("Connected to Wifi! IP address: %s", ip.toString().c_str());
             String serverLoc = F("http://");
             for (int i = 0; i < 4; i++)
                 serverLoc += i ? "." + String(ip[i]) : String(ip[i]);
-
             String resp = "Restart ESP and then reload this page from <a href='";
             resp += serverLoc;
             resp += "/setup'>the new LAN address</a>";
-
             webserver->send(200, "text/plain", resp);
             m_apmode = false;
 
@@ -361,186 +370,93 @@ void FSWebServer::setCrossOrigin()
     webserver->sendHeader(F("Access-Control-Max-Age"), F("600"));
     webserver->sendHeader(F("Access-Control-Allow-Methods"), F("PUT,POST,GET,OPTIONS"));
     webserver->sendHeader(F("Access-Control-Allow-Headers"), F("*"));
-};
+}
 
-void FSWebServer::handleScanNetworks()
-{
-    String jsonList = "[";
-    DebugPrint("Scanning WiFi networks...");
-    int n = WiFi.scanNetworks();
-    DebugPrintln(" complete.");
-    if (n == 0) {
-        DebugPrintln("no networks found");
-        webserver->send(200, "text/json", "[]");
-        return;
-    } else {
-        DebugPrint(n);
-        DebugPrintln(" networks found:");
+// void FSWebServer::handleScanNetworks()
+// {
+//     String jsonList = "[";
+//     log_info("Scanning WiFi networks...");
+//     int n = WiFi.scanNetworks();
+//     log_info(" complete.");
+//     if (n == 0) {
+//         log_info("no networks found");
+//         webserver->send(200, "text/json", "[]");
+//         return;
+//     } else {
+//         log_info("%d networks found", n);
 
-        for (int i = 0; i < n; ++i) {
+//         for (int i = 0; i < n; ++i) {
+//             String ssid = WiFi.SSID(i);
+//             int rssi = WiFi.RSSI(i);
+// #if defined(ESP8266)
+//             String security = WiFi.encryptionType(i) == AUTH_OPEN ? "none" : "enabled";
+// #elif defined(ESP32)
+//             String security = WiFi.encryptionType(i) == WIFI_AUTH_OPEN ? "none" : "enabled";
+// #endif
+//             jsonList += "{\"ssid\":\"";
+//             jsonList += ssid;
+//             jsonList += "\",\"strength\":\"";
+//             jsonList += rssi;
+//             jsonList += "\",\"security\":";
+//             jsonList += security == "none" ? "false" : "true";
+//             jsonList += ssid.equals(WiFi.SSID()) ? ",\"selected\": true" : "";
+//             jsonList += i < n - 1 ? "}," : "}";
+//         }
+//         jsonList += "]";
+//     }
+//     webserver->send(200, "text/json", jsonList);
+// }
+
+void FSWebServer::handleScanNetworks() {
+    log_info("Start scan WiFi networks");
+    int res = WiFi.scanNetworks();
+    log_info(" done!\nNumber of networks: %d", res);
+    DynamicJsonDocument doc(res*96);
+    JsonArray array = doc.to<JsonArray>();
+
+    if (res > 0) {
+        for (int i = 0; i < res; ++i) {
             String ssid = WiFi.SSID(i);
-            int rssi = WiFi.RSSI(i);
-#if defined(ESP8266)
-            String security = WiFi.encryptionType(i) == AUTH_OPEN ? "none" : "enabled";
-#elif defined(ESP32)
-            String security = WiFi.encryptionType(i) == WIFI_AUTH_OPEN ? "none" : "enabled";
-#endif
-            jsonList += "{\"ssid\":\"";
-            jsonList += ssid;
-            jsonList += "\",\"strength\":\"";
-            jsonList += rssi;
-            jsonList += "\",\"security\":";
-            jsonList += security == "none" ? "false" : "true";
-            jsonList += ssid.equals(WiFi.SSID()) ? ",\"selected\": true" : "";
-            jsonList += i < n - 1 ? "}," : "}";
+            JsonObject obj = array.createNestedObject();
+            obj["strength"] = WiFi.RSSI(i);
+            obj["ssid"] = WiFi.SSID(i);
+            #if defined(ESP8266)
+            obj["security"] = AUTH_OPEN ? "none" : "enabled";
+            #elif defined(ESP32)
+            obj["security"] = WIFI_AUTH_OPEN ? "none" : "enabled";
+            #endif
+            if (ssid.equals(WiFi.SSID()))
+                obj["selected"] =  true;
         }
-        jsonList += "]";
+        WiFi.scanDelete();
     }
-    webserver->send(200, "text/json", jsonList);
-    DebugPrintln(jsonList);
+    String json;
+    serializeJson(doc, json);
+    webserver->send(200, "application/json", json);
+    log_info("%s", json.c_str());
 }
 
 #if ESP_FS_WS_SETUP
 
 void FSWebServer::getStatus()
 {
-    uint32_t ip = (WiFi.status() == WL_CONNECTED) ? WiFi.localIP() : WiFi.softAPIP();
+    IPAddress ip = (WiFi.status() == WL_CONNECTED) ? WiFi.localIP() : WiFi.softAPIP();
     String reply = "{\"firmware\": \"";
     reply += m_version;
     reply += "\", \"mode\":\"";
-    reply += WiFi.status() == WL_CONNECTED ? "Station" : "Access Point";
-    reply += "\", \"ip\":";
-    reply += ip;
-    reply += "}";
+    if (WiFi.status() == WL_CONNECTED) {
+        reply += " Station (";
+        reply += WiFi.SSID();
+        reply += ")";
+    }
+    else
+        reply += "Access Point";
+    reply += "\", \"ip\":\"";
+    reply += ip.toString();
+    reply += "\"}";
     webserver->send(200, "application/json", reply);
 }
 
-bool FSWebServer::clearOptions()
-{
-    File file = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "r");
-    if (file) {
-        file.close();
-        m_filesystem->remove(ESP_FS_WS_CONFIG_FILE);
-        return true;
-    }
-    return false;
-}
-
-/*
- * In order to keep config.json file small and clean, custom HTML, CSS and Javascript
- * will be saved as file. The related option will contain the path to this file
- */
-bool FSWebServer::optionToFile(const char* filename, const char* str, bool overWrite)
-{
-    // Check if file is already saved
-    File file = m_filesystem->open(filename, "r");
-    if (file && !overWrite) {
-        file.close();
-        return true;
-    }
-    // Create or overwrite option file
-    else {
-        file = m_filesystem->open(filename, "w");
-        if (file) {
-            file.print(str);
-            file.close();
-            return true;
-        } else {
-            DebugPrintf("Error writing file %s\n", filename);
-        }
-    }
-    return false;
-}
-
-/*
- * Add an option which contain "raw" HTML code to be injected in /setup page
- * Th HTML code will be written in a file with named as option id
- */
-void FSWebServer::addHTML(const char* html, const char* id, bool overWrite)
-{
-    String elementId = "raw-html-";
-    elementId += id;
-    String path = "/setup/";
-    path += elementId;
-    path += ".htm";
-#if defined(ESP8266)
-    String content = html;
-    optionToFile(path.c_str(), content.c_str(), overWrite);
-#else
-    optionToFile(path.c_str(), html, overWrite);
-#endif
-    addOption(elementId.c_str(), path.c_str(), false);
-}
-
-/*
- * Add an option which contain "raw" CSS style to be injected in /setup page
- * Th CSS code will be written in a file with named as option raw-css.css
- */
-void FSWebServer::addCSS(const char* css, bool overWrite)
-{
-#if defined(ESP8266)
-    String content = css;
-    optionToFile("/setup/raw-css.css", content.c_str(), overWrite);
-#else
-    optionToFile("/setup/raw-css.css", css, overWrite);
-#endif
-    addOption("raw-css", "/setup/raw-css.css", true);
-}
-
-/*
- * Add an option which contain "raw" JS script to be injected in /setup page
- * Th JS code will be written in a file with named as option raw-javascript.js
- */
-void FSWebServer::addJavascript(const char* script, bool overWrite)
-{
-#if defined(ESP8266)
-    String content = script;
-    optionToFile("/setup/raw-javascript.js", content.c_str(), overWrite);
-#else
-    optionToFile("/setup/raw-javascript.js", script, overWrite);
-#endif
-    addOption("raw-javascript", "/setup/raw-javascript.js", true);
-}
-
-void FSWebServer::addDropdownList(const char* label, const char** array, size_t size)
-{
-    File file = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "r");
-    int sz = file.size() * 1.33;
-    int docSize = max(sz, 2048);
-    DynamicJsonDocument doc((size_t)docSize);
-    if (file) {
-        // If file is present, load actual configuration
-        DeserializationError error = deserializeJson(doc, file);
-        if (error) {
-            DebugPrintln(F("Failed to deserialize file, may be corrupted"));
-            DebugPrintln(error.c_str());
-            file.close();
-            return;
-        }
-        file.close();
-    } else {
-        DebugPrintln(F("File not found, will be created new configuration file"));
-    }
-
-    numOptions++;
-
-    // If key is present in json, we don't need to create it.
-    if (doc.containsKey(label))
-        return;
-
-    JsonObject obj = doc.createNestedObject(label);
-    obj["selected"] = array[0]; // first element selected as default
-    JsonArray arr = obj.createNestedArray("values");
-    for (unsigned int i = 0; i < size; i++) {
-        arr.add(array[i]);
-    }
-
-    file = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "w");
-    if (serializeJsonPretty(doc, file) == 0) {
-        DebugPrintln(F("Failed to write to file"));
-    }
-    file.close();
-}
 
 void FSWebServer::removeWhiteSpaces(String& str)
 {
@@ -564,7 +480,7 @@ void FSWebServer::removeWhiteSpaces(String& str)
 
 void FSWebServer::handleSetup()
 {
-    DebugPrintln("handleSetup");
+    log_debug("handleSetup");
 #if ESP_FS_WS_SETUP_HTM
     webserver->sendHeader(PSTR("Content-Encoding"), "gzip");
     webserver->send_P(200, "text/html", SETUP_HTML, SETUP_HTML_SIZE);
@@ -643,7 +559,7 @@ void FSWebServer::update_first()
 
 void FSWebServer::handleIndex()
 {
-    DebugPrintln("handleIndex");
+    log_debug("handleIndex");
     if (m_filesystem->exists("/index.htm")) {
         handleFileRead("/index.htm");
     } else if (m_filesystem->exists("/index.html")) {
@@ -659,7 +575,7 @@ void FSWebServer::handleIndex()
 bool FSWebServer::handleFileRead(const char* uri)
 {
     String path = uri;
-    DebugPrintln("handleFileRead: " + path);
+    log_debug("handleFileRead: %s", path);
     if (path.endsWith("/")) {
         path += "index.htm";
     }
@@ -672,7 +588,7 @@ bool FSWebServer::handleFileRead(const char* uri)
         const char* contentType = getContentType(path.c_str());
         File file = m_filesystem->open(path, "r");
         if (webserver->streamFile(file, contentType) != file.size()) {
-            DebugPrintln(PSTR("Sent less data than expected!"));
+            log_debug(PSTR("Sent less data than expected!"));
             // webserver->stop();
         }
         file.close();
@@ -694,9 +610,9 @@ bool FSWebServer::createDirFromPath(const String& path)
         if (dir.indexOf(".") == -1) {
             if (!m_filesystem->exists(dir)) {
                 if (m_filesystem->mkdir(dir)) {
-                    DebugPrintf("Folder %s created\n", dir.c_str());
+                    log_info("Folder %s created\n", dir.c_str());
                 } else {
-                    DebugPrintf("Error. Folder %s not created\n", dir.c_str());
+                    log_error("Error. Folder %s not created\n", dir.c_str());
                     return false;
                 }
             }
@@ -728,13 +644,13 @@ void FSWebServer::handleFileUpload()
             return;
         }
 
-        DebugPrintf_P(PSTR("handleFileUpload Name: %s\n"), filename.c_str());
+        log_debug("handleFileUpload Name: %s", filename.c_str());
         m_uploadFile = m_filesystem->open(filename, "w");
         if (!m_uploadFile) {
             replyToCLient(ERROR, PSTR("CREATE FAILED"));
             return;
         }
-        DebugPrintf_P(PSTR("Upload: START, filename: %s\n"), filename.c_str());
+        log_debug("Upload: START, filename: %s", filename.c_str());
     } else if (upload.status == UPLOAD_FILE_WRITE) {
         if (m_uploadFile) {
             size_t bytesWritten = m_uploadFile.write(upload.buf, upload.currentSize);
@@ -743,12 +659,12 @@ void FSWebServer::handleFileUpload()
                 return;
             }
         }
-        DebugPrintf_P(PSTR("Upload: WRITE, Bytes: %d\n"), upload.currentSize);
+        log_debug("Upload: WRITE, Bytes: %d", upload.currentSize);
     } else if (upload.status == UPLOAD_FILE_END) {
         if (m_uploadFile) {
             m_uploadFile.close();
         }
-        DebugPrintf_P(PSTR("Upload: END, Size: %d\n"), upload.totalSize);
+        log_debug("Upload: END, Size: %d", upload.totalSize);
     }
 }
 
@@ -794,8 +710,7 @@ void FSWebServer::checkForUnsupportedPath(String& filename, String& error)
     if (filename.endsWith("/")) {
         error += PSTR(" ! TRAILING_SLASH ! ");
     }
-    DebugPrintln(filename);
-    DebugPrintln(error);
+    log_debug("Error on %s: %s", filename.c_str(), error.c_str());
 }
 
 const char* FSWebServer::getContentType(const char* filename)
@@ -847,7 +762,7 @@ void FSWebServer::handleFileList()
     }
 
     String path = webserver->arg("dir");
-    DebugPrintln("handleFileList: " + path);
+    log_debug("handleFileList: %s", path.c_str());
     if (path != "/" && !m_filesystem->exists(path)) {
         return replyToCLient(BAD_REQUEST, "BAD PATH");
     }
@@ -907,7 +822,7 @@ void FSWebServer::handleFileCreate()
     String src = webserver->arg("src");
     if (src.isEmpty()) {
         // No source specified: creation
-        DebugPrintf_P(PSTR("handleFileCreate: %s\n"), path.c_str());
+        log_debug("handleFileCreate: %s", path.c_str());
         if (path.endsWith("/")) {
             // Create a folder
             path.remove(path.length() - 1);
@@ -938,7 +853,7 @@ void FSWebServer::handleFileCreate()
             return;
         }
 
-        DebugPrintf_P(PSTR("handleFileCreate: %s from %s\n"), path.c_str(), src.c_str());
+        log_debug("handleFileCreate: %s from %s", path.c_str(), src.c_str());
         if (path.endsWith("/")) {
             path.remove(path.length() - 1);
         }
@@ -966,7 +881,7 @@ void FSWebServer::deleteContent(String& path) {
   if (!file.isDirectory()) {
     file.close();
     m_filesystem->remove(path.c_str());
-    DebugPrintf("File %s deleted", path.c_str());
+    log_debug("File %s deleted", path.c_str());
     return;
   }
 
@@ -984,12 +899,12 @@ void FSWebServer::deleteContent(String& path) {
     else {
       entry.close();
       m_filesystem->remove(entryPath.c_str());
-      DebugPrintf("File %s deleted", path.c_str());
+      log_debug("File %s deleted", path.c_str());
     }
     yield();
   }
   m_filesystem->rmdir(path.c_str());
-  DebugPrintf("Folder %s removed", path.c_str());
+  log_debug("Folder %s removed", path.c_str());
   file.close();
 }
 
@@ -1055,7 +970,7 @@ void FSWebServer::handleGetEdit()
 */
 void FSWebServer::handleStatus()
 {
-    DebugPrintln(PSTR("handleStatus"));
+    log_debug("handleStatus");
 
     size_t totalBytes = 1024;
     size_t usedBytes = 0;

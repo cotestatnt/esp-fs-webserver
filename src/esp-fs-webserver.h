@@ -22,34 +22,24 @@
     #endif
 #endif
 
-#ifndef ESP_FS_WS_DEBUG_OUTPUT
-    #define ESP_FS_WS_DEBUG_OUTPUT      Serial
-#endif
-#ifndef ESP_FS_WS_DEBUG_MODE
-    #define ESP_FS_WS_DEBUG_MODE        0
+#if ESP_FS_WS_EDIT_HTM
+    #include "edit_htm.h"
 #endif
 
-#ifndef ESP_FS_WS_INFO_OUTPUT
-    #define ESP_FS_WS_INFO_OUTPUT       Serial
-#endif
-#ifndef ESP_FS_WS_INFO_MODE
-    #define ESP_FS_WS_INFO_MODE         1
-#endif
-
-#if ESP_FS_WS_EDIT
-    #if ESP_FS_WS_EDIT_HTM
-        #include "edit_htm.h"
-    #endif
-#endif
 #if ESP_FS_WS_SETUP
     #define ARDUINOJSON_USE_LONG_LONG 1
     #include <ArduinoJson.h>
     #define ESP_FS_WS_CONFIG_FOLDER "/setup"
     #define ESP_FS_WS_CONFIG_FILE ESP_FS_WS_CONFIG_FOLDER "/config.json"
-    #if ESP_FS_WS_SETUP_HTM
-        #include "setup_htm.h"
-    #endif
+    #include "setup_htm.h"
 #endif
+
+
+#define DBG_OUTPUT_PORT     Serial
+#define LOG_LEVEL           2         // (0 disable, 1 error, 2 info, 3 debug)
+#include "SerialLog.h"
+#include "SetupConfig.hpp"
+
 
 #if defined(ESP8266)
     #include <ESP8266WiFi.h>
@@ -72,26 +62,26 @@
 #endif
 #include <DNSServer.h>
 
-#define ESP_FS_WS_DEBUG_MODE 1
-#if ESP_FS_WS_DEBUG_MODE
-    #define DebugPrint(...) ESP_FS_WS_DEBUG_OUTPUT.print(__VA_ARGS__)
-    #define DebugPrintln(...) ESP_FS_WS_DEBUG_OUTPUT.println(__VA_ARGS__)
-    #define DebugPrintf(...) ESP_FS_WS_DEBUG_OUTPUT.printf(__VA_ARGS__)
-    #define DebugPrintf_P(...) ESP_FS_WS_DEBUG_OUTPUT.printf_P(__VA_ARGS__)
-#else
-    #define DebugPrint(...) ((void)0)
-    #define DebugPrintln(...) ((void)0)
-    #define DebugPrintf(...) ((void)0)
-    #define DebugPrintf_P(...) ((void)0)
-#endif
+// #define ESP_FS_WS_DEBUG_MODE 1
+// #if ESP_FS_WS_DEBUG_MODE
+//     #define DebugPrint(...) ESP_FS_WS_DEBUG_OUTPUT.print(__VA_ARGS__)
+//     #define DebugPrintln(...) ESP_FS_WS_DEBUG_OUTPUT.println(__VA_ARGS__)
+//     #define DebugPrintf(...) ESP_FS_WS_DEBUG_OUTPUT.printf(__VA_ARGS__)
+//     #define DebugPrintf_P(...) ESP_FS_WS_DEBUG_OUTPUT.printf_P(__VA_ARGS__)
+// #else
+//     #define DebugPrint(...) ((void)0)
+//     #define DebugPrintln(...) ((void)0)
+//     #define DebugPrintf(...) ((void)0)
+//     #define DebugPrintf_P(...) ((void)0)
+// #endif
 
-#if ESP_FS_WS_INFO_MODE
-    #define InfoPrint(...) ESP_FS_WS_INFO_OUTPUT.print(__VA_ARGS__)
-    #define InfoPrintln(...) ESP_FS_WS_INFO_OUTPUT.println(__VA_ARGS__)
-#else
-    #define InfoPrint(...) ((void)0)
-    #define InfoPrintln(...) ((void)0)
-#endif
+// #if ESP_FS_WS_INFO_MODE
+//     #define InfoPrint(...) ESP_FS_WS_INFO_OUTPUT.print(__VA_ARGS__)
+//     #define InfoPrintln(...) ESP_FS_WS_INFO_OUTPUT.println(__VA_ARGS__)
+// #else
+//     #define InfoPrint(...) ((void)0)
+//     #define InfoPrintln(...) ((void)0)
+// #endif
 
 enum
 {
@@ -110,7 +100,11 @@ class FSWebServer
     using CallbackF = std::function<void(void)>;
 
 public:
-    FSWebServer(fs::FS &fs, WebServerClass &server);
+    SetupConfigurator setup;
+
+    FSWebServer(fs::FS &fs, WebServerClass &server): m_filesystem(&fs), webserver(&server), setup(&fs) {;}
+
+    ~FSWebServer() { webserver->stop(); }
 
     bool begin();
 
@@ -133,183 +127,202 @@ public:
 
     void clearWifiCredentials();
 
-    // Backward compatibility
-    IPAddress startWiFi(uint32_t timeout, const char* ssid, const char* psk, CallbackF fn = nullptr) {
+    inline IPAddress startWiFi(uint32_t timeout, const char* ssid, const char* psk, CallbackF fn = nullptr) {
         setAP(ssid, psk);
         return startWiFi(timeout, true, fn);
     }
-    inline WebServerClass* getRequest(){ return webserver; }
-    // Backward compatibility
 
     /*
     * Set current firmware version (shown in /setup webpage)
     */
-    void setFirmwareVersion(char* version) {
+    inline void setFirmwareVersion(char* version) {
       strncpy(m_version, version, sizeof(m_version));
     }
 
-    inline WebServerClass* getWebServer(){ return webserver; }
-    inline uint32_t getTimeout() const { return m_timeout; }
-    inline bool getAPMode() const { return m_apmode; }
+    inline WebServerClass*  getRequest()            { return webserver; }
+    inline uint32_t         getTimeout()    const   { return m_timeout; }
+    inline bool             getAPMode()     const   { return m_apmode;  }
 
 #if ESP_FS_WS_SETUP
-    #define MIN_F -3.4028235E+38
-    #define MAX_F 3.4028235E+38
-
-    inline const char* configFile() {return ESP_FS_WS_CONFIG_FILE; }
-
-    bool clearOptions();        // Clear config file
-    void addHTML(const char* html, const char* id, bool overWrite = false) ;
-    void addCSS(const char* css, bool overWrite = false);
-    void addJavascript(const char* script, bool overWrite = false) ;
-    void addDropdownList(const char *label, const char** array, size_t size);
-
-    inline void addOptionBox(const char* boxTitle) {
-        addOption("param-box", boxTitle, false);
-    }
-
-    // Only for backward-compatibility
-    template <typename T>
-    inline void addOption(fs::FS &fs, const char *label, T val, bool hidden = false)
-    {
-        addOption(label, val, hidden);
-    }
-
-    // Add custom option to config webpage (float values)
-    template <typename T>
-    inline void addOption(const char *label, T val, double d_min, double d_max, double step)
-    {
-        addOption(label, val, false, d_min, d_max, step);
-    }
-
-
-    // Add custom option to config webpage (type of parameter will be deduced from variable itself)
-    template <typename T>
-    inline void addOption(const char *label, T val, bool hidden = false,
-                    double d_min = MIN_F, double d_max = MAX_F, double step = 1.0)
-    {
-        File file = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "r");
-        int sz = file.size() * 1.33;
-        int docSize = max(sz, 2048);
-        DynamicJsonDocument doc((size_t)docSize);
-        if (file)
-        {
-            // If file is present, load actual configuration
-            DeserializationError error = deserializeJson(doc, file);
-            if (error)
-            {
-                DebugPrintln(F("Failed to deserialize file, may be corrupted"));
-                DebugPrintln(error.c_str());
-                file.close();
-                return;
-            }
-            file.close();
-        }
-        else
-        {
-            DebugPrintln(F("File not found, will be created new configuration file"));
-        }
-
-        numOptions++ ;
-
-        String key = label;
-        if (hidden)
-            key += "-hidden";
-
-        // Univoque key name
-        if (key.equals("param-box")) {
-            key += numOptions ;
-        }
-        if (key.equals("raw-javascript")) {
-            key += numOptions ;
-        }
-
-        // If key is present in json, we don't need to create it.
-        if (doc.containsKey(key.c_str()))
-            return;
-
-        // if min, max, step != from default, treat this as object in order to set other properties
-        if (d_min != MIN_F || d_max != MAX_F || step != 1.0)
-        {
-            JsonObject obj = doc.createNestedObject(key);
-            obj["value"] = static_cast<T>(val);
-            obj["min"] = d_min;
-            obj["max"] = d_max;
-            obj["step"] = step;
-        }
-        else {
-            doc[key] = static_cast<T>(val);
-        }
-
-        file = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "w");
-        if (serializeJsonPretty(doc, file) == 0)
-        {
-            DebugPrintln(F("Failed to write to file"));
-        }
-        file.close();
-    }
-
-
-
-    // Get current value for a specific custom option (true on success)
-    template <typename T>
-    bool getOptionValue(const char *label, T &var)
-    {
-        File file = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "r");
-        DynamicJsonDocument doc(file.size() * 1.33);
-        if (file)
-        {
-            DeserializationError error = deserializeJson(doc, file);
-            if (error)
-            {
-                DebugPrintln(F("Failed to deserialize file, may be corrupted"));
-                DebugPrintln(error.c_str());
-                file.close();
-                return false;
-            }
-            file.close();
-        }
-        else
-            return false;
-
-        if (doc[label]["value"])
-            var = doc[label]["value"].as<T>();
-        else if (doc[label]["selected"])
-            var = doc[label]["selected"].as<T>();
-        else
-            var = doc[label].as<T>();
-        return true;
+    void addHTML(const char* h, const char* id, bool ow = false) {setup.addHTML(h, id, ow);}
+    void addCSS(const char* c, const char* id, bool ow = false){setup.addCSS(c, id, ow);}
+    void addJavascript(const char* s, const char* id, bool ow = false) {setup.addJavascript(s, id, ow);}
+    void addDropdownList(const char *l, const char** a, size_t size){setup.addDropdownList(l, a, size);}
+    void addOptionBox(const char* title) { setup.addOption("param-box", title); }
+    void setLogoBase64(const char* logo, const char* w = "128", const char* h = "128", bool ow = false) {
+      setup.setLogoBase64(logo, w, h, ow);
     }
 
     template <typename T>
-    bool saveOptionValue(const char *label, T val)
-    {
-        File file = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "w");
-        DynamicJsonDocument doc(file.size() * 1.33);
-
-        if (file)
-        {
-            DeserializationError error = deserializeJson(doc, file);
-            if (error)
-            {
-                DebugPrintln(F("Failed to deserialize file, may be corrupted"));
-                DebugPrintln(error.c_str());
-                file.close();
-                return false;
-            }
-            file.close();
-        }
-        else
-            return false;
-
-        if (doc[label]["value"])
-            doc[label]["value"] = val;
-        else if (doc[label]["selected"])
-            doc[label]["selected"] = val;
-        else
-            doc[label] = val;
-        return true;
+    void addOption(const char *lbl, T val, double min, double max, double st){
+      setup.addOption(lbl, val, false, min, max, st);
     }
+
+    template <typename T>
+    void addOption(const char *lbl, T val, bool hd = false,  double min = MIN_F,
+      double max = MAX_F, double st = 1.0) {
+      setup.addOption(lbl, val, hd, min, max, st);
+    }
+
+    template <typename T>
+    bool getOptionValue(const char *lbl, T &var) { return setup.getOptionValue(lbl, var);}
+
+    template <typename T>
+    bool saveOptionValue(const char *lbl, T val) {return setup.saveOptionValue(lbl, val);}
+
+    // #define MIN_F -3.4028235E+38
+    // #define MAX_F 3.4028235E+38
+    // inline const char* configFile() {return ESP_FS_WS_CONFIG_FILE; }
+    // bool clearOptions();        // Clear config file
+    // void addHTML(const char* html, const char* id, bool overWrite = false) ;
+    // void addCSS(const char* css, bool overWrite = false);
+    // void addJavascript(const char* script, bool overWrite = false) ;
+    // void addDropdownList(const char *label, const char** array, size_t size);
+
+    // inline void addOptionBox(const char* boxTitle) {
+    //     addOption("param-box", boxTitle, false);
+    // }
+
+    // // Only for backward-compatibility
+    // template <typename T>
+    // inline void addOption(fs::FS &fs, const char *label, T val, bool hidden = false)
+    // {
+    //     addOption(label, val, hidden);
+    // }
+
+    // // Add custom option to config webpage (float values)
+    // template <typename T>
+    // inline void addOption(const char *label, T val, double d_min, double d_max, double step)
+    // {
+    //     addOption(label, val, false, d_min, d_max, step);
+    // }
+
+
+    // // Add custom option to config webpage (type of parameter will be deduced from variable itself)
+    // template <typename T>
+    // inline void addOption(const char *label, T val, bool hidden = false,
+    //                 double d_min = MIN_F, double d_max = MAX_F, double step = 1.0)
+    // {
+    //     File file = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "r");
+    //     int sz = file.size() * 1.33;
+    //     int docSize = max(sz, 2048);
+    //     DynamicJsonDocument doc((size_t)docSize);
+    //     if (file)
+    //     {
+    //         // If file is present, load actual configuration
+    //         DeserializationError error = deserializeJson(doc, file);
+    //         if (error)
+    //         {
+    //             log_error("Failed to deserialize file, may be corrupted: %s", error.c_str());
+    //             file.close();
+    //             return;
+    //         }
+    //         file.close();
+    //     }
+    //     else
+    //     {
+    //         log_error(F("File not found, will be created new configuration file"));
+    //     }
+
+    //     numOptions++ ;
+
+    //     String key = label;
+    //     if (hidden)
+    //         key += "-hidden";
+
+    //     // Univoque key name
+    //     if (key.equals("param-box")) {
+    //         key += numOptions ;
+    //     }
+    //     if (key.equals("raw-javascript")) {
+    //         key += numOptions ;
+    //     }
+
+    //     // If key is present in json, we don't need to create it.
+    //     if (doc.containsKey(key.c_str()))
+    //         return;
+
+    //     // if min, max, step != from default, treat this as object in order to set other properties
+    //     if (d_min != MIN_F || d_max != MAX_F || step != 1.0)
+    //     {
+    //         JsonObject obj = doc.createNestedObject(key);
+    //         obj["value"] = static_cast<T>(val);
+    //         obj["min"] = d_min;
+    //         obj["max"] = d_max;
+    //         obj["step"] = step;
+    //     }
+    //     else {
+    //         doc[key] = static_cast<T>(val);
+    //     }
+
+    //     file = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "w");
+    //     if (serializeJsonPretty(doc, file) == 0)
+    //     {
+    //         log_error(F("Failed to write to file"));
+    //     }
+    //     file.close();
+    // }
+
+
+
+    // // Get current value for a specific custom option (true on success)
+    // template <typename T>
+    // bool getOptionValue(const char *label, T &var)
+    // {
+    //     File file = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "r");
+    //     DynamicJsonDocument doc(file.size() * 1.33);
+    //     if (file)
+    //     {
+    //         DeserializationError error = deserializeJson(doc, file);
+    //         if (error)
+    //         {
+    //             log_error("Failed to deserialize file, may be corrupted: %s", error.c_str());
+    //             file.close();
+    //             return false;
+    //         }
+    //         file.close();
+    //     }
+    //     else
+    //         return false;
+
+    //     if (doc[label]["value"])
+    //         var = doc[label]["value"].as<T>();
+    //     else if (doc[label]["selected"])
+    //         var = doc[label]["selected"].as<T>();
+    //     else
+    //         var = doc[label].as<T>();
+    //     return true;
+    // }
+
+    // template <typename T>
+    // bool saveOptionValue(const char *label, T val)
+    // {
+    //     File file = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "w");
+    //     DynamicJsonDocument doc(file.size() * 1.33);
+
+    //     if (file)
+    //     {
+    //         DeserializationError error = deserializeJson(doc, file);
+    //         if (error)
+    //         {
+    //             DebugPrintln(F("Failed to deserialize file, may be corrupted"));
+    //             DebugPrintln(error.c_str());
+    //             file.close();
+    //             return false;
+    //         }
+    //         file.close();
+    //     }
+    //     else
+    //         return false;
+
+    //     if (doc[label]["value"])
+    //         doc[label]["value"] = val;
+    //     else if (doc[label]["selected"])
+    //         doc[label]["selected"] = val;
+    //     else
+    //         doc[label] = val;
+    //     return true;
+    // }
 
 #endif
 
@@ -321,9 +334,9 @@ private:
     File m_uploadFile;
     bool m_fsOK = false;
     bool m_apmode = false;
-    String m_apWebpage; //default "/setup";
-    String m_apSsid = "";
-    String m_apPsk = "";
+    String m_apWebpage = "/setup";
+    String m_apSsid = "ESP_AP";
+    String m_apPsk = "123456789";
     uint32_t m_timeout = 10000;
 
     char m_version[16] = {__TIME__};
@@ -345,7 +358,6 @@ private:
     uint8_t numOptions = 0;
     void update_second();
     void update_first() ;
-
     bool createDirFromPath(const String& path);
 #endif
 

@@ -4,8 +4,8 @@
 #include <esp-fs-webserver.h>  // https://github.com/cotestatnt/esp-fs-webserver
 
 #include <FS.h>
-#include <LittleFS.h>
-#define FILESYSTEM LittleFS
+#include <FFat.h>
+#define FILESYSTEM FFat
 
 struct tm ntpTime;
 const char* basePath = "/csv";
@@ -119,8 +119,6 @@ void setup(){
     Serial.println(F("Open /setup page to configure optional parameters"));
     Serial.println(F("Open /edit page to view and edit files"));
   }
-
-  pinMode(LED_BUILTIN, OUTPUT);
 }
 
 

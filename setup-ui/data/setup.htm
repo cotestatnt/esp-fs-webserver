@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset=utf-8>
-    <title>ESP FS WebServer</title>
+    <title>Async ESP FS Web Server</title>
     <meta content="width=device-width, initial-scale=1" name=viewport>
     <link href=style.css rel=stylesheet type=text/css>
 </head>
@@ -11,7 +11,7 @@
         <header class="ctn header">
             <div class=title>
                 <div id=img-logo title='Click to upload your logo file'></div>
-                <h1 id=name-logo class=heading>ESP FS WebServer</h1>
+                <h1 id=name-logo class=heading>Async ESP FS Web Server</h1>
             </div>
             <div class=topnav id=top-nav>
                 <span id="nav-link"><a id=set-wifi class="a-link active" data-box="wifi-box">WiFi Setup</a></span>
@@ -25,7 +25,7 @@
         </header>
         <div id=wifi-box class="ctn opt-box">
             <h2 class=heading-2>Connect to WiFi</h2>
-            <div style='text-align: center' >ESP mode: <b>
+            <div class=esp-info>ESP mode: <b>
               <span id=esp-mode></span></b>, IP address: <b>
               <span id=esp-ip></span></b>, Firmware: <span id=firmware></span>
            </div>
@@ -43,22 +43,48 @@
                 </div>
                 <div class=tf-wrapper>
                     <label for=password class=input-label>Password</label>
-                    <div class=show-hide-wrap id=show-hide-password>
-                        <a class="show-hide w--current" id=show-pass>
+                    <div class=pswd>
+                      <input type=password placeholder="Enter your WiFi password"
+                        id=password autocomplete=current-password data-ms-member="password">
+                      <span class=show-hide-wrap id=show-hide-password>
+                        <a class="show-hide hide" id=show-pass>
                             <div class=svg><svg class=svg-e id=svg-eye viewBox="0 0 24 24"></svg></div>
                         </a>
                         <a class="show-hide" id=hide-pass>
                             <div class=svg><svg class=svg-e id=svg-no-eye viewBox="0 0 24 24"></svg></div>
                         </a>
+                      </span>  
                     </div>
-                    <input type=password placeholder="Enter your WiFi password"
-                        id=password autocomplete=current-password data-ms-member="password">
                 </div>
-                <label class="input-label toggle">
+                <div class="tf-wrapper">
+                  <label class="input-label toggle">
+                    <input id=no-dhcp type=checkbox class="t-check">
+                    <div class=toggle-switch></div>
+                    <span class=toggle-label>Manual configuration (no DHCP)</span>
+                  </label>
+                </div>
+                <div class=hide id=conf-wifi> 
+                  <div class="tf-wrapper">
+                      <label for=ip class=input-label>IP Address</label>
+                      <input type=text placeholder="IP Address" id=ip value=192.168.0.10>
+                  </div>
+                  <div class="tf-wrapper">
+                      <label for=gateway class=input-label>Gateway</label>
+                      <input type=text placeholder="Gateway address" id=gateway value=192.168.0.1>
+                  </div>
+                  <div class="tf-wrapper">
+                      <label for=subnet class=input-label>Subnet</label>
+                      <input type=text placeholder="Subnet mask" id=subnet value="255.255.255.0">
+                  </div>
+                </div>
+                    
+                <div class=tf-wrapper>
+                  <label class="lbl-wifi toggle">
                     <input id=persistent type=checkbox class="t-check" checked>
                     <div class=toggle-switch></div>
                     <span class=toggle-label>Store WiFi credentials</span>
-                </label>
+                  </label>
+                </div>
             </div>
             <hr>
             <div class="btn-bar ">
@@ -69,6 +95,10 @@
                 <a id=connect-wifi class="btn">
                     <div class=svg><svg id=svg-connect fill=currentColor viewBox="0 0 24 24"></svg></div>
                     <span>Connect to <span id=ssid-name>SSID</span></span>
+                </a>
+                <a id=save-wifi class="btn hide">
+                    <div class=svg><svg id=svg-save2 fill=currentColor viewBox="0 0 24 24"></svg></div>
+                    <span>Save configuration</span>
                 </a>
             </div>
         </div>
@@ -87,7 +117,7 @@
                   <span>Submit!</span>
                 </a><br>
               </div>
-            	<div class="progress-wrap" id="progress-wrap" data-progress-style="fill-back">
+            	<div class="progress-wrap hide" id="progress-wrap" data-progress-style="fill-back">
             	  <div id="update-log"></div>
             	  <div class="progress" id='progress-anim'></div>
             	</div>
@@ -104,9 +134,8 @@
             </form>
           </div>
         </div>
-
+        <hr id=btn-hr class=hide>
         <div id=btn-box class="btn-bar hide">
-            <span><hr></span>
             <a id=restart class="btn">
                 <div class=svg><svg id=svg-restart fill=currentColor viewBox="0 0 24 24"></svg></div>
                 <span>Restart ESP</span>
