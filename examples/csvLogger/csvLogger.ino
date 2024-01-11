@@ -5,6 +5,8 @@
 
 #include <FS.h>
 #include <FFat.h>
+
+// Check board options and select the right partition scheme
 #define FILESYSTEM FFat
 
 struct tm ntpTime;
