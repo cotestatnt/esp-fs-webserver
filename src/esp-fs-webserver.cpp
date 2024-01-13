@@ -106,7 +106,11 @@ IPAddress FSWebServer::startAP()
 {
     if (!m_apSsid.length()) {
         char ssid[21];
+        #ifdef ESP8266
+        snprintf(ssid, sizeof(ssid), "ESP-%lX", ESP.getChipId());
+        #elif defined(ESP32)
         snprintf(ssid, sizeof(ssid), "ESP-%llX", ESP.getEfuseMac());
+        #endif
         m_apSsid = ssid;
     }
 

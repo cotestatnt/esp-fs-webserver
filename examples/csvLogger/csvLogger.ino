@@ -103,7 +103,11 @@ void setup(){
 
   // Try to connect to stored SSID, start AP if fails after timeout
   char ssid[20];
+#ifdef ESP8266
+  snprintf(ssid, sizeof(ssid), "ESP-%lX", ESP.getChipId());
+#elif defined(ESP32)
   snprintf(ssid, sizeof(ssid), "ESP-%llX", ESP.getEfuseMac());
+#endif
   myWebServer.setAP(ssid, "123456789");
 
   IPAddress myIP = myWebServer.startWiFi(15000);
