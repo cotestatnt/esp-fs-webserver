@@ -62,27 +62,6 @@
 #endif
 #include <DNSServer.h>
 
-// #define ESP_FS_WS_DEBUG_MODE 1
-// #if ESP_FS_WS_DEBUG_MODE
-//     #define DebugPrint(...) ESP_FS_WS_DEBUG_OUTPUT.print(__VA_ARGS__)
-//     #define DebugPrintln(...) ESP_FS_WS_DEBUG_OUTPUT.println(__VA_ARGS__)
-//     #define DebugPrintf(...) ESP_FS_WS_DEBUG_OUTPUT.printf(__VA_ARGS__)
-//     #define DebugPrintf_P(...) ESP_FS_WS_DEBUG_OUTPUT.printf_P(__VA_ARGS__)
-// #else
-//     #define DebugPrint(...) ((void)0)
-//     #define DebugPrintln(...) ((void)0)
-//     #define DebugPrintf(...) ((void)0)
-//     #define DebugPrintf_P(...) ((void)0)
-// #endif
-
-// #if ESP_FS_WS_INFO_MODE
-//     #define InfoPrint(...) ESP_FS_WS_INFO_OUTPUT.print(__VA_ARGS__)
-//     #define InfoPrintln(...) ESP_FS_WS_INFO_OUTPUT.println(__VA_ARGS__)
-// #else
-//     #define InfoPrint(...) ((void)0)
-//     #define InfoPrintln(...) ((void)0)
-// #endif
-
 enum
 {
     MSG_OK,
@@ -102,7 +81,7 @@ class FSWebServer
 public:
     SetupConfigurator setup;
 
-    FSWebServer(fs::FS &fs, WebServerClass &server): m_filesystem(&fs), webserver(&server), setup(&fs) {;}
+    FSWebServer(fs::FS &fs, WebServerClass &server): setup(&fs), m_filesystem(&fs), webserver(&server) {;}
 
     ~FSWebServer() { webserver->stop(); }
 
@@ -113,10 +92,12 @@ public:
     void addHandler(const Uri &uri, HTTPMethod method, WebServerClass::THandlerFunction fn);
 
     void addHandler(const Uri &uri, WebServerClass::THandlerFunction handler);
+	
+	void clearWifiCredentials();
 
     void setAPWebPage(const char *url);                 // point a custom setup webpage
     void setAP(const char *ssid, const char *psk);      // set AP SSID and password
-
+	
     IPAddress startAP();
 
     IPAddress startWiFi(
@@ -124,8 +105,6 @@ public:
         , bool apFlag = false       // if true, start AP only if no credentials was found
         , CallbackF fn = nullptr    // execute callback function during wifi connection
         );
-
-    void clearWifiCredentials();
 
     inline IPAddress startWiFi(uint32_t timeout, const char* ssid, const char* psk, CallbackF fn = nullptr) {
         setAP(ssid, psk);
@@ -136,7 +115,7 @@ public:
     * Set current firmware version (shown in /setup webpage)
     */
     inline void setFirmwareVersion(char* version) {
-      strncpy(m_version, version, sizeof(m_version));
+      strlcpy(m_version, version, sizeof(m_version));
     }
 
     inline WebServerClass*  getRequest()            { return webserver; }
@@ -173,16 +152,17 @@ public:
 #endif
 
 private:
-    WebServerClass *webserver = nullptr;
+    
     fs::FS *m_filesystem = nullptr;
+	WebServerClass *webserver = nullptr;
 
     DNSServer m_dnsServer;
     File m_uploadFile;
     bool m_fsOK = false;
     bool m_apmode = false;
     String m_apWebpage = "/setup";
-    String m_apSsid = "ESP_AP";
-    String m_apPsk = "123456789";
+    String m_apSsid;
+    String m_apPsk;
     uint32_t m_timeout = 10000;
 
     char m_version[16] = {__TIME__};

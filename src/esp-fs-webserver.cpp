@@ -104,13 +104,19 @@ void FSWebServer::setAP(const char* ssid, const char* psk)
 
 IPAddress FSWebServer::startAP()
 {
-    if (!m_apSsid.length() || !m_apPsk.length())
-        setAP("ESP_AP", "123456789");
+    if (!m_apSsid.length()) {
+        char ssid[21];
+        snprintf(ssid, sizeof(ssid), "ESP-%llX", ESP.getEfuseMac());
+        m_apSsid = ssid;
+    }
 
     m_apmode = true;
-    WiFi.mode(WIFI_AP_STA);
+    WiFi.mode(WIFI_AP);
     WiFi.persistent(false);
-    WiFi.softAP(m_apSsid.c_str(), m_apPsk.c_str());
+	if (m_apPsk.length())
+		WiFi.softAP(m_apSsid.c_str(), m_apPsk.c_str());	
+	else
+		WiFi.softAP(m_apSsid.c_str());
     /* Setup the DNS server redirecting all the domains to the apIP */
     m_dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
     IPAddress ip = WiFi.softAPIP();
@@ -245,7 +251,7 @@ void FSWebServer::doWifiConnection()
     IPAddress local_ip, subnet, gateway;
     String ssid, pass;
     bool persistent = true;
-    bool config = false,  newSSID = false;
+    bool config = false;
     WiFi.mode(WIFI_AP_STA);
 
     if (webserver->hasArg("ip_address") && webserver->hasArg("subnet") && webserver->hasArg("gateway")) {

@@ -4,10 +4,10 @@
 #include <esp-fs-webserver.h>  // https://github.com/cotestatnt/esp-fs-webserver
 
 #include <FS.h>
-#include <FFat.h>
+#include <LittleFS.h>
 
 // Check board options and select the right partition scheme
-#define FILESYSTEM FFat
+#define FILESYSTEM LittleFS
 
 struct tm ntpTime;
 const char* basePath = "/csv";
@@ -102,7 +102,10 @@ void setup(){
   startFilesystem();
 
   // Try to connect to stored SSID, start AP if fails after timeout
-  myWebServer.setAP("ESP_AP", "123456789");
+  char ssid[20];
+  snprintf(ssid, sizeof(ssid), "ESP-%llX", ESP.getEfuseMac());
+  myWebServer.setAP(ssid, "123456789");
+
   IPAddress myIP = myWebServer.startWiFi(15000);
   Serial.println("\n");
 
@@ -121,6 +124,12 @@ void setup(){
     Serial.println(F("Open /setup page to configure optional parameters"));
     Serial.println(F("Open /edit page to view and edit files"));
   }
+
+  // Create csv log folder if not exists
+  if (!FILESYSTEM.exists(basePath)) {
+    FILESYSTEM.mkdir(basePath);
+  }
+
 }
 
 
