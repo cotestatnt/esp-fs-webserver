@@ -18,13 +18,7 @@ const char* hostname = "heap-chart";
 #define MYTZ "CET-1CEST,M3.5.0,M10.5.0/3"
 struct tm Time;
 
-#ifdef ESP8266
-ESP8266WebServer server(80);
-#elif defined(ESP32)
-WebServer server(80);
-#endif
-
-FSWebServer myWebServer(FILESYSTEM, server);
+FSWebServer myWebServer(FILESYSTEM, 80);
 WebSocketsServer webSocket = WebSocketsServer(81);
 
 ////////////////////////////////   WebSocket Handler  /////////////////////////////

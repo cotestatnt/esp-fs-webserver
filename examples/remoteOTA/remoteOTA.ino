@@ -14,13 +14,11 @@
 #include <LittleFS.h>
 #define FILESYSTEM LittleFS
 
+FSWebServer myWebServer(FILESYSTEM, 80);
+
 #ifndef LED_BUILTIN
 #define LED_BUILTIN 2
 #endif
-
-// In order to set SSID and password open the /setup webserver page
-// const char* ssid;
-// const char* password;
 
 uint8_t ledPin = LED_BUILTIN;
 bool apMode = false;
@@ -28,14 +26,6 @@ bool apMode = false;
 //String fimwareInfo = "https://raw.githubusercontent.com/cotestatnt/esp-fs-webserver/main/examples/remoteOTA/version-esp32.json";
 String fimwareInfo = "https://raw.githubusercontent.com/cotestatnt/esp-fs-webserver/main/examples/remoteOTA/version-esp8266.json";
 char fw_version[10] = {"0.0.0"};
-
-
-#ifdef ESP8266
-  ESP8266WebServer server(80);
-#elif defined(ESP32)
-  WebServer server(80);
-#endif
-FSWebServer myWebServer(FILESYSTEM, server);
 
 
 //////////////////////////////  Firmware update /////////////////////////////////////////
@@ -111,17 +101,15 @@ void startFilesystem(){
 
 ////////////////////////////  HTTP Request Handlers  ////////////////////////////////////
 void handleLed() {
-  WebServerClass* webRequest = myWebServer.getRequest();
-
   // http://xxx.xxx.xxx.xxx/led?val=1
-  if(webRequest->hasArg("val")) {
-    int value = webRequest->arg("val").toInt();
+  if(myWebServer.hasArg("val")) {
+    int value = myWebServer.arg("val").toInt();
     digitalWrite(ledPin, value);
   }
 
   String reply = "LED is now ";
   reply += digitalRead(ledPin) ? "OFF" : "ON";
-  webRequest->send(200, "text/plain", reply);
+  myWebServer.send(200, "text/plain", reply);
 }
 
 /* Handle the update request from client.
@@ -134,17 +122,16 @@ void handleLed() {
   - on the update webpage, press the "UPDATE" button.
 */
 void handleUpdate() {
-  WebServerClass* webRequest = myWebServer.getRequest();
-
-  if(webRequest->hasArg("version") && webRequest->hasArg("url")) {    
-    const char* new_version = webRequest->arg("version").c_str();
-    const char* url = webRequest->arg("url").c_str();
+ 
+  if(myWebServer.hasArg("version") && myWebServer.hasArg("url")) {    
+    const char* new_version = myWebServer.arg("version").c_str();
+    const char* url = myWebServer.arg("url").c_str();
     String reply = "Firmware is going to be updated to version ";
     reply += new_version;
     reply += " from remote address ";
     reply += url;
     reply += "<br>Wait 10-20 seconds and then reload page.";
-    webRequest->send(200, "text/plain", reply );
+    myWebServer.send(200, "text/plain", reply );
     Serial.println(reply);
     doUpdate(url, new_version);
   }
@@ -167,12 +154,11 @@ void setup(){
   myWebServer.addOption("New firmware JSON", fimwareInfo);
 
   // Add custom handlers to webserver
-  myWebServer.addHandler("/led", HTTP_GET, handleLed);
-  myWebServer.addHandler("/firmware_update", HTTP_GET, handleUpdate);
+  myWebServer.on("/led", HTTP_GET, handleLed);
+  myWebServer.on("/firmware_update", HTTP_GET, handleUpdate);
 
   // Add handler as lambda function (just to show a different method)
-  myWebServer.addHandler("/version", HTTP_GET, []() {
-    WebServerClass* request = myWebServer.getRequest();
+  myWebServer.on("/version", HTTP_GET, []() {    
     EEPROM.get(0, fw_version);
     if (fw_version[0] == 0xFF) // Still not stored in EEPROM (first run)
       strcpy(fw_version, "0.0.0");
@@ -183,7 +169,7 @@ void setup(){
     reply += "\"}";
 
     // Send to client actual firmware version and address where to check if new firmware available
-    request->send(200, "text/json", reply);
+    myWebServer.send(200, "text/json", reply);
   });
 
 

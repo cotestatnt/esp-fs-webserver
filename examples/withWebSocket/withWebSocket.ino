@@ -29,13 +29,7 @@ uint8_t ledPin = LED_BUILTIN;
 #define MYTZ "CET-1CEST,M3.5.0,M10.5.0/3"
 struct tm Time;
 
-#ifdef ESP8266
-  ESP8266WebServer server(80);
-#elif defined(ESP32)
-  WebServer server(80);
-#endif
-
-FSWebServer myWebServer(FILESYSTEM, server);
+FSWebServer myWebServer(FILESYSTEM, 80);
 WebSocketsServer webSocket = WebSocketsServer(81);
 
 ////////////////////////////////   WebSocket Handler  /////////////////////////////
@@ -145,19 +139,16 @@ void loadApplicationConfig() {
 
 ////////////////////////////  HTTP Request Handlers  ////////////////////////////////////
 void handleLed() {
-  WebServerClass* webRequest = myWebServer.getRequest();
-
   // http://xxx.xxx.xxx.xxx/led?val=1
-  if(webRequest->hasArg("val")) {
-    int value = webRequest->arg("val").toInt();
+  if(myWebServer.hasArg("val")) {
+    int value = myWebServer.arg("val").toInt();
     digitalWrite(ledPin, value);
   }
 
   String reply = "LED is now ";
   reply += digitalRead(ledPin) ? "OFF" : "ON";
-  webRequest->send(200, "text/plain", reply);
+  myWebServer.send(200, "text/plain", reply);
 }
-
 
 
 void setup(){
@@ -186,16 +177,17 @@ void setup(){
   myWebServer.addOption("LED Pin", ledPin);
   myWebServer.addOption("Option 1", option1.c_str());
   myWebServer.addOption("Option 2", option2);
+  
   // Add custom page handlers
-  myWebServer.addHandler("/led", HTTP_GET, handleLed);
+  myWebServer.on("/led", HTTP_GET, handleLed);
 
-  if (myWebServer.begin()) {
-    Serial.print(F("ESP Web Server started on IP Address: "));
-    Serial.println(myIP);
-    Serial.println(F("Open /setup page to configure optional parameters"));
-    Serial.println(F("Open /edit page to view and edit files"));
-    Serial.println(F("Open /update page to upload firmware and filesystem updates"));
-  }
+  myWebServer.begin();
+  Serial.print(F("ESP Web Server started on IP Address: "));
+  Serial.println(myIP);
+  Serial.println(F("Open /setup page to configure optional parameters"));
+  Serial.println(F("Open /edit page to view and edit files"));
+  Serial.println(F("Open /update page to upload firmware and filesystem updates"));
+
 
   // Start MDSN responder
   if (WiFi.status() == WL_CONNECTED) {

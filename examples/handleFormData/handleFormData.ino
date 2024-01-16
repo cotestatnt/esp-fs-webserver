@@ -4,50 +4,41 @@
 #include <LittleFS.h>
 #define FILESYSTEM LittleFS
 
-#ifdef ESP8266
-  ESP8266WebServer server(80);
-#elif defined(ESP32)
-  WebServer server(80);
-#endif
-
-FSWebServer myWebServer(FILESYSTEM, server);
+FSWebServer myWebServer(FILESYSTEM, 80);
 
 ////////////////////////////  HTTP Request Handlers  ////////////////////////////////////
-void getDefaultValue() {
-  WebServerClass* webRequest = myWebServer.getRequest();
+void getDefaultValue() {  
   // Send to client default values as JSON string because it's very easy to parse JSON in Javascript
   String defaultVal = "{\"car\":\"Ferrari\", \"firstname\":\"Enzo\", \"lastname\":\"Ferrari\",\"age\":90}";
-  webRequest->send(200, "text/json", defaultVal);
+  myWebServer.send(200, "text/json", defaultVal);
 }
 
-void handleForm1() {
-  WebServerClass* webRequest = myWebServer.getRequest();
+void handleForm1() {  
   String reply;
-  if(webRequest->hasArg("cars")) {
+  if(myWebServer.hasArg("cars")) {
     reply += "You have submitted with Form1: ";
-    reply += webRequest->arg("cars");
+    reply += myWebServer.arg("cars");
   }
   Serial.println(reply);
-  webRequest->send(200, "text/plain", reply);
+  myWebServer.send(200, "text/plain", reply);
 }
 
-void handleForm2() {
-  WebServerClass* webRequest = myWebServer.getRequest();
+void handleForm2() {  
   String reply;
-  if(webRequest->hasArg("firstname")) {
+  if(myWebServer.hasArg("firstname")) {
     reply += "You have submitted with Form2: ";
-    reply += webRequest->arg("firstname");
+    reply += myWebServer.arg("firstname");
   }
-  if(webRequest->hasArg("lastname")) {
+  if(myWebServer.hasArg("lastname")) {
     reply += " ";
-    reply += webRequest->arg("lastname");
+    reply += myWebServer.arg("lastname");
   }
-  if(webRequest->hasArg("age")) {
+  if(myWebServer.hasArg("age")) {
     reply += ", age: ";
-    reply += webRequest->arg("age");
+    reply += myWebServer.arg("age");
   }
   Serial.println(reply);
-  webRequest->send(200, "text/plain", reply);
+  myWebServer.send(200, "text/plain", reply);
 }
 
 
@@ -84,19 +75,18 @@ void setup(){
   IPAddress myIP = myWebServer.startWiFi(15000);
 
   // Add custom page handlers to webserver
-  myWebServer.addHandler("/getDefault", HTTP_GET, getDefaultValue);
+  myWebServer.on("/getDefault", HTTP_GET, getDefaultValue);
   
-  myWebServer.addHandler("/setForm1", HTTP_POST, handleForm1);
-  myWebServer.addHandler("/setForm2", HTTP_POST, handleForm2);
-
+  myWebServer.on("/setForm1", HTTP_POST, handleForm1);
+  myWebServer.on("/setForm2", HTTP_POST, handleForm2);
   
-  if (myWebServer.begin()) {
-    Serial.print(F("ESP Web Server started on IP Address: "));
-    Serial.println(myIP);
-    Serial.println(F("Open /setup page to configure optional parameters"));
-    Serial.println(F("Open /edit page to view and edit files"));
-    Serial.println(F("Open /update page to upload firmware and filesystem updates"));
-  }  
+  myWebServer.begin()
+  Serial.print(F("ESP Web Server started on IP Address: "));
+  Serial.println(myIP);
+  Serial.println(F("Open /setup page to configure optional parameters"));
+  Serial.println(F("Open /edit page to view and edit files"));
+  Serial.println(F("Open /update page to upload firmware and filesystem updates"));
+    
 }
 
 

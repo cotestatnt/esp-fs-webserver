@@ -4,6 +4,8 @@
 #include <LittleFS.h>
 #define FILESYSTEM LittleFS
 
+FSWebServer myWebServer(FILESYSTEM, 80);
+
 #ifndef LED_BUILTIN
 #define LED_BUILTIN 2
 #endif
@@ -31,18 +33,6 @@ String dropdownSelected;
 #define FLOAT_LABEL "A float variable"
 #define STRING_LABEL "A String variable"
 #define DROPDOWN_LABEL "A dropdown listbox"
-
-// Timezone definition to get properly time from NTP server
-#define MYTZ "CET-1CEST,M3.5.0,M10.5.0/3"
-struct tm Time;
-
-#ifdef ESP8266
-ESP8266WebServer server(80);
-#elif defined(ESP32)
-WebServer server(80);
-#endif
-
-FSWebServer myWebServer(FILESYSTEM, server);
 
 static const char save_btn_htm[] PROGMEM = R"EOF(
 <div class="btn-bar">
@@ -168,13 +158,12 @@ void setup() {
   myWebServer.addHTML(save_btn_htm, "buttons");
   myWebServer.addJavascript(button_script, "script");
 
-  if (myWebServer.begin()) {
-    Serial.print(F("ESP Web Server started on IP Address: "));
-    Serial.println(myIP);
-    Serial.println(F("Open /setup page to configure optional parameters"));
-    Serial.println(F("Open /edit page to view and edit files"));
-    Serial.println(F("Open /update page to upload firmware and filesystem updates"));
-  }
+  myWebServer.begin();
+  Serial.print(F("ESP Web Server started on IP Address: "));
+  Serial.println(myIP);
+  Serial.println(F("Open /setup page to configure optional parameters"));
+  Serial.println(F("Open /edit page to view and edit files"));
+  Serial.println(F("Open /update page to upload firmware and filesystem updates"));
 }
 
 

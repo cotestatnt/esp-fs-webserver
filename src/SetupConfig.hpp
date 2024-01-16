@@ -2,7 +2,6 @@
 #define CONFIGURATOR_HPP
 #include <ArduinoJson.h>
 #include <FS.h>
-#include "esp-fs-webserver.h"
 #include "SerialLog.h"
 
 #define MIN_F -3.4028235E+38
@@ -13,6 +12,29 @@ class SetupConfigurator
     private:
         fs::FS* m_filesystem = nullptr;
         uint8_t numOptions = 0;
+
+        bool checkConfigFile() {
+            File file = m_filesystem->open(ESP_FS_WS_CONFIG_FOLDER, "r");
+            if (!file) {
+                log_error("Failed to open /setup directory. Create new folder\n");
+                if (!m_filesystem->mkdir(ESP_FS_WS_CONFIG_FOLDER)) {
+                    log_error("Error. Folder %s not created", ESP_FS_WS_CONFIG_FOLDER);
+                    return false;
+                }
+            }
+
+            // Check if config file exist, and create if necessary
+            if (!m_filesystem->exists(ESP_FS_WS_CONFIG_FILE)) {
+                file = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "w");
+                if (!file) {
+                    log_error("Error. File %s not created", ESP_FS_WS_CONFIG_FILE);
+                    return false;
+                }
+                file.print("{\"wifi-box\": \"\"}");
+                file.close();
+            }
+            return true;
+        }
 
     public:
         SetupConfigurator(fs::FS *fs) {
@@ -96,10 +118,14 @@ class SetupConfigurator
             Add a new dropdown input element
         */
         void addDropdownList(const char *label, const char** array, size_t size) {
-            File file = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "r");
-            int sz = file.size() * 1.33;
-            int docSize = max(sz, 2048);
-            DynamicJsonDocument doc((size_t)docSize);
+            File file = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "r");;
+            #if ARDUINOJSON_VERSION_MAJOR > 6
+                JsonDocument doc;
+            #else
+                int sz = file.size() * 1.33;
+                int docSize = max(sz, 2048);
+                DynamicJsonDocument doc((size_t)docSize);
+            #endif
             if (file) {
                 // If file is present, load actual configuration
                 DeserializationError error = deserializeJson(doc, file);
@@ -119,9 +145,20 @@ class SetupConfigurator
             if (doc.containsKey(label))
                 return;
 
-            JsonObject obj = doc.createNestedObject(label);
+
+            #if ARDUINOJSON_VERSION_MAJOR > 6
+                JsonObject obj = doc[label].add<JsonObject>();
+            #else
+                JsonObject obj = doc.createNestedObject(label);
+            #endif
+
             obj["selected"] = array[0];     // first element selected as default
-            JsonArray arr = obj.createNestedArray("values");
+            #if ARDUINOJSON_VERSION_MAJOR > 6
+                JsonArray arr = obj["values"].to<JsonArray>();
+            #else
+                JsonArray arr = obj.createNestedArray("values");
+            #endif
+
             for (unsigned int i=0; i<size; i++) {
                 arr.add(array[i]);
             }
@@ -158,10 +195,17 @@ class SetupConfigurator
         void addOption(const char *label, T val, bool hidden = false,
                             double d_min = MIN_F, double d_max = MAX_F, double step = 1.0)
         {
+            if (!checkConfigFile())
+                return;
+
             File file = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "r");
-            int sz = file.size() * 1.33;
-            int docSize = max(sz, 2048);
-            DynamicJsonDocument doc((size_t)docSize);
+            #if ARDUINOJSON_VERSION_MAJOR > 6
+                JsonDocument doc;
+            #else
+                int sz = file.size() * 1.33;
+                int docSize = max(sz, 2048);
+                DynamicJsonDocument doc((size_t)docSize);
+            #endif
             if (file) {
                 // If file is present, load actual configuration
                 DeserializationError error = deserializeJson(doc, file);
@@ -185,13 +229,17 @@ class SetupConfigurator
             if (key.equals("raw-javascript"))
                 key += numOptions ;
 
-            // If key is present in json, we don't need to create it.
-            if (doc.containsKey(key.c_str()))
+            // If key is present and value is the same, we don't need to create/update it.
+            if (doc.containsKey(key.c_str()) && doc[key] != val)
                 return;
 
             // if min, max, step != from default, treat this as object in order to set other properties
             if (d_min != MIN_F || d_max != MAX_F || step != 1.0) {
-                JsonObject obj = doc.createNestedObject(key);
+                #if ARDUINOJSON_VERSION_MAJOR > 6
+                    JsonObject obj = doc[key].to<JsonObject>();
+                #else
+                    JsonObject obj = doc.createNestedObject(key);
+                #endif
                 obj["value"] = static_cast<T>(val);
                 obj["min"] = d_min;
                 obj["max"] = d_max;
@@ -213,7 +261,13 @@ class SetupConfigurator
         template <typename T>
         bool getOptionValue(const char *label, T &var) {
             File file = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "r");
-            DynamicJsonDocument doc(file.size() * 1.33);
+            #if ARDUINOJSON_VERSION_MAJOR > 6
+                JsonDocument doc;
+            #else
+                int sz = file.size() * 1.33;
+                int docSize = max(sz, 2048);
+                DynamicJsonDocument doc((size_t)docSize);
+            #endif
             if (file) {
                 DeserializationError error = deserializeJson(doc, file);
                 if (error) {
@@ -238,8 +292,13 @@ class SetupConfigurator
         template <typename T>
         bool saveOptionValue(const char *label, T val) {
             File file = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "w");
-            DynamicJsonDocument doc(file.size() * 1.33);
-
+            #if ARDUINOJSON_VERSION_MAJOR > 6
+                JsonDocument doc;
+            #else
+                int sz = file.size() * 1.33;
+                int docSize = max(sz, 2048);
+                DynamicJsonDocument doc((size_t)docSize);
+            #endif
             if (file) {
                 DeserializationError error = deserializeJson(doc, file);
                 if (error)  {

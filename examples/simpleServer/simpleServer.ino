@@ -4,6 +4,8 @@
 #include <LittleFS.h>
 #define FILESYSTEM LittleFS
 
+FSWebServer myWebServer(FILESYSTEM, 80);
+
 #ifndef LED_BUILTIN
 #define LED_BUILTIN 2
 #endif
@@ -14,13 +16,6 @@
 
 uint8_t ledPin = LED_BUILTIN;
 bool apMode = false;
-
-#ifdef ESP8266
-  ESP8266WebServer server(80);
-#elif defined(ESP32)
-  WebServer server(80);
-#endif
-FSWebServer myWebServer(FILESYSTEM, server);
 
 
 ////////////////////////////////  Filesystem  /////////////////////////////////////////
@@ -35,17 +30,15 @@ void startFilesystem(){
 
 ////////////////////////////  HTTP Request Handlers  ////////////////////////////////////
 void handleLed() {
-  WebServerClass* webRequest = myWebServer.getRequest();
-
   // http://xxx.xxx.xxx.xxx/led?val=1
-  if(webRequest->hasArg("val")) {
-    int value = webRequest->arg("val").toInt();
+  if(myWebServer.hasArg("val")) {
+    int value = myWebServer.arg("val").toInt();
     digitalWrite(ledPin, value);
   }
 
   String reply = "LED is now ";
   reply += digitalRead(ledPin) ? "OFF" : "ON";
-  webRequest->send(200, "text/plain", reply);
+  myWebServer.send(200, "text/plain", reply);
 }
 
 
@@ -61,15 +54,14 @@ void setup(){
   Serial.println("\n");
 
   // Add custom page handlers to webserver
-  myWebServer.addHandler("/led", HTTP_GET, handleLed);
+  myWebServer.on("/led", HTTP_GET, handleLed);
 
   // Start webserver
-  if (myWebServer.begin()) {
-    Serial.print(F("ESP Web Server started on IP Address: "));
-    Serial.println(myIP);
-    Serial.println(F("Open /setup page to configure optional parameters"));
-    Serial.println(F("Open /edit page to view and edit files"));
-  }
+  myWebServer.begin();
+  Serial.print(F("ESP Web Server started on IP Address: "));
+  Serial.println(myIP);
+  Serial.println(F("Open /setup page to configure optional parameters"));
+  Serial.println(F("Open /edit page to view and edit files"));
 
   pinMode(LED_BUILTIN, OUTPUT);
 }

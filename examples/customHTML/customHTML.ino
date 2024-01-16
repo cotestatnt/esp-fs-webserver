@@ -4,6 +4,8 @@
 #include <LittleFS.h>
 #define FILESYSTEM LittleFS
 
+FSWebServer myWebServer(FILESYSTEM, 80);
+
 #ifndef LED_BUILTIN
 #define LED_BUILTIN 2
 #endif
@@ -40,17 +42,7 @@ uint16_t tb_port = 8181;
 #define TB_DEVICE_KEY "Provisioning device key"
 #define TB_SECRET_KEY "Provisioning secret key"
 
-// Timezone definition to get properly time from NTP server
-#define MYTZ "CET-1CEST,M3.5.0,M10.5.0/3"
-struct tm Time;
 
-#ifdef ESP8266
-ESP8266WebServer server(80);
-#elif defined(ESP32)
-WebServer server(80);
-#endif
-
-FSWebServer myWebServer(FILESYSTEM, server);
 
 
 /*
@@ -61,6 +53,19 @@ FSWebServer myWebServer(FILESYSTEM, server);
 * like for example background color, margins, paddings etc etc
 */
 #include "customElements.h"
+
+
+/*
+* Getting FS info (total and free bytes) is strictly related to
+* filesystem library used (LittleFS, FFat, SPIFFS etc etc) and ESP framework
+*/
+#ifdef ESP32
+void getFsInfo(fsInfo_t* fsInfo) {
+	fsInfo->fsName = "LittleFS";
+	fsInfo->totalBytes = LittleFS.totalBytes();
+	fsInfo->usedBytes = LittleFS.usedBytes();
+}
+#endif
 
 ////////////////////////////////  Filesystem  /////////////////////////////////////////
 void startFilesystem(){
@@ -94,13 +99,6 @@ bool loadOptions() {
     longVar = doc[LONG_LABEL];
     floatVar = doc[FLOAT_LABEL]["value"];
     stringVar = doc[STRING_LABEL].as<String>();
-
-    tb_deviceToken = doc[TB_DEVICE_TOKEN].as<String>();
-    tb_device_key = doc[TB_DEVICE_KEY].as<String>();
-    tb_secret_key = doc[TB_SECRET_KEY].as<String>();
-    tb_serverIP = doc[TB_SERVER].as<String>();
-    tb_port = doc[TB_PORT];
-
     file.close();
 
     Serial.println();
@@ -171,33 +169,30 @@ void setup() {
   myWebServer.addOption(STRING_LABEL, stringVar);
   myWebServer.addOption(BOOL_LABEL, boolVar);
 
-  // Add a new options box
-  myWebServer.addOptionBox("ThingsBoard");
-  myWebServer.addOption(TB_SERVER, tb_serverIP);
-  myWebServer.addOption(TB_PORT, tb_port);
-  myWebServer.addOption(TB_DEVICE_KEY, tb_device_key);
-  myWebServer.addOption(TB_SECRET_KEY, tb_secret_key);
-  myWebServer.addOption(TB_DEVICE_TOKEN, tb_deviceToken);
-
   // Add a new options box with custom code injected
   myWebServer.addOptionBox("Custom HTML");
   // How many times you need (for example one in different option box)
-  myWebServer.addHTML(custom_html, "fetch-test", /*overwite*/ true);
+  myWebServer.addHTML(custom_html, "fetch", /*overwite*/ true);
   // Only once (CSS and Javascript will be appended to head and body)
-  myWebServer.addCSS(custom_css, "css", /*overwite*/ false);
-  myWebServer.addJavascript(custom_script, "script", /*overwite*/ false);
+  myWebServer.addCSS(custom_css, "fetch", /*overwite*/ false);
+  myWebServer.addJavascript(custom_script, "fetch", /*overwite*/ false);
+
+  // set /setup and /edit page authentication
+  myWebServer.setAuthentication("admin", "admin");
+
+  // Enable ACE FS file web editor and add FS info callback function
+  myWebServer.enableFsCodeEditor(getFsInfo);
 
   // Try to connect to stored SSID, start AP if fails after timeout
   myWebServer.setAP("ESP_AP", "123456789");
   IPAddress myIP = myWebServer.startWiFi(15000);
 
   // Start webserver
-  if (myWebServer.begin()) {
-    Serial.print(F("\nESP Web Server started on IP Address: "));
-    Serial.println(myIP);
-    Serial.println(F("Open /setup page to configure optional parameters"));
-    Serial.println(F("Open /edit page to view and edit files"));
-  }
+  myWebServer.begin();
+  Serial.print(F("\nESP Web Server started on IP Address: "));
+  Serial.println(myIP);
+  Serial.println(F("Open /setup page to configure optional parameters"));
+  Serial.println(F("Open /edit page to view and edit files"));
 }
 
 

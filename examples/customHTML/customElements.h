@@ -1,30 +1,23 @@
 
 /*
 * This HTML code will be injected in /setup webpage using a <div></div> element as parent
-* The parent element will hhve the HTML id properties equal to 'raw-html-<id>'
+* The parent element will have the HTML id properties equal to 'raw-html-<id>'
 * where the id value will be equal to the id parameter passed to the function addHTML(html_code, id).
 */
 static const char custom_html[] PROGMEM = R"EOF(
-<form>
-  <div class="tf-wrapper left-align">
-    <div>
-      <label for=httpmethod class=input-label>Method</label>
-      <select class='select' id='httpmethod'>
-        <option>GET</option>
-        <option>POST</option>
-      </select>
-    
-      <label for=url class=input-label>Endpoint</label>
-      <input type=text placeholder='https://httpbin.org/' id=url value='https://httpbin.org/'/>
-    </div>
-  </div>
-  <br>
+<label for=url class=input-label>Endpoint</label>
+<input type=text placeholder='https://httpbin.org/' id=url value='https://httpbin.org/' />
+<br>
+<div class=row-wrapper>
+  <input type="radio" id="get" name="httpmethod" value="GET" checked>
+  <label for="html">GET</label><br>
+  <input type="radio" id="post" name="httpmethod" value="POST">
+  <label for="css">POST</label>
   <a id=fetch class='btn'>
-    <span>Fecth url</span>
+  <span>Fecth url</span>
   </a>
-  <br>
-  <pre id=payload></pre>
-</form>
+</div>
+<pre id=payload></pre>
 )EOF";
 
 
@@ -32,7 +25,7 @@ static const char custom_html[] PROGMEM = R"EOF(
 * In this example, a style sections is added in order to render properly the new
 * <select> and <pre> elements introduced. Since this section will be added at the end of the body,
 * it is also possible to override the style of the elements already present:
-* for example the background color of body will be ovverrided with a different color
+* for example the background color of body will be overridden with a different color
 */
 static const char custom_css[] PROGMEM = R"EOF(
 pre{
@@ -45,9 +38,7 @@ pre{
     overflow-y: scroll;
     min-height: 350px;
     font-size: 85%;
-}
-.left-align{
-  align-items: baseline;
+    width: 95%;
 }
 )EOF";
 
@@ -66,7 +57,12 @@ pre{
 */
 static const char custom_script[] PROGMEM = R"EOF(
 function fetchEndpoint() {
-  var mt = $('httpmethod').options[$('httpmethod').selectedIndex].text;
+  var mt;
+  document.getElementsByName('httpmethod').forEach(el => {
+    if (el.checked)
+      mt = el.value;
+  })
+
   var url = $('url').value + mt.toLowerCase();
   var bd = (mt != 'GET') ? 'body: ""' : '';
   var options = {

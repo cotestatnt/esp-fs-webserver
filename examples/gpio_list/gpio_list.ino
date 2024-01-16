@@ -6,8 +6,7 @@
 #include <LittleFS.h>
 #define FILESYSTEM LittleFS
 
-WebServerClass server(80);
-FSWebServer myWebServer(FILESYSTEM, server);
+FSWebServer myWebServer(FILESYSTEM, 80);
 WebSocketsServer webSocket = WebSocketsServer(81);
 
 
@@ -118,11 +117,9 @@ void updateGpioList() {
   String json;
   serializeJson(doc, json);
   webSocket.broadcastTXT(json);
-
-  // If this is a reply to HTPP request, get reference to client request.
-  WebServerClass* webRequest = myWebServer.getRequest();
-  if (webRequest->client())
-    webRequest->send(200, "text/plain", json);
+  
+  if (myWebServer.client())
+    myWebServer.send(200, "text/plain", json);
 }
 
 bool updateGpioState() {
@@ -161,7 +158,7 @@ void setup() {
   }
 
   // Add custom page handlers
-  myWebServer.addHandler("/getGpioList", HTTP_GET, updateGpioList);
+  myWebServer.on("/getGpioList", HTTP_GET, updateGpioList);
 
   // Start webserver
   if (myWebServer.begin()) {

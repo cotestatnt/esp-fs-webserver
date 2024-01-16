@@ -10,8 +10,7 @@
 // Local include files
 #include "camera_pins.h"
 
-WebServer server(80);
-FSWebServer myWebServer(SD_MMC, server);
+FSWebServer myWebServer(SD_MMC, 80);
 
 uint16_t grabInterval = 0;  // Grab a picture every x seconds
 uint32_t lastGrabTime = 0;
@@ -74,14 +73,12 @@ void setup()
   myWebServer.addHandler("/setInterval", setInterval);
 
   // Start webserver
-  if (myWebServer.begin())
-  {
-    Serial.print(F("ESP Web Server started on IP Address: "));
-    Serial.println(myIP);
-    Serial.println(F("Open /setup page to configure optional parameters"));
-    Serial.println(F("Open /edit page to view and edit files"));
-    Serial.println(F("Open /update page to upload firmware and filesystem updates"));
-  }
+  myWebServer.begin();
+  Serial.print(F("ESP Web Server started on IP Address: "));
+  Serial.println(myIP);
+  Serial.println(F("Open /setup page to configure optional parameters"));
+  Serial.println(F("Open /edit page to view and edit files"));
+  Serial.println(F("Open /update page to upload firmware and filesystem updates"));
 
   // Sync time with NTP
   configTzTime(MYTZ, "time.google.com", "time.windows.com", "pool.ntp.org");
