@@ -100,7 +100,6 @@ public:
         m_filesystem(&fs)
     {
 		setup = new SetupConfigurator(m_filesystem);
-        m_dnsServer = new DNSServer();
     }
 
     // Override default begin() method to set library built-in handlers

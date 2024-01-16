@@ -68,7 +68,7 @@ void getFsInfo(fsInfo_t* fsInfo) {
 #else
 void getFsInfo(fsInfo_t* fsInfo) {
 	fsInfo->fsName = "LittleFS";
-}   
+}
 #endif
 
 ////////////////////////////////  Filesystem  /////////////////////////////////////////
@@ -182,13 +182,13 @@ void setup() {
   myWebServer.addJavascript(custom_script, "fetch", /*overwite*/ false);
 
   // set /setup and /edit page authentication
-  myWebServer.setAuthentication("admin", "admin");
+  // myWebServer.setAuthentication("admin", "admin");
 
   // Enable ACE FS file web editor and add FS info callback function
   myWebServer.enableFsCodeEditor(getFsInfo);
 
   // Try to connect to stored SSID, start AP if fails after timeout
-  myWebServer.setAP("ESP_AP", "123456789");
+  myWebServer.setAP("ESP_AP", "");
   IPAddress myIP = myWebServer.startWiFi(15000);
 
   // Start webserver

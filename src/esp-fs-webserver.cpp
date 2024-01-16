@@ -100,6 +100,7 @@ void FSWebServer::begin()
     this->on("/favicon.ico", HTTP_GET, std::bind(&FSWebServer::replyOK, this));
     this->on("/", HTTP_GET, std::bind(&FSWebServer::handleIndex, this));
     this->on("/connect", HTTP_POST, std::bind(&FSWebServer::doWifiConnection, this));
+    this->on("/reset", HTTP_GET, std::bind(&FSWebServer::doRestart, this));
     this->on("/restart", HTTP_GET, std::bind(&FSWebServer::doRestart, this));
 
     // Upload file
@@ -175,8 +176,14 @@ IPAddress FSWebServer::startAP()
         m_apSsid = ssid;
     }
 
-    m_apmode = true;
     WiFi.mode(WIFI_AP);
+    // Set AP IP 8.8.8.8 and subnet 255.255.255.0
+    if (! WiFi.softAPConfig(0x08080808, 0x08080808, 0x00FFFFFF)) {
+        log_error("Captive portal failed to start: WiFi.softAPConfig failed!");
+        WiFi.enableAP(false);
+        return IPAddress((uint32_t) 0);
+    }
+
     WiFi.persistent(false);
 	if (m_apPsk.length())
 		WiFi.softAP(m_apSsid.c_str(), m_apPsk.c_str());
@@ -184,12 +191,18 @@ IPAddress FSWebServer::startAP()
 		WiFi.softAP(m_apSsid.c_str());
 
     /* Setup the DNS server redirecting all the domains to the apIP */
+    m_dnsServer = new DNSServer();
     m_dnsServer->setErrorReplyCode(DNSReplyCode::NoError);
     IPAddress ip = WiFi.softAPIP();
-    m_dnsServer->start(53, "*", ip);
+    if (! m_dnsServer->start(53, "*", WiFi.softAPIP())) {
+        log_error("Captive portal failed to start: no sockets for DNS server available!");
+        WiFi.enableAP(false);
+        return IPAddress((uint32_t) 0);
+    }
 
     ip = WiFi.softAPIP();
     log_info("AP mode.\nServer IP address: %s", ip.toString().c_str());
+    m_apmode = true;
     return ip;
 }
 
@@ -271,14 +284,13 @@ IPAddress FSWebServer::startWiFi(uint32_t timeout, bool apFlag, CallbackF fn)
  */
 bool FSWebServer::captivePortal()
 {
-    String serverLoc("https:://");
+    String serverLoc("http://");
     serverLoc += this->client().localIP().toString();
     serverLoc += m_apWebpage;
     // redirect if hostheader not server ip, prevent redirect loops
     if (serverLoc != this->hostHeader()) {
-        this->sendHeader(F("Location"), serverLoc, true);
-        this->send(302, F("text/html"), ""); // Empty content inhibits Content-length header so we have to close the socket ourselves.
-        this->client().stop(); // Stop is needed because we sent no content length
+        this->sendHeader("Location", serverLoc, true);
+        this->send(301, "text/html", "");
         return true;
     }
     return false;
