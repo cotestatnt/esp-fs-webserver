@@ -24,10 +24,10 @@ jobs:
           path: 'library.properties'
           properties: 'version'
           
-      - name: Overwrite version.h
+      - name: Overwrite src/Version.cpp
         uses: "DamianReeves/write-file-action@master"
         with:
-          path: src/version.cpp
+          path: src/Version.cpp
           write-mode: overwrite
           contents: |
             #ifndef esp_fs_version_cpp
