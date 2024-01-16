@@ -123,6 +123,13 @@ void FSWebServer::begin()
 
     close();
     _server.begin();
+
+    // Configure and start MDNS responder
+    if (!MDNS.begin(m_host)){
+        log_error("MDNS responder not started");
+    }
+    MDNS.addService("http", "tcp", m_port);
+    MDNS.setInstanceName("esp-fs-webserver");
 }
 
 

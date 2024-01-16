@@ -95,11 +95,13 @@ class FSWebServer : public WebServerClass
 public:
     SetupConfigurator* setup;
 
-    FSWebServer(fs::FS& fs, uint16_t port):
+    FSWebServer(fs::FS& fs, uint16_t port, const char* host = "esphost"):
         WebServerClass(port),
-        m_filesystem(&fs)
+        m_filesystem(&fs),
+        m_host(host)
     {
 		setup = new SetupConfigurator(m_filesystem);
+        m_port = port;
     }
 
     // Override default begin() method to set library built-in handlers
@@ -210,6 +212,8 @@ private:
     uint32_t m_timeout = 10000;
 
     char m_version[16] = {__TIME__};
+    uint16_t m_port = 80;
+    char* m_host;
 
     #if defined(ESP32)
     // Override default handleClient() method to increase connection speed
