@@ -98,7 +98,7 @@ public:
     FSWebServer(fs::FS& fs, uint16_t port, const char* host = "esphost"):
         WebServerClass(port),
         m_filesystem(&fs),
-        m_host(host)
+        m_host((char*)host)
     {
 		setup = new SetupConfigurator(m_filesystem);
         m_port = port;
