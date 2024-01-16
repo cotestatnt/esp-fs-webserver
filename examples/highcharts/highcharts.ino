@@ -101,13 +101,13 @@ void setup() {
   webSocket.onEvent(webSocketEvent);
 
   // Start webserver
-  if (myWebServer.begin()) {
-    Serial.print(F("ESP Web Server started on IP Address: "));
-    Serial.println(myIP);
-    Serial.println(F("Open /setup page to configure optional parameters"));
-    Serial.println(F("Open /edit page to view and edit files"));
-    Serial.println(F("Open /update page to upload firmware and filesystem updates"));
-  }
+  myWebServer.begin();
+  Serial.print(F("ESP Web Server started on IP Address: "));
+  Serial.println(myIP);
+  Serial.println(F("Open /setup page to configure optional parameters"));
+  Serial.println(F("Open /edit page to view and edit files"));
+  Serial.println(F("Open /update page to upload firmware and filesystem updates"));
+
 
   // Start MDNS responder
   if (WiFi.status() == WL_CONNECTED) {

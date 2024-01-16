@@ -80,7 +80,7 @@ void setup(){
   myWebServer.on("/setForm1", HTTP_POST, handleForm1);
   myWebServer.on("/setForm2", HTTP_POST, handleForm2);
   
-  myWebServer.begin()
+  myWebServer.begin();
   Serial.print(F("ESP Web Server started on IP Address: "));
   Serial.println(myIP);
   Serial.println(F("Open /setup page to configure optional parameters"));

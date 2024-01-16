@@ -143,7 +143,7 @@ void setup() {
     Serial.println(F("Application options NOT loaded!"));
 
   // Add custom page handlers to webserver
-  myWebServer.addHandler("/reload", HTTP_GET, handleLoadOptions);
+  myWebServer.on("/reload", HTTP_GET, handleLoadOptions);
 
   // Configure /setup page and start Web Server
   myWebServer.addOptionBox("My Options");
