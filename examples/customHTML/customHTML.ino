@@ -65,6 +65,10 @@ void getFsInfo(fsInfo_t* fsInfo) {
 	fsInfo->totalBytes = LittleFS.totalBytes();
 	fsInfo->usedBytes = LittleFS.usedBytes();
 }
+#else
+void getFsInfo(fsInfo_t* fsInfo) {
+	fsInfo->fsName = "LittleFS";
+}   
 #endif
 
 ////////////////////////////////  Filesystem  /////////////////////////////////////////

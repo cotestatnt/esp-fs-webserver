@@ -117,9 +117,8 @@ void saveOptions() {
 }
 
 ////////////////////////////  HTTP Request Handlers  ////////////////////////////////////
-void handleLoadOptions() {
-  WebServerClass* webRequest = myWebServer.getRequest();
-  webRequest->send(200, "text/plain", "Options loaded");
+void handleLoadOptions() {  
+  myWebServer.send(200, "text/plain", "Options loaded");
   loadOptions();
   Serial.println("Application option loaded after web request");
 }
