@@ -92,6 +92,7 @@ void FSWebServer::begin()
 
 #if ESP_FS_WS_SETUP
     this->on("/setup", HTTP_GET, std::bind(&FSWebServer::handleSetup, this));
+    this->on("/scan", HTTP_GET, std::bind(&FSWebServer::handleScanNetworks, this));
     this->on("/getStatus", HTTP_GET, std::bind(&FSWebServer::getStatus, this));
 #endif
 
@@ -167,7 +168,7 @@ IPAddress FSWebServer::startAP()
     if (!m_apSsid.length()) {
         char ssid[21];
         #ifdef ESP8266
-        snprintf(ssid, sizeof(ssid), "ESP-%lX", ESP.getChipId());
+        snprintf(ssid, sizeof(ssid), "ESP-%dX", ESP.getChipId());
         #elif defined(ESP32)
         snprintf(ssid, sizeof(ssid), "ESP-%llX", ESP.getEfuseMac());
         #endif
@@ -427,46 +428,11 @@ void FSWebServer::setCrossOrigin()
     this->sendHeader(F("Access-Control-Allow-Headers"), F("*"));
 };
 
-// void FSWebServer::handleScanNetworks()
-// {
-//     String jsonList = "[";
-//     log_info("Scanning WiFi networks...");
-//     int n = WiFi.scanNetworks();
-//     log_info(" complete.");
-//     if (n == 0) {
-//         log_info("no networks found");
-//         this->send(200, "text/json", "[]");
-//         return;
-//     } else {
-//         log_info("%d networks found:", n);
-
-//         for (int i = 0; i < n; ++i) {
-//             String ssid = WiFi.SSID(i);
-//             int rssi = WiFi.RSSI(i);
-// #if defined(ESP8266)
-//             String security = WiFi.encryptionType(i) == AUTH_OPEN ? "none" : "enabled";
-// #elif defined(ESP32)
-//             String security = WiFi.encryptionType(i) == WIFI_AUTH_OPEN ? "none" : "enabled";
-// #endif
-//             jsonList += "{\"ssid\":\"";
-//             jsonList += ssid;
-//             jsonList += "\",\"strength\":\"";
-//             jsonList += rssi;
-//             jsonList += "\",\"security\":";
-//             jsonList += security == "none" ? "false" : "true";
-//             jsonList += ssid.equals(WiFi.SSID()) ? ",\"selected\": true" : "";
-//             jsonList += i < n - 1 ? "}," : "}";
-//         }
-//         jsonList += "]";
-//     }
-//     this->send(200, "text/json", jsonList);
-//     log_debug("%s", jsonList.c_str());
-// }
 
 #if ESP_FS_WS_SETUP
 void FSWebServer::handleScanNetworks() {
     log_info("Scanning WiFi networks...");
-    int res = WiFi.scanNetworks(false, false, false, 50);
+    int res = WiFi.scanNetworks(false, false, false);
     log_info(" done!\nNumber of networks: %d", res);
 
     JSON_DOC(res*96);
