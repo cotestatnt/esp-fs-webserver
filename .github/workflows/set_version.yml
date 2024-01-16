@@ -1,0 +1,46 @@
+name: Set Lib Version
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      # Give the default GITHUB_TOKEN write permission to commit and push the
+      # added or changed files to the repository.
+      contents: write
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal token
+          fetch-depth: 0 # otherwise, you will failed to push refs to dest repo
+          
+      - name: Read value from Properties-file
+        id: read_property
+        uses: christian-draeger/read-properties@1.1.1
+        with:
+          path: 'library.properties'
+          properties: 'version'
+          
+      - name: Overwrite version.h
+        uses: "DamianReeves/write-file-action@master"
+        with:
+          path: src/version.cpp
+          write-mode: overwrite
+          contents: |
+            #ifndef esp_fs_version_cpp
+            #define  esp_fs_version_cpp
+            #include "esp-fs-webserver.h"
+            const char* FSWebServer::getVersion() { 
+            	return "${{ steps.read_property.outputs.version }}"; 
+            }
+            #endif
+      - name: Commit & Push
+        uses: Andro999b/push@v1.3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: master
+          force: true
+          message: 'Overwritten by Github Actions'
