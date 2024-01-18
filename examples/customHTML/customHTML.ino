@@ -5,15 +5,11 @@
 #define FILESYSTEM LittleFS
 
 FSWebServer myWebServer(FILESYSTEM, 80);
+struct tm sysTime;
 
 #ifndef LED_BUILTIN
 #define LED_BUILTIN 2
 #endif
-
-// Set this to 1 if you want clear the /config.json file at startup
-#define CLEAR_OTIONS 0
-
-struct tm sysTime;
 
 // Test "options" values
 uint8_t ledPin = LED_BUILTIN;
@@ -22,13 +18,6 @@ uint32_t longVar = 1234567890;
 float floatVar = 15.5F;
 String stringVar = "Test option String";
 
-// ThingsBoard varaibles
-String tb_deviceToken = "xxxxxxxxxxxxxxxxxxx";
-String tb_device_key = "xxxxxxxxxxxxxxxxxxx";
-String tb_secret_key = "xxxxxxxxxxxxxxxxxxx";
-String tb_serverIP = "192.168.1.1";
-uint16_t tb_port = 8181;
-
 // Var labels (in /setup webpage)
 #define LED_LABEL "The LED pin number"
 #define BOOL_LABEL "A bool variable"
@@ -36,6 +25,19 @@ uint16_t tb_port = 8181;
 #define FLOAT_LABEL "A float variable"
 #define STRING_LABEL "A String variable"
 
+// ThingsBoard variables
+double tb_deviceLatitude = 41.88505;
+double tb_deviceLongitude = 12.50050;
+String tb_deviceName = "ESP Sensor";
+String tb_deviceToken = "xxxxxxxxxxxxxxxxxxx";
+String tb_device_key = "xxxxxxxxxxxxxxxxxxx";
+String tb_secret_key = "xxxxxxxxxxxxxxxxxxx";
+String tb_serverIP = "thingsboard.cloud";
+uint16_t tb_port = 80;
+
+#define TB_DEVICE_NAME "Device Name"
+#define TB_DEVICE_LAT "Device Latitude"
+#define TB_DEVICE_LON "Device Longitude"
 #define TB_SERVER "ThingsBoard server address"
 #define TB_PORT "ThingsBoard server port"
 #define TB_DEVICE_TOKEN "ThingsBoard device token"
@@ -50,6 +52,7 @@ uint16_t tb_port = 8181;
 * like for example background color, margins, paddings etc etc
 */
 #include "customElements.h"
+#include "thingsboard.h"
 
 
 ////////////////////////////////  Filesystem  /////////////////////////////////////////
@@ -82,67 +85,30 @@ void getFsInfo(fsInfo_t* fsInfo) {
 
 
 ////////////////////  Load application options from filesystem  ////////////////////
-/*
-* Unlike what was done in customOptions.ino, in this example
-* the variables are read (and written) all at once using the ArduinoJon library
-*/
+////////////////////  Load application options from filesystem  ////////////////////
 bool loadOptions() {
   if (FILESYSTEM.exists(myWebServer.getConfigFilepath())) {
-    File file = FILESYSTEM.open(myWebServer.getConfigFilepath(), "r");
-    DynamicJsonDocument doc(file.size() * 1.33);
-    if (!file)
-      return false;
+    // Config file will be opened on the first time we call this method
+    myWebServer.getOptionValue(LED_LABEL, ledPin);
+    myWebServer.getOptionValue(BOOL_LABEL, boolVar);
+    myWebServer.getOptionValue(LONG_LABEL, longVar);
+    myWebServer.getOptionValue(FLOAT_LABEL, floatVar);
+    myWebServer.getOptionValue(STRING_LABEL, stringVar);
+    // Close configuration file and release memory
+    myWebServer.closeConfiguration(false);
 
-    DeserializationError error = deserializeJson(doc, file);
-    if (error)
-      return false;
-
-    ledPin = doc[LED_LABEL];
-    boolVar = doc[BOOL_LABEL];
-    longVar = doc[LONG_LABEL];
-    floatVar = doc[FLOAT_LABEL]["value"];
-    stringVar = doc[STRING_LABEL].as<String>();
-    file.close();
-
-    Serial.println();
+    Serial.println("\nThis are the current values stored: \n");
     Serial.printf("LED pin value: %d\n", ledPin);
-    Serial.printf("Bool value: %d\n", boolVar);
-    Serial.printf("Long value: %d\n", longVar);
+    Serial.printf("Bool value: %s\n", boolVar ? "true" : "false");
+    Serial.printf("Long value: %d\n",longVar);
     Serial.printf("Float value: %d.%d\n", (int)floatVar, (int)(floatVar*1000)%1000);
-    Serial.println(stringVar);
+    Serial.printf("String value: %s\n", stringVar.c_str());
     return true;
   }
   else
-    Serial.println(F("Configuration file not exist"));
+    Serial.println(F("Config file not exist"));
   return false;
 }
-
-// Call this if you need to save parameters from the sketch side
-// bool saveOptions() {
-//   if (FILESYSTEM.exists(myWebServer.configFile())) {
-//     File file = FILESYSTEM.open(myWebServer.configFile(), "w");
-//     if (!file)
-//       return false;
-
-//     DynamicJsonDocument doc(file.size() * 1.33);
-//     // Deserialize first, otherwise unhandled or hidden options will be lost
-//     DeserializationError error = deserializeJson(doc, file);
-//     if (error)
-//       return false;
-
-//     doc[LED_LABEL] = ledPin;
-//     doc[BOOL_LABEL] = boolVar;
-//     doc[LONG_LABEL] = longVar;
-//     doc[FLOAT_LABEL]["value"] = floatVar;
-//     doc[STRING_LABEL] = stringVar;
-//     serializeJsonPretty(doc, file);
-//     file.close();
-//     return true;
-//   }
-//   else
-//     Serial.println(F("Configuration file not exist"));
-//   return false;
-// }
 
 
 void setup() {
@@ -165,7 +131,7 @@ void setup() {
   myWebServer.setAP("ESP_AP", "123456789");
   IPAddress myIP = myWebServer.startWiFi(15000);
 
-  // Configure /setup page and start Web Server  
+  // Configure /setup page and start Web Server
   myWebServer.addOptionBox("My Options");
   myWebServer.addOption(LED_LABEL, ledPin);
   myWebServer.addOption(LONG_LABEL, longVar);
@@ -176,11 +142,30 @@ void setup() {
 
   // Add a new options box with custom code injected
   myWebServer.addOptionBox("Custom HTML");
-  // How many times you need (for example one in different option box)
+  // Add HTML block where you need (for example one in different option box)
   myWebServer.addHTML(custom_html, "fetch", /*overwite*/ true);
-  // Only once (CSS and Javascript will be appended to head and body)
+
+  // Add a new options box
+  myWebServer.addOptionBox("ThingsBoard");
+  myWebServer.addOption(TB_DEVICE_NAME, tb_deviceName);
+  myWebServer.addOption(TB_DEVICE_LAT, tb_deviceLatitude, -180.0, 180.0, 0.00001);
+  myWebServer.addOption(TB_DEVICE_LON, tb_deviceLongitude, -180.0, 180.0, 0.00001);
+  myWebServer.addOption(TB_SERVER, tb_serverIP);
+  myWebServer.addOption(TB_PORT, tb_port);
+  myWebServer.addOption(TB_DEVICE_KEY, tb_device_key);
+  myWebServer.addOption(TB_SECRET_KEY, tb_secret_key);
+  myWebServer.addOption(TB_DEVICE_TOKEN, tb_deviceToken);
+  // Add HTML block where you need (for example one in different option box)
+  myWebServer.addHTML(thingsboard_htm, "ts", /*overwrite file*/ false);
+
+  // CSS and Javascript will be appended to head and body
+  // (add as last to prevent wrong /setup page  aspect)
+  myWebServer.addJavascript(thingsboard_script, "ts", /*overwrite file*/ false);
   myWebServer.addCSS(custom_css, "fetch", /*overwite*/ false);
   myWebServer.addJavascript(custom_script, "fetch", /*overwite*/ false);
+
+  // Add custom logo to /setup page with custom size
+  myWebServer.setLogoBase64(base64_logo, "128", "128", /*overwrite file*/ false);
 
   // set /setup and /edit page authentication
   // myWebServer.setAuthentication("admin", "admin");

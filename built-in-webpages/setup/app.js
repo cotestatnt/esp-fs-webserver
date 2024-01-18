@@ -68,9 +68,9 @@ function getParameters() {
       
       // Custom logo (base 64)
       if (logo){
-        fetch(data[key])
+        fetch(logo)
         .then((response) => response.text())
-        .then(base64 => setLogoBase64(data, key, base64));
+        .then(base64 => setLogoBase64(logo, base64));
       }
         
       options = data;
@@ -80,14 +80,13 @@ function getParameters() {
   });
 }
 
-function setLogoBase64(data, key, base64) {
-  var size = data[key].replace(/[^\d_]/g, '').split('_');
+function setLogoBase64(s, base64) {
+  var size = s.replace(/[^\d_]/g, '').split('_');
   var img = newEl('img', {'class': 'logo', 'src': 'data:image/png;base64, '+ base64, 'style': `width:${size[0]}px;height:${size[1]}px`});
   $('img-logo').innerHTML = "";
   $('img-logo').append(img);
   $('img-logo').setAttribute('type', 'number');
   $('img-logo').setAttribute('title', '');
-  delete data[key];
 }
 
 function addOptionsElement(opt) {

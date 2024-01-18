@@ -253,7 +253,7 @@ class SetupConfigurator
                 #if ARDUINOJSON_VERSION_MAJOR > 6
                     JsonObject obj = (*m_doc)[key].to<JsonObject>();
                 #else
-                    JsonObject obj = m_doc->createNestedObject(key);
+                    JsonObject obj = (*m_doc).createNestedObject(key);
                 #endif
                 obj["value"] = static_cast<T>(val);
                 obj["min"] = d_min;
