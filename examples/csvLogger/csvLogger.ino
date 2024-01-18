@@ -178,9 +178,9 @@ void loop() {
 
   myWebServer.run();
 
-  // static uint32_t updateTime;
-  // if (millis() - updateTime > 30000) {
-  //   updateTime = millis();
-  //   appenRow();
-  // }
+  static uint32_t updateTime;
+  if (millis() - updateTime > 30000) {
+    updateTime = millis();
+    appenRow();
+  }
 }
