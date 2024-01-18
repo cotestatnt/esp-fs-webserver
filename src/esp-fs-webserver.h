@@ -108,7 +108,7 @@ public:
     /*
     * Override default begin() method to set library built-in handlers
     */
-    void begin() override;
+    virtual void begin();
 
     /*
     * Call this method in your loop
