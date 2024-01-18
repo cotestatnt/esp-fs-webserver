@@ -198,7 +198,7 @@ IPAddress FSWebServer::startAP()
     m_dnsServer = new DNSServer();
     m_dnsServer->setErrorReplyCode(DNSReplyCode::NoError);
     IPAddress ip = WiFi.softAPIP();
-    if (! m_dnsServer->start(53, "*", WiFi.softAPIP())) {
+    if (!m_dnsServer->start(53, "*", WiFi.softAPIP())) {
         log_error("Captive portal failed to start: no sockets for DNS server available!");
         WiFi.enableAP(false);
         return IPAddress((uint32_t) 0);
@@ -310,6 +310,7 @@ bool FSWebServer::captivePortal()
 
 void FSWebServer::handleRequest()
 {
+    log_debug("handleRequest");
     if (!m_fsOK) {
         replyToCLient(ERROR, PSTR(FS_INIT_ERROR));
         return;
@@ -496,7 +497,7 @@ void FSWebServer::getStatus()
     doc["firmware"] = m_version;
     doc["mode"] =  WiFi.status() == WL_CONNECTED ? ("Station (" + WiFi.SSID()) +')' : "Access Point";
     doc["ip"] = (WiFi.status() == WL_CONNECTED) ? WiFi.localIP().toString() : WiFi.softAPIP().toString();
-    doc["path"] = ESP_FS_WS_CONFIG_FILE;
+    doc["path"] = String(ESP_FS_WS_CONFIG_FILE).substring(1);   // remove first '/'
     doc["liburl"] = LIB_URL;
     String reply;
     serializeJson(doc, reply);
@@ -516,8 +517,6 @@ bool FSWebServer::clearOptions()
 
 void FSWebServer::handleSetup()
 {
-
-    log_debug("[%d] - handleSetup start", millis());
 #if ESP_FS_WS_SETUP_HTM
     if (m_pageUser != nullptr) {
         if(!this->authenticate(m_pageUser, m_pagePswd))
@@ -529,7 +528,6 @@ void FSWebServer::handleSetup()
 #else
     replyToCLient(NOT_FOUND, PSTR("FILE_NOT_FOUND"));
 #endif
-    log_debug("[%d] - handleSetup end", millis());
 }
 
 // the request handler is triggered after the upload has finished...

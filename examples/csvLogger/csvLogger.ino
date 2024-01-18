@@ -139,7 +139,7 @@ void setup() {
   snprintf(ssid, sizeof(ssid), "ESP-%llX", ESP.getEfuseMac());
 #endif
 
-  myWebServer.setAP(ssid, "");
+  myWebServer.setAP(ssid, "123456789");
   IPAddress myIP = myWebServer.startWiFi(15000);
   Serial.println("\n");
 
@@ -178,9 +178,9 @@ void loop() {
 
   myWebServer.run();
 
-  static uint32_t updateTime;
-  if (millis() - updateTime > 30000) {
-    updateTime = millis();
-    appenRow();
-  }
+  // static uint32_t updateTime;
+  // if (millis() - updateTime > 30000) {
+  //   updateTime = millis();
+  //   appenRow();
+  // }
 }
