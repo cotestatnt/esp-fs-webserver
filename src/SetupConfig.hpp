@@ -27,7 +27,7 @@ class SetupConfigurator
                     int sz = file.size() * 1.33;
                     int docSize = max(sz, 2048);
                     m_doc = new DynamicJsonDocument((size_t)docSize);
-                #endif                
+                #endif
                 DeserializationError error = deserializeJson(*m_doc, file);
                 if (error) {
                     log_error("Failed to deserialize file, may be corrupted\n %s\n", error.c_str());
@@ -64,9 +64,7 @@ class SetupConfigurator
         }
 
     public:
-        SetupConfigurator(fs::FS *fs) {
-            m_filesystem = fs;
-        }
+        SetupConfigurator(fs::FS *fs) : m_filesystem(fs) { ; }
 
         bool closeConfiguration( bool write = true) {
             if (!write) {
@@ -128,7 +126,7 @@ class SetupConfigurator
             return false;
         }
 
-        void addSource(String& source, String& tag, bool overWrite) {
+        void addSource(const String& source, const String& tag, bool overWrite) {
             if (m_doc == nullptr) {
                 if (!openConfiguration()) {
                     log_error("Error! /setup configuration not possible");

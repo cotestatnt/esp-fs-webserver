@@ -79,14 +79,15 @@ enum
     BAD_REQUEST,
     ERROR
 };
+
 #define TEXT_PLAIN "text/plain"
 #define FS_INIT_ERROR "FS INIT ERROR"
 #define FILE_NOT_FOUND "FileNotFound"
 
 class FSWebServer : public WebServerClass
 {
-    using CallbackF = std::function<void(void)>;
-    using FsInfoCallbackF = std::function<void(fsInfo_t*)>;
+    using CallbackF         = std::function<void(void)>;
+    using FsInfoCallbackF   = std::function<void(fsInfo_t*)>;
 
 public:
 
@@ -107,7 +108,7 @@ public:
     /*
     * Override default begin() method to set library built-in handlers
     */
-    virtual void begin();
+    void begin() override;
 
     /*
     * Call this method in your loop
@@ -141,7 +142,7 @@ public:
     /*
     * Set current firmware version (shown in /setup webpage)
     */
-    void setFirmwareVersion(char* version) {
+    void setFirmwareVersion(const char* version) {
       strncpy(m_version, version, sizeof(m_version));
     }
 
@@ -223,25 +224,25 @@ public:
 #endif
 
 private:
-    char*       m_pageUser = nullptr;
-    char*       m_pagePswd = nullptr;
     FsInfoCallbackF getFsInfo;
-    DNSServer*  m_dnsServer;
-    fs::FS*     m_filesystem;
-    File        m_uploadFile;
-    bool        m_fsOK = false;
-    bool        m_apmode = false;
-    String      m_apWebpage = "/setup";
-    String      m_apSsid = "";
-    String      m_apPsk = "";
-    uint32_t    m_timeout = 10000;
-    char        m_version[16] = {__TIME__};
-    uint16_t    m_port = 80;
-    char*       m_host;
+    char*           m_pageUser = nullptr;
+    char*           m_pagePswd = nullptr;
+    DNSServer*      m_dnsServer  = nullptr;
+    fs::FS*         m_filesystem = nullptr;
+    File            m_uploadFile;
+    String          m_apWebpage = "/setup";
+    String          m_apSsid = "";
+    String          m_apPsk = "";
+    uint32_t        m_timeout = 10000;
+    bool            m_fsOK = false;
+    bool            m_apmode = false;
+    uint16_t        m_port = 80;
+    char            m_version[16] = {__TIME__};
+    char*           m_host;
 
     #if defined(ESP32)
     // Override default handleClient() method to increase connection speed
-    virtual void handleClient();
+    void handleClient() override;
     #endif
 
     // Default handler for all URIs not defined above, use it to read files from filesystem
