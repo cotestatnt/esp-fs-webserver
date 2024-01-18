@@ -20,14 +20,14 @@ class SetupConfigurator
 
         bool openConfiguration() {
             if (checkConfigFile()) {
+                File file = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "r");
                 #if ARDUINOJSON_VERSION_MAJOR > 6
                     m_doc = new JsonDocument();
                 #else
                     int sz = file.size() * 1.33;
                     int docSize = max(sz, 2048);
                     m_doc = new DynamicJsonDocument((size_t)docSize);
-                #endif
-                File file = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "r");
+                #endif                
                 DeserializationError error = deserializeJson(*m_doc, file);
                 if (error) {
                     log_error("Failed to deserialize file, may be corrupted\n %s\n", error.c_str());
