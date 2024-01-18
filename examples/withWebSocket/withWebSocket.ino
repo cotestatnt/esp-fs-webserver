@@ -12,6 +12,8 @@
 #define LED_BUILTIN 2
 #endif
 
+FSWebServer myWebServer(FILESYSTEM, 80);
+WebSocketsServer webSocket = WebSocketsServer(81);
 
 // In order to set SSID and password open the /setup webserver page
 // const char* ssid;
@@ -29,8 +31,6 @@ uint8_t ledPin = LED_BUILTIN;
 #define MYTZ "CET-1CEST,M3.5.0,M10.5.0/3"
 struct tm Time;
 
-FSWebServer myWebServer(FILESYSTEM, 80);
-WebSocketsServer webSocket = WebSocketsServer(81);
 
 ////////////////////////////////   WebSocket Handler  /////////////////////////////
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length) {
@@ -78,24 +78,32 @@ void getUpdatedtime(const uint32_t timeout)
 
 
 ////////////////////////////////  Filesystem  /////////////////////////////////////////
-void startFilesystem(){
+void startFilesystem() {
   // FILESYSTEM INIT
-  if ( FILESYSTEM.begin()){
-    File root = FILESYSTEM.open("/", "r");
-    File file = root.openNextFile();
-    while (file){
-      const char* fileName = file.name();
-      size_t fileSize = file.size();
-      log_info("FS File: %s, size: %lu\n", fileName, (long unsigned)fileSize);
-      file = root.openNextFile();
-    }
-  }
-  else {
-    log_info("ERROR on mounting filesystem. It will be formmatted!");
+  if ( !FILESYSTEM.begin()) {
+    Serial.println("ERROR on mounting filesystem. It will be formmatted!");
     FILESYSTEM.format();
     ESP.restart();
   }
+  myWebServer.printFileList(LittleFS, Serial, "/", 2);
 }
+
+/*
+* Getting FS info (total and free bytes) is strictly related to
+* filesystem library used (LittleFS, FFat, SPIFFS etc etc) and ESP framework
+* ESP8266 FS implementation has methods for total and used bytes (only label is missing)
+*/
+#ifdef ESP32
+void getFsInfo(fsInfo_t* fsInfo) {
+	fsInfo->fsName = "LittleFS";
+	fsInfo->totalBytes = LittleFS.totalBytes();
+	fsInfo->usedBytes = LittleFS.usedBytes();
+}
+#else
+void getFsInfo(fsInfo_t* fsInfo) {
+	fsInfo->fsName = "LittleFS";
+}
+#endif
 
 
 ////////////////////  Load and save application configuration from filesystem  ////////////////////
@@ -165,7 +173,7 @@ void setup(){
   loadApplicationConfig();
 
   // Try to connect to stored SSID, start AP if fails after timeout
-  myWebServer.setAP("ESP_AP", "123456789");
+  myWebServer.setAP("ESP_AP", "");
   IPAddress myIP = myWebServer.startWiFi(15000);
 
   // Start WebSocket server on port 81
@@ -178,6 +186,12 @@ void setup(){
   myWebServer.addOption("Option 1", option1.c_str());
   myWebServer.addOption("Option 2", option2);
   
+  // set /setup and /edit page authentication
+  // myWebServer.setAuthentication("admin", "admin");
+
+  // Enable ACE FS file web editor and add FS info callback function
+  myWebServer.enableFsCodeEditor(getFsInfo);
+  
   // Add custom page handlers
   myWebServer.on("/led", HTTP_GET, handleLed);
 
@@ -188,24 +202,11 @@ void setup(){
   Serial.println(F("Open /edit page to view and edit files"));
   Serial.println(F("Open /update page to upload firmware and filesystem updates"));
 
-
-  // Start MDSN responder
-  if (WiFi.status() == WL_CONNECTED) {
-    // Set hostname
-#ifdef ESP8266
-    WiFi.hostname(hostname);
+#ifdef ESP8266    
     configTime(MYTZ, "time.google.com", "time.windows.com", "pool.ntp.org");
-#elif defined(ESP32)
-    WiFi.setHostname(hostname);
+#elif defined(ESP32)    
     configTzTime(MYTZ, "time.google.com", "time.windows.com", "pool.ntp.org");
 #endif
-    if (MDNS.begin(hostname)) {
-      Serial.println(F("MDNS responder started."));
-      Serial.printf("You should be able to connect with address\t http://%s.local/\n", hostname);
-      // Add service to MDNS-SD
-      MDNS.addService("http", "tcp", 80);
-    }
-  }
 
   pinMode(LED_BUILTIN, OUTPUT); 
 }
@@ -214,12 +215,6 @@ void setup(){
 void loop() {
   myWebServer.run();
   webSocket.loop();
-
-  if(WiFi.status() == WL_CONNECTED) {
-    #ifdef ESP8266
-    MDNS.update();
-    #endif
-  }
 
   // Send ESP system time (epoch) to WS client
   static uint32_t sendToClientTime;

@@ -11,7 +11,6 @@
 #define LOG_LEVEL           2         // (0 disable, 1 error, 2 info, 3 debug)
 #include "SerialLog.h"
 
-
 //default values
 #ifndef ESP_FS_WS_EDIT
     #define ESP_FS_WS_EDIT              1   //has edit methods
@@ -61,10 +60,7 @@
     #include <WiFi.h>
     #include <ESPmDNS.h>
     #include <HTTPUpdateServer.h>
-
     #include <WebServer.h>
-    #undef HTTP_MAX_DATA_WAIT
-    #define HTTP_MAX_DATA_WAIT 100      // Fix first connection very slow
     using WebServerClass = WebServer;
 #endif
 #include <DNSServer.h>
@@ -93,7 +89,6 @@ class FSWebServer : public WebServerClass
     using FsInfoCallbackF = std::function<void(fsInfo_t*)>;
 
 public:
-    SetupConfigurator* setup;
 
     FSWebServer(fs::FS& fs, uint16_t port, const char* host = "esphost"):
         WebServerClass(port),
@@ -104,21 +99,43 @@ public:
         m_port = port;
     }
 
-    // Override default begin() method to set library built-in handlers
+    /*
+    * setup web page "configurator" class reference
+    */
+    SetupConfigurator* setup;
+
+    /*
+    * Override default begin() method to set library built-in handlers
+    */
     virtual void begin();
 
+    /*
+    * Call this method in your loop
+    */
     void run();
-    void setAPWebPage(const char *url);                 // point a custom setup webpage
+
+    /*
+    * Set Access Point SSID and password
+    */
     void setAP(const char *ssid, const char *psk);      // set AP SSID and password
 
+    /*
+    * Start ESP in Access Point mode
+    */
     IPAddress startAP();
 
+    /*
+    * Start WiFi connection
+    */
     IPAddress startWiFi(
         uint32_t timeout            // if 0 - do not wait for wifi connections
         , bool apFlag = false       // if true, start AP only if no credentials was found
         , CallbackF fn = nullptr    // execute callback function during wifi connection
-        );
+    );
 
+    /*
+    * Clear store wifi credentials
+    */
     void clearWifiCredentials();
 
     /*
@@ -128,13 +145,19 @@ public:
       strncpy(m_version, version, sizeof(m_version));
     }
 
-    inline uint32_t getTimeout() const { return m_timeout; }
+    /*
+    * Return true if in AP mode
+    */
     inline bool getAPMode() const { return m_apmode; }
 
-	// List all files
+    /*
+    * List all files in folder
+    */
 	void printFileList(fs::FS& fs, Print& p, const char* dirName, uint8_t level = 1);
 
-    // Get library version
+    /*
+    * Get library version
+    */
     const char* getVersion();
 
     /*
@@ -173,6 +196,7 @@ public:
     /////////////////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////   SETUP PAGE CONFIGURATION ////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////////////////////////////
+    bool closeConfiguration( bool write = true) {return setup->closeConfiguration(write);}
     bool optionToFile(const char* f, const char* id, bool ow) {return setup->optionToFile(f, id, ow);}
     void addHTML(const char* h, const char* id, bool ow = false) {setup->addHTML(h, id, ow);}
     void addCSS(const char* c, const char* id, bool ow = false){setup->addCSS(c, id, ow);}
@@ -193,27 +217,27 @@ public:
     }
     template <typename T>
     bool getOptionValue(const char *lbl, T &var) { return setup->getOptionValue(lbl, var);}
+    template <typename T>
+    bool saveOptionValue(const char *lbl, T &var) { return setup->saveOptionValue(lbl, var);}
     /////////////////////////////////////////////////////////////////////////////////////////////////
 #endif
 
 private:
-    char* m_pageUser = nullptr;
-    char* m_pagePswd = nullptr;
-
+    char*       m_pageUser = nullptr;
+    char*       m_pagePswd = nullptr;
     FsInfoCallbackF getFsInfo;
-    DNSServer* m_dnsServer;
-    fs::FS *m_filesystem;
-    File m_uploadFile;
-    bool m_fsOK = false;
-    bool m_apmode = false;
-    String m_apWebpage = "/setup";
-    String m_apSsid = "";
-    String m_apPsk = "";
-    uint32_t m_timeout = 10000;
-
-    char m_version[16] = {__TIME__};
-    uint16_t m_port = 80;
-    char* m_host;
+    DNSServer*  m_dnsServer;
+    fs::FS*     m_filesystem;
+    File        m_uploadFile;
+    bool        m_fsOK = false;
+    bool        m_apmode = false;
+    String      m_apWebpage = "/setup";
+    String      m_apSsid = "";
+    String      m_apPsk = "";
+    uint32_t    m_timeout = 10000;
+    char        m_version[16] = {__TIME__};
+    uint16_t    m_port = 80;
+    char*       m_host;
 
     #if defined(ESP32)
     // Override default handleClient() method to increase connection speed
@@ -221,20 +245,11 @@ private:
     #endif
 
     // Default handler for all URIs not defined above, use it to read files from filesystem
+    bool captivePortal();
     void doWifiConnection();
     void doRestart();
     void replyOK();
     void handleRequest();
-    void removeWhiteSpaces(String& str);
-
-#if ESP_FS_WS_SETUP
-    void getStatus() ;
-    void getConfigFile();
-    void handleSetup();
-    void update_second();
-    void update_first() ;
-    bool createDirFromPath(const String& path);
-#endif
     void handleIndex();
     bool handleFileRead(const char* path);
     void handleFileUpload();
@@ -243,7 +258,16 @@ private:
     void setCrossOrigin();
     void handleScanNetworks();
     const char *getContentType(const char *filename);
-    bool captivePortal();
+
+    // if you don't need /setup page, disable
+#if ESP_FS_WS_SETUP
+    void getStatus() ;
+    void getConfigFile();
+    void handleSetup();
+    void update_second();
+    void update_first() ;
+    bool createDirFromPath(const String& path);
+#endif
 
     // edit page, in usefull in some situation, but if you need to provide only a web interface, you can disable
 #if ESP_FS_WS_EDIT

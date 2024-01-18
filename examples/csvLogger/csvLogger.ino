@@ -8,42 +8,27 @@
 
 // Check board options and select the right partition scheme
 #define FILESYSTEM LittleFS
-
+FSWebServer myWebServer(FILESYSTEM, 80);
 struct tm ntpTime;
 const char* basePath = "/csv";
 
-FSWebServer myWebServer(FILESYSTEM, 80);
 
-// Test "options" values
-uint8_t ledPin = LED_BUILTIN;
-bool boolVar = true;
-uint32_t longVar = 1234567890;
-float floatVar = 15.5F;
-String stringVar = "Test option String";
-// In order to show a dropdown list box in /setup page
-// we need a list ef values and a variable to store the selected option
-#define LIST_SIZE  7
-const char* dropdownList[LIST_SIZE] = {
-  "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"};
-String dropdownSelected;
 
-// Var labels (in /setup webpage)
-#define LED_LABEL "The LED pin number"
-#define BOOL_LABEL "A bool variable"
-#define LONG_LABEL "A long variable"
-#define FLOAT_LABEL "A float variable"
-#define STRING_LABEL "A String variable"
-#define DROPDOWN_LABEL "A dropdown listbox"
+// This script will set page favicon using a base_64 encoded 32x32 pixel icon
+static const char base64_favicon[] PROGMEM = R"string_literal(
+var favIcon = "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAA7EAAAOxAGVKw4bAAABv0lEQVRYw+3XvWsUURTG4ScYsVEUJUtEEOxiYxTF0i6bSlBSaCXi32B" +
+              "jpU0IEWyClR/Y2AiiLIiKIGhpY7DQRpQUimLEKEkUYjZrcwYuMhuZD4jFXJhi7rnve35z5szMHfLHCDpYQq/AcVENYwQLBRPXCtEJo3toFdTWApGVvVVCW0slMgMVAUpD1Al" +
+              "QCqIKwPc6IKoAzNTxdFQB2BIQlSpRBaCw76ANHg1AA9AANAANwH8JMLARAAMYxRDe4GOyZjOOYhte4RN2YCe+xB4y89iHn/hcBGIIL5LPZRdXIrYfc1jFL/zGeYzH2snE51DM" +
+              "TRX9zN/CCk5iVyTvoY27mMcebEo2G8P4ipeJz4XQHS4KMI+HyfnWuLJjeBKJDuTorke1dsf5c7wrs9FZw40+onEsh/ADbuNgxNoxfxbbo4rTZQC6uLmOcBjn4lb9wGLMDUb17" +
+              "mAizI/08WhFfCkvOBdNmCZ8FKbHo7mycTrpD7iGbwH3fp3k90PXyVtwKYJXcQpPo9tH8Syu8gzG8Dges+y+j4V2BZf/8ZOyED++ue+C6UjUxWuciNhePIikq9H17b+0s3i" +
+              "b0/29pOydfsn/AEofvJL5jAPxAAAAAElFTkSuQmCC";
+var docHead = document.getElementsByTagName('head')[0];
+var newLink = document.createElement('link');
+newLink.rel = 'shortcut icon';
+newLink.href = 'data:image/png;base64,' + favIcon;
+docHead.appendChild(newLink);
+)string_literal";
 
-////////////////////////////////  NTP Time  /////////////////////////////////////////
-void getUpdatedtime(const uint32_t timeout) {
-  uint32_t start = millis();
-  do {
-    time_t now = time(nullptr);
-    ntpTime = *localtime(&now);
-    delay(1);
-  } while (millis() - start < timeout && ntpTime.tm_year <= (1970 - 1900));
-}
 
 ////////////////////////////////  Filesystem  /////////////////////////////////////////
 void startFilesystem() {
@@ -55,6 +40,34 @@ void startFilesystem() {
   }
   myWebServer.printFileList(LittleFS, Serial, "/", 2);
 }
+
+/*
+* Getting FS info (total and free bytes) is strictly related to
+* filesystem library used (LittleFS, FFat, SPIFFS etc etc) and ESP framework
+* ESP8266 FS implementation has methods for total and used bytes (only label is missing)
+*/
+#ifdef ESP32
+void getFsInfo(fsInfo_t* fsInfo) {
+	fsInfo->fsName = "LittleFS";
+	fsInfo->totalBytes = LittleFS.totalBytes();
+	fsInfo->usedBytes = LittleFS.usedBytes();
+}
+#else
+void getFsInfo(fsInfo_t* fsInfo) {
+	fsInfo->fsName = "LittleFS";
+}
+#endif
+
+////////////////////////////////  NTP Time  /////////////////////////////////////////
+void getUpdatedtime(const uint32_t timeout) {
+  uint32_t start = millis();
+  do {
+    time_t now = time(nullptr);
+    ntpTime = *localtime(&now);
+    delay(1);
+  } while (millis() - start < timeout && ntpTime.tm_year <= (1970 - 1900));
+}
+
 
 //////////////////////////// Append a row to csv file ///////////////////////////////////
 bool appenRow() {
@@ -125,8 +138,8 @@ void setup() {
 #elif defined(ESP32)
   snprintf(ssid, sizeof(ssid), "ESP-%llX", ESP.getEfuseMac());
 #endif
-  myWebServer.setAP(ssid, "123456789");
 
+  myWebServer.setAP(ssid, "");
   IPAddress myIP = myWebServer.startWiFi(15000);
   Serial.println("\n");
 
@@ -139,13 +152,13 @@ void setup() {
   getUpdatedtime(5000);    // Wait for NTP sync
 
   // Configure /setup page and start Web Server
-  myWebServer.addOptionBox("My Options");
-  myWebServer.addOption(BOOL_LABEL, boolVar);
-  myWebServer.addOption(LED_LABEL, ledPin);
-  myWebServer.addOption(LONG_LABEL, longVar);
-  myWebServer.addOption(FLOAT_LABEL, floatVar, 1.0, 100.0, 0.01);
-  myWebServer.addOption(STRING_LABEL, stringVar);
-  myWebServer.addDropdownList(DROPDOWN_LABEL, dropdownList, LIST_SIZE);
+  myWebServer.addJavascript(base64_favicon, "favicon");
+
+  // set /setup and /edit page authentication
+  // myWebServer.setAuthentication("admin", "admin");
+
+  // Enable ACE FS file web editor and add FS info callback function
+  myWebServer.enableFsCodeEditor(getFsInfo);
 
   // Start webserver
   myWebServer.begin();

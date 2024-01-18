@@ -2,6 +2,8 @@
 
 #include <FS.h>
 #include <LittleFS.h>
+#include <SPIFFS.h>
+#include <FFat.h>
 #define FILESYSTEM LittleFS
 
 FSWebServer myWebServer(FILESYSTEM, 80);
@@ -42,9 +44,6 @@ uint16_t tb_port = 8181;
 #define TB_DEVICE_KEY "Provisioning device key"
 #define TB_SECRET_KEY "Provisioning secret key"
 
-
-
-
 /*
 * Include the custom HTML, CSS and Javascript to be injected in /setup webpage.
 * HTML code will be injected according to the order of options declaration.
@@ -55,9 +54,21 @@ uint16_t tb_port = 8181;
 #include "customElements.h"
 
 
+////////////////////////////////  Filesystem  /////////////////////////////////////////
+void startFilesystem() {
+  // FILESYSTEM INIT
+  if ( !FILESYSTEM.begin()) {
+    Serial.println("ERROR on mounting filesystem. It will be formmatted!");
+    FILESYSTEM.format();
+    ESP.restart();
+  }
+  myWebServer.printFileList(LittleFS, Serial, "/", 2);
+}
+
 /*
 * Getting FS info (total and free bytes) is strictly related to
 * filesystem library used (LittleFS, FFat, SPIFFS etc etc) and ESP framework
+* ESP8266 FS implementation has methods for total and used bytes (only label is missing)
 */
 #ifdef ESP32
 void getFsInfo(fsInfo_t* fsInfo) {
@@ -70,16 +81,6 @@ void getFsInfo(fsInfo_t* fsInfo) {
 	fsInfo->fsName = "LittleFS";
 }
 #endif
-
-////////////////////////////////  Filesystem  /////////////////////////////////////////
-void startFilesystem(){
-  // FILESYSTEM INIT
-  if ( !FILESYSTEM.begin()){
-    Serial.println("ERROR on mounting filesystem. It will be formmatted!");
-    FILESYSTEM.format();
-    ESP.restart();
-  }
-}
 
 
 ////////////////////  Load application options from filesystem  ////////////////////
@@ -162,9 +163,11 @@ void setup() {
   else
     Serial.println(F("Application options NOT loaded!\n\n"));
 
-  // Configure /setup page and start Web Server
+  // Try to connect to stored SSID, start AP if fails after timeout
+  myWebServer.setAP("ESP_AP", "");
+  IPAddress myIP = myWebServer.startWiFi(15000);
 
-  // Add a new options box
+  // Configure /setup page and start Web Server  
   myWebServer.addOptionBox("My Options");
   myWebServer.addOption(LED_LABEL, ledPin);
   myWebServer.addOption(LONG_LABEL, longVar);
@@ -186,10 +189,6 @@ void setup() {
 
   // Enable ACE FS file web editor and add FS info callback function
   myWebServer.enableFsCodeEditor(getFsInfo);
-
-  // Try to connect to stored SSID, start AP if fails after timeout
-  myWebServer.setAP("ESP_AP", "");
-  IPAddress myIP = myWebServer.startWiFi(15000);
 
   // Start webserver
   myWebServer.begin();

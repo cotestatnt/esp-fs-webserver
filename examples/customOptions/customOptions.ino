@@ -5,6 +5,7 @@
 #define FILESYSTEM LittleFS
 
 FSWebServer myWebServer(FILESYSTEM, 80);
+#include "custom_html.h"
 
 #ifndef LED_BUILTIN
 #define LED_BUILTIN 2
@@ -34,63 +35,47 @@ String dropdownSelected;
 #define STRING_LABEL "A String variable"
 #define DROPDOWN_LABEL "A dropdown listbox"
 
-static const char save_btn_htm[] PROGMEM = R"EOF(
-<div class="btn-bar">
-  <a class="btn" id="reload-btn">Reload options</a>
-</div>
-)EOF";
-
-static const char button_script[] PROGMEM = R"EOF(
-/* Add click listener to button */
-document.getElementById('reload-btn').addEventListener('click', reload);
-function reload() {
-  console.log('Reload configuration options');
-  fetch('/reload')
-  .then((response) => {
-    if (response.ok) {
-      openModalMessage('Options loaded', 'Options was reloaded from configuration file');
-      return;
-    }
-    throw new Error('Something goes wrong with fetch');
-  })
-  .catch((error) => {
-    openModalMessage('Error', 'Something goes wrong with your request');
-  });
-}
-)EOF";
-
-
 ////////////////////////////////  Filesystem  /////////////////////////////////////////
 void startFilesystem() {
   // FILESYSTEM INIT
-  if ( FILESYSTEM.begin()) {
-    File root = FILESYSTEM.open("/", "r");
-    File file = root.openNextFile();
-    while (file) {
-      const char* fileName = file.name();
-      size_t fileSize = file.size();
-      Serial.printf("FS File: %s, size: %lu\n", fileName, (long unsigned)fileSize);
-      file = root.openNextFile();
-    }
-    Serial.println();
-  }
-  else {
+  if ( !FILESYSTEM.begin()) {
     Serial.println("ERROR on mounting filesystem. It will be formmatted!");
     FILESYSTEM.format();
     ESP.restart();
   }
+  myWebServer.printFileList(LittleFS, Serial, "/", 2);
 }
+
+/*
+* Getting FS info (total and free bytes) is strictly related to
+* filesystem library used (LittleFS, FFat, SPIFFS etc etc) and ESP framework
+* ESP8266 FS implementation has methods for total and used bytes (only label is missing)
+*/
+#ifdef ESP32
+void getFsInfo(fsInfo_t* fsInfo) {
+	fsInfo->fsName = "LittleFS";
+	fsInfo->totalBytes = LittleFS.totalBytes();
+	fsInfo->usedBytes = LittleFS.usedBytes();
+}
+#else
+void getFsInfo(fsInfo_t* fsInfo) {
+	fsInfo->fsName = "LittleFS";
+}
+#endif
 
 
 ////////////////////  Load application options from filesystem  ////////////////////
 bool loadOptions() {
-  if (FILESYSTEM.exists("/config.json")) {
+  if (FILESYSTEM.exists(myWebServer.getConfigFilepath())) {
+    // Config file will be opened on the first time we call this method
     myWebServer.getOptionValue(LED_LABEL, ledPin);
     myWebServer.getOptionValue(BOOL_LABEL, boolVar);
     myWebServer.getOptionValue(LONG_LABEL, longVar);
     myWebServer.getOptionValue(FLOAT_LABEL, floatVar);
     myWebServer.getOptionValue(STRING_LABEL, stringVar);
     myWebServer.getOptionValue(DROPDOWN_LABEL, dropdownSelected);
+    // Close configuration file and release memory
+    myWebServer.closeConfiguration(false);
 
     Serial.println("\nThis are the current values stored: \n");
     Serial.printf("LED pin value: %d\n", ledPin);
@@ -102,22 +87,25 @@ bool loadOptions() {
     return true;
   }
   else
-    Serial.println(F("File \"config.json\" not exist"));
+    Serial.println(F("Config file not exist"));
   return false;
 }
 
 void saveOptions() {
-  // myWebServer.saveOptionValue(LED_LABEL, ledPin);
-  // myWebServer.saveOptionValue(BOOL_LABEL, boolVar);
-  // myWebServer.saveOptionValue(LONG_LABEL, longVar);
-  // myWebServer.saveOptionValue(FLOAT_LABEL, floatVar);
-  // myWebServer.saveOptionValue(STRING_LABEL, stringVar);
-  // myWebServer.saveOptionValue(DROPDOWN_LABEL, dropdownSelected);
+  // Config file will be opened on the first time we call this method
+  myWebServer.saveOptionValue(LED_LABEL, ledPin);
+  myWebServer.saveOptionValue(BOOL_LABEL, boolVar);
+  myWebServer.saveOptionValue(LONG_LABEL, longVar);
+  myWebServer.saveOptionValue(FLOAT_LABEL, floatVar);
+  myWebServer.saveOptionValue(STRING_LABEL, stringVar);
+  myWebServer.saveOptionValue(DROPDOWN_LABEL, dropdownSelected);
+  // Close config file and release memory
+  myWebServer.closeConfiguration(false);
   Serial.println(F("Application options saved."));
 }
 
 ////////////////////////////  HTTP Request Handlers  ////////////////////////////////////
-void handleLoadOptions() {  
+void handleLoadOptions() {
   myWebServer.send(200, "text/plain", "Options loaded");
   loadOptions();
   Serial.println("Application option loaded after web request");
@@ -132,7 +120,7 @@ void setup() {
   startFilesystem();
 
   // Try to connect to stored SSID, start AP if fails after timeout
-  myWebServer.setAP("ESP_AP", "123456789");
+  myWebServer.setAP("ESP_AP", "");
   IPAddress myIP = myWebServer.startWiFi(15000);
 
   // Load configuration (if not present, default will be created when webserver will start)
@@ -146,16 +134,20 @@ void setup() {
 
   // Configure /setup page and start Web Server
   myWebServer.addOptionBox("My Options");
-
   myWebServer.addOption(BOOL_LABEL, boolVar);
   myWebServer.addOption(LED_LABEL, ledPin);
   myWebServer.addOption(LONG_LABEL, longVar);
   myWebServer.addOption(FLOAT_LABEL, floatVar, 1.0, 100.0, 0.01);
   myWebServer.addOption(STRING_LABEL, stringVar);
   myWebServer.addDropdownList(DROPDOWN_LABEL, dropdownList, LIST_SIZE);
-
   myWebServer.addHTML(save_btn_htm, "buttons");
   myWebServer.addJavascript(button_script, "script");
+
+  // set /setup and /edit page authentication
+  // myWebServer.setAuthentication("admin", "admin");
+
+  // Enable ACE FS file web editor and add FS info callback function
+  myWebServer.enableFsCodeEditor(getFsInfo);
 
   myWebServer.begin();
   Serial.print(F("ESP Web Server started on IP Address: "));

@@ -65,12 +65,18 @@ void setup()
   listDir(getFolder, 0);
 
   // Try to connect to stored SSID, start AP if fails after timeout
-  myWebServer.setAP("ESP_AP", "123456789");
+  myWebServer.setAP("ESP_AP", "");
   IPAddress myIP = myWebServer.startWiFi(15000);
 
   // Add custom page handlers to webserver
-  myWebServer.addHandler("/getPicture", getPicture);
-  myWebServer.addHandler("/setInterval", setInterval);
+  myWebServer.on("/getPicture", getPicture);
+  myWebServer.on("/setInterval", setInterval);
+  
+  // set /setup and /edit page authentication
+  // myWebServer.setAuthentication("admin", "admin");
+
+  // Enable ACE FS file web editor and add FS info callback function
+  myWebServer.enableFsCodeEditor(getFsInfo);
 
   // Start webserver
   myWebServer.begin();
@@ -101,14 +107,13 @@ void loop()
 
 //////////////////////////////////  FUNCTIONS//////////////////////////////////////
 
-void setInterval() {
-  WebServerClass *webRequest = myWebServer.getRequest();
-  if(webRequest->hasArg("val")) {
+void setInterval() {  
+  if(myWebServer.hasArg("val")) {
     grabInterval = 0;
-    grabInterval = webRequest->arg("val").toInt();
+    grabInterval = myWebServer.arg("val").toInt();
     Serial.printf("Set grab interval every %d seconds\n", grabInterval);
   }
-  webRequest->send(200, "text/plain", "OK");
+  myWebServer.send(200, "text/plain", "OK");
 }
 
 // Lamp Control
@@ -128,8 +133,7 @@ void setLamp(int newVal)
 
 // Send a picture taken from CAM to a Telegram chat
 void getPicture()
-{
-  WebServerClass *webRequest = myWebServer.getRequest();
+{  
 
   // Take Picture with Camera;
   Serial.println("Camera capture requested");
@@ -144,7 +148,7 @@ void getPicture()
   {
     Serial.println("Camera capture failed");
     if(webRequest)
-      webRequest->send(500, "text/plain", "ERROR. Image grab failed");
+      myWebServer.send(500, "text/plain", "ERROR. Image grab failed");
     return;
   }
 
@@ -164,7 +168,7 @@ void getPicture()
   {
     Serial.println("Failed to open file in writing mode");
     if(webRequest)
-      webRequest->send(500, "text/plain", "ERROR. Image grab failed");
+      myWebServer.send(500, "text/plain", "ERROR. Image grab failed");
     return;
   }
   // size_t _jpg_buf_len = 0;
@@ -177,8 +181,8 @@ void getPicture()
 
   // Clear buffer
   esp_camera_fb_return(fb);
-  if(webRequest)
-    webRequest->send(200, "text/plain", filename);
+  if(webRequest.client())
+    myWebServer.send(200, "text/plain", filename);
 }
 
 // List all files saved in the selected filesystem

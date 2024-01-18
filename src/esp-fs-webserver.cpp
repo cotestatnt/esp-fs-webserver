@@ -65,6 +65,7 @@ void FSWebServer::handleClient()
 // Override default begin() method to set library built-in handlers
 void FSWebServer::begin()
 {
+
     File file = m_filesystem->open(ESP_FS_WS_CONFIG_FOLDER, "r");
     if (!file) {
         log_error("Failed to open /setup directory. Create new folder\n");
@@ -79,6 +80,8 @@ void FSWebServer::begin()
         file.print("{\"wifi-box\": \"\"}");
         file.close();
     }
+
+    setup->closeConfiguration();
 
     // Captive Portal redirect
     // Windows
@@ -124,12 +127,11 @@ void FSWebServer::begin()
     close();
     _server.begin();
 
-    // Configure and start MDNS responder
-    if (!MDNS.begin(m_host)){
-        log_error("MDNS responder not started");
-    }
-    MDNS.addService("http", "tcp", m_port);
-    MDNS.setInstanceName("esp-fs-webserver");
+#ifdef ESP8266
+    WiFi.hostname(m_host);
+#elif defined(ESP32)
+    WiFi.setHostname(m_host);
+#endif
 }
 
 
@@ -159,11 +161,6 @@ void FSWebServer::setAuthentication(const char* user, const char* pswd) {
     strcpy(m_pagePswd, pswd);
 }
 
-
-void FSWebServer::setAPWebPage(const char* url)
-{
-    m_apWebpage = url;
-}
 
 void FSWebServer::setAP(const char* ssid, const char* psk)
 {
@@ -277,6 +274,14 @@ IPAddress FSWebServer::startWiFi(uint32_t timeout, bool apFlag, CallbackF fn)
             if (millis() - startTime > timeout)
                 break;
         }
+
+        // Configure and start MDNS responder
+        if (!MDNS.begin(m_host)){
+            log_error("MDNS responder not started");
+        }
+        MDNS.addService("http", "tcp", m_port);
+        MDNS.setInstanceName("esp-fs-webserver");
+
         if ((WiFi.status() == WL_CONNECTED) || apFlag)
             return WiFi.localIP();
     }
@@ -460,7 +465,7 @@ void FSWebServer::handleScanNetworks() {
     if (res > 0) {
         for (int i = 0; i < res; ++i) {
             #if ARDUINOJSON_VERSION_MAJOR > 6
-                JsonObject obj = doc.add<JsonObject>();
+                JsonObject obj = array.add<JsonObject>();
             #else
                 JsonObject obj = array.createNestedObject();
             #endif
@@ -507,26 +512,6 @@ bool FSWebServer::clearOptions()
         return true;
     }
     return false;
-}
-
-void FSWebServer::removeWhiteSpaces(String& str)
-{
-    const char noChars[] = { '\n', '\r', '\t' };
-    int pos = -1;
-    // Remove non printable characters
-    for (unsigned int i = 0; i < sizeof(noChars); i++) {
-        pos = str.indexOf(noChars[i]);
-        while (pos > -1) {
-            str.replace(String(noChars[i]), "");
-            pos = str.indexOf(noChars[i]);
-        }
-    }
-    // Remove doubles spaces
-    pos = str.indexOf("  ");
-    while (pos > -1) {
-        str.replace("  ", " ");
-        pos = str.indexOf("  ");
-    }
 }
 
 void FSWebServer::handleSetup()
@@ -1037,7 +1022,7 @@ void FSWebServer::handleStatus()
 
 void FSWebServer::printFileList(fs::FS& fs, Print& p, const char* dirName, uint8_t level)
 {
-    p.printf("\nListing directory: %s\n", dirName);
+    p.printf("\n%s\n", dirName);
     File root = fs.open(dirName, "r");
     if(!root){
         p.println("- failed to open directory");
@@ -1047,9 +1032,20 @@ void FSWebServer::printFileList(fs::FS& fs, Print& p, const char* dirName, uint8
         p.println(" - not a directory");
         return;
     }
+
+    // First list all files
     File file = root.openNextFile();
-    while(file){
-        if(file.isDirectory()){
+    while(file) {
+        if (!file.isDirectory()) {
+            p.printf("|__ %s \t(%d bytes)\n",file.name(), file.size());
+        }
+        file = root.openNextFile();
+    }
+    // Rewind directory and call recursively for each subfolder
+    root.rewindDirectory();
+    file = root.openNextFile();
+    while(file) {
+        if(file.isDirectory()) {
             if(level){
             #ifdef ESP32
 			  printFileList(fs, p, file.path(), level - 1);
@@ -1057,8 +1053,6 @@ void FSWebServer::printFileList(fs::FS& fs, Print& p, const char* dirName, uint8
 			  printFileList(fs, p, file.fullName(), level - 1);
 			#endif
             }
-        } else {
-            p.printf("|__ %s \t(%d bytes)\n",file.name(), file.size());
         }
         file = root.openNextFile();
     }

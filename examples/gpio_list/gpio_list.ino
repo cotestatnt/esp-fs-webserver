@@ -148,7 +148,7 @@ void setup() {
   }
   
   // Try to connect to stored SSID, start AP if fails after timeout
-  myWebServer.setAP("ESP_AP", "123456789");
+  myWebServer.setAP("ESP_AP", "");
   IPAddress myIP = myWebServer.startWiFi(15000);
   
   if (WiFi.status() == WL_CONNECTED) {
@@ -160,9 +160,16 @@ void setup() {
   // Add custom page handlers
   myWebServer.on("/getGpioList", HTTP_GET, updateGpioList);
 
+  // set /setup and /edit page authentication
+  // myWebServer.setAuthentication("admin", "admin");
+
+  // Enable ACE FS file web editor and add FS info callback function
+  myWebServer.enableFsCodeEditor(getFsInfo);
+
   // Start webserver
   myWebServer.begin();
-  Serial.println(F("ESP Web Server started"));
+  Serial.println(F("ESP Web Server started.\n IP address: "));
+  Serial.println(myIP);
   Serial.println(F("Open /setup page to configure optional parameters"));
   Serial.println(F("Open /edit page to view and edit files"));
   Serial.println(F("Open /update page to upload firmware and filesystem updates"));

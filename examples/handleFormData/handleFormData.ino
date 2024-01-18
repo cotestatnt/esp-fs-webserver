@@ -43,25 +43,32 @@ void handleForm2() {
 
 
 ////////////////////////////////  Filesystem  /////////////////////////////////////////
-void startFilesystem(){
+void startFilesystem() {
   // FILESYSTEM INIT
-  if ( FILESYSTEM.begin()){
-    File root = FILESYSTEM.open("/", "r");
-    File file = root.openNextFile();
-    while (file){
-      const char* fileName = file.name();
-      size_t fileSize = file.size();
-      Serial.printf("FS File: %s, size: %lu\n", fileName, (long unsigned)fileSize);
-      file = root.openNextFile();
-    }
-    Serial.println();
-  }
-  else {
-    Serial.println("ERROR on mounting filesystem. It will be formatted!");
+  if ( !FILESYSTEM.begin()) {
+    Serial.println("ERROR on mounting filesystem. It will be formmatted!");
     FILESYSTEM.format();
     ESP.restart();
   }
+  myWebServer.printFileList(LittleFS, Serial, "/", 2);
 }
+
+/*
+* Getting FS info (total and free bytes) is strictly related to
+* filesystem library used (LittleFS, FFat, SPIFFS etc etc) and ESP framework
+* ESP8266 FS implementation has methods for total and used bytes (only label is missing)
+*/
+#ifdef ESP32
+void getFsInfo(fsInfo_t* fsInfo) {
+	fsInfo->fsName = "LittleFS";
+	fsInfo->totalBytes = LittleFS.totalBytes();
+	fsInfo->usedBytes = LittleFS.usedBytes();
+}
+#else
+void getFsInfo(fsInfo_t* fsInfo) {
+	fsInfo->fsName = "LittleFS";
+}
+#endif
 
 
 void setup(){
@@ -71,14 +78,19 @@ void setup(){
   startFilesystem();
 
   // Try to connect to stored SSID, start AP if fails after timeout
-  myWebServer.setAP("ESP_AP", "123456789");
+  myWebServer.setAP("ESP_AP", "");
   IPAddress myIP = myWebServer.startWiFi(15000);
 
   // Add custom page handlers to webserver
   myWebServer.on("/getDefault", HTTP_GET, getDefaultValue);
-  
   myWebServer.on("/setForm1", HTTP_POST, handleForm1);
   myWebServer.on("/setForm2", HTTP_POST, handleForm2);
+  
+  // set /setup and /edit page authentication
+  // myWebServer.setAuthentication("admin", "admin");
+
+  // Enable ACE FS file web editor and add FS info callback function
+  myWebServer.enableFsCodeEditor(getFsInfo);
   
   myWebServer.begin();
   Serial.print(F("ESP Web Server started on IP Address: "));
