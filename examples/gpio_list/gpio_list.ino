@@ -163,9 +163,6 @@ void setup() {
   // set /setup and /edit page authentication
   // myWebServer.setAuthentication("admin", "admin");
 
-  // Enable ACE FS file web editor and add FS info callback function
-  myWebServer.enableFsCodeEditor(getFsInfo);
-
   // Start webserver
   myWebServer.begin();
   Serial.println(F("ESP Web Server started.\n IP address: "));

@@ -2,8 +2,6 @@
 
 #include <FS.h>
 #include <LittleFS.h>
-#include <SPIFFS.h>
-#include <FFat.h>
 #define FILESYSTEM LittleFS
 
 FSWebServer myWebServer(FILESYSTEM, 80);

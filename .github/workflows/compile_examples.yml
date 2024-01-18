@@ -55,6 +55,7 @@ jobs:
       run: |
         pio ci --board=nodemcuv2 \
         --lib=examples/customHTML/**.h \
+        --lib=examples/customOptions/**.h 
       env:
         PLATFORMIO_CI_SRC: ${{ matrix.example }}
 
@@ -101,5 +102,6 @@ jobs:
       run: |
         pio ci --board=esp32dev \
         --lib=examples/customHTML/**.h \
+        --lib=examples/customOptions/**.h 
       env:
         PLATFORMIO_CI_SRC: ${{ matrix.example }}

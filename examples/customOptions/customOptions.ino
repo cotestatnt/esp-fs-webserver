@@ -1,11 +1,10 @@
 #include <esp-fs-webserver.h>   // https://github.com/cotestatnt/esp-fs-webserver
-
 #include <FS.h>
 #include <LittleFS.h>
 #define FILESYSTEM LittleFS
+#include "custom_html.h"
 
 FSWebServer myWebServer(FILESYSTEM, 80);
-#include "custom_html.h"
 
 #ifndef LED_BUILTIN
 #define LED_BUILTIN 2
