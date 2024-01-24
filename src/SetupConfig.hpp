@@ -9,7 +9,7 @@
 
 class SetupConfigurator
 {
-    private:
+    protected:
         uint8_t numOptions = 0;
         fs::FS* m_filesystem = nullptr;
         #if ARDUINOJSON_VERSION_MAJOR > 6
@@ -17,6 +17,12 @@ class SetupConfigurator
         #else
         DynamicJsonDocument* m_doc = nullptr;
         #endif
+
+        bool m_opened = false;
+
+        bool isOpened() {
+            return m_opened;
+        }
 
         bool openConfiguration() {
             if (checkConfigFile()) {
@@ -35,6 +41,7 @@ class SetupConfigurator
                     return false;
                 }
                 file.close();
+                m_opened = true;
                 return true;
             }
             return false;
@@ -64,9 +71,11 @@ class SetupConfigurator
         }
 
     public:
+        friend class FSWebServer;
         SetupConfigurator(fs::FS *fs) : m_filesystem(fs) { ; }
 
         bool closeConfiguration( bool write = true) {
+            m_opened = false;
             if (!write) {
                 m_doc->clear();
                 delete (m_doc);

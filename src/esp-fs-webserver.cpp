@@ -66,22 +66,19 @@ void FSWebServer::handleClient()
 void FSWebServer::begin()
 {
 
-    File file = m_filesystem->open(ESP_FS_WS_CONFIG_FOLDER, "r");
-    if (!file) {
-        log_error("Failed to open /setup directory. Create new folder\n");
-        m_filesystem->mkdir(ESP_FS_WS_CONFIG_FOLDER);
-        ESP.restart();
+#if ESP_FS_WS_SETUP
+    m_fsOK = setup->checkConfigFile();
+    if (setup->isOpened()) {
+        setup->closeConfiguration();
     }
-    m_fsOK = true;
-
-    // Check if config file exist, and create if necessary
-    if (!m_filesystem->exists(ESP_FS_WS_CONFIG_FILE)) {
-        file = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "w");
-        file.print("{\"wifi-box\": \"\"}");
-        file.close();
-    }
-
-    setup->closeConfiguration();
+    this->on("/setup", HTTP_GET, std::bind(&FSWebServer::handleSetup, this));
+    this->on("/scan", HTTP_GET, std::bind(&FSWebServer::handleScanNetworks, this));
+    this->on("/getStatus", HTTP_GET, std::bind(&FSWebServer::getStatus, this));
+    // OTA update via webbrowser
+    this->on("/update", HTTP_POST,
+        std::bind(&FSWebServer::update_second, this),
+        std::bind(&FSWebServer::update_first, this)
+    );
 
     // Captive Portal redirect
     // Windows
@@ -92,11 +89,6 @@ void FSWebServer::begin()
     // Android
     this->on("/generate_204", HTTP_GET, std::bind(&FSWebServer::captivePortal, this));
     this->on("/gen_204", HTTP_GET, std::bind(&FSWebServer::captivePortal, this));
-
-#if ESP_FS_WS_SETUP
-    this->on("/setup", HTTP_GET, std::bind(&FSWebServer::handleSetup, this));
-    this->on("/scan", HTTP_GET, std::bind(&FSWebServer::handleScanNetworks, this));
-    this->on("/getStatus", HTTP_GET, std::bind(&FSWebServer::getStatus, this));
 #endif
 
     this->onNotFound(std::bind(&FSWebServer::handleRequest, this));
@@ -105,19 +97,6 @@ void FSWebServer::begin()
     this->on("/connect", HTTP_POST, std::bind(&FSWebServer::doWifiConnection, this));
     this->on("/reset", HTTP_GET, std::bind(&FSWebServer::doRestart, this));
     this->on("/restart", HTTP_GET, std::bind(&FSWebServer::doRestart, this));
-
-    // Upload file
-    // - first callback is called after the request has ended with all parsed arguments
-    // - second callback handles file upload at that location
-    this->on("/edit", HTTP_POST,
-        std::bind(&FSWebServer::replyOK, this),
-        std::bind(&FSWebServer::handleFileUpload, this));
-
-    // OTA update via webbrowser
-    this->on("/update", HTTP_POST,
-        std::bind(&FSWebServer::update_second, this),
-        std::bind(&FSWebServer::update_first, this)
-    );
 
 #ifdef ESP32
     this->enableCrossOrigin(true);
@@ -151,6 +130,12 @@ void FSWebServer::enableFsCodeEditor(FsInfoCallbackF fsCallback) {
     this->on("/edit", HTTP_GET, std::bind(&FSWebServer::handleGetEdit, this));
     this->on("/edit", HTTP_PUT, std::bind(&FSWebServer::handleFileCreate, this));
     this->on("/edit", HTTP_DELETE, std::bind(&FSWebServer::handleFileDelete, this));
+    // Upload file
+    // - first callback is called after the request has ended with all parsed arguments
+    // - second callback handles file upload at that location
+    this->on("/edit", HTTP_POST,
+        std::bind(&FSWebServer::replyOK, this),
+        std::bind(&FSWebServer::handleFileUpload, this));
 #endif
 }
 
