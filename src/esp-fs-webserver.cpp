@@ -258,8 +258,8 @@ IPAddress FSWebServer::startWiFi(uint32_t timeout, bool apFlag, CallbackF fn)
             // execute callback function during wifi connection
             if (fn != nullptr)
                 fn();
-            delay(1000);
-            Serial.print(".");
+            delay(100);
+            // Serial.print(".");
             // If no connection after a while break
             if (millis() - startTime > timeout)
                 break;
