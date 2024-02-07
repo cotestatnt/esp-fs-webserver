@@ -91,14 +91,19 @@ class FSWebServer : public WebServerClass
 
 public:
 
-    FSWebServer(fs::FS& fs, uint16_t port, const char* host = "esphost"):
+    FSWebServer(fs::FS& fs, uint16_t port = 80, const char* host = "esphost"):
         WebServerClass(port),
         m_filesystem(&fs),
-        m_host((char*)host)
+        m_host(host)
     {
 		setup = new SetupConfigurator(m_filesystem);
         m_port = port;
     }
+
+    /*
+    *   Set web server hostname
+    */
+    void setHostname(const char* host);
 
     /*
     * setup web page "configurator" class reference
@@ -108,7 +113,7 @@ public:
     /*
     * Override default begin() method to set library built-in handlers
     */
-    virtual void begin();
+    virtual void begin(uint16_t port = 80);
 
     /*
     * Call this method in your loop
@@ -194,6 +199,18 @@ public:
     */
     bool clearOptions();
 
+    /*
+    * Set IP address in AP mode
+    */
+    void setIPaddressAP(IPAddress ip) {
+        m_captiveIp = ip;
+    }
+
+    /*
+    * Get current web server port
+    */
+    uint16_t getPort() { return m_port;}
+
     /////////////////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////   SETUP PAGE CONFIGURATION ////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -233,12 +250,13 @@ private:
     String          m_apWebpage = "/setup";
     String          m_apSsid = "";
     String          m_apPsk = "";
+    String          m_host;
     uint32_t        m_timeout = 10000;
     bool            m_fsOK = false;
     bool            m_apmode = false;
     uint16_t        m_port = 80;
     char            m_version[16] = {__TIME__};
-    char*           m_host;
+    IPAddress       m_captiveIp = IPAddress(192, 168, 4, 1);
 
     #if defined(ESP32)
     // Override default handleClient() method to increase connection speed

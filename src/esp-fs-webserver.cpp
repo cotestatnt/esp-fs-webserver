@@ -62,10 +62,15 @@ void FSWebServer::handleClient()
 #endif
 
 
-// Override default begin() method to set library built-in handlers
-void FSWebServer::begin()
-{
+void FSWebServer::setHostname(const char* host) {
+    m_host = host;
+}
 
+
+// Override default begin() method to set library built-in handlers
+void FSWebServer::begin(uint16_t port)
+{
+    m_port = port;
 #if ESP_FS_WS_SETUP
     m_fsOK = setup->checkConfigFile();
     if (setup->isOpened()) {
@@ -102,15 +107,15 @@ void FSWebServer::begin()
     this->enableCrossOrigin(true);
     _server.setNoDelay(true);
 #endif
-
     close();
-    _server.begin();
+    _server.begin(port);
 
 #ifdef ESP8266
-    WiFi.hostname(m_host);
+    WiFi.hostname(m_host.c_str());
 #elif defined(ESP32)
-    WiFi.setHostname(m_host);
+    WiFi.setHostname(m_host.c_str());
 #endif
+    log_info("Server started on %s:%d\n", WiFi.localIP().toString().c_str(), port);
 }
 
 
@@ -166,8 +171,8 @@ IPAddress FSWebServer::startAP()
     }
 
     WiFi.mode(WIFI_AP);
-    // Set AP IP 8.8.8.8 and subnet 255.255.255.0
-    if (! WiFi.softAPConfig(0x08080808, 0x08080808, 0x00FFFFFF)) {
+    // Set AP IP and subnet 255.255.255.0
+    if (! WiFi.softAPConfig(m_captiveIp, m_captiveIp, 0x00FFFFFF)) {
         log_error("Captive portal failed to start: WiFi.softAPConfig failed!");
         WiFi.enableAP(false);
         return IPAddress((uint32_t) 0);
@@ -190,7 +195,7 @@ IPAddress FSWebServer::startAP()
     }
 
     ip = WiFi.softAPIP();
-    log_info("AP mode.\nServer IP address: %s", ip.toString().c_str());
+    log_info("\nAP mode.\nIP address: %s", ip.toString().c_str());
     m_apmode = true;
     return ip;
 }
@@ -265,7 +270,7 @@ IPAddress FSWebServer::startWiFi(uint32_t timeout, bool apFlag, CallbackF fn)
             log_error("MDNS responder not started");
         }
         MDNS.addService("http", "tcp", m_port);
-        MDNS.setInstanceName("esp-fs-webserver");
+        MDNS.setInstanceName(m_host);
 
         if ((WiFi.status() == WL_CONNECTED) || apFlag)
             return WiFi.localIP();
