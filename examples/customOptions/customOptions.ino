@@ -99,7 +99,7 @@ void saveOptions() {
   myWebServer.saveOptionValue(STRING_LABEL, stringVar);
   myWebServer.saveOptionValue(DROPDOWN_LABEL, dropdownSelected);
   // Close config file and release memory
-  myWebServer.closeConfiguration(false);
+  myWebServer.closeConfiguration(true);
   Serial.println(F("Application options saved."));
 }
 
