@@ -11,7 +11,8 @@ const svgNoEye = '<path d="M0 0h24v24H0V0z" fill="none"/><path d="M12 4.5C7 4.5 
 const svgMenu = '<path d="M3,6H21V8H3V6M3,11H21V13H3V11M3,16H21V18H3V16Z"/>';
 
 var closeCallback = function(){};
-var esp = `${window.location.protocol}//${window.location.hostname}:${window.location.port}/`;
+var port = location.port || (window.location.protocol === 'https:' ? '443' : '80');
+var esp = `${window.location.protocol}//${window.location.hostname}:${port}/`;
 var options = {};
 var configFile;
 var lastBox;
@@ -40,7 +41,7 @@ function getParameters() {
   .then(res => res.json())
   .then(data => {
     $('esp-mode').innerHTML = data.mode;
-    $('esp-ip').innerHTML = data.ip;
+    $('esp-ip').innerHTML = `<a href="${esp}">${esp}</a>`;
     $('firmware').innerHTML = data.firmware;
     $('about').innerHTML = 'Created with ' + data.liburl;
     $('about').setAttribute('href', data.liburl);
@@ -438,6 +439,7 @@ function doConnection(e, f) {
 
 
 function switchPage(el) {
+  console.log(el);
   $('top-nav').classList.remove('responsive');
 
   // Menu items

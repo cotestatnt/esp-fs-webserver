@@ -2,16 +2,20 @@
 <html>
 <head>
     <meta charset=utf-8>
-    <title>Async ESP FS Web Server</title>
+    <title>ESP FS Web Server</title>
     <meta content="width=device-width, initial-scale=1" name=viewport>
     <link href=style.css rel=stylesheet type=text/css>
 </head>
 <body>
     <main id=main-box>
-        <header class="ctn header">
+        <header class="ctn">
             <div class=title>
                 <div id=img-logo title='Click to upload your logo file'></div>
-                <h1 id=name-logo class=heading>Async ESP FS Web Server</h1>
+                <div class=heading>
+                  <h1 id=name-logo>ESP FS Web Server</h1>
+                  <span id=esp-ip></span><br>
+                  <span id=esp-mode></span> - v<span id=firmware></span>
+                </div>
             </div>
             <div class=topnav id=top-nav>
                 <span id="nav-link"><a id=set-wifi class="a-link active" data-box="wifi-box">WiFi Setup</a></span>
@@ -25,10 +29,7 @@
         </header>
         <div id=wifi-box class="ctn opt-box">
             <h2 class=heading-2>Connect to WiFi</h2>
-            <div class=esp-info>ESP mode: <b>
-              <span id=esp-mode></span></b>, IP address: <b>
-              <span id=esp-ip></span></b>, Firmware: <span id=firmware></span>
-           </div>
+            
             <div id=wifi-table class=hide>
                 <hr>
                 <table class=table>
