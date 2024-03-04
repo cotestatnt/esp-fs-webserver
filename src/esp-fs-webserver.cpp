@@ -155,6 +155,13 @@ void FSWebServer::setAuthentication(const char* user, const char* pswd) {
     strcpy(m_pagePswd, pswd);
 }
 
+/*
+ Enable the flag which turns on basic authentication for all pages
+ */
+void FSWebServer::requireAuthentication(bool require)
+{
+    m_authAll = require;
+}
 
 void FSWebServer::setAP(const char* ssid, const char* psk)
 {
@@ -307,6 +314,14 @@ bool FSWebServer::captivePortal()
 void FSWebServer::handleRequest()
 {
     log_debug("handleRequest");
+    
+    // Check if authentication for all routes is turned on,
+    // and credentials are present:
+    if (m_authAll && m_pageUser != nullptr) {
+        if(!this->authenticate(m_pageUser, m_pagePswd))
+            return this->requestAuthentication();
+    }
+    
     if (!m_fsOK) {
         replyToCLient(ERROR, PSTR(FS_INIT_ERROR));
         return;
