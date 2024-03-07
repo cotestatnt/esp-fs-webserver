@@ -115,7 +115,11 @@ void FSWebServer::begin(uint16_t port)
 #elif defined(ESP32)
     WiFi.setHostname(m_host.c_str());
 #endif
-    log_info("Server started on %s:%d\n", WiFi.localIP().toString().c_str(), port);
+    log_info(
+        "\nServer started on %s:%d\n",
+        WiFi.getMode() == WIFI_MODE_AP ? WiFi.softAPIP().toString().c_str() : WiFi.localIP().toString().c_str(),
+        port
+    );
 }
 
 
@@ -151,13 +155,6 @@ void FSWebServer::setAuthentication(const char* user, const char* pswd) {
     strcpy(m_pagePswd, pswd);
 }
 
-/*
- Enable the flag which turns on basic authentication for all pages
- */
-void FSWebServer::requireAuthentication(bool require)
-{
-    m_authAll = require;
-}
 
 void FSWebServer::setAP(const char* ssid, const char* psk)
 {
@@ -177,7 +174,9 @@ IPAddress FSWebServer::startAP()
         m_apSsid = ssid;
     }
 
-    WiFi.mode(WIFI_AP);
+	WiFi.mode(WIFI_AP);
+	delay(250);
+
     // Set AP IP and subnet 255.255.255.0
     if (! WiFi.softAPConfig(m_captiveIp, m_captiveIp, 0x00FFFFFF)) {
         log_error("Captive portal failed to start: WiFi.softAPConfig failed!");
@@ -185,30 +184,29 @@ IPAddress FSWebServer::startAP()
         return IPAddress((uint32_t) 0);
     }
 
-    WiFi.persistent(false);
 	if (m_apPsk.length())
 		WiFi.softAP(m_apSsid.c_str(), m_apPsk.c_str());
 	else
 		WiFi.softAP(m_apSsid.c_str());
 
-    /* Setup the DNS server redirecting all the domains to the apIP */
+	// Setup the DNS server redirecting all the domains to the apIP
     m_dnsServer = new DNSServer();
     m_dnsServer->setErrorReplyCode(DNSReplyCode::NoError);
-    IPAddress ip = WiFi.softAPIP();
     if (!m_dnsServer->start(53, "*", WiFi.softAPIP())) {
         log_error("Captive portal failed to start: no sockets for DNS server available!");
         WiFi.enableAP(false);
         return IPAddress((uint32_t) 0);
     }
 
-    ip = WiFi.softAPIP();
-    log_info("\nAP mode.\nIP address: %s", ip.toString().c_str());
+    log_info("\nAP mode. IP address: %s\n", WiFi.softAPIP().toString().c_str());
+	log_debug("\nAP SSID: %s, password %s\n", m_apSsid.c_str(), m_apPsk.c_str());
     m_apmode = true;
-    return ip;
+    return WiFi.softAPIP();
 }
 
 IPAddress FSWebServer::startWiFi(uint32_t timeout, bool apFlag, CallbackF fn)
 {
+    WiFi.mode(WIFI_STA);
     IPAddress local_ip, subnet, gateway;
     File file = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "r");
 #if ARDUINOJSON_VERSION_MAJOR > 6
@@ -243,8 +241,6 @@ IPAddress FSWebServer::startWiFi(uint32_t timeout, bool apFlag, CallbackF fn)
     if (timeout > 0)
         m_timeout = timeout;
 
-    m_apmode = false;
-    WiFi.mode(WIFI_STA);
 #if defined(ESP8266)
     struct station_config conf;
     wifi_station_get_config_default(&conf);
@@ -252,11 +248,14 @@ IPAddress FSWebServer::startWiFi(uint32_t timeout, bool apFlag, CallbackF fn)
     const char* _pass = reinterpret_cast<const char*>(conf.password);
 #elif defined(ESP32)
     wifi_config_t conf;
-    esp_wifi_get_config(WIFI_IF_STA, &conf);
+    esp_err_t err = esp_wifi_get_config(WIFI_IF_STA, &conf);
     const char* _ssid = reinterpret_cast<const char*>(conf.sta.ssid);
     const char* _pass = reinterpret_cast<const char*>(conf.sta.password);
+    log_debug("Get WiFi config: %s", esp_err_to_name(err));
 #endif
-    if (strlen(_ssid) && strlen(_pass)) {
+    if (strlen(_ssid)) {
+		m_apmode = false;
+
 
         WiFi.begin(_ssid, _pass);
         uint32_t startTime = millis();
@@ -308,14 +307,6 @@ bool FSWebServer::captivePortal()
 void FSWebServer::handleRequest()
 {
     log_debug("handleRequest");
-    
-    // Check if authentication for all routes is turned on,
-    // and credentials are present:
-    if (m_authAll && m_pageUser != nullptr) {
-        if(!this->authenticate(m_pageUser, m_pagePswd))
-            return this->requestAuthentication();
-    }
-    
     if (!m_fsOK) {
         replyToCLient(ERROR, PSTR(FS_INIT_ERROR));
         return;
@@ -343,7 +334,8 @@ void FSWebServer::doRestart()
 
 void FSWebServer::doWifiConnection()
 {
-    String ssid, pass;
+    char resp[256];
+    String ssid = "", pass = "";
     bool persistent = true;
     WiFi.mode(WIFI_AP_STA);
 
@@ -364,10 +356,10 @@ void FSWebServer::doWifiConnection()
 
     if (WiFi.status() == WL_CONNECTED) {
         // IPAddress ip = WiFi.localIP();
-        String resp = "ESP is currently connected to a WiFi network.<br><br>"
-                      "Actual connection will be closed and a new attempt will be done with <b>";
-        resp += ssid;
-        resp += "</b> WiFi network.";
+        snprintf(resp, sizeof(resp),
+                "ESP is currently connected to a WiFi network.<br><br>"
+                "Actual connection will be closed and a new attempt will be done with <b>"
+                "%s</b> WiFi network.", ssid.c_str());
         this->send(200, "text/plain", resp);
 
         delay(500);
@@ -393,14 +385,11 @@ void FSWebServer::doWifiConnection()
             // WiFi.softAPdisconnect();
             IPAddress ip = WiFi.localIP();
             log_info("Connected to Wifi! IP address: %s", ip.toString().c_str());
-            String serverLoc = F("http://");
-            for (int i = 0; i < 4; i++)
-                serverLoc += i ? "." + String(ip[i]) : String(ip[i]);
 
-            String resp = "Restart ESP and then reload this page from <a href='";
-            resp += serverLoc;
-            resp += "/setup'>the new LAN address</a>";
-
+            snprintf(resp, sizeof(resp),
+                "Restart ESP and then reload this page from "
+                "<a href='%d:%d.%d.%d:%d/setup'>the new LAN address</a>",
+                ip[3], ip[2], ip[1], ip[0], m_port);
             this->send(200, "text/plain", resp);
             m_apmode = false;
 
@@ -422,15 +411,16 @@ void FSWebServer::doWifiConnection()
                 memset(&stationConf, 0, sizeof(stationConf));
                 memcpy(&stationConf.sta.ssid, ssid.c_str(), ssid.length());
                 memcpy(&stationConf.sta.password, pass.c_str(), pass.length());
-                esp_wifi_set_config(WIFI_IF_STA, &stationConf);
+                esp_err_t err = esp_wifi_set_config(WIFI_IF_STA, &stationConf);
+                log_debug("Set WiFi config: %s", esp_err_to_name(err));
 #endif
             } else {
                 this->clearWifiCredentials();
             }
         } else
-            this->send(500, "text/plain", "Connection error, maybe the password is wrong?");
+            this->send(500, "text/plain", F("Connection error, maybe the password is wrong?"));
     }
-    this->send(500, "text/plain", "Wrong credentials provided");
+    this->send(500, "text/plain", F("Wrong credentials provided"));
 }
 
 void FSWebServer::clearWifiCredentials()
@@ -548,7 +538,7 @@ void FSWebServer::update_second()
         txt += Update.errorString();
 #endif
     } else {
-        txt = "Update completed successfully. The ESP32 will restart";
+        txt = F("Update completed successfully. The ESP32 will restart");
     }
     log_info("%s", txt.c_str());
     this->send((Update.hasError()) ? 500 : 200, "text/plain", txt);
@@ -565,7 +555,7 @@ void FSWebServer::update_first()
     if (this->hasArg("size"))
         fsize = this->arg("size").toInt();
     else {
-        this->send(500, "text/plain", "Request malformed: missing file size");
+        this->send(500, "text/plain", F("Request malformed: missing file size"));
         return;
     }
 
@@ -624,7 +614,7 @@ void FSWebServer::handleIndex()
 */
 bool FSWebServer::handleFileRead(const char* uri)
 {
-    log_debug("handleFileRead: %", uri);
+    log_debug("handleFileRead: %s", uri);
 
     // Check if requested file (or gzipped version) exists
     String path = uri;
