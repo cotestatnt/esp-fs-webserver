@@ -8,7 +8,7 @@
 #include <FS.h>
 
 #define DBG_OUTPUT_PORT     Serial
-#define LOG_LEVEL           2         // (0 disable, 1 error, 2 info, 3 debug)
+#define LOG_LEVEL           3         // (0 disable, 1 error, 2 info, 3 debug)
 #include "SerialLog.h"
 
 //default values
@@ -179,12 +179,6 @@ public:
       Enable authenticate for /setup webpage
     */
     void setAuthentication(const char* user, const char* pswd);
-    
-    /*
-      Enable authentication for other pages, too.
-      Call setAuthentication first.
-    */
-    void requireAuthentication(bool require);
 
 #if ESP_FS_WS_SETUP
     /*
@@ -250,7 +244,6 @@ private:
     FsInfoCallbackF getFsInfo;
     char*           m_pageUser = nullptr;
     char*           m_pagePswd = nullptr;
-    bool            m_authAll = false;
     DNSServer*      m_dnsServer  = nullptr;
     fs::FS*         m_filesystem = nullptr;
     File            m_uploadFile;
