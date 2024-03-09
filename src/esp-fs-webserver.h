@@ -65,6 +65,8 @@
 #endif
 #include <DNSServer.h>
 
+#include "Websocket.h"
+
 typedef struct {
   size_t totalBytes;
   size_t usedBytes;
@@ -186,6 +188,18 @@ public:
     */
     void requireAuthentication(bool require);
 
+    /*
+      Enable built-in websocket server. Events like connect/disconnect or 
+      messages can be handled using callback function
+    */
+    void enableWebsocket(uint16_t port, myWSS::WsReceive_cb fn_receive, 
+            myWSS::WsConnect_cb fn_connect = nullptr, myWSS::WsConnect_cb fn_disconnect = nullptr);
+
+    void onWebsocketConnect(myWSS::WsConnect_cb fn_connect);
+    void onWebsocketDisconnect(myWSS::WsConnect_cb fn_disconnect);
+
+    bool sendWebSocketMessage(String& payload);
+
 #if ESP_FS_WS_SETUP
     /*
     * Get reference to current config.json file
@@ -264,6 +278,7 @@ private:
     uint16_t        m_port = 80;
     char            m_version[16] = {__TIME__};
     IPAddress       m_captiveIp = IPAddress(192, 168, 4, 1);
+    myWSS*          m_websocket; 
 
     #if defined(ESP32)
     // Override default handleClient() method to increase connection speed

@@ -128,6 +128,10 @@ void FSWebServer::run()
     this->handleClient();
     if (m_apmode)
         m_dnsServer->processNextRequest();
+
+    if (m_websocket != nullptr)
+        m_websocket->loop();
+
     yield();
 }
 
@@ -1064,4 +1068,26 @@ void FSWebServer::printFileList(fs::FS& fs, Print& p, const char* dirName, uint8
         }
         file = root.openNextFile();
     }
+}
+
+
+void FSWebServer::enableWebsocket(uint16_t port, myWSS::WsReceive_cb fn_receive, 
+        myWSS::WsConnect_cb fn_connect, myWSS::WsConnect_cb fn_disconnect) 
+{
+    m_websocket = new myWSS(port);
+    m_websocket->onWebsocketReceive(fn_receive);
+    if (fn_connect != nullptr)
+        m_websocket->onWebsocketConnect(fn_connect);
+    if (fn_disconnect != nullptr)
+        m_websocket->onWebsocketDisconnect(fn_disconnect);
+}
+void FSWebServer::onWebsocketConnect(myWSS::WsConnect_cb fn_connect) {
+    m_websocket->onWebsocketConnect(fn_connect);
+}
+void FSWebServer::onWebsocketDisconnect(myWSS::WsConnect_cb fn_disconnect) {
+    m_websocket->onWebsocketDisconnect(fn_disconnect);
+}
+
+bool FSWebServer::sendWebSocketMessage(String& payload) {
+    return m_websocket->broadcastTXT(payload);
 }
