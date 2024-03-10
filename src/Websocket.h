@@ -8,20 +8,20 @@
 #include "WebSockets/WebSocketsServer.h"
 #include "SerialLog.h"
 
-class myWSS : public WebSocketsServer {
+class ServerWebSocket : public WebSocketsServer {
 public:
     using WsConnect_cb       = std::function<void(uint8_t)>;
     using WsReceive_cb       = std::function<void(uint8_t, uint8_t*, size_t)>;
 
-    myWSS(uint16_t port, const String& origin = "", const String& protocol = "arduino")
+    ServerWebSocket(uint16_t port, const String& origin = "", const String& protocol = "arduino")
         : WebSocketsServer(port, origin, protocol) {
             using namespace std::placeholders;
 
             this->begin();
-            this->onEvent(std::bind(&myWSS::webSocketEvent, this, _1, _2, _3, _4));
+            this->onEvent(std::bind(&ServerWebSocket::webSocketEvent, this, _1, _2, _3, _4));
         }
 
-    ~myWSS(void) {;}
+    ~ServerWebSocket(void) {;}
 
     void onWebsocketConnect(WsConnect_cb fn) {
         onConnect = fn;

@@ -1070,24 +1070,29 @@ void FSWebServer::printFileList(fs::FS& fs, Print& p, const char* dirName, uint8
     }
 }
 
-
-void FSWebServer::enableWebsocket(uint16_t port, myWSS::WsReceive_cb fn_receive, 
-        myWSS::WsConnect_cb fn_connect, myWSS::WsConnect_cb fn_disconnect) 
+///////////////////////////   WEBSOCKET  ///////////////////////////////////
+void FSWebServer::enableWebsocket(uint16_t port, ServerWebSocket::WsReceive_cb fn_receive, 
+        ServerWebSocket::WsConnect_cb fn_connect, ServerWebSocket::WsConnect_cb fn_disconnect) 
 {
-    m_websocket = new myWSS(port);
+    m_websocket = new ServerWebSocket(port);
     m_websocket->onWebsocketReceive(fn_receive);
     if (fn_connect != nullptr)
         m_websocket->onWebsocketConnect(fn_connect);
     if (fn_disconnect != nullptr)
         m_websocket->onWebsocketDisconnect(fn_disconnect);
 }
-void FSWebServer::onWebsocketConnect(myWSS::WsConnect_cb fn_connect) {
+void FSWebServer::onWebsocketConnect(ServerWebSocket::WsConnect_cb fn_connect) {
     m_websocket->onWebsocketConnect(fn_connect);
 }
-void FSWebServer::onWebsocketDisconnect(myWSS::WsConnect_cb fn_disconnect) {
+void FSWebServer::onWebsocketDisconnect(ServerWebSocket::WsConnect_cb fn_disconnect) {
     m_websocket->onWebsocketDisconnect(fn_disconnect);
 }
 
-bool FSWebServer::sendWebSocketMessage(String& payload) {
+bool FSWebServer::broadcastWebSocket(const char* payload) {
     return m_websocket->broadcastTXT(payload);
 }
+
+bool FSWebServer::sendWebSocket(uint8_t num, const char* payload) {
+    return m_websocket->sendTXT(num, payload);
+}
+///////////////////////////   WEBSOCKET  ///////////////////////////////////

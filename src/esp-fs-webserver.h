@@ -2,13 +2,10 @@
 #define esp_fs_webserver_H
 
 #include <Arduino.h>
-#include <memory>
-#include <typeinfo>
-#include <base64.h>
 #include <FS.h>
 
 #define DBG_OUTPUT_PORT     Serial
-#define LOG_LEVEL           3         // (0 disable, 1 error, 2 info, 3 debug)
+#define LOG_LEVEL           2         // (0 disable, 1 error, 2 info, 3 debug)
 #include "SerialLog.h"
 
 //default values
@@ -188,17 +185,22 @@ public:
     */
     void requireAuthentication(bool require);
 
+    ///////////////////////////   WEBSOCKET  ///////////////////////////////////
     /*
       Enable built-in websocket server. Events like connect/disconnect or 
       messages can be handled using callback function
     */
-    void enableWebsocket(uint16_t port, myWSS::WsReceive_cb fn_receive, 
-            myWSS::WsConnect_cb fn_connect = nullptr, myWSS::WsConnect_cb fn_disconnect = nullptr);
+    void enableWebsocket(uint16_t port, ServerWebSocket::WsReceive_cb fn_receive, 
+            ServerWebSocket::WsConnect_cb fn_connect = nullptr, ServerWebSocket::WsConnect_cb fn_disconnect = nullptr);
+    void onWebsocketConnect(ServerWebSocket::WsConnect_cb fn_connect);
+    void onWebsocketDisconnect(ServerWebSocket::WsConnect_cb fn_disconnect);
+    bool broadcastWebSocket(const char* payload);
+    bool sendWebSocket(uint8_t num, const char* payload);
 
-    void onWebsocketConnect(myWSS::WsConnect_cb fn_connect);
-    void onWebsocketDisconnect(myWSS::WsConnect_cb fn_disconnect);
-
-    bool sendWebSocketMessage(String& payload);
+    inline bool broadcastWebSocket(const String& payload) { return broadcastWebSocket(payload.c_str()); }
+    inline bool sendWebSocket(uint8_t num, const String& payload) { return sendWebSocket(num, payload.c_str()); }
+    inline ServerWebSocket * getWebSocketServer() { return m_websocket; }
+    //////////////////////////////////////////////////////////////////////////////
 
 #if ESP_FS_WS_SETUP
     /*
@@ -278,7 +280,7 @@ private:
     uint16_t        m_port = 80;
     char            m_version[16] = {__TIME__};
     IPAddress       m_captiveIp = IPAddress(192, 168, 4, 1);
-    myWSS*          m_websocket; 
+    ServerWebSocket*  m_websocket; 
 
     #if defined(ESP32)
     // Override default handleClient() method to increase connection speed
