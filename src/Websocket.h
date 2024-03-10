@@ -57,12 +57,7 @@ protected:
             if (onReceive != nullptr)
                 onReceive(num, payload, len);
             break;
-        case WStype_BIN:
-        case WStype_ERROR:
-        case WStype_FRAGMENT_TEXT_START:
-        case WStype_FRAGMENT_BIN_START:
-        case WStype_FRAGMENT:
-        case WStype_FRAGMENT_FIN:
+        default:
             break;
         }
     }

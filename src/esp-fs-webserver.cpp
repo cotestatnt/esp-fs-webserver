@@ -260,9 +260,11 @@ IPAddress FSWebServer::startWiFi(uint32_t timeout, bool apFlag, CallbackF fn)
 #elif defined(ESP32)
     wifi_config_t conf;
     esp_err_t err = esp_wifi_get_config(WIFI_IF_STA, &conf);
+    if (err) {
+        log_error("Get WiFi config: %s", esp_err_to_name(err));
+    }
     const char* _ssid = reinterpret_cast<const char*>(conf.sta.ssid);
     const char* _pass = reinterpret_cast<const char*>(conf.sta.password);
-    log_debug("Get WiFi config: %s", esp_err_to_name(err));
 #endif
     if (strlen(_ssid)) {
 		m_apmode = false;
@@ -430,8 +432,11 @@ void FSWebServer::doWifiConnection()
                 memset(&stationConf, 0, sizeof(stationConf));
                 memcpy(&stationConf.sta.ssid, ssid.c_str(), ssid.length());
                 memcpy(&stationConf.sta.password, pass.c_str(), pass.length());
+
                 esp_err_t err = esp_wifi_set_config(WIFI_IF_STA, &stationConf);
-                log_debug("Set WiFi config: %s", esp_err_to_name(err));
+                if (err) {
+                    log_error("Set WiFi config: %s", esp_err_to_name(err));
+                }
 #endif
             } else {
                 this->clearWifiCredentials();
