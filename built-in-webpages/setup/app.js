@@ -10,7 +10,7 @@ const svgEye = '<path d="M12,9A3,3 0 0,1 15,12A3,3 0 0,1 12,15A3,3 0 0,1 9,12A3,
 const svgNoEye = '<path d="M0 0h24v24H0V0z" fill="none"/><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>';
 const svgMenu = '<path d="M3,6H21V8H3V6M3,11H21V13H3V11M3,16H21V18H3V16Z"/>';
 
-var closeCallback = function(){};
+var closeCb = function(){};
 var port = location.port || (window.location.protocol === 'https:' ? '443' : '80');
 var esp = `${window.location.protocol}//${window.location.hostname}:${port}/`;
 var options = {};
@@ -328,7 +328,7 @@ function saveParameters() {
   // Handle the server response
   .then(response => response.text())
   .then(text => {
-    openModalMessage('Save options','<br><b>"' + configFile +'"</b> saved successfully on flash memory!<br><br>');
+    openModal('Save options','<br><b>"' + configFile +'"</b> saved successfully on flash memory!<br><br>');
   });
 }
 
@@ -352,7 +352,7 @@ function getWiFiList() {
   fetch(esp + "scan")
   .then(response => response.json())
   .then(data => {
-    listWifiNetworks(data);
+    listWifi(data);
     $('loader').classList.add('hide');
   });
 }
@@ -370,19 +370,26 @@ function selectWifi(row) {
 }
 
 
-function listWifiNetworks(elems) {
+function listWifi(obj) {
+  if (obj.hasOwnProperty("reload"))
+    setTimeout(getWiFiList, 2000); 
+    
+  obj.sort((a, b) => {
+    return b.strength - a.strength;
+  });
+  
   const list = document.querySelector('#wifi-list');
   list.innerHTML = "";
-	elems.forEach((elem, idx) => {
+	obj.forEach((net, i) => {
     // Create a single row with all columns
     var row = newEl('tr');
-    var id = 'wifi-' + idx;
+    var id = 'wifi-' + i;
     row.id = id;
     row.addEventListener('click', selectWifi);
 	  row.innerHTML  = `<td><input type="radio" name="select" id="select-${id}"></td>`;
-    row.innerHTML += `<td id="ssid-${id}">${elem.ssid}</td>`;
-    row.innerHTML += '<td class="hide-tiny">' + elem.strength + ' dBm</td>';
-    row.innerHTML += (elem.security) ? '<td>' + svgLock + '</td>' : '<td>' + svgUnlock + '</td>';
+    row.innerHTML += `<td id="ssid-${id}">${net.ssid}</td>`;
+    row.innerHTML += '<td class="hide-tiny">' + net.strength + ' dBm</td>';
+    row.innerHTML += (net.security) ? '<td>' + svgLock + '</td>' : '<td>' + svgUnlock + '</td>';
     // Add row to list
     list.appendChild(row);
   });
@@ -391,7 +398,7 @@ function listWifiNetworks(elems) {
 
 function doConnection(e, f) {
   if ($('ssid').value === '' ||  $('password').value === ''){
-    openModalMessage('Connect to WiFi','Please insert a SSID and a Password');
+    openModal('Connect to WiFi','Please insert a SSID and a Password');
     return;
   }
   var formdata = new FormData();
@@ -421,18 +428,18 @@ function doConnection(e, f) {
   .then(function(data) {
     if (s === 200) {
       if (data.includes("already")) {
-        openModalMessage('Connect to WiFi', data, () => {doConnection(e, true)});
+        openModal('Connect to WiFi', data, () => {doConnection(e, true)});
         $('loader').classList.add('hide');
       }
       else
-        openModalMessage('Connect to WiFi', data, restartESP);
+        openModal('Connect to WiFi', data, restartESP);
     }
     else 
-      openModalMessage('Error!', data);
+      openModal('Error!', data);
     $('loader').classList.add('hide');
   })
   .catch((error) => {
-    openModalMessage('Connect to WiFi', error);
+    openModal('Connect to WiFi', error);
     $('loader').classList.add('hide'); 
   });
 }
@@ -480,32 +487,32 @@ function showMenu() {
   $('top-nav').classList.add('responsive');
 }
 
-function openModalMessage(title, msg, fn, args) {
+function openModal(title, msg, fn, args) {
   $('message-title').innerHTML = title;
   $('message-body').innerHTML = msg;
   $('modal-message').open = true;
   $('main-box').style.filter = "blur(3px)";
   if (typeof fn != 'undefined') {
-    closeCallback = fn;
+    closeCb = fn;
     $('ok-modal').classList.remove('hide');
   }
   else
     $('ok-modal').classList.add('hide');
 }
 
-function closeModalMessage(do_cb) {
+function closeModal(do_cb) {
   $('modal-message').open = false;
   $('main-box').style.filter = "";
-  if (typeof closeCallback != 'undefined' && do_cb)
-    closeCallback();
+  if (typeof closeCb != 'undefined' && do_cb)
+    closeCb();
 }
 
 function restartESP() {
   fetch(esp + "reset")
   .then(response => response.text())
   .then(data => {
-    closeModalMessage();
-    openModalMessage('Restart!', '<br>ESP restarted!');
+    closeModal();
+    openModal('Restart!', '<br>ESP restarted!');
   });
 }
 

@@ -475,14 +475,16 @@ void FSWebServer::setCrossOrigin()
 
 #if ESP_FS_WS_SETUP
 void FSWebServer::handleScanNetworks() {
-    log_info("Scanning WiFi networks...");
-    int res = WiFi.scanNetworks(false, false, false);
-    log_info(" done!\nNumber of networks: %d", res);
+    log_info("Start scan WiFi networks");
+    int res = WiFi.scanComplete();
 
-    JSON_DOC(res*96);
-    JsonArray array = doc.to<JsonArray>();
-
-    if (res > 0) {
+    if (res == -2){
+        WiFi.scanNetworks(true);
+    } 
+    else if (res) {
+        log_info("Number of networks: %d", res);
+        JSON_DOC(res*96);
+        JsonArray array = doc.to<JsonArray>();
         for (int i = 0; i < res; ++i) {
             #if ARDUINOJSON_VERSION_MAJOR > 6
                 JsonObject obj = array.add<JsonObject>();
@@ -497,12 +499,20 @@ void FSWebServer::handleScanNetworks() {
             obj["security"] = WIFI_AUTH_OPEN ? "none" : "enabled";
             #endif
         }
+
+        String json;
+        serializeJson(doc, json);
+        this->send(200, "application/json", json);
+        log_debug("%s", json.c_str());
+
         WiFi.scanDelete();
+        if(WiFi.scanComplete() == -2){
+            WiFi.scanNetworks(true);
+        }
     }
-    String json;
-    serializeJson(doc, json);
-    this->send(200, "application/json", json);
-    log_info("%s", json.c_str());
+
+    // The very first request will be empty, reload /scan endpoint
+    this->send(200, "application/json", "{\"reload\" : 1}");
 }
 
 
