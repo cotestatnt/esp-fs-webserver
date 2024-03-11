@@ -12,22 +12,31 @@ This library makes it easier by incorporating this functions into a specific cla
 **Note**:
 Starting from version 2.0.0 ESP32 core for Aruino introduced the LittlsFS library like ESP8266. The examples in this library is written to work with this for both platform by default. Change according to your needs if you prefer other filesystems.
 
-## ACE web broswer editor
-Thanks to the built-in **/edit** page (enabled by default), is possible upload, delete and edit the HTML/CSS/JavaScript source files directly from browser and immediately displaying the changes introduced at runtime without having to recompile the device firmware.
+## WiFi, OTA firmware update and Options manager
+Thanks to the built-in page **/setup** (about 8Kb of program space) it is possible to scan and set the WiFi credentials and other freely configurable parameters.
 
-![editor](https://user-images.githubusercontent.com/27758688/122570105-b6a01080-d04b-11eb-832c-f60c0a886efd.png)
+With **/setup** webpage it is also possible to perform remote firmware update (OTA-update). 
 
+![image](https://github.com/cotestatnt/async-esp-fs-webserver/assets/27758688/81a1f6db-a4bd-4f1d-b263-7bebe79cae7d)
 
-
-## WiFi manager
-I've added also another built-in page **/setup**, also enabled by default, with which it is possible to set the WiFi credentials and other freely configurable parameters.
-
-![image](https://user-images.githubusercontent.com/27758688/218732999-e22fe092-cbc9-40d6-a34b-38282fbd60e2.png)
 
 This web page can be injected also with custom HTML and Javascript code in order to create very smart and powerful web application.
 
-In the image below, for example, the HTML and Javascript code to provision the devices in the well-known [ThingsBoard IoT platform](https://thingsboard.io/) has been added at runtime starting from the Arduino sketch (check example customHTML.ino).
+In the image below, for example, the HTML and Javascript code to provision the devices in the well-known [ThingsBoard IoT platform](https://thingsboard.io/) has been added at runtime starting from the Arduino sketch (check example [customHTML.ino](https://github.com/cotestatnt/async-esp-fs-webserver/tree/main/examples/customHTML)).
 
-![image](https://user-images.githubusercontent.com/27758688/218733394-9cd7af3e-257e-4798-98b0-b8d426e07848.png)
+![image](https://github.com/cotestatnt/async-esp-fs-webserver/assets/27758688/d728c315-7271-454d-8c34-fb9db0b7a333)
 
+## Web server file upload
+
+In addition to built-in firmware update functionality, you can also upload your web server content all at once (typically the files are placed inside the folder `data` of your sketch).
+
+![image](https://github.com/cotestatnt/async-esp-fs-webserver/assets/27758688/7c261216-3acd-4463-9105-d11e0be3a59a)
+
+
+
+## ACE web file editor/browser
+Thanks to the built-in **/edit** page, it is possible to upload, delete and edit the HTML/CSS/JavaScript source files directly from browser and immediately display the changes introduced at runtime without having to recompile the device firmware.
+The page can be enabled at runtime using the method `enableFsCodeEditor()` and it occupies about 6.7Kb of program space.
+
+![image](https://github.com/cotestatnt/async-esp-fs-webserver/assets/27758688/668c0899-a060-4aed-956b-51311bf3fe13)
 
