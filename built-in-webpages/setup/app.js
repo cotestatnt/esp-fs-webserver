@@ -17,10 +17,18 @@ var options = {};
 var configFile;
 var lastBox;
 
-// Simple JQuery-like selector
+// Element selector shorthands
 var $ = function(el) {
 	return document.getElementById(el);
 };
+
+function hide(id) {
+  $(id).classList.add('hide');
+}
+
+function show(id) {
+  $(id).classList.remove('hide');
+}
 
 function newEl(element, attribute) {
   var el = document.createElement(element);
@@ -34,8 +42,7 @@ function newEl(element, attribute) {
 
 function getParameters() {
   var logo;
-  $('loader').classList.remove('hide');
-  
+  show('loader');
   // Fetch actual status and config info
   fetch(esp + "getStatus")
   .then(res => res.json())
@@ -76,7 +83,7 @@ function getParameters() {
         
       options = data;
       createOptionsBox(options);
-      $('loader').classList.add('hide');
+      hide('loader');      
     });
   });
 }
@@ -195,8 +202,8 @@ async function createOptionsBox(raw) {
       $('gateway').value = raw.gateway;
       $('subnet').value = raw.subnet;
       if ($('no-dhcp').checked){
-        $('conf-wifi').classList.remove('hide');
-        $('save-wifi').classList.remove('hide');
+        show('conf-wifi');
+        show('save-wifi');
       }
     }
 
@@ -317,7 +324,7 @@ function saveParameters() {
     type: 'application/json'
   });
   var formData = new FormData();
-  formData.append("data", myblob, configFile);
+  formData.append("data", myblob, '/' + configFile);
 
   // POST data using the Fetch API
   fetch('/edit', {
@@ -328,7 +335,7 @@ function saveParameters() {
   // Handle the server response
   .then(response => response.text())
   .then(text => {
-    openModal('Save options','<br><b>"' + configFile +'"</b> saved successfully on flash memory!<br><br>');
+    openModal('Save options','<br><b>"/' + configFile +'"</b> saved successfully on flash memory!<br><br>');
   });
 }
 
@@ -337,23 +344,23 @@ function showHidePassword() {
   var inp = $("password");
   if (inp.type === "password") {
     inp.type = "text";
-    $('show-pass').classList.remove("hide");
-    $('hide-pass').classList.add("hide");
+    show('show-pass');
+    hide('hide-pass');
   }
   else {
     inp.type = "password";
-    $('show-pass').classList.add("hide");
-    $('hide-pass').classList.remove("hide");
+    hide('show-pass');
+    show('hide-pass');
   }
 }
 
 function getWiFiList() {
-  $('loader').classList.remove('hide');
+  show('loader');
   fetch(esp + "scan")
   .then(response => response.json())
   .then(data => {
     listWifi(data);
-    $('loader').classList.add('hide');
+    hide('loader');
   });
 }
 
@@ -393,7 +400,7 @@ function listWifi(obj) {
     // Add row to list
     list.appendChild(row);
   });
-  $("wifi-table").classList.remove("hide");
+  show('wifi-table');
 }
 
 function doConnection(e, f) {
@@ -418,7 +425,7 @@ function doConnection(e, f) {
     redirect: 'follow'
   };
   
-  $('loader').classList.remove('hide');
+  show('loader');
   var s;
   fetch('/connect', requestOptions)
   .then(function(res) {
@@ -427,28 +434,25 @@ function doConnection(e, f) {
   })
   .then(function(data) {
     if (s === 200) {
-      if (data.includes("already")) {
+      if (data.includes("already")) 
         openModal('Connect to WiFi', data, () => {doConnection(e, true)});
-        $('loader').classList.add('hide');
-      }
       else
         openModal('Connect to WiFi', data, restartESP);
     }
     else 
       openModal('Error!', data);
-    $('loader').classList.add('hide');
+    
+    hide('loader');
   })
   .catch((error) => {
     openModal('Connect to WiFi', error);
-    $('loader').classList.add('hide'); 
+    hide('loader');
   });
 }
 
 
 function switchPage(el) {
-  console.log(el);
-  $('top-nav').classList.remove('responsive');
-
+  $('top-nav').classList.remove('resp');
   // Menu items
   document.querySelectorAll("a").forEach(item => {
     item.classList.remove('active');
@@ -459,7 +463,7 @@ function switchPage(el) {
   document.querySelectorAll(".opt-box").forEach(e => {
     e.classList.add('hide');
   });
-  $(el.target.getAttribute("data-box")).classList.remove('hide');
+  show(el.target.getAttribute("data-box"));
 
   if(el.target.id != 'set-wifi') {
     var fragment = document.createDocumentFragment();
@@ -473,18 +477,18 @@ function switchPage(el) {
         box.insertBefore(el,  $('btn-hr'));
     });
     
-    $('btn-box').classList.remove('hide');
-    $('btn-hr').classList.remove('hide');
+    show('btn-box');
+    show('btn-hr');
   }
   else {
-    $('btn-box').classList.add('hide');
-    $('btn-hr').classList.add('hide');
+    hide('btn-box');
+    hide('btn-hr');
   }
 }
 
 
 function showMenu() {
-  $('top-nav').classList.add('responsive');
+  $('top-nav').classList.add('resp');
 }
 
 function openModal(title, msg, fn, args) {
@@ -494,10 +498,10 @@ function openModal(title, msg, fn, args) {
   $('main-box').style.filter = "blur(3px)";
   if (typeof fn != 'undefined') {
     closeCb = fn;
-    $('ok-modal').classList.remove('hide');
+    show('ok-modal');
   }
   else
-    $('ok-modal').classList.add('hide');
+    hide('ok-modal');
 }
 
 function closeModal(do_cb) {
@@ -526,9 +530,9 @@ function handleSubmit() {
   var update = $('update-log');
   var loader = $('loader');
   var prg = $('progress-wrap');
-  loader.classList.remove('hide');
-  prg.classList.remove('hide');
-  prg.classList.add('active')
+  show('loader');
+  show('progress-wrap');
+  $('progress-wrap').classList.add('active');
   update.innerHTML = 'Update in progress';
   
   let formData = new FormData();
@@ -536,8 +540,8 @@ function handleSubmit() {
   var req = new XMLHttpRequest();
   req.open('POST', '/update?size=' + fileElement.files[0].size);  
   req.onload = function(d) {
-    loader.classList.add('hide');
-    prg.classList.remove('active');
+    hide('loader');
+    $('progress-wrap').classList.remove('active');
     update.innerHTML = (req.status != 200)  ? `Error ${req.status}: ${req.statusText}` : req.response;
   };
   req.upload.addEventListener('progress', (p) => {
@@ -551,12 +555,12 @@ function handleSubmit() {
 }
 
 async function uploadFolder(e) {
-  let listing = document.getElementById('listing');
+  let list = $('listing');
   for (let file of Array.from(e.target.files)) {
     let path = file.webkitRelativePath;
-    let item = document.createElement('li');
+    let item = newEl('li');
     item.textContent = path;
-    listing.appendChild(item);
+    list.appendChild(item);
     // Save each file in the ESP flash
     var reader = new FileReader();
     reader.onload = function(event) {
@@ -602,14 +606,12 @@ $('file-input').addEventListener('change', () => {
 });
 
 $('no-dhcp').addEventListener('change', function() {
-  let el = $('conf-wifi');
-  let btn = $('save-wifi');
   if (this.checked) {
-    el.classList.remove('hide');
-    btn.classList.remove('hide');
+    show('conf-wifi');
+    show('save-wifi');
   }
   else {
-    el.classList.add('hide');
+    hide('conf-wifi');
   }
 });
 window.addEventListener('load', getParameters);
