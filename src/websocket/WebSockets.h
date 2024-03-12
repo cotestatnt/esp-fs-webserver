@@ -22,8 +22,8 @@
  *
  */
 
-#ifndef WEBSOCKETS_H_
-#define WEBSOCKETS_H_
+#ifndef ESP_WEBSOCKETS_H_
+#define ESP_WEBSOCKETS_H_
 
 
 #ifdef STM32_DEVICE

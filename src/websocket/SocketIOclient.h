@@ -5,8 +5,8 @@
  *      Author: links
  */
 
-#ifndef SOCKETIOCLIENT_H_
-#define SOCKETIOCLIENT_H_
+#ifndef ESP_SOCKETIOCLIENT_H_
+#define ESP_SOCKETIOCLIENT_H_
 
 #include "WebSockets.h"
 #include "WebSocketsClient.h"

@@ -117,7 +117,7 @@ void FSWebServer::begin(uint16_t port)
 #endif
     log_info(
         "\nServer started on %s:%d\n",
-        WiFi.getMode() == WIFI_MODE_AP ? WiFi.softAPIP().toString().c_str() : WiFi.localIP().toString().c_str(),
+        WiFi.getMode() == WIFI_AP ? WiFi.softAPIP().toString().c_str() : WiFi.localIP().toString().c_str(),
         port
     );
 }
@@ -320,14 +320,14 @@ bool FSWebServer::captivePortal()
 void FSWebServer::handleRequest()
 {
     log_debug("handleRequest");
-    
+
     // Check if authentication for all routes is turned on,
     // and credentials are present:
     if (m_authAll && m_pageUser != nullptr) {
         if(!this->authenticate(m_pageUser, m_pagePswd))
             return this->requestAuthentication();
     }
-    
+
     if (!m_fsOK) {
         replyToCLient(ERROR, PSTR(FS_INIT_ERROR));
         return;
@@ -480,7 +480,7 @@ void FSWebServer::handleScanNetworks() {
 
     if (res == -2){
         WiFi.scanNetworks(true);
-    } 
+    }
     else if (res) {
         log_info("Number of networks: %d", res);
         JSON_DOC(res*96);
@@ -1086,8 +1086,8 @@ void FSWebServer::printFileList(fs::FS& fs, Print& p, const char* dirName, uint8
 }
 
 ///////////////////////////   WEBSOCKET  ///////////////////////////////////
-void FSWebServer::enableWebsocket(uint16_t port, ServerWebSocket::WsReceive_cb fn_receive, 
-        ServerWebSocket::WsConnect_cb fn_connect, ServerWebSocket::WsConnect_cb fn_disconnect) 
+void FSWebServer::enableWebsocket(uint16_t port, ServerWebSocket::WsReceive_cb fn_receive,
+        ServerWebSocket::WsConnect_cb fn_connect, ServerWebSocket::WsConnect_cb fn_disconnect)
 {
     m_websocket = new ServerWebSocket(port);
     m_websocket->onWebsocketReceive(fn_receive);

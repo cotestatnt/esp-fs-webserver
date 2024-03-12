@@ -22,8 +22,8 @@
  *
  */
 
-#ifndef WEBSOCKETSCLIENT_H_
-#define WEBSOCKETSCLIENT_H_
+#ifndef ESP_WEBSOCKETSCLIENT_H_
+#define ESP_WEBSOCKETSCLIENT_H_
 
 #include "WebSockets.h"
 

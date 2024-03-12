@@ -1,6 +1,5 @@
 
 #include <esp-fs-webserver.h>   // https://github.com/cotestatnt/esp-fs-webserver
-#include <FS.h>
 #include <LittleFS.h>
 #define FILESYSTEM LittleFS
 
@@ -30,7 +29,7 @@ void webSocketConnected(uint8_t num) {
 }
 
 void webSocketMessage(uint8_t num, uint8_t* payload, size_t len) {
-  Serial.printf("[%u] WS get Text: %s\n", num, payload);        
+  Serial.printf("[%u] WS get text(%d): %s\n", num, len, payload);        
 }
 
 

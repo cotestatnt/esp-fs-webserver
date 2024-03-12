@@ -1,11 +1,11 @@
-#ifndef WEBSOCKET_H_
-#define WEBSOCKET_H_
+#ifndef ESP_WEBSOCKET_H_
+#define ESP_WEBSOCKET_H_
 
 #include <functional>
 
 #include <WiFiClient.h>
 #include <WiFiClientSecure.h>
-#include "WebSockets/WebSocketsServer.h"
+#include "websocket/WebSocketsServer.h"
 #include "SerialLog.h"
 
 class ServerWebSocket : public WebSocketsServer {

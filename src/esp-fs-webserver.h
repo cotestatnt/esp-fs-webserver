@@ -38,11 +38,9 @@
     #define ESP_FS_WS_CONFIG_FOLDER "/setup"
     #define ESP_FS_WS_CONFIG_FILE ESP_FS_WS_CONFIG_FOLDER "/config.json"
     #define LIB_URL "https://github.com/cotestatnt/esp-fs-webserver/"
-
     #include "setup_htm.h"
     #include "SetupConfig.hpp"
 #endif
-
 
 #if defined(ESP8266)
     #include <ESP8266WiFi.h>
@@ -60,9 +58,9 @@
     #include <WebServer.h>
     using WebServerClass = WebServer;
 #endif
-#include <DNSServer.h>
 
-#include "Websocket.h"
+#include <DNSServer.h>
+#include "esp-websocket.h"
 
 typedef struct {
   size_t totalBytes;
@@ -178,7 +176,7 @@ public:
       Enable authenticate for /setup webpage
     */
     void setAuthentication(const char* user, const char* pswd);
-    
+
     /*
       Enable authentication for other pages, too.
       Call setAuthentication first.
@@ -187,10 +185,10 @@ public:
 
     ///////////////////////////   WEBSOCKET  ///////////////////////////////////
     /*
-      Enable built-in websocket server. Events like connect/disconnect or 
+      Enable built-in websocket server. Events like connect/disconnect or
       messages can be handled using callback function
     */
-    void enableWebsocket(uint16_t port, ServerWebSocket::WsReceive_cb fn_receive, 
+    void enableWebsocket(uint16_t port, ServerWebSocket::WsReceive_cb fn_receive,
             ServerWebSocket::WsConnect_cb fn_connect = nullptr, ServerWebSocket::WsConnect_cb fn_disconnect = nullptr);
     void onWebsocketConnect(ServerWebSocket::WsConnect_cb fn_connect);
     void onWebsocketDisconnect(ServerWebSocket::WsConnect_cb fn_disconnect);
@@ -280,7 +278,7 @@ private:
     uint16_t        m_port = 80;
     char            m_version[16] = {__TIME__};
     IPAddress       m_captiveIp = IPAddress(192, 168, 4, 1);
-    ServerWebSocket*  m_websocket; 
+    ServerWebSocket*  m_websocket;
 
     #if defined(ESP32)
     // Override default handleClient() method to increase connection speed
