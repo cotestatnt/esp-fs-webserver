@@ -36,6 +36,15 @@ public:
     void onWebsocketReceive(WsReceive_cb fn) {
         onReceive = fn;
     }
+	
+	
+    void print(const char* data) {
+        this->broadcastTXT(data, strlen(data));
+    }
+
+    void print(String& data) {
+        this->broadcastTXT(data);
+    }
 
 protected:
     WsConnect_cb onConnect = nullptr;
