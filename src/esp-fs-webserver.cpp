@@ -131,7 +131,10 @@ void FSWebServer::run()
 
     if (m_websocket != nullptr)
         m_websocket->loop();
-
+    
+#if defined(ESP8266)
+    MDNS.update();
+#endif
     yield();
 }
 
@@ -284,12 +287,25 @@ IPAddress FSWebServer::startWiFi(uint32_t timeout, bool apFlag, CallbackF fn)
                 break;
         }
 
-        // Configure and start MDNS responder
+// Configure and start MDNS responder
+#if defined(ESP8266)
         if (!MDNS.begin(m_host)){
             log_error("MDNS responder not started");
         }
         MDNS.addService("http", "tcp", m_port);
-        MDNS.setInstanceName(m_host);
+#else
+        // Initialize mDNS
+        ESP_ERROR_CHECK( mdns_init() );
+        // Set mDNS hostname (required if you want to advertise services)
+        ESP_ERROR_CHECK( mdns_hostname_set(m_host.c_str()) );
+        ESP_LOGI(TAG, "mdns hostname set to: [%s]", m_host.c_str());
+        // Set default mDNS instance name
+        ESP_ERROR_CHECK( mdns_instance_name_set("EXAMPLE_MDNS_INSTANCE") );
+        // Structure with TXT records
+        mdns_txt_item_t serviceTxtData[1] = {{"board", "esp32"}};
+        // Initialize service
+        ESP_ERROR_CHECK( mdns_service_add("ESP32-WebServer", "_http", "_tcp", 80, serviceTxtData, 1) );
+#endif
 
         if ((WiFi.status() == WL_CONNECTED) || apFlag)
             return WiFi.localIP();

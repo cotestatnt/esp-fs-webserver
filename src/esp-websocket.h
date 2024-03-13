@@ -5,8 +5,10 @@
 
 #include <WiFiClient.h>
 #include <WiFiClientSecure.h>
-#include "websocket/WebSocketsServer.h"
+
 #include "SerialLog.h"
+#include "websocket/WebSocketsServer.h"
+
 
 class ServerWebSocket : public WebSocketsServer {
 public:

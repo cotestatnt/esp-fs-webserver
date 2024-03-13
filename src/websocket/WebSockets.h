@@ -25,219 +25,57 @@
 #ifndef ESP_WEBSOCKETS_H_
 #define ESP_WEBSOCKETS_H_
 
-
-#ifdef STM32_DEVICE
-#include <application.h>
-#define bit(b) (1UL << (b))    // Taken directly from Arduino.h
-#else
 #include <Arduino.h>
 #include <IPAddress.h>
-#endif
-
-#ifdef ARDUINO_ARCH_AVR
-#error Version 2.x.x currently does not support Arduino with AVR since there is no support for std namespace of c++.
-#error Use Version 1.x.x. (ATmega branch)
-#else
 #include <functional>
-#endif
-
-
-#ifndef NODEBUG_WEBSOCKETS
-#ifdef DEBUG_ESP_PORT
-#define DEBUG_WEBSOCKETS(...)               \
-    {                                       \
-        DEBUG_ESP_PORT.printf(__VA_ARGS__); \
-        DEBUG_ESP_PORT.flush();             \
-    }
-#else
-// #define DEBUG_WEBSOCKETS(...) os_printf( __VA_ARGS__ )
-#endif
-#endif
-
-#ifndef DEBUG_WEBSOCKETS
-#define DEBUG_WEBSOCKETS(...)
-#ifndef NODEBUG_WEBSOCKETS
-#define NODEBUG_WEBSOCKETS
-#endif
-#endif
-
-#if defined(ESP8266) || defined(ESP32)
+#include "../SerialLog.h"
 
 #define WEBSOCKETS_MAX_DATA_SIZE (15 * 1024)
 #define WEBSOCKETS_USE_BIG_MEM
 #define GET_FREE_HEAP ESP.getFreeHeap()
-// moves all Header strings to Flash (~300 Byte)
-// #define WEBSOCKETS_SAVE_RAM
 
-#if defined(ESP8266)
-#define WEBSOCKETS_YIELD() delay(0)
-#define WEBSOCKETS_YIELD_MORE() delay(1)
-#elif defined(ESP32)
-#define WEBSOCKETS_YIELD() yield()
-#define WEBSOCKETS_YIELD_MORE() delay(1)
-#endif
-
-#elif defined(STM32_DEVICE)
-
-#define WEBSOCKETS_MAX_DATA_SIZE (15 * 1024)
-#define WEBSOCKETS_USE_BIG_MEM
-#define GET_FREE_HEAP System.freeMemory()
-#define WEBSOCKETS_YIELD()
-#define WEBSOCKETS_YIELD_MORE()
-
-#elif defined(ARDUINO_ARCH_RP2040)
-
-#define WEBSOCKETS_MAX_DATA_SIZE (15 * 1024)
-#define WEBSOCKETS_USE_BIG_MEM
-#define GET_FREE_HEAP rp2040.getFreeHeap()
-#define WEBSOCKETS_YIELD() yield()
-#define WEBSOCKETS_YIELD_MORE() delay(1)
-
-#else
-
-// atmega328p has only 2KB ram!
-#define WEBSOCKETS_MAX_DATA_SIZE (1024)
-// moves all Header strings to Flash
-#define WEBSOCKETS_SAVE_RAM
-#define WEBSOCKETS_YIELD()
-#define WEBSOCKETS_YIELD_MORE()
-#endif
-
-#ifndef WEBSOCKETS_TCP_TIMEOUT
+// ws timeout
 #define WEBSOCKETS_TCP_TIMEOUT (5000)
-#endif
-
-#define NETWORK_ESP8266_ASYNC (0)
-#define NETWORK_ESP8266 (1)
-#define NETWORK_W5100 (2)
-#define NETWORK_ENC28J60 (3)
-#define NETWORK_ESP32 (4)
-#define NETWORK_ESP32_ETH (5)
-#define NETWORK_RP2040 (6)
-
 // max size of the WS Message Header
 #define WEBSOCKETS_MAX_HEADER_SIZE (14)
 
-#if !defined(WEBSOCKETS_NETWORK_TYPE)
-// select Network type based
-#if defined(ESP8266) || defined(ESP31B)
-#define WEBSOCKETS_NETWORK_TYPE NETWORK_ESP8266
-// #define WEBSOCKETS_NETWORK_TYPE NETWORK_ESP8266_ASYNC
-// #define WEBSOCKETS_NETWORK_TYPE NETWORK_W5100
-
-#elif defined(ESP32)
-#define WEBSOCKETS_NETWORK_TYPE NETWORK_ESP32
-// #define WEBSOCKETS_NETWORK_TYPE NETWORK_ESP32_ETH
-
-#elif defined(ARDUINO_ARCH_RP2040)
-#define WEBSOCKETS_NETWORK_TYPE NETWORK_RP2040
-
-#else
-#define WEBSOCKETS_NETWORK_TYPE NETWORK_W5100
-
-#endif
-#endif
-
-// Includes and defined based on Network Type
-#if(WEBSOCKETS_NETWORK_TYPE == NETWORK_ESP8266_ASYNC)
-
-// Note:
-//   No SSL/WSS support for client in Async mode
-//   TLS lib need a sync interface!
-
-#if defined(ESP8266)
-#include <ESP8266WiFi.h>
-#elif defined(ESP32)
-#include <WiFi.h>
-#include <WiFiClientSecure.h>
-#define SSL_AXTLS
-#elif defined(ESP31B)
-#include <ESP31BWiFi.h>
-#else
-#error "network type ESP8266 ASYNC only possible on the ESP mcu!"
-#endif
-
-#include <ESPAsyncTCP.h>
-#include <ESPAsyncTCPbuffer.h>
-#define WEBSOCKETS_NETWORK_CLASS AsyncTCPbuffer
-#define WEBSOCKETS_NETWORK_SERVER_CLASS AsyncServer
-
-#elif(WEBSOCKETS_NETWORK_TYPE == NETWORK_ESP8266)
-
-#if !defined(ESP8266) && !defined(ESP31B)
-#error "network type ESP8266 only possible on the ESP mcu!"
-#endif
-
-#ifdef ESP8266
-#include <ESP8266WiFi.h>
-#if defined(wificlientbearssl_h) && !defined(USING_AXTLS) && !defined(wificlientsecure_h)
-#define SSL_BARESSL
-#else
-#define SSL_AXTLS
-#endif
-#else
-#include <ESP31BWiFi.h>
-#endif
-#define WEBSOCKETS_NETWORK_CLASS WiFiClient
-#define WEBSOCKETS_NETWORK_SSL_CLASS WiFiClientSecure
-#define WEBSOCKETS_NETWORK_SERVER_CLASS WiFiServer
-
-#elif(WEBSOCKETS_NETWORK_TYPE == NETWORK_W5100)
-
-#ifdef STM32_DEVICE
-#define WEBSOCKETS_NETWORK_CLASS TCPClient
-#define WEBSOCKETS_NETWORK_SERVER_CLASS TCPServer
-#else
-#include <Ethernet.h>
-#include <SPI.h>
-#define WEBSOCKETS_NETWORK_CLASS EthernetClient
-#define WEBSOCKETS_NETWORK_SERVER_CLASS EthernetServer
-#endif
-
-#elif(WEBSOCKETS_NETWORK_TYPE == NETWORK_ENC28J60)
-
-#include <UIPEthernet.h>
-#define WEBSOCKETS_NETWORK_CLASS UIPClient
-#define WEBSOCKETS_NETWORK_SERVER_CLASS UIPServer
-
-#elif(WEBSOCKETS_NETWORK_TYPE == NETWORK_ESP32)
-
-#include <WiFi.h>
-#include <WiFiClientSecure.h>
-#define SSL_AXTLS
-#define WEBSOCKETS_NETWORK_CLASS WiFiClient
-#define WEBSOCKETS_NETWORK_SSL_CLASS WiFiClientSecure
-#define WEBSOCKETS_NETWORK_SERVER_CLASS WiFiServer
-
-#elif(WEBSOCKETS_NETWORK_TYPE == NETWORK_ESP32_ETH)
-
-#include <ETH.h>
-#define WEBSOCKETS_NETWORK_CLASS WiFiClient
-#define WEBSOCKETS_NETWORK_SERVER_CLASS WiFiServer
-
-#elif(WEBSOCKETS_NETWORK_TYPE == NETWORK_RP2040)
-
-#include <WiFi.h>
-#include <WiFiClientSecure.h>
-#define SSL_BARESSL
-#define WEBSOCKETS_NETWORK_CLASS WiFiClient
-#define WEBSOCKETS_NETWORK_SSL_CLASS WiFiClientSecure
-#define WEBSOCKETS_NETWORK_SERVER_CLASS WiFiServer
-
-#else
-#error "no network type selected!"
-#endif
-
-#ifdef WEBSOCKETS_NETWORK_SSL_CLASS
-#define HAS_SSL
-#endif
-
 // moves all Header strings to Flash (~300 Byte)
+// #define WEBSOCKETS_SAVE_RAM
 #ifdef WEBSOCKETS_SAVE_RAM
 #define WEBSOCKETS_STRING(var) F(var)
 #else
 #define WEBSOCKETS_STRING(var) var
 #endif
+
+#if defined(ESP8266)
+    #define WEBSOCKETS_NETWORK_CLASS WiFiClient
+    #define WEBSOCKETS_NETWORK_SSL_CLASS WiFiClientSecure
+    #define WEBSOCKETS_NETWORK_SERVER_CLASS WiFiServer
+    #define HAS_SSL
+    #define WEBSOCKETS_YIELD() delay(0)
+    #define WEBSOCKETS_YIELD_MORE() delay(1)
+
+    #include <ESP8266WiFi.h>
+    #if defined(wificlientbearssl_h) && !defined(USING_AXTLS) && !defined(wificlientsecure_h)
+    #define SSL_BARESSL
+    #else
+    #define SSL_AXTLS
+    #endif
+
+#elif defined(ESP32)
+    #include <WiFi.h>
+    #include <WiFiClientSecure.h>
+    #define SSL_AXTLS
+    #define WEBSOCKETS_YIELD() yield()
+    #define WEBSOCKETS_YIELD_MORE() delay(1)
+
+    #define WEBSOCKETS_NETWORK_CLASS WiFiClient
+    #define WEBSOCKETS_NETWORK_SSL_CLASS WiFiClientSecure
+    #define WEBSOCKETS_NETWORK_SERVER_CLASS WiFiServer
+    #define HAS_SSL
+#endif
+
+
 
 typedef enum {
     WSC_NOT_CONNECTED,
@@ -342,19 +180,12 @@ typedef struct {
     uint8_t disconnectTimeoutCount = 0;    // after how many subsequent pong timeouts discconnect will happen, 0 means "do not disconnect"
     uint8_t pongTimeoutCount       = 0;    // current pong timeout count
 
-#if(WEBSOCKETS_NETWORK_TYPE == NETWORK_ESP8266_ASYNC)
-    String cHttpLine;    ///< HTTP header lines
-#endif
-
 } WSclient_t;
 
 class WebSockets {
   protected:
-#ifdef __AVR__
-    typedef void (*WSreadWaitCb)(WSclient_t * client, bool ok);
-#else
+
     typedef std::function<void(WSclient_t * client, bool ok)> WSreadWaitCb;
-#endif
 
     virtual void clientDisconnect(WSclient_t * client)  = 0;
     virtual bool clientIsConnected(WSclient_t * client) = 0;

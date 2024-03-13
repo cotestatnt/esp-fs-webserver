@@ -39,13 +39,9 @@ class WebSocketsServerCore : protected WebSockets {
     void begin(void);
     void close(void);
 
-#ifdef __AVR__
-    typedef void (*WebSocketServerEvent)(uint8_t num, WStype_t type, uint8_t * payload, size_t length);
-    typedef bool (*WebSocketServerHttpHeaderValFunc)(String headerName, String headerValue);
-#else
     typedef std::function<void(uint8_t num, WStype_t type, uint8_t * payload, size_t length)> WebSocketServerEvent;
     typedef std::function<bool(String headerName, String headerValue)> WebSocketServerHttpHeaderValFunc;
-#endif
+
 
     void onEvent(WebSocketServerEvent cbEvent);
     void onValidateHttpHeader(
@@ -89,14 +85,8 @@ class WebSocketsServerCore : protected WebSockets {
 
     void enableHeartbeat(uint32_t pingInterval, uint32_t pongTimeout, uint8_t disconnectTimeoutCount);
     void disableHeartbeat();
-
-#if(WEBSOCKETS_NETWORK_TYPE == NETWORK_ESP8266) || (WEBSOCKETS_NETWORK_TYPE == NETWORK_ESP8266_ASYNC) || (WEBSOCKETS_NETWORK_TYPE == NETWORK_ESP32) || (WEBSOCKETS_NETWORK_TYPE == NETWORK_RP2040)
     IPAddress remoteIP(uint8_t num);
-#endif
-
-#if(WEBSOCKETS_NETWORK_TYPE != NETWORK_ESP8266_ASYNC)
     void loop(void);    // handle client data only
-#endif
 
     WSclient_t * newClient(WEBSOCKETS_NETWORK_CLASS * TCPclient);
 
@@ -123,9 +113,7 @@ class WebSocketsServerCore : protected WebSockets {
     void clientDisconnect(WSclient_t * client);
     bool clientIsConnected(WSclient_t * client);
 
-#if(WEBSOCKETS_NETWORK_TYPE != NETWORK_ESP8266_ASYNC)
     void handleClientData(void);
-#endif
 
     void handleHeader(WSclient_t * client, String * headerLine);
 
@@ -137,7 +125,7 @@ class WebSocketsServerCore : protected WebSockets {
      * @param client WSclient_t *  ptr to the client struct
      */
     virtual void handleNonWebsocketConnection(WSclient_t * client) {
-        DEBUG_WEBSOCKETS("[WS-Server][%d][handleHeader] no Websocket connection close.\n", client->num);
+        log_debug("[WS-Server][%d][handleHeader] no Websocket connection close.\n", client->num);
         client->tcp->write(
             "HTTP/1.1 400 Bad Request\r\n"
             "Server: arduino-WebSocket-Server\r\n"
@@ -199,9 +187,8 @@ class WebSocketsServerCore : protected WebSockets {
         return true;
     }
 
-#if(WEBSOCKETS_NETWORK_TYPE != NETWORK_ESP8266_ASYNC)
     WSclient_t * handleNewClient(WEBSOCKETS_NETWORK_CLASS * tcpClient);
-#endif
+
 
     /**
      * drop native tcp connection (client->tcp)
@@ -223,18 +210,10 @@ class WebSocketsServer : public WebSocketsServerCore {
 
     void begin(void);
     void close(void);
-
-#if(WEBSOCKETS_NETWORK_TYPE != NETWORK_ESP8266_ASYNC)
     void loop(void);    // handle incoming client and client data
-#else
-    // Async interface not need a loop call
-    void loop(void) __attribute__((deprecated)) {}
-#endif
-
   protected:
-#if(WEBSOCKETS_NETWORK_TYPE != NETWORK_ESP8266_ASYNC)
+
     void handleNewClients(void);
-#endif
 
     uint16_t _port;
     WEBSOCKETS_NETWORK_SERVER_CLASS * _server;

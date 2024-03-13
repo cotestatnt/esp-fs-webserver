@@ -68,7 +68,7 @@ void SocketIOclient::configureEIOping(bool disableHeartbeat) {
 
 void SocketIOclient::initClient(void) {
     if(_client.cUrl.indexOf("EIO=4") != -1) {
-        DEBUG_WEBSOCKETS("[wsIOc] found EIO=4 disable EIO ping on client\n");
+        log_debug("[wsIOc] found EIO=4 disable EIO ping on client\n");
         configureEIOping(true);
     }
 }
@@ -180,7 +180,7 @@ void SocketIOclient::loop(void) {
     unsigned long t = millis();
     if(!_disableHeartbeat && (t - _lastHeartbeat) > EIO_HEARTBEAT_INTERVAL) {
         _lastHeartbeat = t;
-        DEBUG_WEBSOCKETS("[wsIOc] send ping\n");
+        log_debug("[wsIOc] send ping\n");
         WebSocketsClient::sendTXT(eIOtype_PING);
     }
 }
@@ -189,10 +189,10 @@ void SocketIOclient::handleCbEvent(WStype_t type, uint8_t * payload, size_t leng
     switch(type) {
         case WStype_DISCONNECTED:
             runIOCbEvent(sIOtype_DISCONNECT, NULL, 0);
-            DEBUG_WEBSOCKETS("[wsIOc] Disconnected!\n");
+            log_debug("[wsIOc] Disconnected!\n");
             break;
         case WStype_CONNECTED: {
-            DEBUG_WEBSOCKETS("[wsIOc] Connected to url: %s\n", payload);
+            log_debug("[wsIOc] Connected to url: %s\n", payload);
             // send message to server when Connected
             // Engine.io upgrade confirmation message (required)
             WebSocketsClient::sendTXT("2probe");
@@ -208,11 +208,11 @@ void SocketIOclient::handleCbEvent(WStype_t type, uint8_t * payload, size_t leng
             switch(eType) {
                 case eIOtype_PING:
                     payload[0] = eIOtype_PONG;
-                    DEBUG_WEBSOCKETS("[wsIOc] get ping send pong (%s)\n", payload);
+                    log_debug("[wsIOc] get ping send pong (%s)\n", payload);
                     WebSocketsClient::sendTXT(payload, length, false);
                     break;
                 case eIOtype_PONG:
-                    DEBUG_WEBSOCKETS("[wsIOc] get pong\n");
+                    log_debug("[wsIOc] get pong\n");
                     break;
                 case eIOtype_MESSAGE: {
                     if(length < 2) {
@@ -223,10 +223,10 @@ void SocketIOclient::handleCbEvent(WStype_t type, uint8_t * payload, size_t leng
                     size_t lData                 = length - 2;
                     switch(ioType) {
                         case sIOtype_EVENT:
-                            DEBUG_WEBSOCKETS("[wsIOc] get event (%d): %s\n", lData, data);
+                            log_debug("[wsIOc] get event (%d): %s\n", lData, data);
                             break;
                         case sIOtype_CONNECT:
-                            DEBUG_WEBSOCKETS("[wsIOc] connected (%d): %s\n", lData, data);
+                            log_debug("[wsIOc] connected (%d): %s\n", lData, data);
                             return;
                         case sIOtype_DISCONNECT:
                         case sIOtype_ACK:
@@ -234,8 +234,8 @@ void SocketIOclient::handleCbEvent(WStype_t type, uint8_t * payload, size_t leng
                         case sIOtype_BINARY_EVENT:
                         case sIOtype_BINARY_ACK:
                         default:
-                            DEBUG_WEBSOCKETS("[wsIOc] Socket.IO Message Type %c (%02X) is not implemented\n", ioType, ioType);
-                            DEBUG_WEBSOCKETS("[wsIOc] get text: %s\n", payload);
+                            log_debug("[wsIOc] Socket.IO Message Type %c (%02X) is not implemented\n", ioType, ioType);
+                            log_debug("[wsIOc] get text: %s\n", payload);
                             break;
                     }
 
@@ -246,8 +246,8 @@ void SocketIOclient::handleCbEvent(WStype_t type, uint8_t * payload, size_t leng
                 case eIOtype_UPGRADE:
                 case eIOtype_NOOP:
                 default:
-                    DEBUG_WEBSOCKETS("[wsIOc] Engine.IO Message Type %c (%02X) is not implemented\n", eType, eType);
-                    DEBUG_WEBSOCKETS("[wsIOc] get text: %s\n", payload);
+                    log_debug("[wsIOc] Engine.IO Message Type %c (%02X) is not implemented\n", eType, eType);
+                    log_debug("[wsIOc] get text: %s\n", payload);
                     break;
             }
         } break;

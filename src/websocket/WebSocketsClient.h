@@ -29,11 +29,7 @@
 
 class WebSocketsClient : protected WebSockets {
   public:
-#ifdef __AVR__
-    typedef void (*WebSocketClientEvent)(WStype_t type, uint8_t * payload, size_t length);
-#else
     typedef std::function<void(WStype_t type, uint8_t * payload, size_t length)> WebSocketClientEvent;
-#endif
 
     WebSocketsClient(void);
     virtual ~WebSocketsClient(void);
@@ -68,13 +64,6 @@ class WebSocketsClient : protected WebSockets {
 #endif
 #endif
 
-#if(WEBSOCKETS_NETWORK_TYPE != NETWORK_ESP8266_ASYNC)
-    void loop(void);
-#else
-    // Async interface not need a loop call
-    void loop(void) __attribute__((deprecated)) {}
-#endif
-
     void onEvent(WebSocketClientEvent cbEvent);
 
     bool sendTXT(uint8_t * payload, size_t length = 0, bool headerToPayload = false);
@@ -96,7 +85,6 @@ class WebSocketsClient : protected WebSockets {
     void setAuthorization(const char * auth);
 
     void setExtraHeaders(const char * extraHeaders = NULL);
-
     void setReconnectInterval(unsigned long time);
 
     void enableHeartbeat(uint32_t pingInterval, uint32_t pongTimeout, uint8_t disconnectTimeoutCount);
@@ -133,25 +121,16 @@ class WebSocketsClient : protected WebSockets {
     unsigned long _lastHeaderSent;
 
     void messageReceived(WSclient_t * client, WSopcode_t opcode, uint8_t * payload, size_t length, bool fin);
-
     void clientDisconnect(WSclient_t * client);
     bool clientIsConnected(WSclient_t * client);
-
-#if(WEBSOCKETS_NETWORK_TYPE != NETWORK_ESP8266_ASYNC)
     void handleClientData(void);
-#endif
-
     void sendHeader(WSclient_t * client);
     void handleHeader(WSclient_t * client, String * headerLine);
-
-    void connectedCb();
     void connectFailedCb();
-
     void handleHBPing();    // send ping in specified intervals
 
-#if(WEBSOCKETS_NETWORK_TYPE == NETWORK_ESP8266_ASYNC)
-    void asyncConnect();
-#endif
+    void loop(void);
+    void connectedCb();
 
     /**
      * called for sending a Event to the app
