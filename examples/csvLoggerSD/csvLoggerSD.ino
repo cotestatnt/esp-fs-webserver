@@ -1,5 +1,3 @@
-
-#include <FS.h>
 #include <SD.h>
 #include <esp-fs-webserver.h>  // https://github.com/cotestatnt/esp-fs-webserver
 
@@ -7,6 +5,10 @@
 #define MYTZ "CET-1CEST,M3.5.0,M10.5.0/3"
 #include <time.h>
 
+#define PIN_CS 14
+#define PIN_SCK 13
+#define PIN_MOSI 12
+#define PIN_MISO 11
 
 // Check board options and select the right partition scheme
 FSWebServer myWebServer(SD, 80, "hostname");
@@ -33,9 +35,8 @@ docHead.appendChild(newLink);
 ////////////////////////////////  Filesystem  /////////////////////////////////////////
 void startFilesystem() {
   // FILESYSTEM INIT
-  if ( !SD.begin()) {
-    Serial.println("ERROR on mounting SD. It will be formmatted!");
-    ESP.restart();
+  if (!SD.begin(PIN_CS)) {
+    Serial.println("ERROR on mounting SD.");
   }
   myWebServer.printFileList(SD, Serial, "/", 2);
 }
@@ -74,11 +75,12 @@ bool appenRow() {
 
   char filename[32];
   snprintf(filename, sizeof(filename),
-           "%s/%04d_%02d_%02d.csv",
+           "%s/%04d_%02d_%02d_%02d.csv",
            basePath,
            ntpTime.tm_year + 1900,
            ntpTime.tm_mon + 1,
-           ntpTime.tm_mday
+           ntpTime.tm_mday,
+           ntpTime.tm_hour
           );
 
   File file;
@@ -125,6 +127,7 @@ bool appenRow() {
 
 
 void setup() {
+  SPI.begin(PIN_SCK, PIN_MISO, PIN_MOSI, PIN_CS);
   Serial.begin(115200);
 
   // SD init
@@ -177,7 +180,7 @@ void loop() {
   myWebServer.run();
 
   static uint32_t updateTime;
-  if (millis() - updateTime > 30000) {
+  if (millis() - updateTime > 1000) {
     updateTime = millis();
     appenRow();
   }
