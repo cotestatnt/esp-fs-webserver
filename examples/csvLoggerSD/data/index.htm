@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+  <title>ESP32 CSV List</title>
+  <!-- Cyustom page styling -->
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+  <body>
+    <main>
+      <div id="page-wrapper" class="clearfix">
+        <h1>CSV list web interface</h1>
+        <div class=container>
+          <div id="files">
+            <ul id="file-list"></ul>
+            <div class="field">
+              <input type="text" id="csv-path" name="path" value='/csv/'>
+              <button id="load-list">Load list</button><br><br>
+              <button id="download-csv">Download</button>
+              <button id="save-csv">Save CSV</button>
+            </div>
+            <hr>
+            <input type="button" onclick="deleteAll()" value="Delete all files" class="delete-all">  
+            <hr>
+          </div>
+          <div id="content">
+            <div class="tables text-center" id="csv-table"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <script src="assets/js/csv.js"></script>
+    <script src="assets/js/index.js"></script>
+  </body>
+</html>
