@@ -28,6 +28,7 @@ button:hover,.btn:hover{ filter: brightness(85%);}
 ul {display: table; text-align: left; margin: 0 auto 10px auto;}
 hr {width: 100%; order:997;}
 select {width:92.5%}
+td svg {width: 24px; height: 24px;}
 
 .input-label{
   align-self: self-start;
@@ -59,8 +60,9 @@ select {width:92.5%}
 .progress-wrap.active .progress {	opacity: 1;	animation: progress-anim 10s ease 0s;}
 .progress-wrap[data-progress-style='fill-back'] .progress {position: absolute;left: 0;top: 0;	right: 0;	bottom: 0;}
 .d-modal{
-  width: 70%; border-radius: 10px; border-style: solid;border-width: 1px;border-color: #3333336e;background-color: hsl(199.53deg 18.3% 46.08% / 90%);
-  box-shadow: rgba(0, 0, 0, 0.24) 0 3px 8px;left: 50%;position: absolute;top: 50%;transform: translate(-50%, -50%);flex-direction: column;
+  width: -webkit-fill-available; border-radius: 10px; border-style: solid;border-width: 1px;border-color: #3333336e;
+  box-shadow: rgba(0, 0, 0, 0.24) 0 3px 8px;left: 50%;position: absolute;top: 60%;transform: translate(-50%, -50%);flex-direction: column;
+  background-color: hsl(199.53deg 18.3% 46.08% / 90%);
 }
 .d-modal-title{color:#111827;padding:1.5em;position:relative;width:calc(100% - 4.5em);}
 .d-modal-content{border-top:1px solid #e0e0e0;padding:1.5em;overflow:auto;}
