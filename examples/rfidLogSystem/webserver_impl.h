@@ -271,14 +271,14 @@ void startWebServer() {
   });
   
   // Enable ACE FS file web editor and add FS info callback fucntion
-  myWebServer.enableFsCodeEditor([](fsInfo_t* fsInfo) {
-    fsInfo->totalBytes = LittleFS.totalBytes();
-    fsInfo->usedBytes = LittleFS.usedBytes();
-    fsInfo->fsName = "LittleFS";
-  });
+  // myWebServer.enableFsCodeEditor([](fsInfo_t* fsInfo) {
+  //   fsInfo->totalBytes = LittleFS.totalBytes();
+  //   fsInfo->usedBytes = LittleFS.usedBytes();
+  //   fsInfo->fsName = "LittleFS";
+  // });
 
-  // Enable built-in websocket server
-  myWebServer.enableWebsocket(81, nullptr);
+  // set /setup and /edit page authentication
+  myWebServer.setAuthentication("admin", "admin");
 
   // Start the webserver
   myWebServer.begin();

@@ -298,7 +298,7 @@ IPAddress FSWebServer::startWiFi(uint32_t timeout, bool apFlag, CallbackF fn)
         ESP_ERROR_CHECK( mdns_init() );
         // Set mDNS hostname (required if you want to advertise services)
         ESP_ERROR_CHECK( mdns_hostname_set(m_host.c_str()) );
-        ESP_LOGI(TAG, "mdns hostname set to: [%s]", m_host.c_str());
+        ESP_LOGI("", "mdns hostname set to: [%s]", m_host.c_str());
         // Set default mDNS instance name
         ESP_ERROR_CHECK( mdns_instance_name_set("EXAMPLE_MDNS_INSTANCE") );
         // Structure with TXT records
