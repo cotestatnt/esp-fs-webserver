@@ -1,66 +1,67 @@
 #include "esp-fs-webserver.h"
 #include "detail/RequestHandlersImpl.h"
 
-// Override default handleClient() method to increase connection speed
-#if defined(ESP32)
-void FSWebServer::handleClient()
-{
-    if (_currentStatus == HC_NONE) {
-        _currentClient = _server.available();
-        if (!_currentClient) {
-            if (_nullDelay) {
-                delay(1);
-            }
-            return;
-        }
-        log_v("New client: client.localIP()=%s", _currentClient.localIP().toString().c_str());
-        _currentStatus = HC_WAIT_READ;
-        _statusChange = millis();
-    }
+// // Override default handleClient() method to increase connection speed
+// #if defined(ESP32)
+// void FSWebServer::handleClient()
+// {
+//     if (_currentStatus == HC_NONE) {
+//         _currentClient = _server.available();
+//         if (!_currentClient) {
+//             if (_nullDelay) {
+//                 delay(1);
+//             }
+//             return;
+//         }
+//         log_v("New client: client.localIP()=%s", _currentClient.localIP().toString().c_str());
+//         _currentStatus = HC_WAIT_READ;
+//         _statusChange = millis();
+//     }
 
-    bool keepCurrentClient = false;
+//     bool keepCurrentClient = false;
 
-    if (_currentClient.connected()) {
-        switch (_currentStatus) {
-            // No-op to avoid C++ compiler warning
-            case HC_NONE:
-                break;
+//     if (_currentClient.connected()) {
+//         switch (_currentStatus) {
+//             // No-op to avoid C++ compiler warning
+//             case HC_NONE:
+//                 break;
 
-            // Wait for data from client to become available
-            case HC_WAIT_READ:
-                if (_currentClient.available()) {
-                    if (_parseRequest(_currentClient)) {
-                        _currentClient.setTimeout(HTTP_MAX_SEND_WAIT / 1000);
-                        _contentLength = CONTENT_LENGTH_NOT_SET;
-                        _handleRequest();
-                    }
-                }
-                else {
-                    if (millis() - _statusChange <= 100) {
-                        keepCurrentClient = true;
-                    }
-                    yield();
-                }
-                break;
+//             // Wait for data from client to become available
+//             case HC_WAIT_READ:
+//                 if (_currentClient.available()) {
+//                     if (_parseRequest(_currentClient)) {
+//                         _currentClient.setTimeout(HTTP_MAX_SEND_WAIT / 1000);
+//                         _contentLength = CONTENT_LENGTH_NOT_SET;
+//                         _handleRequest();
+//                     }
+//                 }
+//                 else {
+//                     if (millis() - _statusChange <= 100) {
+//                         keepCurrentClient = true;
+//                     }
+//                     yield();
+//                 }
+//                 break;
 
-            // Wait for client to close the connection
-            case HC_WAIT_CLOSE:
-                if (millis() - _statusChange <= HTTP_MAX_CLOSE_WAIT) {
-                    keepCurrentClient = true;
-                    yield();
-                }
-                break;
-        }
-    }
+//             // Wait for client to close the connection
+//             case HC_WAIT_CLOSE:
+//                 if (millis() - _statusChange <= HTTP_MAX_CLOSE_WAIT) {
+//                     keepCurrentClient = true;
+//                     yield();
+//                 }
+//                 break;
+//         }
+//     }
 
-    if (!keepCurrentClient) {
-        _currentClient = WiFiClient();
-        _currentStatus = HC_NONE;
-        _currentUpload.reset();
-    }
-}
-#endif
+//     if (!keepCurrentClient) {
+//         _currentClient = WiFiClient();
+//         _currentStatus = HC_NONE;
+//         _currentUpload.reset();
+//     }
+// }
+// #endif
 
+#define MDNS_INSTANCE "esp-fs-webserver"
 
 void FSWebServer::setHostname(const char* host) {
     m_host = host;
@@ -131,7 +132,7 @@ void FSWebServer::run()
 
     if (m_websocket != nullptr)
         m_websocket->loop();
-    
+
 #if defined(ESP8266)
     MDNS.update();
 #endif
@@ -272,7 +273,6 @@ IPAddress FSWebServer::startWiFi(uint32_t timeout, bool apFlag, CallbackF fn)
     if (strlen(_ssid)) {
 		m_apmode = false;
 
-
         WiFi.begin(_ssid, _pass);
         uint32_t startTime = millis();
         log_info("Connecting to '%s'", _ssid);
@@ -294,17 +294,44 @@ IPAddress FSWebServer::startWiFi(uint32_t timeout, bool apFlag, CallbackF fn)
         }
         MDNS.addService("http", "tcp", m_port);
 #else
-        // Initialize mDNS
-        ESP_ERROR_CHECK( mdns_init() );
-        // Set mDNS hostname (required if you want to advertise services)
-        ESP_ERROR_CHECK( mdns_hostname_set(m_host.c_str()) );
-        ESP_LOGI("", "mdns hostname set to: [%s]", m_host.c_str());
-        // Set default mDNS instance name
-        ESP_ERROR_CHECK( mdns_instance_name_set("EXAMPLE_MDNS_INSTANCE") );
-        // Structure with TXT records
-        mdns_txt_item_t serviceTxtData[1] = {{"board", "esp32"}};
-        // Initialize service
-        ESP_ERROR_CHECK( mdns_service_add("ESP32-WebServer", "_http", "_tcp", 80, serviceTxtData, 1) );
+        WiFi.setHostname(m_host.c_str());
+        // // Initialize mDNS
+        // ESP_ERROR_CHECK( mdns_init() );
+        // // Set mDNS hostname (required if you want to advertise services)
+        // ESP_ERROR_CHECK( mdns_hostname_set(m_host.c_str()) );
+        // log_info("mdns hostname set to: [%s]", m_host.c_str());
+        // // Set default mDNS instance name
+        // ESP_ERROR_CHECK( mdns_instance_name_set("MDNS_INSTANCE") );
+        // // Structure with TXT records
+        // mdns_txt_item_t serviceTxtData[1] = {{"board", "esp32"}};
+        // // Initialize service
+        // ESP_ERROR_CHECK( mdns_service_add("ESP32-WebServer", "_http", "_tcp", 80, serviceTxtData, 1) );
+
+        //initialize mDNS service
+        esp_err_t err = mdns_init();
+        if (err) {
+            log_error("MDNS Init failed: %d\n", err);
+        }
+
+        //set hostname
+        mdns_hostname_set(m_host.c_str());
+        log_info("mdns hostname set to: [%s]", m_host.c_str());
+        //set default instance
+        mdns_instance_name_set(MDNS_INSTANCE);
+        //add our services
+        mdns_service_add(NULL, "_http", "_tcp", 80, NULL, 0);
+        mdns_service_add(NULL, "_arduino", "_tcp", 3232, NULL, 0);
+        mdns_service_instance_name_set("_http", "_tcp", MDNS_INSTANCE);
+        mdns_service_subtype_add_for_host(MDNS_INSTANCE, "_http", "_tcp", NULL, "_server");
+
+        mdns_txt_item_t serviceTxtData[3] = {
+            {"board","{esp32}"},
+            {"u","user"},
+            {"p","password"}
+        };
+        //set txt data for service (will free and replace current data)
+        mdns_service_txt_set("_http", "_tcp", serviceTxtData, 3);
+
 #endif
 
         if ((WiFi.status() == WL_CONNECTED) || apFlag)

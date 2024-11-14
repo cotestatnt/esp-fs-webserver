@@ -190,14 +190,14 @@ class SetupConfigurator
         void addDropdownList(const char *label, const char** array, size_t size) {
 
             // If key is present in json, we don't need to create it.
-            if ((*m_doc).containsKey(label))
-                return;
+        #if ARDUINOJSON_VERSION_MAJOR > 6
+            JsonObject obj = (*m_doc)[label].to<JsonObject>();
+        #else
+            JsonObject obj = (*m_doc).createNestedObject(label);
+        #endif
 
-            #if ARDUINOJSON_VERSION_MAJOR > 6
-                JsonObject obj = (*m_doc)[label].to<JsonObject>();
-            #else
-                JsonObject obj = (*m_doc).createNestedObject(label);
-            #endif
+            if (obj.isNull())
+                return;
 
             obj["selected"] = array[0];     // first element selected as default
             #if ARDUINOJSON_VERSION_MAJOR > 6
@@ -252,8 +252,12 @@ class SetupConfigurator
                 key += numOptions ;
 
             // If key is present and value is the same, we don't need to create/update it.
-            if (m_doc->containsKey(key.c_str()))
+            JsonVariant foundObject = (*m_doc)[key];
+            if (foundObject.isNull())
                 return;
+            
+            // if (m_doc->containsKey(key.c_str()))
+            //     return;
 
             // if min, max, step != from default, treat this as object in order to set other properties
             if (d_min != MIN_F || d_max != MAX_F || step != 1.0) {

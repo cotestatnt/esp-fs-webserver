@@ -70,7 +70,7 @@ void getUpdatedtime(const uint32_t timeout) {
 
 
 //////////////////////////// Append a row to csv file ///////////////////////////////////
-bool appenRow() {
+bool appendRow() {
   getUpdatedtime(10);
 
   char filename[32];
@@ -181,6 +181,6 @@ void loop() {
   static uint32_t updateTime;
   if (millis() - updateTime > 30000) {
     updateTime = millis();
-    appenRow();
+    appendRow();
   }
 }

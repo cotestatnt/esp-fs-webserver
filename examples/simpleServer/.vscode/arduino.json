@@ -1,0 +1,5 @@
+{
+    "configuration": "USBMode=hwcdc,JTAGAdapter=default,CDCOnBoot=default,PartitionScheme=default,CPUFreq=160,FlashMode=qio,FlashFreq=80,UploadSpeed=921600,DebugLevel=none,EraseFlash=none",
+    "board": "esp32:esp32:nologo_esp32c3_super_mini",
+    "sketch": "simpleServer.ino"
+}

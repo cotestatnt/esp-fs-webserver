@@ -6,9 +6,8 @@
 
 FSWebServer myWebServer(FILESYSTEM, 80);
 
-#ifndef LED_BUILTIN
-#define LED_BUILTIN 2
-#endif
+#undef LED_BUILTIN
+#define LED_BUILTIN 8
 
 // In order to set SSID and password open the /setup webserver page
 // const char* ssid;
@@ -67,7 +66,7 @@ void setup(){
   startFilesystem();
 
   // Try to connect to stored SSID, start AP if fails after timeout
-  myWebServer.setAP("ESP_AP", "123456789");
+  myWebServer.setAP("ESP32C3", "123456789");
   IPAddress myIP = myWebServer.startWiFi(15000);
   Serial.println("\n");
 
