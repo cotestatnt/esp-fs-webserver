@@ -13,7 +13,6 @@ struct tm ntpTime;
 const char* basePath = "/csv";
 
 
-
 // This script will set page favicon using a base_64 encoded 32x32 pixel icon
 static const char base64_favicon[] PROGMEM = R"string_literal(
 var favIcon = "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAA7EAAAOxAGVKw4bAAABv0lEQVRYw+3XvWsUURTG4ScYsVEUJUtEEOxiYxTF0i6bSlBSaCXi32B" +
@@ -58,20 +57,10 @@ void getFsInfo(fsInfo_t* fsInfo) {
 }
 #endif
 
-////////////////////////////////  NTP Time  /////////////////////////////////////////
-void getUpdatedtime(const uint32_t timeout) {
-  uint32_t start = millis();
-  do {
-    time_t now = time(nullptr);
-    ntpTime = *localtime(&now);
-    delay(1);
-  } while (millis() - start < timeout && ntpTime.tm_year <= (1970 - 1900));
-}
-
 
 //////////////////////////// Append a row to csv file ///////////////////////////////////
 bool appendRow() {
-  getUpdatedtime(10);
+  getLocalTime(&ntpTime, 10);
 
   char filename[32];
   snprintf(filename, sizeof(filename),
@@ -149,7 +138,7 @@ void setup() {
 #elif defined(ESP32)
   configTzTime(MYTZ, "time.google.com", "time.windows.com", "pool.ntp.org");
 #endif
-  getUpdatedtime(5000);    // Wait for NTP sync
+  getLocalTime(&ntpTime, 5000);  // Wait for NTP sync
 
   // Configure /setup page and start Web Server
   myWebServer.addJavascript(base64_favicon, "favicon");

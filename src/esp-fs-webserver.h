@@ -280,10 +280,10 @@ private:
     IPAddress       m_captiveIp = IPAddress(192, 168, 4, 1);
     ServerWebSocket*  m_websocket;
 
-    // #if defined(ESP32)
-    // // Override default handleClient() method to increase connection speed
-    // void handleClient() override;
-    // #endif
+    #if defined(ESP32)
+    // Override default handleClient() method to increase connection speed
+    void handleClient() override;
+    #endif
 
     // Default handler for all URIs not defined above, use it to read files from filesystem
     bool captivePortal();

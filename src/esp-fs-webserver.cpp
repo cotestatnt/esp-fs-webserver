@@ -1,65 +1,73 @@
 #include "esp-fs-webserver.h"
 #include "detail/RequestHandlersImpl.h"
 
-// // Override default handleClient() method to increase connection speed
-// #if defined(ESP32)
-// void FSWebServer::handleClient()
-// {
-//     if (_currentStatus == HC_NONE) {
-//         _currentClient = _server.available();
-//         if (!_currentClient) {
-//             if (_nullDelay) {
-//                 delay(1);
-//             }
-//             return;
-//         }
-//         log_v("New client: client.localIP()=%s", _currentClient.localIP().toString().c_str());
-//         _currentStatus = HC_WAIT_READ;
-//         _statusChange = millis();
-//     }
+// Override default handleClient() method to increase connection speed
+#if defined(ESP32)
+void FSWebServer::handleClient()
+{
+    if (_currentStatus == HC_NONE) {
+        _currentClient = _server.available();
+        if (!_currentClient) {
+            if (_nullDelay) {
+                delay(1);
+            }
+            return;
+        }
+        log_v("New client: client.localIP()=%s", _currentClient.localIP().toString().c_str());
+        _currentStatus = HC_WAIT_READ;
+        _statusChange = millis();
+    }
 
-//     bool keepCurrentClient = false;
+    bool keepCurrentClient = false;
 
-//     if (_currentClient.connected()) {
-//         switch (_currentStatus) {
-//             // No-op to avoid C++ compiler warning
-//             case HC_NONE:
-//                 break;
+    if (_currentClient.connected()) {
+        switch (_currentStatus) {
+            // No-op to avoid C++ compiler warning
+            case HC_NONE:
+                break;
 
-//             // Wait for data from client to become available
-//             case HC_WAIT_READ:
-//                 if (_currentClient.available()) {
-//                     if (_parseRequest(_currentClient)) {
-//                         _currentClient.setTimeout(HTTP_MAX_SEND_WAIT / 1000);
-//                         _contentLength = CONTENT_LENGTH_NOT_SET;
-//                         _handleRequest();
-//                     }
-//                 }
-//                 else {
-//                     if (millis() - _statusChange <= 100) {
-//                         keepCurrentClient = true;
-//                     }
-//                     yield();
-//                 }
-//                 break;
+            // Wait for data from client to become available
+            case HC_WAIT_READ:
+                if (_currentClient.available()) {
+                    if (_parseRequest(_currentClient)) {
+                        _currentClient.setTimeout(HTTP_MAX_SEND_WAIT / 1000);
+                        _contentLength = CONTENT_LENGTH_NOT_SET;
+                        _handleRequest();
 
-//             // Wait for client to close the connection
-//             case HC_WAIT_CLOSE:
-//                 if (millis() - _statusChange <= HTTP_MAX_CLOSE_WAIT) {
-//                     keepCurrentClient = true;
-//                     yield();
-//                 }
-//                 break;
-//         }
-//     }
+                        if (_currentClient.isSSE()) {
+                            _currentStatus = HC_WAIT_CLOSE;
+                            _statusChange = millis();
+                            keepCurrentClient = true;
+                        }
+                    }
+                }
+                else { // !_currentClient.available()
+                    // if (millis() - _statusChange <= HTTP_MAX_DATA_WAIT) {
 
-//     if (!keepCurrentClient) {
-//         _currentClient = WiFiClient();
-//         _currentStatus = HC_NONE;
-//         _currentUpload.reset();
-//     }
-// }
-// #endif
+                    if (millis() - _statusChange <= 100) {
+                        keepCurrentClient = true;
+                    }
+                    yield();
+                }
+                break;
+
+            // Wait for client to close the connection
+            case HC_WAIT_CLOSE:
+                if (millis() - _statusChange <= HTTP_MAX_CLOSE_WAIT) {
+                    keepCurrentClient = true;
+                    yield();
+                }
+                break;
+        }
+    }
+
+    if (!keepCurrentClient) {
+        _currentClient = WiFiClient();
+        _currentStatus = HC_NONE;
+        _currentUpload.reset();
+    }
+}
+#endif
 
 #define MDNS_INSTANCE "esp-fs-webserver"
 
