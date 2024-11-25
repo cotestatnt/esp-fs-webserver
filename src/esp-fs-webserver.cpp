@@ -34,11 +34,11 @@ void FSWebServer::handleClient()
                         _contentLength = CONTENT_LENGTH_NOT_SET;
                         _handleRequest();
 
-                        if (_currentClient.isSSE()) {
-                            _currentStatus = HC_WAIT_CLOSE;
-                            _statusChange = millis();
-                            keepCurrentClient = true;
-                        }
+                        // if (_currentClient.isSSE()) {
+                        //     _currentStatus = HC_WAIT_CLOSE;
+                        //     _statusChange = millis();
+                        //     keepCurrentClient = true;
+                        // }
                     }
                 }
                 else { // !_currentClient.available()
