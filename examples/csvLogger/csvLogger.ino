@@ -164,7 +164,6 @@ void setup() {
 
 
 void loop() {
-
   myWebServer.run();
 
   static uint32_t updateTime;
