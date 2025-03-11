@@ -484,7 +484,7 @@ void WebSocketsClient::clientDisconnect(WSclient_t * client) {
 
     if(client->tcp) {
         if(client->tcp->connected()) {
-            client->tcp->clear();
+            // client->tcp->clear();
             client->tcp->stop();
         }
         event = true;
