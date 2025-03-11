@@ -1,0 +1,6 @@
+{
+    "configuration": "JTAGAdapter=default,PSRAM=disabled,FlashMode=qio,FlashSize=4M,LoopCore=1,EventsCore=1,USBMode=hwcdc,CDCOnBoot=default,MSCOnBoot=default,DFUOnBoot=default,UploadMode=default,PartitionScheme=default,CPUFreq=240,UploadSpeed=921600,DebugLevel=error,EraseFlash=none,ZigbeeMode=default",
+    "board": "esp32:esp32:esp32s3",
+    "sketch": "chartjs.ino",
+    "port": "COM12"
+}

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+  <title>Grafico WebSocket con Chart.js</title>
+</head>
+<body>
+  <h1>ESP FS WebServer - Heap Memory</h1>
+  <div id="esp-time"></div>
+  
+  <div style="width: 70%">
+    <canvas id="canvas" height="450" width="600"></canvas>
+  </div>
+  
+  <!-- Chart.js e plugin -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
+
+  <script>
+    // Creazione del WebSocket
+    const socket = new WebSocket('ws://' + location.hostname + ':81/');
+
+    // Creazione del contesto del grafico
+    const ctx = document.getElementById('canvas').getContext('2d');
+
+    // Configurazione del grafico
+    const chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [], // Timestamp in formato leggibile
+        datasets: [
+          {
+            label: 'Total Heap',
+            data: [],
+            borderColor: 'blue',
+            borderWidth: 2,
+            fill: true
+          },
+          {
+            label: 'Max Block',
+            data: [],
+            borderColor: 'red',
+            borderWidth: 2,
+            fill: true
+          }
+        ]
+      },
+      options: {
+        
+        plugins: {
+          title: {
+            display: true,
+            text: 'ESP32 Heap Stats'
+          },
+          zoom: {
+            pan: {
+              enabled: true,              // Permette di trascinare il grafico
+              mode: 'xy',
+            },
+            zoom: {
+              wheel: { enabled: true },   // Zoom con la rotella del mouse
+              pinch: { enabled: true },   // Zoom con le dita (touchscreen)
+              drag: { enabled: true },    // Zoom tramite drag col mouse
+              mode: 'xy'                  // Zoom sia in X che in Y
+            }
+          }
+        },
+        scales: {
+           x: {
+            title: {
+              display: true,
+              text: 'Timestamp'
+            }
+          },
+          y: {
+            title: {
+              display: true,
+              text: 'Memory (bytes)'
+            }
+          }
+        }
+      }
+    });
+    
+    // Reset dello zoom con doppio click
+    document.getElementById('canvas').addEventListener('dblclick', () => {
+        chart.resetZoom();
+    });
+
+    function addDataPoint(data) {
+      if (!data || typeof data !== 'object') {
+        console.log("Invalid JSON data");
+        return;
+      }
+      
+      const { timestamp, totalHeap, maxBlock } = data;
+      if (typeof timestamp !== 'number' || typeof totalHeap !== 'number' || typeof maxBlock !== 'number') {
+        console.log("Invalid data types", data);
+        return;
+      }
+      
+      // Converte il timestamp UNIX in un oggetto Date
+      const timeLabel = new Date(data.timestamp * 1000);
+      const hours = timeLabel.getHours().toString().padStart(2, '0');
+      const minutes = timeLabel.getMinutes().toString().padStart(2, '0');
+      const seconds = timeLabel.getSeconds().toString().padStart(2, '0');
+
+      const formattedTime = `${hours}:${minutes}:${seconds}`;
+            
+      // Aggiunge i dati al grafico
+      chart.data.labels.push(formattedTime);
+      chart.data.datasets[0].data.push({ x: timeLabel, y: data.totalHeap });
+      chart.data.datasets[1].data.push({ x: timeLabel, y: data.maxBlock });
+
+      // Limita il numero di punti nel grafico per evitare sovraccarico
+      const maxPoints = 20;
+      if (chart.data.labels.length > maxPoints) {
+        chart.data.labels.shift();
+        chart.data.datasets[0].data.shift();
+        chart.data.datasets[1].data.shift();
+      }
+
+      // Aggiorna il grafico
+      chart.update();
+    }
+
+    // Ricezione dati dal WebSocket
+    socket.onmessage = function(event) {
+      const data = JSON.parse(event.data);
+      
+      var date = new Date(data.timestamp * 1000);   
+      document.getElementById("esp-time").innerHTML = date.toLocaleString();
+
+      addDataPoint(data);
+    };
+  </script>
+</body>
+</html>
