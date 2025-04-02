@@ -54,7 +54,7 @@
     #include "sys/stat.h"
     #include <WiFi.h>
     #include <mdns.h>
-    #include <HTTPUpdateServer.h>
+    #include <Update.h>
     #include <WebServer.h>
     using WebServerClass = WebServer;
 #endif
@@ -279,7 +279,7 @@ private:
     char            m_version[16] = {__TIME__};
     IPAddress       m_captiveIp = IPAddress(192, 168, 4, 1);
     ServerWebSocket*  m_websocket;
-
+    uint8_t otaDone = 0;
     // Default handler for all URIs not defined above, use it to read files from filesystem
     bool captivePortal();
     void doWifiConnection();
