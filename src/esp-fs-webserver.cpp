@@ -564,7 +564,6 @@ void FSWebServer::update_second()
 
 void FSWebServer::update_first()
 {
-    static uint8_t otaDone = 0;
     size_t fsize;
     if (this->hasArg("size"))
         fsize = this->arg("size").toInt();
