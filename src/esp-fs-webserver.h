@@ -162,6 +162,14 @@ public:
     * Get library version
     */
     const char* getVersion();
+    
+    /**
+     *  authenticate user
+     *  use internal function to check if user is authenticated
+     * ( intended to be used outside the library's scope )
+     *  @return true if authenticated, false otherwise
+     */
+    bool authenticate_internal();
 
     /*
       Enable the built-in ACE web file editor
