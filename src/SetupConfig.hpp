@@ -189,8 +189,13 @@ class SetupConfigurator
         */
         void addDropdownList(const char *label, const char** array, size_t size) {
 
-            // If key is present in json, we don't need to create it.
         #if ARDUINOJSON_VERSION_MAJOR > 6
+            // If key is present we don't need to create it.          
+            JsonVariant variant = (*m_doc)[label];
+            if (!variant.isNull()) {
+                log_debug("Key \"%s\" value present", label);
+                return;
+            }
             JsonObject obj = (*m_doc)[label].to<JsonObject>();
         #else
             JsonObject obj = (*m_doc).createNestedObject(label);
@@ -251,13 +256,12 @@ class SetupConfigurator
             if (key.equals("raw-javascript"))
                 key += numOptions ;
 
-            // If key is present and value is the same, we don't need to create/update it.
-            JsonVariant foundObject = (*m_doc)[key];
-            if (foundObject.isNull())
+            // If key is present we don't need to create it.          
+            JsonVariant obj = (*m_doc)[key];
+            if (!obj.isNull()) {
+                log_debug("Key \"%s\" value present", key.c_str());
                 return;
-            
-            // if (m_doc->containsKey(key.c_str()))
-            //     return;
+            }
 
             // if min, max, step != from default, treat this as object in order to set other properties
             if (d_min != MIN_F || d_max != MAX_F || step != 1.0) {
