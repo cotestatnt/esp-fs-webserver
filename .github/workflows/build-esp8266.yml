@@ -30,7 +30,7 @@ jobs:
 
       - name: Install ArduinoJson
         run: arduino-cli lib install ArduinoJson
-        
+
       - name: Install Arduino WebSockets
         run: ARDUINO_LIBRARY_ENABLE_UNSAFE_INSTALL=true arduino-cli lib install --git-url https://github.com/Links2004/arduinoWebSockets
 
@@ -42,7 +42,7 @@ jobs:
 
       - name: Build Examples
         run: |          
-          EXCLUDE_EXAMPLES="esp32-CAM-webpage.ino csvLoggerSD.ino gpio_list.ino"
+          EXCLUDE_EXAMPLES="esp32-CAM-webpage.ino csvLoggerSD.ino gpio_list.ino rfidLogSystem.ino"
           
           for i in `ls examples`; do
             # skip excluded examples
@@ -91,7 +91,7 @@ jobs:
 
       - name: Build Examples
         run: |          
-          EXCLUDE_EXAMPLES="esp32-CAM-webpage.ino csvLoggerSD.ino gpio_list.ino"
+          EXCLUDE_EXAMPLES="esp32-CAM-webpage.ino csvLoggerSD.ino gpio_list.ino rfidLogSystem.ino"
           
           for i in `ls examples`; do
             # skip excluded examples
