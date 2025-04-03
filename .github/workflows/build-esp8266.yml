@@ -31,9 +31,6 @@ jobs:
       - name: Install ArduinoJson
         run: arduino-cli lib install ArduinoJson
 
-      - name: Install Arduino WebSockets
-        run: ARDUINO_LIBRARY_ENABLE_UNSAFE_INSTALL=true arduino-cli lib install --git-url https://github.com/Links2004/arduinoWebSockets
-
       - name: Install Arduino-MySQL
         run: ARDUINO_LIBRARY_ENABLE_UNSAFE_INSTALL=true arduino-cli lib install --git-url https://github.com/cotestatnt/Arduino-MySQL
         
