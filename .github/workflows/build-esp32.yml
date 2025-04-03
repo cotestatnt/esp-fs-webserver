@@ -49,47 +49,6 @@ jobs:
             arduino-cli compile --library . --warnings none -b esp32:esp32:esp32 "examples/$i/$i.ino"
           done
 
-  platformio-esp32-arduino2:
-    name: ESP32 (pio) - Arduino 2
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        board:
-          - esp32dev
-          - esp32-s3-devkitc-1
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Cache PlatformIO
-        uses: actions/cache@v4
-        with:
-          key: ${{ runner.os }}-pio
-          path: |
-            ~/.cache/pip
-            ~/.platformio
-
-      - name: Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.x"
-
-      - name: Install PIO
-        run: |
-          python -m pip install --upgrade pip
-          pip install --upgrade platformio
-
-      - name: Build Examples
-        run: |
-          for i in `ls examples`; do
-            echo "============================================================="
-            echo "Building examples/$i..."
-            echo "============================================================="
-            PLATFORMIO_SRC_DIR=examples/$i PIO_BOARD=${{ matrix.board }} pio run -e ci-arduino-2
-          done
-
   platformio-esp32-arduino-3:
     name: ESP32 (pio) - Arduino 3
     runs-on: ubuntu-latest

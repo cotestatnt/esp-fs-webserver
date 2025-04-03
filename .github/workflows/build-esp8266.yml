@@ -39,7 +39,7 @@ jobs:
 
       - name: Build Examples
         run: |          
-          EXCLUDE_EXAMPLES="esp32-cam binaryWebSocket csvLoggerSD localRFID mysqlRFID"
+          EXCLUDE_EXAMPLES="esp32-CAM-webpage.ino"
           
           for i in `ls examples`; do
             # skip excluded examples
@@ -88,7 +88,7 @@ jobs:
 
       - name: Build Examples
         run: |          
-          EXCLUDE_EXAMPLES="esp32-cam binaryWebSocket csvLoggerSD localRFID mysqlRFID"
+          EXCLUDE_EXAMPLES="esp32-CAM-webpage.ino"
           
           for i in `ls examples`; do
             # skip excluded examples
