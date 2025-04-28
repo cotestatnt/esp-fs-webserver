@@ -1,4 +1,3 @@
-#include <WebSocketsServer.h>   // https://github.com/Links2004/arduinoWebSockets
 #include <esp-fs-webserver.h>   // https://github.com/cotestatnt/esp-fs-webserver
 
 #include <FS.h>

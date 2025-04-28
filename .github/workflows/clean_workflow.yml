@@ -1,20 +1,21 @@
 name: Clean Workflow Logs
-
 on:
   workflow_dispatch:
     inputs:
-      days_old:
-        description: "The amount of days old to delete"
-        default: "3"
+      keep_minimum_runs:
+        description: "Numero di workflow recenti da mantenere"
+        default: "5"
         required: false
-
 jobs:
   clean-logs:
     runs-on: ubuntu-latest
+    permissions:
+      actions: write
     steps:
-      - uses: igorjs/gh-actions-clean-workflow@v1
+      - name: Delete workflow runs
+        uses: Mattraks/delete-workflow-runs@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          owner: ${{ github.repository_owner }}
-          repo: ${{ github.event.repository.name }}
-          days_old: ${{ github.event.inputs.days_old }}
+          repository: ${{ github.repository }}
+          retain_days: 0  # Imposta a 0 per ignorare la data e considerare solo keep_minimum_runs
+          keep_minimum_runs: ${{ github.event.inputs.keep_minimum_runs }}

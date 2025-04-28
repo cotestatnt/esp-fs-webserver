@@ -54,7 +54,7 @@
     #include "sys/stat.h"
     #include <WiFi.h>
     #include <mdns.h>
-    #include <HTTPUpdateServer.h>
+    #include <Update.h>
     #include <WebServer.h>
     using WebServerClass = WebServer;
 #endif
@@ -162,6 +162,14 @@ public:
     * Get library version
     */
     const char* getVersion();
+    
+    /**
+     *  authenticate user
+     *  use internal function to check if user is authenticated
+     * ( intended to be used outside the library's scope )
+     *  @return true if authenticated, false otherwise
+     */
+    bool authenticate_internal();
 
     /*
       Enable the built-in ACE web file editor
@@ -279,7 +287,7 @@ private:
     char            m_version[16] = {__TIME__};
     IPAddress       m_captiveIp = IPAddress(192, 168, 4, 1);
     ServerWebSocket*  m_websocket;
-
+    uint8_t otaDone = 0;
     // Default handler for all URIs not defined above, use it to read files from filesystem
     bool captivePortal();
     void doWifiConnection();

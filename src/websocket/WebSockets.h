@@ -30,6 +30,7 @@
 #include <functional>
 #include "../SerialLog.h"
 
+
 #define WEBSOCKETS_MAX_DATA_SIZE (15 * 1024)
 #define WEBSOCKETS_USE_BIG_MEM
 #define GET_FREE_HEAP ESP.getFreeHeap()
@@ -182,6 +183,7 @@ typedef struct {
 
 } WSclient_t;
 
+
 class WebSockets {
   protected:
 
@@ -220,4 +222,7 @@ class WebSockets {
 #ifndef UNUSED
 #define UNUSED(var) (void)(var)
 #endif
+
+
+
 #endif /* WEBSOCKETS_H_ */

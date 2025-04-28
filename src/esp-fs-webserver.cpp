@@ -94,8 +94,28 @@ void FSWebServer::enableFsCodeEditor(FsInfoCallbackF fsCallback) {
 }
 
 void FSWebServer::setAuthentication(const char* user, const char* pswd) {
-    m_pageUser = (char*) malloc(strlen(user)*sizeof(char));
-    m_pagePswd = (char*) malloc(strlen(pswd)*sizeof(char));
+    if (user == nullptr || pswd == nullptr) {
+        log_error("Invalid username or password");
+        return;
+    }
+    size_t user_len = (strlen(user) * sizeof(char)) + 1;
+    size_t pswd_len = (strlen(pswd) * sizeof(char) )+ 1;
+    if (m_pageUser != nullptr) {
+        free(m_pageUser);
+        m_pageUser = nullptr;
+    }
+    if (m_pagePswd != nullptr) {
+        free(m_pagePswd);
+        m_pagePswd = nullptr;
+    }
+    m_pageUser = nullptr;
+    m_pagePswd = nullptr;
+    if (user_len <= 1 || pswd_len <= 1) {
+        log_error("Invalid username or password");
+        return;
+    }
+    m_pageUser = (char *)malloc(user_len);
+    m_pagePswd = (char *)malloc(pswd_len);
     strcpy(m_pageUser, user);
     strcpy(m_pagePswd, pswd);
 }
@@ -564,7 +584,6 @@ void FSWebServer::update_second()
 
 void FSWebServer::update_first()
 {
-    static uint8_t otaDone = 0;
     size_t fsize;
     if (this->hasArg("size"))
         fsize = this->arg("size").toInt();
@@ -991,6 +1010,14 @@ void FSWebServer::handleGetEdit()
 #else
     replyToCLient(NOT_FOUND, PSTR("FILE_NOT_FOUND"));
 #endif
+}
+
+bool FSWebServer::authenticate_internal()
+{
+    if (m_pageUser == nullptr) {
+        return true; // No authentication required
+    }
+    return this->authenticate(m_pageUser, m_pagePswd);
 }
 
 /*

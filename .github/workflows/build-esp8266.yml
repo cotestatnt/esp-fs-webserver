@@ -1,0 +1,104 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+
+name: Build (ESP8266)
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+      - release/*
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  arduino-esp8266:
+    name: ESP8266 (arduino-cli)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install arduino-cli
+        run: curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | BINDIR=/usr/local/bin sh
+
+      - name: Update core index
+        run: arduino-cli core update-index --additional-urls https://arduino.esp8266.com/stable/package_esp8266com_index.json
+
+      - name: Install core
+        run: arduino-cli core install --additional-urls https://arduino.esp8266.com/stable/package_esp8266com_index.json esp8266:esp8266
+
+      - name: Install ArduinoJson
+        run: arduino-cli lib install ArduinoJson
+
+      - name: Install Arduino-MySQL
+        run: ARDUINO_LIBRARY_ENABLE_UNSAFE_INSTALL=true arduino-cli lib install --git-url https://github.com/cotestatnt/Arduino-MySQL
+        
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build Examples
+        run: |          
+          EXCLUDE_EXAMPLES="esp32-CAM-webpage.ino csvLoggerSD.ino gpio_list.ino rfidLogSystem.ino"
+          
+          for i in `ls examples`; do
+            # skip excluded examples
+            if [[ $EXCLUDE_EXAMPLES == *"$i"* ]]; then
+              echo "Skipping: $i"
+              continue
+            fi
+            
+            echo "============================================================="
+            echo "Building examples/$i..."
+            echo "============================================================="
+            arduino-cli compile --library . --warnings none -b esp8266:esp8266:huzzah "examples/$i/$i.ino"
+          done
+
+  platformio-esp8266:
+    name: ESP8266 (pio)
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        board:
+          - huzzah
+          - d1_mini
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache PlatformIO
+        uses: actions/cache@v4
+        with:
+          key: ${{ runner.os }}-pio
+          path: |
+            ~/.cache/pip
+            ~/.platformio
+
+      - name: Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install PIO
+        run: |
+          python -m pip install --upgrade pip
+          pip install --upgrade platformio
+
+      - name: Build Examples
+        run: |          
+          EXCLUDE_EXAMPLES="esp32-CAM-webpage.ino csvLoggerSD.ino gpio_list.ino rfidLogSystem.ino"
+          
+          for i in `ls examples`; do
+            # skip excluded examples
+            if [[ $EXCLUDE_EXAMPLES == *"$i"* ]]; then
+              echo "Skipping: $i"
+              continue
+            fi
+            
+            echo "============================================================="
+            echo "Building examples/$i..."
+            echo "============================================================="
+            PLATFORMIO_SRC_DIR=examples/$i PIO_BOARD=${{ matrix.board }} pio run -e ci-esp8266
+          done

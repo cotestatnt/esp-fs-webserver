@@ -7,6 +7,10 @@
 #include "soc/soc.h"          // Brownout error fix
 #include "soc/rtc_cntl_reg.h" // Brownout error fix
 
+#if ESP_ARDUINO_VERSION_MAJOR >= 3
+  #include "soc/soc_caps.h"
+#endif
+
 // Local include files
 #include "camera_pins.h"
 
@@ -22,8 +26,6 @@ uint32_t lastGrabTime = 0;
 struct tm tInfo;
 
 // Functions prototype
-void listDir(fs::FS &, const char *, uint8_t, bool);
-void printHeapStats();
 void setLamp(int);
 
 // Grab a picture from CAM and store on SD or in flash
@@ -31,15 +33,18 @@ void getPicture();
 const char* getFolder = "/img";
 
 ///////////////////////////////////  SETUP  ///////////////////////////////////////
-void setup()
-{
+void setup() {
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); // disable brownout detect
 
   // Flash LED setup
   pinMode(LAMP_PIN, OUTPUT);                      // set the lamp pin as output
+#if ESP_ARDUINO_VERSION_MAJOR >= 3
+  ledcAttach(LAMP_PIN, 1000, 8);
+#else
   ledcSetup(lampChannel, pwmfreq, pwmresolution); // configure LED PWM channel
-  setLamp(0);                                     // set default value
-  ledcAttachPin(LAMP_PIN, lampChannel);           // attach the GPIO pin to the channel
+  ledcAttachPin(LAMP_PIN, lampChannel);
+#endif
+  setLamp(0);        
 
   Serial.begin(115200);
   Serial.println();
@@ -50,19 +55,18 @@ void setup()
    To avoid led glowindg, set mode1bit = true (SD HS_DATA1 is tied to GPIO4, the same of on-board flash led)
   */
 
-  if (!SD_MMC.begin("/sdcard", true, true, SDMMC_FREQ_HIGHSPEED, 5))
-  {
+  if (!SD_MMC.begin("/sdcard", true, true, SDMMC_FREQ_HIGHSPEED, 5)) {
     Serial.println("\nSD Mount Failed.\n");
   }
 
-  if (!SD_MMC.exists(getFolder))
-  {
+  if (!SD_MMC.exists(getFolder)) {
     if(SD_MMC.mkdir(getFolder))
       Serial.println("Dir created");
     else
       Serial.println("mkdir failed");
   }
-  listDir(getFolder, 0);
+
+  myWebServer.printFileList(SD_MMC, Serial, getFolder);
 
   // Try to connect to stored SSID, start AP if fails after timeout
   myWebServer.setAP("ESP_AP", "123456789");
@@ -74,9 +78,6 @@ void setup()
   
   // set /setup and /edit page authentication
   // myWebServer.setAuthentication("admin", "admin");
-
-  // Enable ACE FS file web editor and add FS info callback function
-  myWebServer.enableFsCodeEditor(getFsInfo);
 
   // Start webserver
   myWebServer.begin();
@@ -94,8 +95,7 @@ void setup()
 }
 
 ///////////////////////////////////  LOOP  ///////////////////////////////////////
-void loop()
-{
+void loop() {
   myWebServer.run();
   if (grabInterval) {
     if (millis() - lastGrabTime > grabInterval *1000) {
@@ -117,10 +117,8 @@ void setInterval() {
 }
 
 // Lamp Control
-void setLamp(int newVal)
-{
-  if (newVal != -1)
-  {
+void setLamp(int newVal) {
+  if (newVal != -1) {
     // Apply a logarithmic function to the scale.
     int brightness = round((pow(2, (1 + (newVal * 0.02))) - 2) / 6 * pwmMax);
     ledcWrite(lampChannel, brightness);
@@ -132,8 +130,8 @@ void setLamp(int newVal)
 }
 
 // Send a picture taken from CAM to a Telegram chat
-void getPicture()
-{  
+void getPicture() {  
+  bool isWebRequest = (myWebServer.client());
 
   // Take Picture with Camera;
   Serial.println("Camera capture requested");
@@ -144,10 +142,9 @@ void getPicture()
   camera_fb_t *fb = esp_camera_fb_get();
   setLamp(0);
 
-  if (!fb)
-  {
+  if (!fb) {
     Serial.println("Camera capture failed");
-    if(webRequest)
+    if(isWebRequest)
       myWebServer.send(500, "text/plain", "ERROR. Image grab failed");
     return;
   }
@@ -164,10 +161,9 @@ void getPicture()
   strcat(filePath, "/");
   strcat(filePath, filename);
   File file = SD_MMC.open(filePath, "w");
-  if (!file)
-  {
+  if (!file) {
     Serial.println("Failed to open file in writing mode");
-    if(webRequest)
+    if (isWebRequest)
       myWebServer.send(500, "text/plain", "ERROR. Image grab failed");
     return;
   }
@@ -181,45 +177,6 @@ void getPicture()
 
   // Clear buffer
   esp_camera_fb_return(fb);
-  if(webRequest.client())
+  if (isWebRequest)
     myWebServer.send(200, "text/plain", filename);
-}
-
-// List all files saved in the selected filesystem
-void listDir(const char *dirname, uint8_t levels)
-{
-  uint32_t freeBytes = SD_MMC.totalBytes() - SD_MMC.usedBytes();
-  Serial.print("\nTotal space: ");
-  Serial.println(SD_MMC.totalBytes());
-  Serial.print("Free space: ");
-  Serial.println(freeBytes);
-
-  Serial.printf("Listing directory: %s\r\n", dirname);
-  File root = SD_MMC.open(dirname);
-  if (!root)
-  {
-    Serial.println("- failed to open directory\n");
-    return;
-  }
-  if (!root.isDirectory())
-  {
-    Serial.println(" - not a directory\n");
-    return;
-  }
-  File file = root.openNextFile();
-  while (file)
-  {
-    if (file.isDirectory())
-    {
-      Serial.printf("  DIR : %s\n", file.name());
-      if (levels)
-        listDir(file.name(), levels - 1);
-    }
-    else
-    {
-      Serial.printf("  FILE: %s\tSIZE: %d", file.name(), file.size());
-      Serial.println();
-    }
-    file = root.openNextFile();
-  }
 }

@@ -1,5 +1,4 @@
-#include <WebSocketsServer.h>   // https://github.com/Links2004/arduinoWebSockets
-#include <esp-fs-webserver.h>  // https://github.com/cotestatnt/esp-fs-webserver
+#include <esp-fs-webserver.h>   // https://github.com/cotestatnt/esp-fs-webserver
 #include <ArduinoJson.h>
 
 #include <FS.h>
@@ -78,7 +77,11 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len) {
 
 
 void parseMessage(String& json) {
-  DynamicJsonDocument doc(512);
+#if ARDUINOJSON_VERSION_MAJOR > 6
+  JsonDocument doc;
+#else
+ DynamicJsonDocument doc(512);
+#endif
   DeserializationError error = deserializeJson(doc, json);
 
   if (!error) {
@@ -103,11 +106,20 @@ void parseMessage(String& json) {
 }
 
 void updateGpioList() {
-  StaticJsonDocument<512> doc;
+#if ARDUINOJSON_VERSION_MAJOR > 6
+  JsonDocument doc;
   JsonArray array = doc.to<JsonArray>();
+#else
+  DynamicJsonDocument doc(512);
+  JsonArray array = doc.to<JsonArray>();
+#endif
 
   for (gpio_type &gpio : gpios) {
+#if ARDUINOJSON_VERSION_MAJOR > 6
+    JsonObject obj = array.add<JsonObject>();
+#else
     JsonObject obj = array.createNestedObject();
+#endif
     obj["type"] = gpio.type;
     obj["pin"] = gpio.pin;
     obj["label"] = gpio.label;

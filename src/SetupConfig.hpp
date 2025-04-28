@@ -189,8 +189,13 @@ class SetupConfigurator
         */
         void addDropdownList(const char *label, const char** array, size_t size) {
 
-            // If key is present in json, we don't need to create it.
         #if ARDUINOJSON_VERSION_MAJOR > 6
+            // If key is present we don't need to create it.          
+            JsonVariant variant = (*m_doc)[label];
+            if (!variant.isNull()) {
+                log_debug("Key \"%s\" value present", label);
+                return;
+            }
             JsonObject obj = (*m_doc)[label].to<JsonObject>();
         #else
             JsonObject obj = (*m_doc).createNestedObject(label);
