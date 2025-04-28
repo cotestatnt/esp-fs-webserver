@@ -22,8 +22,7 @@ String stringVar = "Test option String";
 // In order to show a dropdown list box in /setup page
 // we need a list ef values and a variable to store the selected option
 #define LIST_SIZE  7
-const char* dropdownList[LIST_SIZE] = {
-  "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"};
+const char* dropdownList[LIST_SIZE] = { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"};
 String dropdownSelected;
 
 // Var labels (in /setup webpage)

@@ -251,13 +251,14 @@ class SetupConfigurator
             if (key.equals("raw-javascript"))
                 key += numOptions ;
 
-            // If key is present and value is the same, we don't need to create/update it.
-            JsonVariant foundObject = (*m_doc)[key];
-            if (foundObject.isNull())
+            // If key is present and value is the same, we don't need to create/update it.      
+            #if ARDUINOJSON_VERSION_MAJOR > 6      
+            if ((*m_doc)[key].is<JsonVariant>())
                 return;
-            
-            // if (m_doc->containsKey(key.c_str()))
-            //     return;
+            #else                        
+            if (m_doc->containsKey(key.c_str()))
+                return;
+            #endif
 
             // if min, max, step != from default, treat this as object in order to set other properties
             if (d_min != MIN_F || d_max != MAX_F || step != 1.0) {
