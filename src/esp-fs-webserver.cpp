@@ -25,8 +25,12 @@ void FSWebServer::begin(uint16_t port)
 
     // Captive Portal redirect
     // Windows
-    this->on("/connecttest.txt", HTTP_GET, std::bind(&FSWebServer::captivePortal, this));
+	this->on("/connecttest.txt", HTTP_GET, std::bind(&FSWebServer::captivePortal, this));
+    this->on("/redirect", HTTP_GET, std::bind(&FSWebServer::captivePortal, this));
     this->on("/www.msftconnecttest.com/redirect", HTTP_GET, std::bind(&FSWebServer::captivePortal, this));
+    this->on("/www.msftncsi.com/ncsi.txt", HTTP_GET, std::bind(&FSWebServer::captivePortal, this));
+    this->on("/ncsi.txt", HTTP_GET, std::bind(&FSWebServer::captivePortal, this));
+    this->on("/www.msftconnecttest.com/connecttest.txt", HTTP_GET, std::bind(&FSWebServer::captivePortal, this));
     // Apple
     this->on("/hotspot-detect.html", HTTP_GET, std::bind(&FSWebServer::captivePortal, this));
     // Android
