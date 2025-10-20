@@ -2,6 +2,6 @@
 #define  esp_fs_version_cpp
 #include "esp-fs-webserver.h"
 const char* FSWebServer::getVersion() { 
-	return "2.0.9"; 
+	return "2.0.10"; 
 }
 #endif
