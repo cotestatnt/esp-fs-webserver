@@ -411,10 +411,11 @@ void FSWebServer::doWifiConnection()
             IPAddress ip = WiFi.localIP();
             log_info("Connected to Wifi! IP address: %s", ip.toString().c_str());
 
+            // <a href="http://192.168.4.1:80/">http://192.168.4.1:80/</a>
             snprintf(resp, sizeof(resp),
-                "Restart ESP and then reload this page from "
-                "<a href='%d:%d.%d.%d:%d/setup'>the new LAN address</a>",
-                ip[3], ip[2], ip[1], ip[0], m_port);
+                "Restart ESP and then reload this page from the new LAN address: "
+                "<a href='%s:%d/setup'>%s</a>", 
+                ip.toString().c_str(), m_port, ip.toString().c_str());
             this->send(200, "text/plain", resp);
             m_apmode = false;
 
