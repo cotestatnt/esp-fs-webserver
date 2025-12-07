@@ -17,8 +17,6 @@
 FSWebServer myWebServer(LittleFS, 80);
 
 // Update these with values suitable for your network.
-const char* ssid = "PuccosNET";
-const char* password = "Tole76tnt";
 const char* mqtt_server = "broker.mqtt-dashboard.com";
 
 WiFiClient espClient;
@@ -145,7 +143,6 @@ void loop() {
     mqttClient.publish(outTopic, payload.c_str());
   }
 
-  // Handle webserver request 
-  // (just /setup and /edit in this example)
+  // Handle webserver request (just /setup and /edit in this example)
   myWebServer.run();
 }
