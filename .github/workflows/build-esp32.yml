@@ -37,6 +37,9 @@ jobs:
       - name: Install Arduino_MFRC522v2
         run: ARDUINO_LIBRARY_ENABLE_UNSAFE_INSTALL=true arduino-cli lib install --git-url https://github.com/OSSLibraries/Arduino_MFRC522v2        
 
+      - name: Install Arduino_MFRC522v2
+        run: ARDUINO_LIBRARY_ENABLE_UNSAFE_INSTALL=true arduino-cli lib install --git-url https://github.com/knolleary/pubsubclient        
+
       - name: Checkout
         uses: actions/checkout@v4
 
