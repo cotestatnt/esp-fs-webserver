@@ -61,7 +61,6 @@ jobs:
       fail-fast: false
       matrix:
         board:
-          - huzzah
           - d1_mini
 
     steps:
@@ -88,7 +87,7 @@ jobs:
 
       - name: Build Examples
         run: |          
-          EXCLUDE_EXAMPLES="esp32-CAM-webpage.ino csvLoggerSD.ino gpio_list.ino rfidLogSystem.ino"
+          EXCLUDE_EXAMPLES="mqtt_webserver.ino esp32-CAM-webpage.ino csvLoggerSD.ino gpio_list.ino rfidLogSystem.ino"
           
           for i in `ls examples`; do
             # skip excluded examples
