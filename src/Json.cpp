@@ -143,6 +143,51 @@ String Json::serialize(bool pretty) const
     return s;
 }
 
+// --------- Construction helpers for nested structures ---------
+bool Json::createObject()
+{
+    if (root) cJSON_Delete(root);
+    root = cJSON_CreateObject();
+    return root != nullptr;
+}
+
+bool Json::createArray()
+{
+    if (root) cJSON_Delete(root);
+    root = cJSON_CreateArray();
+    return root != nullptr;
+}
+
+bool Json::add(const Json& child)
+{
+    if (!root || !cJSON_IsArray(root)) return false;
+    // Deep copy child root into this array
+    cJSON* copy = nullptr;
+    if (child.root) {
+        copy = cJSON_Duplicate(child.root, /*recurse*/1);
+    } else {
+        copy = cJSON_CreateNull();
+    }
+    if (!copy) return false;
+    cJSON_AddItemToArray(root, copy);
+    return true;
+}
+
+bool Json::set(const String& key, const Json& child)
+{
+    if (!root || !cJSON_IsObject(root)) return false;
+    cJSON_DeleteItemFromObjectCaseSensitive(root, key.c_str());
+    cJSON* copy = nullptr;
+    if (child.root) {
+        copy = cJSON_Duplicate(child.root, /*recurse*/1);
+    } else {
+        copy = cJSON_CreateNull();
+    }
+    if (!copy) return false;
+    cJSON_AddItemToObject(root, key.c_str(), copy);
+    return true;
+}
+
 bool Json::hasObject(const String &key) const
 {
     if (!root)

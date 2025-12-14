@@ -15,6 +15,15 @@ public:
     bool parse(const String& text);
     String serialize(bool pretty=false) const;
 
+    // Construction helpers for nested structures
+    // Initialize the root as an empty object or array
+    bool createObject();
+    bool createArray();
+    // Append a child to the root array
+    bool add(const Json& child);
+    // Set a nested child under a key in the root object
+    bool set(const String& key, const Json& child);
+
     bool hasObject(const String& key) const;
     void ensureObject(const String& key);
 

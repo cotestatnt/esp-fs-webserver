@@ -228,47 +228,49 @@ void FSWebServer::sendOK() {
 void FSWebServer::handleFileRequest() {
     String _url = WebServerClass::urlDecode(this->uri());
 
-    // Captive portal generic redirect when in AP mode
-    if (m_isApMode) {
-        // If the Host header is not our local host, redirect to portal root
-        String host = this->hostHeader();
-        if (host.length() > 0 && host != m_host) {
+    log_debug("handleFileRequest for %s", _url.c_str());
+    if (!m_filesystem->exists(_url)) {
+        // Requested file not found, check if gzipped version exists
+        log_debug("File %s not found, checking for gzipped version", this->uri().c_str());
+        _url += ".gz";  
+        // this->sendHeader(PSTR("Content-Encoding"), "gzip");
+    }
+    
+    if (m_filesystem->exists(_url)) {
+        File file = m_filesystem->open(_url , "r");
+        if (file) {
+#if defined(ESP8266)
+            // ESP8266WebServer has its own mime namespace
+            using namespace mime;
+            String contentType = getContentType(_url);
+#elif defined(ESP32)
+            // Use local mimetable from library
+            String contentType = mimetype::getContentType(_url);
+            log_debug("Determined content type: %s", contentType.c_str());
+#endif                      
+            this->streamFile(file, contentType);
+            file.close();
+            return; // If file was served, skip the rest
+        } 
+        else {
+            log_debug("Failed to open file %s", _url.c_str());
+            this->send(500, "text/plain", "FsWebServer: Failed to open file resource");
+        } 
+    }
+    else {
+        log_debug("File %s not found, checking for index redirection", this->uri().c_str());
+        
+        // File not found
+        if (this->uri() == "/" && !m_filesystem->exists("/index.htm") && !m_filesystem->exists("/index.html")) {
             this->sendHeader(PSTR("Location"), "/");
             this->send(302, "text/plain", "");
+            log_debug("Redirecting \"/\" to \"/setup\" (no index file found)");
             return;
         }
     }
 
-    // Check if requested file (or gzipped version) exists
-    if (!m_filesystem->exists(_url)) {
-        _url += ".gz";        
-    }
-
-    log_debug("handleFileRequest: %s", _url.c_str());
-    File file = m_filesystem->open(_url , "r");
-    if (file) {
-        #if defined(ESP8266)
-            // ESP8266WebServer has its own mime namespace
-            using namespace mime;
-            String contentType = getContentType(_url);
-        #elif defined(ESP32)
-            // Use local mimetable from library
-            String contentType = mimetype::getContentType(_url.c_str());
-        #endif
-        this->streamFile(file, contentType);
-        file.close();
-        return; // If file was served, 404 is not needed
-    }   
-
-    String error = "FSWebServer: File " + _url + " not found"; 
-    if (m_isApMode) {
-        // Fallback redirect to portal in AP mode
-        this->sendHeader(PSTR("Location"), "/");
-        this->send(302, "text/plain", "");
-    } else {
-        this->send(404, "text/plain", error);
-    }
-    log_debug("Resource %s not found\n", this->uri().c_str());
+    this->send(404, "text/plain", "AsyncFsWebServer: resource not found");
+    log_debug("Resource %s not found", this->uri().c_str());
 }
 
 

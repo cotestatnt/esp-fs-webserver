@@ -41,12 +41,12 @@ gpio_type gpios[NUM_GPIOS] = {
 
 /* ESP32 - NodeMCU-32S */
 gpio_type gpios[] = {
-  {"input", "INPUT 18", 18},
-  {"input", "INPUT 19", 19},
-  {"input", "INPUT 21", 21},
-  {"output", "OUTPUT 4", 4},
-  {"output", "OUTPUT 5", 5},
-  {"output", "LED BUILTIN", 2} // Led ON with signal HIGH
+  {"input", "INPUT 0", BOOT_PIN},
+  {"input", "INPUT 1", 19},
+  {"input", "INPUT 2", 21},
+  {"output", "OUTPUT 1", 4},
+  {"output", "OUTPUT 2", 5},
+  {"output", "LED BUILTIN", LED_BUILTIN} // Led ON with signal LOW usually
 };
 
 
@@ -80,19 +80,20 @@ void parseMessage(const String json) {
   CJSON::Json doc;
   
   if (doc.parse(json)) {
-    // If this is a "writeOut" command, set the pin level to value
     String cmd;
     if (doc.getString("cmd", cmd)) {
+      // If this is a "writeOut" command, set the pin level to value
       if (cmd == "writeOut") {
-        double pin_val, level_val;
-        if (doc.getNumber("pin", pin_val) && doc.getNumber("level", level_val)) {
-          int pin = (int)pin_val;
-          int level = (int)level_val;
+        // getNumber returns double, so use double and cast to int
+        double pin, level;
+        if (doc.getNumber("pin", pin) && doc.getNumber("level", level)) {
+          // Find the gpio in the array and set the level
           for (gpio_type &gpio : gpios) {
-            if (gpio.pin == pin) {
-              Serial.printf("Set pin %d to %d\n", pin, level);
-              gpio.level = level;
-              digitalWrite(pin, level);
+            if (gpio.pin == (int)pin) {
+              Serial.printf("Set pin %d to %d\n", (int)pin, (int)level);
+              gpio.level = (int)level;
+              digitalWrite((int)pin, (int)level);
+              // Update all clients with new gpio list
               updateGpioList();
               return;
             }
@@ -106,26 +107,25 @@ void parseMessage(const String json) {
 }
 
 void updateGpioList() {
-  // Temporary JSON build without nested CJSON::Json support
-  String json = "[";
-  for (size_t i = 0; i < (sizeof(gpios) / sizeof(gpio_type)); i++) {
-    const gpio_type &gpio = gpios[i];
-    json += "{\"type\":\"" + String(gpio.type) + "\",";
-    json += "\"pin\":" + String(gpio.pin) + ",";
-    json += "\"label\":\"" + String(gpio.label) + "\",";
-    json += "\"level\":" + String(gpio.level ? "true" : "false") + "}";
-    if (i < (sizeof(gpios) / sizeof(gpio_type)) - 1) json += ",";
+  // Build JSON array using CJSON::Json with nesting support
+  CJSON::Json doc;
+  doc.createArray();
+  // Iterate the array of GPIO struct and add each as JSON object
+  for (gpio_type &gpio : gpios) {
+    CJSON::Json item;
+    item.createObject();
+    item.setString("type", String(gpio.type));
+    item.setNumber("pin", gpio.pin);
+    item.setString("label", String(gpio.label));
+    item.setBool("level", gpio.level);
+    doc.add(item);
   }
-  json += "]";
+  // Serialize JSON document to string
+  String json = doc.serialize();
 
   // Update client via websocket
   server.broadcastWebSocket(json);
   server.send(200, "text/plain", json);
-}
-
-// Overload used by places that call updateGpioList(nullptr)
-void updateGpioList(void*) {
-  updateGpioList();
 }
 
 bool updateGpioState() {
@@ -141,8 +141,6 @@ bool updateGpioState() {
   }
   return false;
 }
-
-
 
 void setup() {
   Serial.begin(115200);
@@ -202,6 +200,6 @@ void loop() {
 
   // True on pin state change
   if (updateGpioState()) {
-    updateGpioList(nullptr);   // Push new state to web clients via websocket
+    updateGpioList();   // Push new state to web clients via websocket
   }
 }
