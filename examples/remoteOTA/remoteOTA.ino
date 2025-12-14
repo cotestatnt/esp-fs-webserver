@@ -140,16 +140,16 @@ bool startFilesystem() {
 
 
 ////////////////////////////  HTTP Request Handlers  ////////////////////////////////////
-void handleLed(AsyncWebServerRequest *request) {
+void handleLed() {
   // http://xxx.xxx.xxx.xxx/led?val=1
-  if(request->hasArg("val")) {
-    int value = request->arg("val").toInt();
+  if(server.hasArg("val")) {
+    int value = server.arg("val").toInt();
     digitalWrite(ledPin, value);
   }
 
   String reply = "LED is now ";
   reply += digitalRead(ledPin) ? "OFF" : "ON";
-  request->send(200, "text/plain", reply);
+  server.send(200, "text/plain", reply);
 }
 
 /* Handle the update request from client.
@@ -161,16 +161,16 @@ void handleLed(AsyncWebServerRequest *request) {
   - update the "version.json" file with the new version number and the address of the binary file
   - on the update webpage, press the "UPDATE" button.
 */
-void handleUpdate(AsyncWebServerRequest *request) {
-  if(request->hasArg("version") && request->hasArg("url")) {
-    const char* new_version = request->arg("version").c_str();
-    const char* url = request->arg("url").c_str();
+void handleUpdate() {
+  if(server.hasArg("version") && server.hasArg("url")) {
+    const char* new_version = server.arg("version").c_str();
+    const char* url = server.arg("url").c_str();
     String reply = "Firmware is going to be updated to version ";
     reply += new_version;
     reply += " from remote address ";
     reply += url;
     reply += "<br>Wait 10-20 seconds and then reload page.";
-    request->send(200, "text/plain", reply );
+    server.send(200, "text/plain", reply );
     Serial.println(reply);
     doUpdate(url, new_version);
   }
@@ -211,7 +211,7 @@ void setup(){
   server.on("/firmware_update", HTTP_GET, handleUpdate);
 
   // Add handler as lambda function (just to show a different method)
-  server.on("/version", HTTP_GET, [](AsyncWebServerRequest *request) {
+  server.on("/version", HTTP_GET, []() {
     server.getOptionValue("New firmware JSON", fimwareInfo);
 
     EEPROM.get(0, fw_version);
@@ -223,7 +223,7 @@ void setup(){
     reply += fimwareInfo;
     reply += "\"}";
     // Send to client actual firmware version and address where to check if new firmware available
-    request->send(200, "text/json", reply);
+    server.send(200, "text/json", reply);
   });
 
   // Configure /setup page and start Web Server

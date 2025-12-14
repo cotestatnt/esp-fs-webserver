@@ -117,11 +117,11 @@ bool loadOptions() {
 
 
 ////////////////////////////  HTTP Request Handlers  ////////////////////////////////////
-void handleLoadOptions(AsyncWebServerRequest *request) {
-  request->send(200, "text/plain", "Options loaded");
+void handleLoadOptions() {
+  server.send(200, "text/plain", "Options loaded");
   loadOptions();
   Serial.println("Application option loaded after web request");
-}
+} 
 
 
 void setup() {

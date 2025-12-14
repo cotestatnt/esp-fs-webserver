@@ -1,5 +1,8 @@
 #include "FSWebServer.h"
-#include "mimetable/mimetable.h"
+#if defined(ESP32)
+    #include "mimetable/mimetable.h"
+#endif
+
 
 void setTaskWdt(uint32_t timeout) {
   #if defined(ESP32)
@@ -231,8 +234,15 @@ void FSWebServer::handleFileRequest() {
     log_debug("handleFileRequest: %s", _url.c_str());
     File file = m_filesystem->open(_url , "r");
     if (file) {
-        // Use local mimetable from library
-        this->streamFile(file, mimetype::getContentType(_url.c_str()))  ;
+        #if defined(ESP8266)
+            // ESP8266WebServer has its own mime namespace
+            using namespace mime;
+            String contentType = getContentType(_url);
+        #elif defined(ESP32)
+            // Use local mimetable from library
+            String contentType = mimetype::getContentType(_url.c_str());
+        #endif
+        this->streamFile(file, contentType);
         file.close();
         return; // If file was served, 404 is not needed
     }   

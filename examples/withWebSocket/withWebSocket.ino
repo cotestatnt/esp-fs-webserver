@@ -147,8 +147,8 @@ void setup() {
   server.addOption("Option 2", option2);
 
   // Add custom page handlers
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(200, "text/html", homepage);
+  server.on("/", HTTP_GET, [](){
+    server.send(200, "text/html", homepage);
   });
 
   // Enable ACE FS file web editor and add FS info callback function

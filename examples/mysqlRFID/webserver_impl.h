@@ -45,11 +45,11 @@ String getSHA256(const char* payload) {
 }
 
 
-void handleGetLogs(AsyncWebServerRequest *request) {
+void handleGetLogs() {
 
   String filter;
-  if(request->hasArg("filter")) {
-    filter = request->arg("firstname");
+  if(myWebServer.hasArg("filter")) {
+    filter = myWebServer.arg("firstname");
   }
 
   String SQL = "SELECT * FROM logs ";
@@ -76,13 +76,13 @@ void handleGetLogs(AsyncWebServerRequest *request) {
     }
     String json;
     serializeJsonPretty(doc, json);
-    request->send(200, "application/json", json);
+    myWebServer.send(200, "application/json", json);
     return;
   }
-  request->send(500, "text/plain", sql.getLastError());
+  myWebServer.send(500, "text/plain", sql.getLastError());
 }
 
-void handleGetUsers(AsyncWebServerRequest *request) {
+void handleGetUsers() {
   DataQuery_t data;
   if (queryExecute(data, "SELECT id, username, name, email, tag_code, level FROM users")) {
     sql.printResult(data, Serial);
@@ -100,41 +100,41 @@ void handleGetUsers(AsyncWebServerRequest *request) {
     }
     String json;
     serializeJsonPretty(doc, json);
-    request->send(200, "application/json", json);
+    myWebServer.send(200, "application/json", json);
     return;
   }
-  request->send(500, "text/plain", sql.getLastError());
+  myWebServer.send(500, "text/plain", sql.getLastError());
 }
 
-void handleNewUser(AsyncWebServerRequest *request) {
-  String user = request->arg("username");
-  String name = request->arg("name");
-  String email = request->arg("email");
-  String tagCode = request->arg("tagCode");
-  String level = request->arg("level");
-  String hashedPassword = getSHA256(request->arg("password").c_str());
+void handleNewUser() {
+  String user = myWebServer.arg("username");
+  String name = myWebServer.arg("name");
+  String email = myWebServer.arg("email");
+  String tagCode = myWebServer.arg("tagCode");
+  String level = myWebServer.arg("level");
+  String hashedPassword = getSHA256(myWebServer.arg("password").c_str());
   
   DataQuery_t data;
   if (queryExecute(data, newUpdateUser,
-    request->arg("username").c_str(), hashedPassword.c_str(), request->arg("name").c_str(),
-    request->arg("email").c_str(), request->arg("tagCode").c_str(), request->arg("level").c_str()))
+    myWebServer.arg("username").c_str(), hashedPassword.c_str(), myWebServer.arg("name").c_str(),
+    myWebServer.arg("email").c_str(), myWebServer.arg("tagCode").c_str(), myWebServer.arg("level").c_str()))
   {
-    request->send(200, "text/plain", "OK");
+    myWebServer.send(200, "text/plain", "OK");
     return;
   }
-  request->send(500, "text/plain", sql.getLastError());
+  myWebServer.send(500, "text/plain", sql.getLastError());
 }
 
-void handleRemoveUser(AsyncWebServerRequest *request) {
+void handleRemoveUser() {
   DataQuery_t data;
-  if (queryExecute(data, "DELETE FROM users WHERE username = '%s';", request->arg("username").c_str())) {
-    request->send(200, "text/plain", "OK");
+  if (queryExecute(data, "DELETE FROM users WHERE username = '%s';", myWebServer.arg("username").c_str())) {
+    myWebServer.send(200, "text/plain", "OK");
     return;
   }
-  request->send(500, "text/plain", sql.getLastError());
+  myWebServer.send(500, "text/plain", sql.getLastError());
 }
 
-void handleGetCode(AsyncWebServerRequest *request) {
+void handleGetCode() {
   uint32_t timeout = millis();
 
   while (true) {
@@ -153,13 +153,13 @@ void handleGetCode(AsyncWebServerRequest *request) {
       result += "\"}";
 
       Serial.printf("Tag code: 0x%llX", tagCode);
-      request->send(200, "application/json", result);
+      myWebServer.send(200, "application/json", result);
       addLogRecord = true;
       return;
     }
 
     if (millis() - timeout > 5000) {
-      request->send(500, "application/json", "{\"error\": \"timeout\"}");
+      myWebServer.send(500, "application/json", "{\"error\": \"timeout\"}");
       addLogRecord = true;
       return;
     }
@@ -167,33 +167,33 @@ void handleGetCode(AsyncWebServerRequest *request) {
 }
 
 // This handler will be called from login page to check password
-void handleCheckHash(AsyncWebServerRequest *request) {
+void handleCheckHash() {
 
   // Even if user con login, only user with level >= 5 can edit users table
-  if (getUserLevel(request->arg("username"), request->arg("hash"))) {
-    request->send(200, "text/plain", "OK");
+  if (getUserLevel(myWebServer.arg("username"), myWebServer.arg("hash"))) {
+    myWebServer.send(200, "text/plain", "OK");
   }
   else {
-    request->send(401, "text/plain", "Wrong password");
+    myWebServer.send(401, "text/plain", "Wrong password");
   }
 }
 
 // This handler will be called from login page on login succesfull
-void handleMainPage(AsyncWebServerRequest *request) {
+void handleMainPage() {
   // Check again user and password to avoid direct page loading
-  int level = getUserLevel(request->arg("username"), request->arg("hash"));
+  int level = getUserLevel(myWebServer.arg("username"), myWebServer.arg("hash"));
   if (level) {
     // Even if any user con login succesfully, only user with level >= 5 can edit users table
     // Username and user level is set here using cookie.
     String cookie = "username=" ;
-    cookie += request->arg("username");
+    cookie += myWebServer.arg("username");
     cookie += ",";  cookie += level;  cookie += "; Path=/";
-    AsyncWebServerResponse *response = request->beginResponse(200, "text/html", (const uint8_t*)index_htm, sizeof(index_htm));
-    response->addHeader("Set-Cookie", cookie);
-    request->send(response);
+    // For the new API, send response directly with headers
+    myWebServer.setHeader("Set-Cookie", cookie);
+    myWebServer.send(200, "text/html", (const char*)index_htm, sizeof(index_htm));
   } 
   else {
-    request->send(401, "text/plain", "Wrong password");
+    myWebServer.send(401, "text/plain", "Wrong password");
   }
 }
 
@@ -261,9 +261,9 @@ bool startWebServer(bool clear = false) {
   myWebServer.on("/addUser", HTTP_POST, handleNewUser);
   myWebServer.on("/deleUser", HTTP_POST, handleRemoveUser);
   myWebServer.on("/getCode", HTTP_GET, handleGetCode);
-  myWebServer.on("/waitCode", HTTP_GET, [](AsyncWebServerRequest *request){
+  myWebServer.on("/waitCode", HTTP_GET, [](){
     addLogRecord = false; 
-    request->send(200, "text/plain", "OK");
+    myWebServer.send(200, "text/plain", "OK");
   });
 
   /* 
@@ -271,11 +271,11 @@ bool startWebServer(bool clear = false) {
   * let's use a custom login web page (from flash literal string). This web page
   * will send a POST request to /rfid enpoint passing username and password SHA256 hash
   */
-  myWebServer.on("/", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send(200, "text/html", (const uint8_t*)login_htm, sizeof(login_htm));
+  myWebServer.on("/", HTTP_ANY, [](){
+    myWebServer.send(200, "text/html", (const uint8_t*)login_htm, sizeof(login_htm));
   });
-  myWebServer.on("/login", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send(200, "text/html", (const uint8_t*)login_htm, sizeof(login_htm));
+  myWebServer.on("/login", HTTP_ANY, [](){
+    myWebServer.send(200, "text/html", (const uint8_t*)login_htm, sizeof(login_htm));
   });
   myWebServer.on("/rfid", HTTP_POST, handleCheckHash);
   /*
@@ -285,13 +285,12 @@ bool startWebServer(bool clear = false) {
   myWebServer.on("/rfid", HTTP_GET, handleMainPage);
 
   // To enable add/edit/delete buttons, user must be admin (level >= 5)
-  myWebServer.on("/userLevel", HTTP_GET, [](AsyncWebServerRequest *request){
+  myWebServer.on("/userLevel", HTTP_GET, [](){
     DataQuery_t data;
-    if (queryExecute(data, "SELECT password, level FROM users WHERE username = '%s';", request->arg("username"))) {
+    if (queryExecute(data, "SELECT password, level FROM users WHERE username = '%s';", myWebServer.arg("username"))) {
       String cookie = "user_level=" + String(data.getRowValue(0, "level")) + "; Path=/";
-      AsyncWebServerResponse *response = request->beginResponse(200, "text/plain", "OK");
-      response->addHeader("Set-Cookie", cookie);
-      request->send(response);
+      myWebServer.setHeader("Set-Cookie", cookie);
+      myWebServer.send(200, "text/plain", "OK");
     }
   });
   

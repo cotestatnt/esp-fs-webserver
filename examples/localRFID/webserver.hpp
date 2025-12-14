@@ -42,21 +42,21 @@ int getUserLevel(const String& username, const String&  hash) {
   return 0;
 }
 
-void handleGetUsers(AsyncWebServerRequest *request) {
+void handleGetUsers() {
   JsonArray users = usersTable.getUsers();
   String json;
   serializeJsonPretty(users, json);
-  request->send(200, "application/json", json);
+  myWebServer.send(200, "application/json", json);
 }
 
-void handleNewUser(AsyncWebServerRequest *request) {
-  String username = request->arg("username");
-  String name = request->arg("name");
-  String email = request->arg("email");
-  String tag = request->arg("tag");
-  String level = request->arg("level");
-  String hashedPassword = getSHA256(request->arg("password").c_str());
-  bool update = request->arg("type").equals("Update");
+void handleNewUser() {
+  String username = myWebServer.arg("username");
+  String name = myWebServer.arg("name");
+  String email = myWebServer.arg("email");
+  String tag = myWebServer.arg("tag");
+  String level = myWebServer.arg("level");
+  String hashedPassword = getSHA256(myWebServer.arg("password").c_str());
+  bool update = myWebServer.arg("type").equals("Update");
 
   JsonDocument newUser;
   newUser["username"] = username;
@@ -70,25 +70,25 @@ void handleNewUser(AsyncWebServerRequest *request) {
 
   if (update){
     if (!usersTable.deleteRecord("username", username.c_str()))
-      request->send(500, "text/plain", "Error");
+      myWebServer.send(500, "text/plain", "Error");
   }
   
   if (usersTable.addRecord(newUser.as<JsonObject>(),uniqueKeys, 2))  {
-    request->send(200, "text/plain", "OK");
+    myWebServer.send(200, "text/plain", "OK");
     return;
   } 
-  request->send(500, "text/plain", "Error");
+  myWebServer.send(500, "text/plain", "Error");
 }
 
-void handleRemoveUser(AsyncWebServerRequest *request) {
-  String username = request->arg("username");
+void handleRemoveUser() {
+  String username = myWebServer.arg("username");
   if (usersTable.deleteRecord("username", username.c_str()))
-    request->send(200, "text/plain", "OK");
+    myWebServer.send(200, "text/plain", "OK");
   else
-    request->send(500, "text/plain", "Error");
+    myWebServer.send(500, "text/plain", "Error");
 }
 
-void handleGetCode(AsyncWebServerRequest *request) {
+void handleGetCode() {
   uint32_t timeout = millis();
 
   while (true) {
@@ -107,13 +107,13 @@ void handleGetCode(AsyncWebServerRequest *request) {
       result += "\"}";
 
       Serial.printf("Tag code: 0x%llX", tagCode);
-      request->send(200, "application/json", result);
+      myWebServer.send(200, "application/json", result);
       addLogRecord = true;
       return;
     }
 
     if (millis() - timeout > 5000) {
-      request->send(500, "application/json", "{\"error\": \"timeout\"}");
+      myWebServer.send(500, "application/json", "{\"error\": \"timeout\"}");
       addLogRecord = true;
       return;
     }
@@ -121,39 +121,39 @@ void handleGetCode(AsyncWebServerRequest *request) {
 }
 
 // This handler will be called from login page to check password
-void handleCheckHash(AsyncWebServerRequest *request) {
+void handleCheckHash() {
 
   // Even if user con login, only user with level >= 5 can edit users table
-  if (getUserLevel(request->arg("username"), request->arg("hash"))) {
-    request->send(200, "text/plain", "OK");
+  if (getUserLevel(myWebServer.arg("username"), myWebServer.arg("hash"))) {
+    myWebServer.send(200, "text/plain", "OK");
   }
   else {
-    request->send(401, "text/plain", "Wrong password");
+    myWebServer.send(401, "text/plain", "Wrong password");
   }
 }
 
 
 // This handler will be called from login page on login succesfull
-void handleMainPage(AsyncWebServerRequest *request) {
+void handleMainPage() {
   // Check again user and password to avoid direct page loading
-  int level = getUserLevel(request->arg("username"), request->arg("hash"));
+  int level = getUserLevel(myWebServer.arg("username"), myWebServer.arg("hash"));
   if (level) {
     // Even if any user con login succesfully, only user with level >= 5 can edit users table
     // Username and user level is set here using cookie.
     String cookie = "username=" ;
-    cookie += request->arg("username");
+    cookie += myWebServer.arg("username");
     cookie += ",";  cookie += level;  cookie += "; Path=/";
 #if USE_EMBEDDED_HTM
-    AsyncWebServerResponse *response = request->beginResponse(200, "text/html", (const uint8_t*)rfid, sizeof(rfid));
-    response->addHeader("Content-Encoding", "gzip");
+    myWebServer.setHeader("Content-Encoding", "gzip");
+    myWebServer.setHeader("Set-Cookie", cookie);
+    myWebServer.send(200, "text/html", (const char*)rfid, sizeof(rfid));
 #else
-    AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/rfid", "text/html");    
+    myWebServer.setHeader("Set-Cookie", cookie);
+    myWebServer.send(200, "text/html", "");  // Send file from filesystem if not embedded
 #endif
-    response->addHeader("Set-Cookie", cookie);
-    request->send(response);    
   } 
   else {
-    request->send(401, "text/plain", "Wrong password");
+    myWebServer.send(401, "text/plain", "Wrong password");
   }
 }
 
@@ -185,9 +185,9 @@ bool startWebServer(bool clear = false) {
   myWebServer.on("/addUser", HTTP_POST, handleNewUser);
   myWebServer.on("/delUser", HTTP_POST, handleRemoveUser);
   myWebServer.on("/getCode", HTTP_GET, handleGetCode);
-  myWebServer.on("/waitCode", HTTP_GET, [](AsyncWebServerRequest *request){
+  myWebServer.on("/waitCode", HTTP_GET, [](){
     addLogRecord = false; 
-    request->send(200, "text/plain", "OK");
+    myWebServer.send(200, "text/plain", "OK");
   });
 
   /* 
@@ -195,21 +195,19 @@ bool startWebServer(bool clear = false) {
   * let's use a custom login web page (from flash literal string). This web page
   * will send a POST request to /rfid enpoint passing username and password SHA256 hash
   */
-  myWebServer.on("/", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->redirect("/login");
+  myWebServer.on("/", HTTP_ANY, [](){
+    myWebServer.sendRedirect("/login");
   });
 
   #if USE_EMBEDDED_HTM
-  myWebServer.on("/login", HTTP_ANY, [](AsyncWebServerRequest *request){
-    AsyncWebServerResponse *response = request->beginResponse(200, "text/html", (const uint8_t*)login, sizeof(login));
-    response->addHeader("Content-Encoding", "gzip");
-    request->send(response);    
+  myWebServer.on("/login", HTTP_ANY, [](){
+    myWebServer.setHeader("Content-Encoding", "gzip");
+    myWebServer.send(200, "text/html", (const char*)login, sizeof(login));    
   });
   #else
   // Use flash stored file (remember to upload before using /setup embedded webpage)
-  myWebServer.on("/login", HTTP_ANY, [](AsyncWebServerRequest *request){
-    AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/login.htm", "text/html");
-    request->send(response);    
+  myWebServer.on("/login", HTTP_ANY, [](){
+    myWebServer.send(200, "text/html", "");  // Send file from filesystem if not embedded    
   });
   #endif
   
