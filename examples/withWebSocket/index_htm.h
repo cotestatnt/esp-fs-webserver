@@ -51,7 +51,7 @@ inline const char homepage[] PROGMEM = R"EOF(
       
       // Configure and start WebSocket client
       function startSocket(){
-        ws = new WebSocket('ws://'+document.location.host+'/ws',['arduino']);
+        ws = new WebSocket('ws://' + location.hostname + ':81/');
         ws.binaryType = "arraybuffer";
         ws.onopen = function(e){
           addMessage("WebSocket client connected to " + 'ws://'+document.location.host+'/ws');

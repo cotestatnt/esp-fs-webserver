@@ -6,7 +6,7 @@
 #include "SerialLog.h"
 #include "Version.h"
 #include "Json.h"
-#include "EspWebsocket.h"
+#include "websocket/WebSocketsServer.h"
 
 #if defined(ESP8266)
     #include <ESP8266WiFi.h>
@@ -110,7 +110,7 @@ class FSWebServer : public WebServerClass
 {
   protected:
 #if ESP_FS_WS_WEBSOCKET
-    ServerWebSocket*  m_websocket;
+    WebSocketsServer*  m_websocket;
 #endif
     DNSServer* m_dnsServer = nullptr;
     bool m_isApMode = false;
@@ -179,7 +179,6 @@ class FSWebServer : public WebServerClass
 #endif
 
   public:
-    
 
     // Constructor with filesystem reference
     FSWebServer(uint16_t port, fs::FS &fs, const char* hostname = "") : WebServerClass(port), m_filesystem(&fs)
@@ -211,11 +210,19 @@ class FSWebServer : public WebServerClass
 #endif
     }
 
-#ifdef ESP32
-    inline TaskHandle_t getTaskHandler() {
-      return xTaskGetCurrentTaskHandle();
-    }
+    inline void run() {
+      this->handleClient();
+      // Handle websocket events
+#if ESP_FS_WS_WEBSOCKET
+      if (m_websocket)
+        m_websocket->loop();    
 #endif
+      // Handle DNS requests
+#if ESP_FS_WS_MDNS 
+      if (this->isAccessPointMode())
+        m_dnsServer->processNextRequest();
+#endif  
+    }
 
     /*
       Get the webserver IP address
@@ -232,7 +239,7 @@ class FSWebServer : public WebServerClass
       Start webserver and bind a websocket event handler (optional)
     */
     using WebServerClass::begin; 
-    virtual void begin(ServerWebSocket::WsReceive_cb wsHandle = nullptr);
+    virtual void begin(WebSocketsServerCore::WebSocketServerEvent wsEventHandler = nullptr);
 
 #if ESP_FS_WS_EDIT    
     /*
@@ -314,7 +321,7 @@ class FSWebServer : public WebServerClass
       messages can be handled using callback function
     */
   
-    inline ServerWebSocket * getWebSocketServer() { 
+    inline WebSocketsServer* getWebSocketServer() { 
       return m_websocket; 
     }
 
@@ -327,6 +334,12 @@ class FSWebServer : public WebServerClass
     inline bool broadcastWebSocket(const uint8_t* payload, size_t length) { 
       if (m_websocket) 
         return m_websocket->broadcastBIN(payload, length);
+      return false;
+    }
+    
+    inline bool sendWebSocket(uint8_t num, const String& payload) { 
+      if (m_websocket) 
+        return m_websocket->sendTXT(num, payload.c_str()); 
       return false;
     }
 #endif

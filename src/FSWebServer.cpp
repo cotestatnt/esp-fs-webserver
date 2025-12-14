@@ -23,7 +23,7 @@ void setTaskWdt(uint32_t timeout) {
   }
 
 
-void FSWebServer::begin(ServerWebSocket::WsReceive_cb wsHandle) {
+void FSWebServer::begin(WebSocketsServer::WebSocketServerEvent wsEventHandler) {
 
 //////////////////////    BUILT-IN HANDLERS    ///////////////////////////
 
@@ -71,15 +71,17 @@ void FSWebServer::begin(ServerWebSocket::WsReceive_cb wsHandle) {
 #endif
     });
 #endif
+
     // Handler for all other files
     onNotFound([this]() { this->handleFileRequest(); });    
 
     // WebSocket setup
 #if ESP_FS_WS_WEBSOCKET
-    if (wsHandle != nullptr) {
+    if (wsEventHandler != nullptr) {
         if (!m_websocket) {
-            m_websocket = new ServerWebSocket(m_port);
-            m_websocket->onWebsocketReceive(wsHandle);
+            m_websocket = new WebSocketsServer(m_port+1);
+            m_websocket->begin();
+            m_websocket->onEvent(wsEventHandler);
         }
     }
 #endif
@@ -226,6 +228,17 @@ void FSWebServer::sendOK() {
 void FSWebServer::handleFileRequest() {
     String _url = WebServerClass::urlDecode(this->uri());
 
+    // Captive portal generic redirect when in AP mode
+    if (m_isApMode) {
+        // If the Host header is not our local host, redirect to portal root
+        String host = this->hostHeader();
+        if (host.length() > 0 && host != m_host) {
+            this->sendHeader(PSTR("Location"), "/");
+            this->send(302, "text/plain", "");
+            return;
+        }
+    }
+
     // Check if requested file (or gzipped version) exists
     if (!m_filesystem->exists(_url)) {
         _url += ".gz";        
@@ -248,7 +261,13 @@ void FSWebServer::handleFileRequest() {
     }   
 
     String error = "FSWebServer: File " + _url + " not found"; 
-    this->send(404, "text/plain", error);
+    if (m_isApMode) {
+        // Fallback redirect to portal in AP mode
+        this->sendHeader(PSTR("Location"), "/");
+        this->send(302, "text/plain", "");
+    } else {
+        this->send(404, "text/plain", error);
+    }
     log_debug("Resource %s not found\n", this->uri().c_str());
 }
 
@@ -790,6 +809,15 @@ bool FSWebServer::startWiFi(uint32_t timeout, CallbackF fn) {
 }
 
 bool FSWebServer::startCaptivePortal(const char* ssid, const char* pass, const char* redirectTargetURL) {
+
+    // Captive portal OS connectivity probes
+    this->on("/generate_204", HTTP_GET, [this]() { this->handleSetup(); });              // Android probe
+    this->on("/hotspot-detect.html", HTTP_GET, [this]() { this->handleSetup(); });       // iOS/macOS probe
+    this->on("/ncsi.txt", HTTP_GET, [this]() { this->handleSetup(); });                  // Windows NCSI probe
+    this->on("/connecttest.txt", HTTP_GET, [this]() { this->handleSetup(); });           // Windows 8/10 probe
+    this->on("/success.txt", HTTP_GET, [this]() { this->handleSetup(); });
+    this->on("/library/test/success.html", HTTP_GET, [this]() { this->handleSetup(); }); // ChromeOS probe
+
     // Start AP mode
     delay(100);
     WiFi.mode(WIFI_AP);
@@ -825,7 +853,6 @@ bool FSWebServer::startCaptivePortal(const char* ssid, const char* pass, const c
     #endif
 
     log_info("Captive portal started. Redirecting all requests to %s", redirectTargetURL);
-
     return true;
 }
 

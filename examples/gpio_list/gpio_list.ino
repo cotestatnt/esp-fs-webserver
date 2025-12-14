@@ -51,33 +51,26 @@ gpio_type gpios[] = {
 };
 
 
-////////////////////////////////   WebSocket Handler  /////////////////////////////
-void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len){
+/////////////////////////   WebSocket event callback////////////////////////////////   WebSocket Handler  /////////////////////////////
+void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length) {
   switch (type) {
-    case WS_EVT_DISCONNECT:
-      Serial.print("WebSocket client disconnected!\n");
+    case WStype_DISCONNECTED:
+      Serial.printf("[%u] Disconnected!\n", num);
       break;
-    case WS_EVT_CONNECT:  {
-        IPAddress ip = client->remoteIP();
-        Serial.printf("WebSocket client %d.%d.%d.%d connected.\n", ip[0], ip[1], ip[2], ip[3]);
-        client->printf("%s", "{\"Connected\": true}");
+    case WStype_CONNECTED:{
+        IPAddress ip = server.getWebSocketServer()->remoteIP(num);
+        server.getWebSocketServer()->sendTXT(num, "{\"Connected\": true}");
+        Serial.printf("Hello client #%d [%s]\n", (int)num, ip.toString().c_str());
       }
       break;
-    case WS_EVT_DATA: {
-        AwsFrameInfo * info = (AwsFrameInfo*)arg;
-        String msg = "";
-        if(info->final && info->index == 0 && info->len == len){
-          //the whole message is in a single frame and we got all of it's data
-          if (info->opcode == WS_TEXT){
-            for(size_t i=0; i < info->len; i++) {
-              msg += (char) data[i];
-            }
-          }
-          Serial.printf("WS message: %s\n",msg.c_str());
-          if (msg[0] == '{')
-            parseMessage(msg);
-        }
-      }
+    case WStype_TEXT:
+      Serial.printf("[%u] got Text: %s\n", num, payload);   // Got text message from a client
+      if (msg[0] == '{')
+        parseMessage(msg);
+      break;
+    case WStype_BIN:
+      Serial.printf("[%u] got binary length: %u\n", num, length); // Got binary message from a client
+      break;
     default:
       break;
   }

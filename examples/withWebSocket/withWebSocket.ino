@@ -5,8 +5,10 @@
 #include "index_htm.h"
 
 #define FILESYSTEM LittleFS
+const char* hostname = "fsbrowser";
 
-char const* hostname = "fsbrowser";
+// If you edit server port, remember to change also websocket port in index_htm.h
+// By default websocket port with FSWebServer library is server port + 1
 FSWebServer server(80, FILESYSTEM, hostname);
 
 #ifndef LED_BUILTIN
@@ -26,38 +28,34 @@ void wsLogPrintf(bool toSerial, const char* format, ...) {
     Serial.println(buffer);
 }
 
-// In this example a custom websocket event handler is used instead default
-void onWsEvent(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEventType type, void* arg, uint8_t* data, size_t len) {
+/////////////////////////   WebSocket event callback////////////////////////////////   WebSocket Handler  /////////////////////////////
+void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length) {
   switch (type) {
-    case WS_EVT_CONNECT:
-      client->printf("{\"Websocket connected\": true, \"clients\": %u}", client->id());
-      Serial.printf("Websocket client %u connected\n", client->id());
+    case WStype_DISCONNECTED:
+      Serial.printf("[%u] Disconnected!\n", num);
       break;
+    case WStype_CONNECTED:{
+        IPAddress ip = server.getWebSocketServer()->remoteIP(num);
+        server.getWebSocketServer()->sendTXT(num, "{\"Connected\": true}");
 
-    case WS_EVT_DISCONNECT:
-      Serial.printf("Websocket client %u connected\n", client->id());
-      break;
-
-    case WS_EVT_DATA:
-      {
-        AwsFrameInfo* info = (AwsFrameInfo*)arg;
-        if (info->opcode == WS_TEXT) {
-          char msg[len+1];
-          msg[len] = '\0';
-          memcpy(msg, data, len);
-          Serial.printf("Received message \"%s\"\n", msg);
-        }
+        // Print welcome message to all clients and to Serial
+        wsLogPrintf(true, "Hello to client #%d [%s]\n", (int)num, ip.toString().c_str());
       }
       break;
-
+    case WStype_TEXT:
+      Serial.printf("[%u] got Text: %s\n", num, payload);   // Got text message from a client
+      break;
+    case WStype_BIN:
+      Serial.printf("[%u] got binary length: %u\n", num, length); // Got binary message from a client
+      break;
     default:
       break;
   }
 }
 
 // Test "config" values
-String option1 = "Test option String";
-uint32_t option2 = 1234567890;
+String optionString = "Test option String";
+uint32_t optionULong = 1234567890;
 uint8_t ledPin = LED_BUILTIN;
 
 // Timezone definition to get properly time from NTP server
@@ -81,7 +79,7 @@ void getUpdatedtime(const uint32_t timeout) {
 ////////////////////////////////  Filesystem  /////////////////////////////////////////
 bool startFilesystem() {
   if (FILESYSTEM.begin()) {
-    server.printFileList(FILESYSTEM, "/", 1);
+    server.printFileList(FILESYSTEM, "/", 1, Serial);
     return true;
   } else {
     Serial.println("ERROR on mounting filesystem. It will be reformatted!");
@@ -95,19 +93,10 @@ bool startFilesystem() {
 ////////////////////  Load and save application configuration from filesystem  ////////////////////
 bool loadApplicationConfig() {
   if (FILESYSTEM.exists(server.getConfiFileName())) {
-    File file = server.getConfigFile("r");
-    String content = file.readString();
-    file.close();
-    CJSON::Json json;
-    if (!json.parse(content)) {
-      Serial.println(F("Failed to parse JSON configuration."));
-      return false;
-    }
-    String str;
-    double num;
-    if (json.getString("Option 1", str)) option1 = str;
-    if (json.getNumber("Option 2", num)) option2 = (uint32_t)num;
-    if (json.getNumber("LED Pin", num)) ledPin = (uint8_t)num;
+    server.getOptionValue("Option 1", optionString);
+    server.getOptionValue("Option 2", optionULong);
+    server.getOptionValue("LED Pin", ledPin);
+    server.closeSetupConfiguration();  // Close configuration to free resources
     return true;
   }
   return false;
@@ -127,8 +116,8 @@ void setup() {
     if (loadApplicationConfig()) {
       Serial.println(F("\nApplication option loaded"));
       Serial.printf("  LED Pin: %d\n", ledPin);
-      Serial.printf("  Option 1: %s\n", option1.c_str());   
-      Serial.printf("  Option 2: %u\nn", option2);
+      Serial.printf("  Option 1: %s\n", optionString.c_str());   
+      Serial.printf("  Option 2: %u\nn", optionULong);
     }
     else
       Serial.println(F("Application options NOT loaded!"));
@@ -143,12 +132,12 @@ void setup() {
   // Configure /setup page
   server.addOptionBox("My Options");
   server.addOption("LED Pin", ledPin);
-  server.addOption("Option 1", option1.c_str());
-  server.addOption("Option 2", option2);
+  server.addOption("Option 1", optionString.c_str());
+  server.addOption("Option 2", optionULong);
 
   // Add custom page handlers
   server.on("/", HTTP_GET, [](){
-    server.send(200, "text/html", homepage);
+    server.send_P(200, "text/html", homepage);
   });
 
   // Enable ACE FS file web editor and add FS info callback function
@@ -166,8 +155,8 @@ void setup() {
   });
 #endif
 
-  // Init with custom WebSocket event handler and start server
-  server.begin(onWsEvent);
+  // Init with WebSocket event handler and start server
+  server.begin(webSocketEvent);
 
   Serial.print(F("ESP Web Server started on IP Address: "));
   Serial.println(server.getServerIP());
@@ -180,23 +169,11 @@ void setup() {
   // Set hostname
   WiFi.setHostname(hostname);
   configTzTime(MYTZ, "time.google.com", "time.windows.com", "pool.ntp.org");
-
-  // Start MDSN responder
-  if (WiFi.status() == WL_CONNECTED) {
-    if (MDNS.begin(hostname)) {
-      Serial.println(F("MDNS responder started."));
-      Serial.printf("You should be able to connect with address  http://%s.local/\n", hostname);
-      // Add service to MDNS-SD
-      MDNS.addService("http", "tcp", 80);
-    }
-  }
 }
 
 
 void loop() {
-  server.handleClient();
-  if (server.isAccessPointMode())
-    server.updateDNS();
+  server.run();  // Handle client requests
 
   if (digitalRead(BOOT_BUTTON) == LOW) {
     wsLogPrintf(true, "Button on GPIO %d clicked", BOOT_BUTTON);

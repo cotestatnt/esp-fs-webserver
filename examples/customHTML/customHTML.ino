@@ -148,8 +148,8 @@ void setup() {
   }
 
   // Add custom HTTP request handlers to webserver
-  server.on("/reload", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(200, "text/plain", "Options loaded");
+  server.on("/reload", HTTP_GET, [](){
+    server.send(200, "text/plain", "Options loaded");
     loadOptions();
     Serial.println("Application option loaded after web request");
   });
@@ -219,13 +219,9 @@ void setup() {
     Serial.print(F("Captive portal is running"));
 }
 
-}
-
 
 void loop() {
-  server.handleClient();
-  if (server.isAccessPointMode())
-    server.updateDNS();
+  server.run();  // Handle client requests
   
   // Nothing to do here, just a small delay for task yield
   delay(10);  
