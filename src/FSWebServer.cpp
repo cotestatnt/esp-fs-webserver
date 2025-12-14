@@ -227,27 +227,32 @@ void FSWebServer::sendOK() {
 // and if it fails, return a 404 page with debug information        
 void FSWebServer::handleFileRequest() {
     String _url = WebServerClass::urlDecode(this->uri());
-
     log_debug("handleFileRequest for %s", _url.c_str());
+
+    // Check if authentication for all routes is turned on, and credentials are present:
+    if (m_authAll && m_pageUser != nullptr) {
+        if(!this->authenticate(m_pageUser, m_pagePswd))
+            return this->requestAuthentication();
+    }
+
+#if defined(ESP8266)
+    // ESP8266WebServer has its own mime namespace
+    using namespace mime;
+    String contentType = getContentType(_url);
+#elif defined(ESP32)
+    // Use local mimetable from library
+    String contentType = mimetype::getContentType(_url);
+#endif
+
     if (!m_filesystem->exists(_url)) {
         // Requested file not found, check if gzipped version exists
         log_debug("File %s not found, checking for gzipped version", this->uri().c_str());
         _url += ".gz";  
-        // this->sendHeader(PSTR("Content-Encoding"), "gzip");
     }
     
     if (m_filesystem->exists(_url)) {
         File file = m_filesystem->open(_url , "r");
-        if (file) {
-#if defined(ESP8266)
-            // ESP8266WebServer has its own mime namespace
-            using namespace mime;
-            String contentType = getContentType(_url);
-#elif defined(ESP32)
-            // Use local mimetable from library
-            String contentType = mimetype::getContentType(_url);
-            log_debug("Determined content type: %s", contentType.c_str());
-#endif                      
+        if (file) {               
             this->streamFile(file, contentType);
             file.close();
             return; // If file was served, skip the rest

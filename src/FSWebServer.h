@@ -114,6 +114,7 @@ class FSWebServer : public WebServerClass
 #endif
     DNSServer* m_dnsServer = nullptr;
     bool m_isApMode = false;
+    bool m_authAll = false;  // Flag to require authentication for all pages
   
     void handleFileRequest();
     void handleFileName();
@@ -261,6 +262,13 @@ class FSWebServer : public WebServerClass
       Enable authenticate for /setup webpage
     */
     void setAuthentication(const char* user, const char* pswd);
+
+    /*
+    Enable the flag which turns on basic authentication for all pages
+    */
+    inline void requireAuthentication(bool require){
+      m_authAll = require;
+    }
 
     /*
       List FS content
