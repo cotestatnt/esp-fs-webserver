@@ -6,12 +6,8 @@
 
   <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css">
   <style>
-    #check-fw {
-      max-width: 50%;
-    }
-    body {
-      width:800px;
-    }
+    #check-fw {max-width: 50%;}
+    .container { max-width: 700px;}
   </style>
 
 </head>
@@ -22,15 +18,15 @@
           <hgroup>
             <h1>ESP FS WebServer - Remote OTA update</h1>
           </hgroup>
-          
+
           <section id="loading">
             <button id="check-fw" aria-busy="false">Check for New firmware</button>
             <article id="loading-fw" aria-busy="false">
-              <div id="fw-version" >Firmware version: <span id="current-fw"></span></div>
+              <div id="fw-version" >Current firmware version: <span id="current-fw"></span></div>
               <div id="update-result"></div>
             </article>
           </section>
- 
+
           <label for="remember">
             <input type="checkbox" role="switch" id="toggle-led" name="toggle-led" >
             Toggle built-in LED
@@ -38,30 +34,30 @@
           <br>
           <p id="esp-response"></p>
           <img src="espressif.jpg" style="opacity: 0.75"/>
-          
+
         </div>
       </article>
     </main>
-    
+
 
   <script type="text/javascript">
-    var actual_version = '1.0.0';
-    var firmware_info = 'https://raw.githubusercontent.com/cotestatnt/esp-fs-webserver/main/examples/remoteOTA/version.json';
+    var actual_version = '0.0.0';
+    var firmware_info = 'https://github.com/cotestatnt/async-esp-fs-webserver';
 
     // This function fetch the GET request to the ESP webserver
     function toggleLed() {
       const pars = new URLSearchParams({
         val:  document.getElementById('toggle-led').checked ? '1' : '0'
       });
-      
+
       fetch('/led?' + pars )                // Do the request
-      .then(response => response.text())    // Parse the response 
+      .then(response => response.text())    // Parse the response
       .then(text => {                       // DO something with response
         console.log(text);
         document.getElementById('esp-response').innerHTML = text + ' <i>(Builtin LED is ON with a low signal)</i>';
       });
     }
-    
+
     // v1 > v2 -> 1; v1 = v2 -> 0; v1 < v2 = -1
     function compareVersion (v1, v2) {
       if (typeof v1 !== 'string') return false;
@@ -82,14 +78,18 @@
     function checkNewFirmware () {
       document.getElementById('check-fw').setAttribute('aria-busy', true);
       document.getElementById('current-fw').setAttribute('aria-busy', true);
-      
-      fetch(firmware_info)                    
-      .then(response => response.json())   
-      .then(obj => {                   
+      console.log(firmware_info);
+      fetch(firmware_info)
+      .then(response => response.json())
+      .then(obj => {
         if (compareVersion(obj.version, actual_version) === 1) {
           // Prompt the user for confirmation
-          if (confirm('Are you sure you want to proceed with firmware update?')) {
+          if (confirm(`Firmware version ${obj.version} available.\n Are you sure you want to proceed with firmware update?`)) {
             updateFirmware(obj);
+          }
+          else {
+            document.getElementById('check-fw').setAttribute('aria-busy', false);
+            document.getElementById('current-fw').setAttribute('aria-busy', false);
           }
         }
         else {
@@ -103,7 +103,7 @@
     // Get actual firmeware version from ESP
     function getFirmwareVersion () {
       fetch('/version')                // Do the request
-      .then(response => response.json())    // Parse the response 
+      .then(response => response.json())    // Parse the response
       .then(obj => {                        // Do something with response
         document.getElementById("current-fw").innerHTML = obj.version;
         actual_version = obj.version;
@@ -117,20 +117,20 @@
         version: obj.version,
         url: obj.raw_url
       });
-      
-      fetch('/firmware_update?' + pars )   
-      .then(response => response.text())   
-      .then(text => {                    
+
+      fetch('/firmware_update?' + pars )
+      .then(response => response.text())
+      .then(text => {
         console.log(text);
         document.getElementById("update-result").innerHTML = text;
       });
     }
-    
+
     // Add event listener to the HTML elements
     document.getElementById('toggle-led').addEventListener('change', toggleLed );
     document.getElementById('check-fw').addEventListener('click', checkNewFirmware );
     document.addEventListener("DOMContentLoaded", getFirmwareVersion);
   </script>
-  
+
 </body>
 </html>

@@ -306,7 +306,7 @@ bool WebSockets::sendFrame(WSclient_t * client, WSopcode_t opcode, uint8_t * pay
         }
     }
 
-    log_debug("[WS][%d][sendFrame] sending Frame Done (%luus).\n", client->num, (micros() - start));
+    log_debug("[WS][%d][sendFrame] sending Frame Done.\n", client->num);
 
 #ifdef WEBSOCKETS_USE_BIG_MEM
     if(useInternBuffer && payloadPtr) {
@@ -492,13 +492,18 @@ void WebSockets::handleWebsocketPayloadCb(WSclient_t * client, bool ok, uint8_t 
                 messageReceived(client, header->opCode, payload, header->payloadLen, header->fin);
                 break;
             case WSop_close: {
-
+#if LOG_LEVEL > 2
+                uint16_t reasonCode = 0;
+                if(header->payloadLen >= 2 && payload) {
+                    reasonCode = (payload[0] << 8) | payload[1];
+                }
                 log_debug("[WS][%d][handleWebsocket] get ask for close. Code: %d\n", client->num, reasonCode);
-                if(header->payloadLen > 2) {
+                if(header->payloadLen > 2 && payload) {
                     log_debug(" (%s)\n", (payload + 2));
                 } else {
                     log_debug("\n");
                 }
+#endif
                 clientDisconnect(client, 1000);
             } break;
             default:

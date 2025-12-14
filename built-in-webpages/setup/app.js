@@ -1,123 +1,110 @@
-/*jshint esversion: 9 */
-const svgLogo = '<svg fill="brown" height=120px viewBox="0 0 24 24"><path d="M5 3C3.9 3 3 3.9 3 5S2.1 7 1 7V9C2.1 9 3 9.9 3 11S3.9 13 5 13H7V11H5V10C5 8.9 4.1 8 3 8C4.1 8 5 7.1 5 6V5H7V3M11 3C12.1 3 13 3.9 13 5S13.9 7 15 7V9C13.9 9 13 9.9 13 11S12.1 13 11 13H9V11H11V10C11 8.9 11.9 8 13 8C11.9 8 11 7.1 11 6V5H9V3H11M22 6V18C22 19.11 21.11 20 20 20H4C2.9 20 2 19.11 2 18V15H4V18H20V6H17.03V4H20C21.11 4 22 4.89 22 6Z" /></svg>'
+const svgLogo = '<svg fill="brown" height="120" viewBox="0 0 24 24"><path d="M5 3C3.9 3 3 3.9 3 5S2.1 7 1 7v2c1.1 0 2 .9 2 2s.9 2 2 2h2v-2H5v-1c0-1.1-.9-2-2-2 1.1 0 2-.9 2-2V5h2V3M11 3c1.1 0 2 .9 2 2s.9 2 2 2v2c-1.1 0-2 .9-2 2s-.9 2-2 2H9v-2h2v-1c0-1.1.9-2 2-2-1.1 0-2-.9-2-2V5H9V3h2m11 3v12c0 1.11-.89 2-2 2H4a2 2 0 01-2-2v-3h2v3h16V6h-2.97V4H20c1.11 0 2 .89 2 2z"/></svg>';
+const svgLock = '<svg height="16" viewBox="0 0 24 24"><path d="M12 17a2 2 0 002-2c0-1.11-.9-2-2-2a2 2 0 00-2 2 2 2 0 002 2m6-9a2 2 0 012 2v10a2 2 0 01-2 2H6a2 2 0 01-2-2V10c0-1.11.9-2 2-2h1V6a5 5 0 0110 0v2h1M12 3a3 3 0 00-3 3v2h6V6a3 3 0 00-3-3z"/></svg>';
+const svgUnlock = '<svg height="16" viewBox="0 0 24 24"><path d="M18 1c-2.76 0-5 2.24-5 5v2H4c-1.1 0-2 .89-2 2v10c0 1.11.9 2 2 2h12c1.11 0 2-.89 2-2V10c0-1.1-.89-2-2-2h-1V6c0-1.66 1.34-3 3-3s3 1.34 3 3v2h2V6c0-2.76-2.24-5-5-5M10 13c1.1 0 2 .89 2 2 0 1.11-.9 2-2 2s-2-.89-2-2c0-1.1.9-2 2-2z"/></svg>';
+const svgScan = '<path d="M12 20l-3.6-4.8c1 .75 2.25 1.2 3.6 1.2s2.6-.45 3.6-1.2L12 20M4.8 10.4l1.8 2.4C8.1 11.67 10 11 12 11s3.9.67 5.4 1.8l1.8-2.4C17.19 8.89 14.7 8 12 8s-5.19.89-8.2 2.4M12 2a10 10 0 00-10.8 3.6L3 8c2.5-1.88 5.62-3 9-3s6.5 1.12 9 3l1.8-2.4C19.79 3.34 16.05 2 12 2M7 24h2v-2H7v2m8 0h2v-2h-2v2m-4 0h2v-2h-2v2z"/>';
+const svgConnect = '<path d="M12 21l3.6-4.8c-1-.75-2.25-1.2-3.6-1.2s-2.6.45-3.6 1.2L12 21M12 3C7.95 3 4.21 4.34 1.2 6.6L3 9c2.5-1.88 5.62-3 9-3s6.5 1.12 9 3l1.8-2.4C19.79 4.34 16.05 3 12 3m0 6c-2.7 0-5.19.89-7.2 2.4l1.8 2.4c1.5-1.13 3.37-1.8 5.4-1.8s3.9.67 5.4 1.8l1.8-2.4C17.19 9.89 14.7 9 12 9z"/>';
+const svgSave = '<path d="M15 9H5V5h10m-3 10a3 3 0 01-3-3 3 3 0 013-3 3 3 0 013 3 3 3 0 01-3 3m8-16H5c-1.11 0-2 .9-2 2v14a2 2 0 002 2h14a2 2 0 002-2V7l-4-4z"/>';
+const svgRestart = '<path d="M12 4a8 8 0 015.6 2.3C20.7 9.4 20.7 14.5 17.6 17.6a8 8 0 01-6.7 2.3l.5-2a6 6 0 004.8-1.7c2.3-2.3 2.3-6.1 0-8.5a6 6 0 00-4.2-1.7V10.6L7 5.6 12 .6V4M6.3 17.6C3.7 15 3.3 11 5.1 7.9l1.5 1.5A6 6 0 007.8 16.2c.5.5 1.1.9 1.8 1.2l-.6 2a8 8 0 01-2.7-1.8z"/>';
+const svgEye = '<path d="M12 9a3 3 0 013 3 3 3 0 01-3 3 3 3 0 01-3-3 3 3 0 013-3m0-4.5c5 0 9.27 3.11 11 7.5-1.73 4.39-6 7.5-11 7.5s-9.27-3.11-11-7.5C2.73 7.61 7 4.5 12 4.5M3.18 12a9.821 9.821 0 0017.64 0A9.821 9.821 0 003.18 12z"/>';
+const svgNoEye = '<path d="M0 0h24v24H0V0z" fill="none"/><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>';
+const svgMenu = '<path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/>';
 
-const svgLock = '<svg viewBox="0 0 24 24"><path d="M12 17a2 2 0 1 0 0-4 2 2 0 1 0 0 4m6-9a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V10a2 2 0 0 1 2-2h1V6a5 5 0 1 1 10 0v2h1m-6-5a3 3 0 0 0-3 3v2h6V6a3 3 0 0 0-3-3z"/></svg>';
-const svgUnlock = '<svg viewBox="0 0 24 24"><path d="M18 8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V10a2 2 0 0 1 2-2h9V6a3 3 0 1 0-6 0H7a5 5 0 1 1 10 0v2h1m-6 9a2 2 0 1 0 0-4 2 2 0 1 0 0 4z"/></svg>';
+// Global Variables
+let closeCb = function() {};
+const port = location.port || (window.location.protocol === 'https:' ? '443' : '80');
+const esp = `${window.location.protocol}//${window.location.hostname}:${port}/`;
+let options = {};
+let configFile;
+let lastBox;
 
-const svgScan = '<path d="M12 20l-3.6-4.8a5.99 5.99 0 0 1 7.2 0L12 20m-7.2-9.6l1.8 2.4A8.94 8.94 0 0 1 12 11a8.94 8.94 0 0 1 5.4 1.8l1.8-2.4C17.19 8.89 14.7 8 12 8s-5.19.89-7.2 2.4M12 2C7.95 2 4.21 3.34 1.2 5.6L3 8a14.93 14.93 0 0 1 9-3 14.93 14.93 0 0 1 9 3l1.8-2.4C19.79 3.34 16.05 2 12 2M7 24h2v-2H7v2m8 0h2v-2h-2v2m-4 0h2v-2h-2v2z"/>';
-const svgConnect = '<path d="M12 21l3.6-4.8a5.99 5.99 0 0 0-7.2 0L12 21m0-18C7.95 3 4.21 4.34 1.2 6.6L3 9a14.93 14.93 0 0 1 9-3 14.93 14.93 0 0 1 9 3l1.8-2.4C19.79 4.34 16.05 3 12 3m0 6c-2.7 0-5.19.89-7.2 2.4l1.8 2.4A8.94 8.94 0 0 1 12 12a8.94 8.94 0 0 1 5.4 1.8l1.8-2.4C17.19 9.89 14.7 9 12 9z"/>';
+// Element selector shorthand
+const $ = (el) => document.getElementById(el);
 
-const svgSave = '<path d="M15 9H5V5h10m-3 14a3 3 0 1 1 0-6 3 3 0 1 1 0 6m5-16H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7l-4-4z"/>';
-const svgRestart = '<path d="M16.56 5.44l-1.45 1.45C16.84 7.94 18 9.83 18 12a6 6 0 1 1-12 0c0-2.17 1.16-4.06 2.88-5.12L7.44 5.44A7.96 7.96 0 0 0 4 12a8 8 0 1 0 16 0 7.96 7.96 0 0 0-3.44-6.56M13 3h-2v10h2"/>';
+// Utility Functions
+const hide = (id) => $(id).classList.add('hide');
+const show = (id) => $(id).classList.remove('hide');
 
-const svgNoEye = '<path d="M12 9a3 3 0 1 0 0 6 3 3 0 1 0 0-6m0 8a5 5 0 1 1 0-10 5 5 0 1 1 0 10m0-12.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5z"/>';
-const svgEye = '<path d="M12 9a3 3 0 1 1 0 6 3 3 0 1 1 0-6m0-4.5c5 0 9.27 3.11 11 7.5-1.73 4.39-6 7.5-11 7.5S2.73 16.39 1 12c1.73-4.39 6-7.5 11-7.5M3.18 12a9.82 9.82 0 0 0 17.64 0 9.82 9.82 0 0 0-17.64 0z"/>';
-
-const svgMenu = '<path d="M3,6H21V8H3V6M3,11H21V13H3V11M3,16H21V18H3V16Z"/>';
-
-var closeCb = function(){};
-var port = location.port || (window.location.protocol === 'https:' ? '443' : '80');
-var esp = `${window.location.protocol}//${window.location.hostname}:${port}/`;
-var options = {};
-var configFile;
-var lastBox;
-
-// Element selector shorthands
-var $ = function(el) {
-	return document.getElementById(el);
-};
-
-function hide(id) {
-  $(id).classList.add('hide');
-}
-
-function show(id) {
-  $(id).classList.remove('hide');
-}
-
-function newEl(element, attribute) {
-  var el = document.createElement(element);
-  if (typeof(attribute) === 'object') {
-    for (var key in attribute) {
-      el.setAttribute(key, attribute[key]);
-    }
+// Create element with attributes (readable + robust)
+const newEl = (element, attribute) => {
+  const el = document.createElement(element);
+  if (attribute && typeof attribute === 'object') {
+    for (const [key, val] of Object.entries(attribute)) el.setAttribute(key, val);
   }
   return el;
-}
+};
 
-function getParameters() {
-  var logo;
+// Fetch and display parameters
+const getParameters = () => {
+  let logo;
   show('loader');
-  // Fetch actual status and config info
-  fetch(esp + "getStatus")
-  .then(res => res.json())
-  .then(data => {
-    $('esp-mode').innerHTML = data.mode;
-    $('esp-ip').innerHTML = `<a href="${esp}">${esp}</a>`;
-    $('firmware').innerHTML = data.firmware;
-    $('about').innerHTML = data.liburl;
-    $('about').setAttribute('href', data.liburl);
-    configFile = data.path;
-    
-    // Fetch 'config.json'
-    fetch(esp + configFile)
-    .then(response => response.json())
+  fetch(`${esp}getStatus`)
+    .then(res => res.json())
     .then(data => {
-      for (const key in data){
-        if(data.hasOwnProperty(key)){
-          if (key === 'name-logo') {
-            $('name-logo').innerHTML = data[key].replace( /(<([^>]+)>)/ig, '');
-            document.title = data[key].replace( /(<([^>]+)>)/ig, '');
-            delete data[key];
-            continue;
-          }
-          if (key == 'img-logo') {
-            logo = data[key];
-            delete data[key];
-            continue;
-          }
-        }
-      }
-      
-      // Custom logo (base 64)
-      if (logo){
-        fetch(logo)
-        .then((response) => response.text())
-        .then(base64 => setLogoBase64(logo, base64));
-      }
-        
-      options = data;
-      createOptionsBox(options);
-      hide('loader');      
-    });
-  });
-}
+      $('esp-mode').innerHTML = data.mode;
+      $('esp-ip').innerHTML = `<a href="http://${data.hostname}.local/">http://${data.hostname}.local</a><a href="${esp}"> (${data.ip})</a>`;
+      $('firmware').innerHTML = data.firmware;
+      $('about').innerHTML = 'Created with ' + data.liburl;
+      $('about').setAttribute('href', data.liburl);
+      configFile = data.path;
 
-function setLogoBase64(s, base64) {
-  var size = s.replace(/[^\d_]/g, '').split('_');
-  var img = newEl('img', {'class': 'logo', 'src': 'data:image/png;base64, '+ base64, 'style': `width:${size[0]}px;height:${size[1]}px`});
+      fetch(`${esp}${configFile}`)
+        .then(response => response.json())
+        .then(data => {
+          for (const key in data) {
+            if (data.hasOwnProperty(key)) {
+              if (key === 'name-logo') {
+                $('name-logo').innerHTML = data[key].replace(/(<([^>]+)>)/ig, '');
+                document.title = data[key].replace(/(<([^>]+)>)/ig, '');
+                delete data[key];
+                continue;
+              }
+              if (key === 'img-logo') {
+                logo = data[key];
+                delete data[key];
+                continue;
+              }
+            }
+          }
+
+          if (logo) {
+            fetch(logo)
+              .then(response => response.text())
+              .then(base64 => setLogoBase64(logo, base64));
+          }
+
+          options = data;
+          createOptionsBox(options);
+          hide('loader');
+        });
+    });
+};
+
+const setLogoBase64 = (s, base64) => {
+  const size = s.replace(/[^\d_]/g, '').split('_');
+  const img = newEl('img', { 'class': 'logo', 'src': `data:image/png;base64, ${base64}`, 'style': `width:${size[0]}px;height:${size[1]}px` });
   $('img-logo').innerHTML = "";
   $('img-logo').append(img);
   $('img-logo').setAttribute('type', 'number');
   $('img-logo').setAttribute('title', '');
-}
+};
 
-function addOptionsElement(opt) {
+// Add options element
+const addOptionsElement = (opt) => {
   const bools = Object.keys(opt)
-  .filter(key => typeof(opt[key]) === "boolean")
-  .reduce((obj, key) => {
-    obj[key] = opt[key];
-    return obj;
-  }, {});
-  
+    .filter(key => typeof(opt[key]) === "boolean")
+    .reduce((obj, key) => {
+      obj[key] = opt[key];
+      return obj;
+    }, {});
+
   if (Object.entries(bools).length !== 0) {
-    var d  = newEl('div', {'class': 'row-wrapper'});
+    const d = newEl('div', { 'class': 'row-wrapper' });
     Object.entries(bools).forEach(([key, value]) => {
-      let lbl = newEl('label', {'class': 'input-label toggle'});
-      let el = newEl('input', {'class': 't-check opt-input', 'type': 'checkbox', 'id': key});
+      const lbl = newEl('label', { 'class': 'input-label toggle' });
+      const el = newEl('input', { 'class': 't-check opt-input', 'type': 'checkbox', 'id': key });
       el.checked = value;
-      let dv = newEl('div', {'class': 'toggle-switch'});
-      let sp = newEl('span' , {'class': 'toggle-label'});
+      const dv = newEl('div', { 'class': 'toggle-switch' });
+      const sp = newEl('span', { 'class': 'toggle-label' });
       sp.textContent = key;
       lbl.appendChild(el);
       lbl.appendChild(dv);
@@ -127,28 +114,27 @@ function addOptionsElement(opt) {
     });
     lastBox.appendChild(d);
   }
-  
+
   const others = Object.keys(opt)
-  .filter(key => typeof(opt[key]) !== "boolean")
-  .reduce((obj, key) => {
-    obj[key] = opt[key];
-    return obj;
-  }, {});
-  
+    .filter(key => typeof(opt[key]) !== "boolean")
+    .reduce((obj, key) => {
+      obj[key] = opt[key];
+      return obj;
+    }, {});
+
   Object.entries(others).forEach(([key, value]) => {
-    let lbl = newEl('label', {'class': 'input-label', 'label-for': key});
+    const lbl = newEl('label', { 'class': 'input-label', 'label-for': key });
     lbl.textContent = key;
-    let el = newEl('input',  {'class': 'opt-input', 'type': 'text', 'id': key});
+    let el = newEl('input', { 'class': 'opt-input', 'type': 'text', 'id': key });
     el.value = value;
-    
-    if (typeof(value) === "number")
-      el.setAttribute('type', 'number');
-    if (typeof(value) === "object" ) {
-      // This is a select/option
+
+    if (typeof(value) === "number") el.setAttribute('type', 'number');
+    if (typeof(value) === "object") {
+      // Dropdown list
       if (value.values) {
-        el = newEl('select', {'id': key});
+        el = newEl('select', { 'id': key });
         value.values.forEach((a) => {
-          var opt = newEl('option');
+          const opt = newEl('option');
           opt.textContent = a;
           opt.value = a;
           el.appendChild(opt);
@@ -156,467 +142,547 @@ function addOptionsElement(opt) {
         el.value = value.selected;
         lastBox.appendChild(el);
       }
-      // This is a float value
-      else {
-        var num = Math.round(value.value  * (1/value.step)) / (1/value.step);
+      // Slider (explicit discriminator)
+      else if (value.type === 'slider' && typeof value.value === 'number' && 'min' in value && 'max' in value && 'step' in value) {
+        const num = Math.round(value.value * (1 / value.step)) / (1 / value.step);
+        const stepStr = String(value.step);
+        const decimalPlaces = stepStr.includes('.') ? stepStr.split('.')[1].length : 0;
+
+        // Create slider input
+        const slider = newEl('input', { 'class': 'opt-input slider', 'type': 'range', 'id': key });
+        slider.setAttribute('step', value.step);
+        slider.setAttribute('min', value.min);
+        slider.setAttribute('max', value.max);
+        slider.value = Number(num).toFixed(decimalPlaces);
+
+        // Create readout input for precise edits
+        const readout = newEl('input', { 'class': 'opt-input slider-readout', 'type': 'number', 'id': `${key}-readout` });
+        readout.setAttribute('step', value.step);
+        readout.setAttribute('min', value.min);
+        readout.setAttribute('max', value.max);
+        readout.value = Number(num).toFixed(decimalPlaces);
+
+        // Keep slider and readout in sync
+        slider.addEventListener('input', (e) => {
+          readout.value = e.target.value;
+          const prev = (options[key] && typeof options[key] === 'object') ? options[key] : {};
+          options[key] = {
+            ...prev,
+            value: Number(e.target.value),
+            step: value.step,
+            min: value.min,
+            max: value.max,
+            type: prev.type || 'slider'
+          };
+        });
+        readout.addEventListener('change', (e) => {
+          const v = Number(e.target.value);
+          const bounded = Math.min(Math.max(v, value.min), value.max);
+          const rounded = Math.round(bounded * (1 / value.step)) / (1 / value.step);
+          const fixed = Number(rounded).toFixed(decimalPlaces);
+          slider.value = fixed;
+          readout.value = fixed;
+          const prev = (options[key] && typeof options[key] === 'object') ? options[key] : {};
+          options[key] = {
+            ...prev,
+            value: Number(fixed),
+            step: value.step,
+            min: value.min,
+            max: value.max,
+            type: prev.type || 'slider'
+          };
+        });
+
+        // Wrap slider + readout in a container
+        const container = newEl('div', { 'class': 'slider-wrapper' });
+        container.appendChild(slider);
+        container.appendChild(readout);
+        el = container;
+      }
+      // Numeric object rendered as number input (explicit discriminator or fallback)
+      else if ((value.type === 'number') && typeof value.value === 'number' && 'min' in value && 'max' in value && 'step' in value) {
+        const num = Math.round(value.value * (1 / value.step)) / (1 / value.step);
+        const stepStr = String(value.step);
+        const decimalPlaces = stepStr.includes('.') ? stepStr.split('.')[1].length : 0;
         el.setAttribute('type', 'number');
         el.setAttribute('step', value.step);
         el.setAttribute('min', value.min);
         el.setAttribute('max', value.max);
-        el.value = Number(num).toFixed(3);
+        el.value = Number(num).toFixed(decimalPlaces);
       }
     }
     addInputListener(el);
-    var d = newEl('div', {'class': 'tf-wrapper'});
+    const d = newEl('div', { 'class': 'tf-wrapper' });
     d.appendChild(lbl);
     d.appendChild(el);
     lastBox.appendChild(d);
 
-    if(key.endsWith('-hidden'))  {
-      d.classList.add('hide');
-    }
+    if (key.endsWith('-hidden')) d.classList.add('hide');
   });
-  
-}
+};
 
-
-function createNewBox(cont, lbl) {
-  var box = newEl('div', {'class': 'ctn opt-box hide', 'id': 'option-box'+cont});
-  var h = newEl('h2',  {'class': 'heading-2'});
+// Create new box
+const createNewBox = (cont, lbl) => {
+  const box = newEl('div', { 'class': 'ctn opt-box hide', 'id': `option-box${cont}` });
+  const h = newEl('h2', { 'class': 'heading-2' });
   h.innerHTML = lbl;
   box.appendChild(h);
   $('main-box').appendChild(box);
-  
-  // Add new voice in menu and relatvie listener
-  var lnk = newEl('a', {'class': 'a-link', 'id': 'set-opt'+cont, 'data-box': 'option-box'+cont});
+
+  const lnk = newEl('a', { 'class': 'a-link', 'id': `set-opt${cont}`, 'data-box': `option-box${cont}` });
   lnk.innerHTML = lbl;
   lnk.addEventListener('click', switchPage);
   $('nav-link').appendChild(lnk);
   return box;
-}
+};
 
-async function createOptionsBox(raw) {
-  var nest = {};
-  var boxId = 'wifi-box';
-  lastBox =  $(boxId);  
-      
+// Create options box
+const createOptionsBox = async (raw) => {
+  // Initialize WiFi settings
+  const dhcp = !!raw.dhcp;
+  $('no-dhcp').checked = dhcp;
+  $('ip').value = raw.ip_address;
+  $('gateway').value = raw.gateway;
+  $('subnet').value = raw.subnet;
+  if (dhcp) { show('conf-wifi'); show('save-wifi'); }
+
+  let nest = {};
+  let boxId = 'wifi-box';
+  lastBox = $(boxId);
+
   Object.entries(raw).forEach(([key, value], index) => {
-    if (boxId === 'wifi-box') {
-      $('no-dhcp').checked = raw.dhcp;
-      $('ip').value = raw.ip_address;
-      $('gateway').value = raw.gateway;
-      $('subnet').value = raw.subnet;
-      if ($('no-dhcp').checked){
-        show('conf-wifi');
-        show('save-wifi');
-      }
-    }
-
     if (key.startsWith('param-box')) {
       addOptionsElement(nest);
       lastBox = createNewBox(index, value);
       nest = {};
       boxId = value;
-    }
-    else if (boxId != 'wifi-box') {
-      var hidden = false;
+    } else if (boxId !== 'wifi-box') {
+      let hidden = false;
       if (key.startsWith('img-logo') || key.startsWith('name-logo')) {
         hidden = true;
-      }
-      else if(key.startsWith('raw-css')) {
-        var css = newEl("link", {'rel': 'stylesheet', 'href': value});
+      } else if (key.startsWith('raw-css')) {
+        const css = newEl("link", { 'rel': 'stylesheet', 'href': value });
         document.head.appendChild(css);
         hidden = true;
-      }
-      // Inject runtime JS source file
-      else if(key.startsWith('raw-javascript')) {
-        var js = newEl("script", {'src': value});
+      } else if (key.startsWith('raw-javascript')) {
+        const js = newEl("script", { 'src': value });
         document.body.appendChild(js);
         hidden = true;
-      }
-      // Inject runtime HTML source file
-      else if(key.startsWith('raw-html')) {
-        var el = newEl('div', {'class': 'tf-wrapper raw-html', 'id': value, 'data-box': lastBox.id});
+      } else if (key.startsWith('raw-html')) {
+        const el = newEl('div', { 'class': 'tf-wrapper raw-html', 'id': value, 'data-box': lastBox.id });
         lastBox.appendChild(el);
         fetch(value)
-        .then((res) => res.text())
-        .then((data) => $(value).innerHTML = data);
+          .then((res) => res.text())
+          .then((data) => $(value).innerHTML = data);
         hidden = true;
       }
-      if (!hidden) {
-        nest[key] = value;
-      }
+      if (!hidden) nest[key] = value;
     }
   });
-  
-  // Add last items
-  if (Object.entries(nest).length !== 0) {
-    addOptionsElement(nest);
-  }
-}
 
+  if (Object.entries(nest).length !== 0) addOptionsElement(nest);
+};
 
 function addInputListener(item) {
-  // Add event listener to option inputs
-  if (item.type  === "number") {
-    item.addEventListener('change', () => {
-       if (item.getAttribute("step")) {
-        var obj = {};
-        obj.value = Math.round(item.value  * (1/item.step)) / (1/item.step);
-        obj.step = item.getAttribute("step");
-        obj.min = item.getAttribute("min");
-        obj.max = item.getAttribute("max");
-        options[item.id] = obj;
+  const onChange = (e) => {
+    const t = e.target;
+    switch (t.type) {
+      case 'number': {
+        const step = t.step ? Number(t.step) : 0;
+        // Ignore readout changes handled above; treat plain number inputs
+        if (t.id.endsWith('-readout')) return;
+        if (step) {
+          const prev = (options[t.id] && typeof options[t.id] === 'object') ? options[t.id] : {};
+          options[t.id] = {
+            ...prev,
+            value: Math.round(Number(t.value) * (1/step)) / (1/step),
+            step,
+            min: Number(t.getAttribute('min')),
+            max: Number(t.getAttribute('max')),
+            type: (prev && prev.type) ? prev.type : 'number'
+          };
+        } else {
+          options[t.id] = parseInt(t.value, 10);
+        }
+        break;
       }
-      else
-        options[item.id] = parseInt(item.value);
-    });
-    return;
-  }
-
-  if(item.type === "text") {
-    item.addEventListener('change', () => {
-      options[item.id] = item.value;
-    });
-    return;
-  }
-
-  if(item.type === "checkbox") {
-    item.addEventListener('change', () => {
-      options[item.id] = item.checked;
-    });
-    return;
-  }
-
-  if(item.type === 'select-one'){
-    item.addEventListener('change', (e) => {
-      options[e.target.id].selected = e.target.value;
-    });
-    return;
-  }
+      case 'text':
+        options[t.id] = t.value;
+        break;
+      case 'checkbox':
+        options[t.id] = t.checked;
+        break;
+      default:
+        if (t.type === 'select-one') options[t.id].selected = t.value;
+        break;
+    }
+  };
+  item.addEventListener('change', onChange);
 }
 
-function insertKey(key,value,obj,pos){
-  return Object.keys(obj).reduce((ac,a,i) => {
-    if(i === pos) ac[key] = value;
-    ac[a] = obj[a]; 
-    return ac;
-  },{});
+function insertKey(key, value, obj, pos) {
+  const acc = {};
+  const keys = Object.keys(obj);
+  keys.forEach((k, i) => { if (i === pos) acc[key] = value; acc[k] = obj[k]; });
+  return acc;
 }
 
 function saveParameters() {
   // Backward compatibility
-  if(Object.keys(options)[0].startsWith('param-box')) {
-    if(Object.keys(options)[0] === 'param-box0') {
-      options['param-box-0'] = options['wifi-box']; 
-      options = {'dhcp': false, ...options};
-    }
-    else
-      options = {'wifi-box': '', 'dhcp': false, ...options};
+  if (Object.keys(options)[0]?.startsWith('param-box')) {
+    const isParamBox0 = Object.keys(options)[0] === 'param-box0';
+    options = {
+      ...(isParamBox0 
+        ? { 'param-box-0': options['wifi-box'] }
+        : { 'wifi-box': '' }
+      ),
+      'dhcp': false,
+      ...options
+    };
   }
-  
-  options.dhcp = $('no-dhcp').checked;
-  if ($('no-dhcp').checked) {
-    options = insertKey('ip_address', $('ip').value, options, 2);
-    options = insertKey('gateway', $('gateway').value, options, 3);
-    options = insertKey('subnet', $('subnet').value, options, 4);
-    options["ip_address"] = $('ip').value;
-    options["gateway"] = $('gateway').value;
-    options["subnet"] = $('subnet').value;
+
+  const noDhcp = $('no-dhcp').checked;
+  options.dhcp = noDhcp;
+
+  if (noDhcp) {
+    const networkConfig = {
+      ip_address: $('ip').value,
+      gateway: $('gateway').value,
+      subnet: $('subnet').value
+    };
+
+    Object.entries(networkConfig).forEach(([key, value], index) => {
+      options = insertKey(key, value, options, index + 2);
+      options[key] = value;
+    });
   }
-  
-  var myblob = new Blob([JSON.stringify(options, null, 2)], {
+
+  const configData = new Blob([JSON.stringify(options, null, 2)], {
     type: 'application/json'
   });
-  var formData = new FormData();
-  formData.append("data", myblob, '/' + configFile);
 
-  // POST data using the Fetch API
-  fetch('/edit', {
-    method: 'POST',
-    body: formData
-  })
+  const formData = new FormData();
+  formData.append("data", configData, '/' + configFile);
 
-  // Handle the server response
-  .then(response => response.text())
-  .then(text => {
-    openModal('Save options','<br><b>"/' + configFile +'"</b> saved successfully on flash memory!<br><br>');
-  });
+  fetch('/edit', { method: 'POST', body: formData })
+    .then(r => r.text())
+    .then(() => openModal('Save options', `<br><b>"/${configFile}"</b> saved successfully on flash memory!<br><br>`))
+    .catch(err => openModal('Error!', `Failed to save: ${err}`));
 }
 
 
 function showHidePassword() {
-  var inp = $("password");
-  if (inp.type === "password") {
-    inp.type = "text";
-    show('show-pass');
-    hide('hide-pass');
-  }
-  else {
-    inp.type = "password";
-    hide('show-pass');
-    show('hide-pass');
-  }
+  const inp = $("password");
+  const isPassword = inp.type === "password";
+  inp.type = isPassword ? "text" : "password";
+  show(isPassword ? 'show-pass' : 'hide-pass');
+  hide(isPassword ? 'hide-pass' : 'show-pass');
 }
 
 function getWiFiList() {
   show('loader');
-  fetch(esp + "scan")
-  .then(response => response.json())
-  .then(data => {
-    listWifi(data);
-    hide('loader');
-  });
+  fetch(`${esp}scan`)
+    .then(response => response.json())
+    .then(data => {
+      listWifi(data);
+      hide('loader');
+    })
+    .catch(error => {
+      console.error('Error fetching WiFi list:', error);
+      hide('loader');
+    });
 }
 
-function selectWifi(row) {
+function selectWifi(event) {
+  const row = event.currentTarget;
+  const id = row.id;
+  const ssid = row.cells[1].textContent;
+
   try {
-    $('select-' + row.target.parentNode.id).checked = true;
+    $(`select-${id}`).checked = true;
+  } catch (err) {
+    $(id).checked = true;
   }
-  catch(err) {
-    $(row.target.id).checked = true;
-  }
-  $('ssid').value = this.cells[1].innerHTML;
-  $('ssid-name').innerHTML = this.cells[1].innerHTML;
-  $('password').focus();
-}
 
+  $('ssid').value = ssid;
+  $('ssid-name').textContent = ssid;
+  $('password').focus();
+  
+  // Collapse wifi list and show chevron
+  $('wifi-table').classList.add('hide');
+  show('show-networks');
+}
 
 function listWifi(obj) {
-  if (obj.hasOwnProperty("reload"))
-    setTimeout(getWiFiList, 2000); 
-    
-  obj.sort((a, b) => {
-    return b.strength - a.strength;
-  });
-  
+  if (obj.reload) setTimeout(getWiFiList, 2000);
+
+  obj.sort((a, b) => b.strength - a.strength);
+
   const list = document.querySelector('#wifi-list');
   list.innerHTML = "";
-	obj.forEach((net, i) => {
-    // Create a single row with all columns
-    var row = newEl('tr');
-    var id = 'wifi-' + i;
-    row.id = id;
+  const frag = document.createDocumentFragment();
+  obj.forEach((net, i) => {
+    const row = newEl('tr', { id: `wifi-${i}` });
     row.addEventListener('click', selectWifi);
-	  row.innerHTML  = `<td><input type="radio" name="select" id="select-${id}"></td>`;
-    row.innerHTML += `<td id="ssid-${id}">${net.ssid}</td>`;
-    row.innerHTML += '<td class="hide-tiny">' + net.strength + ' dBm</td>';
-    row.innerHTML += (net.security) ? '<td>' + svgLock + '</td>' : '<td>' + svgUnlock + '</td>';
-    // Add row to list
-    list.appendChild(row);
+    row.innerHTML = `
+      <td><input type="radio" name="select" id="select-wifi-${i}"></td>
+      <td id="ssid-wifi-${i}">${net.ssid}</td>
+      <td class="hide-tiny">${net.strength} dBm</td>
+      <td>${net.security ? svgLock : svgUnlock}</td>
+    `;
+    frag.appendChild(row);
   });
+  list.appendChild(frag);
   show('wifi-table');
 }
 
 function doConnection(e, f) {
-  if ($('ssid').value === '' ||  $('password').value === ''){
-    openModal('Connect to WiFi','Please insert a SSID and a Password');
+  const ssid = $('ssid').value;
+  const password = $('password').value;
+
+  if (!ssid || !password) {
+    openModal('Connect to WiFi', 'Please insert a SSID and a Password');
     return;
   }
-  var formdata = new FormData();
-  formdata.append("ssid", $('ssid').value);
-  formdata.append("password", $('password').value);
+
+  const formdata = new FormData();
+  formdata.append("ssid", ssid);
+  formdata.append("password", password);
   formdata.append("persistent", $('persistent').checked);
-  if (typeof f !== 'undefined')
-    formdata.append("newSSID", true);
+
+  if (f) formdata.append("newSSID", true);
+
   if ($('no-dhcp').checked) {
     formdata.append("ip_address", $('ip').value);
     formdata.append("gateway", $('gateway').value);
     formdata.append("subnet", $('subnet').value);
   }
-  var requestOptions = {
+
+  const requestOptions = {
     method: 'POST',
     body: formdata,
     redirect: 'follow'
   };
-  
+
   show('loader');
-  var s;
+
   fetch('/connect', requestOptions)
-  .then(function(res) {
-    s = res.status;
-    return res.text();
-  })
-  .then(function(data) {
-    if (s === 200) {
-      if (data.includes("already")) 
-        openModal('Connect to WiFi', data, () => {doConnection(e, true)});
-      else
-        openModal('Connect to WiFi', data, restartESP);
-    }
-    else 
-      openModal('Error!', data);
-    
-    hide('loader');
-  })
-  .catch((error) => {
-    openModal('Connect to WiFi', error);
-    hide('loader');
-  });
+    .then(res => res.text().then(data => ({ status: res.status, data })))
+    .then(({ status, data }) => {
+      if (status === 200) {
+        if (data.includes("already")) {
+          openModal('Connect to WiFi', data, () => doConnection(e, true));
+        } else {
+          openModal('Connect to WiFi', data, restartESP);
+        }
+      } else {
+        openModal('Error!', data);
+      }
+      hide('loader');
+    })
+    .catch(error => {
+      openModal('Connect to WiFi', error);
+      hide('loader');
+    });
 }
 
-
 function switchPage(el) {
-  $('top-nav').classList.remove('resp');
-  // Menu items
-  document.querySelectorAll("a").forEach(item => {
-    item.classList.remove('active');
-  });
-  el.target.classList.add('active');
+  const target = el.target;
+  const boxId = target.getAttribute("data-box");
+  
+  $('top-nav').classList.remove('responsive');
+  
+  // Update active menu item
+  document.querySelectorAll("a").forEach(item => item.classList.remove('active'));
+  target.classList.add('active');
 
-  // Box items
-  document.querySelectorAll(".opt-box").forEach(e => {
-    e.classList.add('hide');
-  });
-  show(el.target.getAttribute("data-box"));
+  // Hide all option boxes and show the selected one
+  document.querySelectorAll(".opt-box").forEach(e => e.classList.add('hide'));
+  show(boxId);
 
-  if(el.target.id != 'set-wifi') {
-    var fragment = document.createDocumentFragment();
+  const isWifiPage = target.id === 'set-wifi';
+  if (!isWifiPage) {
+    const box = $(boxId);
+    const fragment = document.createDocumentFragment();
     fragment.appendChild($('btn-hr'));
-	  fragment.appendChild($('btn-box'));
-	  const box = $(el.target.getAttribute("data-box"));
-	  box.appendChild(fragment);
-	  
-	  document.querySelectorAll('.raw-html').forEach(function(el) {
-	    if (el.getAttribute("data-box") === box.id)
-        box.insertBefore(el,  $('btn-hr'));
+    fragment.appendChild($('btn-box'));
+    box.appendChild(fragment);
+
+    document.querySelectorAll('.raw-html').forEach(elem => {
+      if (elem.getAttribute("data-box") === box.id) {
+        box.insertBefore(elem, $('btn-hr'));
+      }
     });
-    
+
     show('btn-box');
     show('btn-hr');
-  }
-  else {
+  } else {
     hide('btn-box');
     hide('btn-hr');
   }
 }
 
-
 function showMenu() {
-  $('top-nav').classList.add('resp');
+  $('top-nav').classList.toggle('responsive');
 }
 
-function openModal(title, msg, fn, args) {
+function openModal(title, msg, fn) {
+  const modal = $('modal-message');
+  const mainBox = $('main-box');
+  
   $('message-title').innerHTML = title;
   $('message-body').innerHTML = msg;
-  $('modal-message').open = true;
-  $('main-box').style.filter = "blur(3px)";
-  if (typeof fn != 'undefined') {
+  modal.open = true;
+  mainBox.style.filter = "blur(3px)";
+  
+  if (fn) {
     closeCb = fn;
     show('ok-modal');
-  }
-  else
+  } else {
     hide('ok-modal');
+  }
 }
 
-function closeModal(do_cb) {
+function closeModal(doCb) {
   $('modal-message').open = false;
   $('main-box').style.filter = "";
-  if (typeof closeCb != 'undefined' && do_cb)
-    closeCb();
+  if (closeCb && doCb) closeCb();
+}
+
+// Ask user confirmation before triggering restart
+function confirmRestart() {
+  openModal('Restart ESP', '<br>Do you want to restart now?', restartESP);
 }
 
 function restartESP() {
-  fetch(esp + "reset")
-  .then(response => response.text())
-  .then(data => {
-    closeModal();
-    openModal('Restart!', '<br>ESP restarted!');
-  });
+  fetch(`${esp}reset`)
+    .then(() => {
+      closeModal();
+      openModal('Restart!', '<br>ESP restarted!');
+    })
+    .catch(error => openModal('Error!', `Failed to restart ESP: ${error}`));
 }
-
 function handleSubmit() {
-  let fileElement = $('file-input');
-  // check if user had selected a file
-  if (fileElement.files.length === 0) {
-    alert('please choose a file');
+  const fileElement = $('file-input');
+  const files = fileElement.files;
+
+  if (files.length === 0) {
+    alert('Please choose a file');
     return;
   }
-  var update = $('update-log');
-  var loader = $('loader');
-  var prg = $('progress-wrap');
+
+  const update = $('update-log');
+  const progressWrap = $('progress-wrap');
+  const progressAnim = $('progress-anim');
+
   show('loader');
   show('progress-wrap');
-  $('progress-wrap').classList.add('active');
+  progressWrap.classList.add('active');
   update.innerHTML = 'Update in progress';
-  
-  let formData = new FormData();
-  formData.set('update', fileElement.files[0]);
-  var req = new XMLHttpRequest();
-  req.open('POST', '/update?size=' + fileElement.files[0].size);  
-  req.onload = function(d) {
+
+  const formData = new FormData();
+  formData.set('update', files[0]);
+
+  const req = new XMLHttpRequest();
+  req.open('POST', `/update?size=${files[0].size}`);
+
+  req.onload = () => {
     hide('loader');
-    $('progress-wrap').classList.remove('active');
-    update.innerHTML = (req.status != 200)  ? `Error ${req.status}: ${req.statusText}` : req.response;
+    progressWrap.classList.remove('active');
+    update.innerHTML = req.status === 200 ? req.response : `Error ${req.status}: ${req.statusText}`;
   };
+
   req.upload.addEventListener('progress', (p) => {
-    let w = Math.round(p.loaded/p.total*100) + '%';
     if (p.lengthComputable) {
-      $('progress-anim').style.width = w;
-      update.innerHTML = 'Update in progress: ' + w;
+      const width = `${Math.round((p.loaded / p.total) * 100)}%`;
+      progressAnim.style.width = width;
+      update.innerHTML = `Update in progress: ${width}`;
     }
   });
+
   req.send(formData);
 }
-
 async function uploadFolder(e) {
-  let list = $('listing');
-  for (let file of Array.from(e.target.files)) {
-    let path = file.webkitRelativePath;
-    let item = newEl('li');
+  const list = $('listing');
+  const uploadFile = async (file, path) => {
+    const item = newEl('li');
     item.textContent = path;
     list.appendChild(item);
-    // Save each file in the ESP flash
-    var reader = new FileReader();
-    reader.onload = function(event) {
-      // Remove default "data" from path
-      if (path.startsWith("data/"))
-        path = path.replace("data/", "");
-      var formData = new FormData();
-      formData.set("data", file, "/" + path);
-      // POST data using the Fetch API
-      fetch('/edit', {method: 'POST', body: formData})
-      .then(response => response.text())
-    };
-    reader.readAsText(file);
+
+    try {
+      const formData = new FormData();
+      formData.set("data", file, '/' + path);
+      const response = await fetch('/edit', { method: 'POST', body: formData });
+      if (!response.ok) throw new Error(`Upload failed`);
+    } catch (err) {
+      console.error(`Error uploading ${path}:`, err);
+      item.style.color = 'red';
+    }
   };
+
+  for (const file of e.target.files) {
+    const path = file.webkitRelativePath.replace(/^data\//, '');
+    await uploadFile(file, path);
+  }
 }
+// Initialize SVG icons
+const svgIcons = {
+  'svg-menu': svgMenu,
+  'svg-eye': svgEye, 
+  'svg-no-eye': svgNoEye,
+  'svg-scan': svgScan,
+  'svg-connect': svgConnect,
+  'svg-save': svgSave,
+  'svg-save2': svgSave,
+  'svg-restart': svgRestart,
+  'img-logo': svgLogo
+};
 
-// Initializes the app.
-$('svg-menu').innerHTML = svgMenu;
-$('svg-eye').innerHTML = svgEye;
-$('svg-no-eye').innerHTML = svgNoEye;
-$('svg-scan').innerHTML = svgScan;
-$('svg-connect').innerHTML = svgConnect;
-$('svg-save').innerHTML = svgSave;
-$('svg-save2').innerHTML = svgSave;
-$('svg-restart').innerHTML = svgRestart;
-$('img-logo').innerHTML = svgLogo;
+// Set SVG icons
+Object.entries(svgIcons).forEach(([id, svg]) => {
+  $(id).innerHTML = svg;
+});
 
-$('hum-btn').addEventListener('click', showMenu);
-$('scan-wifi').addEventListener('click', getWiFiList);
-$('connect-wifi').addEventListener('click', doConnection);
-$('save-params').addEventListener('click', saveParameters);
-$('save-wifi').addEventListener('click', saveParameters);
-$('show-hide-password').addEventListener('click', showHidePassword);
-$('set-wifi').addEventListener('click', switchPage);
-$('set-update').addEventListener('click', switchPage);
-$('about').addEventListener('click', switchPage);
-$('restart').addEventListener('click', restartESP);
-$('picker').addEventListener('change', uploadFolder );
-$('update-btn').addEventListener('click', handleSubmit);
+// Add event listeners
+const eventListeners = {
+  'hum-btn': ['click', showMenu],
+  'scan-wifi': ['click', getWiFiList],
+  'connect-wifi': ['click', doConnection],
+  'save-params': ['click', saveParameters],
+  'save-wifi': ['click', saveParameters], 
+  'show-hide-password': ['click', showHidePassword],
+  'set-wifi': ['click', switchPage],
+  'set-update': ['click', switchPage],
+  'about': ['click', switchPage],
+  'restart': ['click', confirmRestart],
+  'picker': ['change', uploadFolder],
+  'update-btn': ['click', handleSubmit]
+};
+
+Object.entries(eventListeners).forEach(([id, [event, handler]]) => {
+  $(id).addEventListener(event, handler);
+});
+
+// File input change handler
 $('file-input').addEventListener('change', () => {
-  $('fw-label').innerHTML = $('file-input').files.item(0).name +' (' + $('file-input').files.item(0).size + ' bytes)' ;
+  const file = $('file-input').files[0];
+  $('fw-label').innerHTML = `${file.name} (${file.size} bytes)`;
   $('fw-label').style.background = 'brown';
 });
 
+// DHCP checkbox handler
 $('no-dhcp').addEventListener('change', function() {
-  if (this.checked) {
-    show('conf-wifi');
-    show('save-wifi');
-  }
-  else {
-    hide('conf-wifi');
-  }
+  const method = this.checked ? 'remove' : 'add';
+  ['conf-wifi', 'save-wifi'].forEach(id => $(id).classList[method]('hide'));
 });
+
+// WiFi list chevron handler - toggle visibility
+if ($('show-networks')) {
+  $('show-networks').addEventListener('click', () => {
+    $('wifi-table').classList.toggle('hide');
+    $('show-networks').classList.toggle('hide');
+  });
+}
+
+// Initialize on page load
 window.addEventListener('load', getParameters);

@@ -1,11 +1,10 @@
-#include <esp-fs-webserver.h>   // https://github.com/cotestatnt/esp-fs-webserver
-
 #include <FS.h>
 #include <LittleFS.h>
-#define FILESYSTEM LittleFS
+#include <FSWebServer.h>   // https://github.com/cotestatnt/esp-fs-webserver
 
-FSWebServer myWebServer(FILESYSTEM, 80);
-struct tm sysTime;
+const char* hostname = "myserver";
+#define FILESYSTEM LittleFS
+FSWebServer server(80, FILESYSTEM, hostname);
 
 #ifndef LED_BUILTIN
 #define LED_BUILTIN 2
@@ -14,9 +13,20 @@ struct tm sysTime;
 // Test "options" values
 uint8_t ledPin = LED_BUILTIN;
 bool boolVar = true;
+bool boolVar2 = false;
 uint32_t longVar = 1234567890;
 float floatVar = 15.5F;
 String stringVar = "Test option String";
+String dropdownSelected = "Item1";
+// ThingsBoard variables
+String tb_deviceName = "ESP Sensor";
+double tb_deviceLatitude = 41.88505;
+double tb_deviceLongitude = 12.50050;
+String tb_deviceToken = "xxxxxxxxxxxxxxxxxxx";
+String tb_device_key = "xxxxxxxxxxxxxxxxxxx";
+String tb_secret_key = "xxxxxxxxxxxxxxxxxxx";
+String tb_serverIP = "thingsboard.cloud";
+uint16_t tb_port = 80;
 
 // Var labels (in /setup webpage)
 #define LED_LABEL "The LED pin number"
@@ -24,16 +34,7 @@ String stringVar = "Test option String";
 #define LONG_LABEL "A long variable"
 #define FLOAT_LABEL "A float variable"
 #define STRING_LABEL "A String variable"
-
-// ThingsBoard variables
-double tb_deviceLatitude = 41.88505;
-double tb_deviceLongitude = 12.50050;
-String tb_deviceName = "ESP Sensor";
-String tb_deviceToken = "xxxxxxxxxxxxxxxxxxx";
-String tb_device_key = "xxxxxxxxxxxxxxxxxxx";
-String tb_secret_key = "xxxxxxxxxxxxxxxxxxx";
-String tb_serverIP = "thingsboard.cloud";
-uint16_t tb_port = 80;
+#define DROPDOWN_TEST "A dropdown listbox"
 
 #define TB_DEVICE_NAME "Device Name"
 #define TB_DEVICE_LAT "Device Latitude"
@@ -44,32 +45,42 @@ uint16_t tb_port = 80;
 #define TB_DEVICE_KEY "Provisioning device key"
 #define TB_SECRET_KEY "Provisioning secret key"
 
+// Timezone definition to get properly time from NTP server
+//n.u. #define MYTZ "CET-1CEST,M3.5.0,M10.5.0/3"
+//n.u. struct tm Time;
+
 /*
 * Include the custom HTML, CSS and Javascript to be injected in /setup webpage.
 * HTML code will be injected according to the order of options declaration.
 * CSS and JavaScript will be appended to the end of body in order to work properly.
 * In this manner, is also possible override the default element styles
-* like for example background color, margins, paddings etc etc
+* like for example background color, margins, padding etc etc
 */
 #include "customElements.h"
 #include "thingsboard.h"
 
+// Callback: notify user when the configuration file is saved
+void onConfigSaved(const char* path) {
+  Serial.printf("\n[Config] File salvato: %s\n", path);
+}
 
 ////////////////////////////////  Filesystem  /////////////////////////////////////////
-void startFilesystem() {
-  // FILESYSTEM INIT
-  if ( !FILESYSTEM.begin()) {
-    Serial.println("ERROR on mounting filesystem. It will be formmatted!");
+bool startFilesystem() {
+  if (FILESYSTEM.begin()){
+    server.printFileList(FILESYSTEM, "/", 1);
+    return true;
+  }
+  else {
+    Serial.println("ERROR on mounting filesystem. It will be reformatted!");
     FILESYSTEM.format();
     ESP.restart();
   }
-  myWebServer.printFileList(LittleFS, Serial, "/", 2);
+  return false;
 }
 
 /*
 * Getting FS info (total and free bytes) is strictly related to
 * filesystem library used (LittleFS, FFat, SPIFFS etc etc) and ESP framework
-* ESP8266 FS implementation has methods for total and used bytes (only label is missing)
 */
 #ifdef ESP32
 void getFsInfo(fsInfo_t* fsInfo) {
@@ -77,111 +88,145 @@ void getFsInfo(fsInfo_t* fsInfo) {
 	fsInfo->totalBytes = LittleFS.totalBytes();
 	fsInfo->usedBytes = LittleFS.usedBytes();
 }
-#else
-void getFsInfo(fsInfo_t* fsInfo) {
-	fsInfo->fsName = "LittleFS";
-}
 #endif
 
 
 ////////////////////  Load application options from filesystem  ////////////////////
-////////////////////  Load application options from filesystem  ////////////////////
 bool loadOptions() {
-  if (FILESYSTEM.exists(myWebServer.getConfigFilepath())) {
-    // Config file will be opened on the first time we call this method
-    myWebServer.getOptionValue(LED_LABEL, ledPin);
-    myWebServer.getOptionValue(BOOL_LABEL, boolVar);
-    myWebServer.getOptionValue(LONG_LABEL, longVar);
-    myWebServer.getOptionValue(FLOAT_LABEL, floatVar);
-    myWebServer.getOptionValue(STRING_LABEL, stringVar);
-    // Close configuration file and release memory
-    myWebServer.closeConfiguration(false);
+  if (FILESYSTEM.exists(server.getConfiFileName())) {
+    // Test "options" values
+    server.getOptionValue(LED_LABEL, ledPin);
+    server.getOptionValue(BOOL_LABEL, boolVar);
+    server.getOptionValue(BOOL_LABEL "2", boolVar2);
+    server.getOptionValue(LONG_LABEL, longVar);
+    server.getOptionValue(FLOAT_LABEL, floatVar);
+    server.getOptionValue(STRING_LABEL, stringVar);
+    server.getOptionValue(DROPDOWN_TEST, dropdownSelected);
+    // ThingsBoard variables
+    server.getOptionValue(TB_DEVICE_NAME, tb_deviceName);
+    server.getOptionValue(TB_DEVICE_LAT, tb_deviceLatitude);
+    server.getOptionValue(TB_DEVICE_LON, tb_deviceLongitude);
+    server.getOptionValue(TB_DEVICE_TOKEN, tb_deviceToken);
+    server.getOptionValue(TB_DEVICE_KEY, tb_device_key);
+    server.getOptionValue(TB_SECRET_KEY, tb_secret_key);
+    server.getOptionValue(TB_SERVER, tb_serverIP);
+    server.getOptionValue(TB_PORT, tb_port);
+    server.closeSetupConfiguration();  // Close configuration to free resources
 
     Serial.println("\nThis are the current values stored: \n");
     Serial.printf("LED pin value: %d\n", ledPin);
-    Serial.printf("Bool value: %s\n", boolVar ? "true" : "false");
-    Serial.printf("Long value: %d\n",longVar);
+    Serial.printf("Bool value 1: %s\n", boolVar ? "true" : "false");
+    Serial.printf("Bool value 2: %s\n", boolVar2 ? "true" : "false");
+    Serial.printf("Long value: %u\n", longVar);
     Serial.printf("Float value: %d.%d\n", (int)floatVar, (int)(floatVar*1000)%1000);
     Serial.printf("String value: %s\n", stringVar.c_str());
+    Serial.printf("Dropdown selected: %s\n", dropdownSelected.c_str());
     return true;
   }
-  else
-    Serial.println(F("Config file not exist"));
-  return false;
+  else {
+      Serial.println("Failed to parse configuration file");            
+      return false;
+  }
+  return true;
 }
 
 
 void setup() {
+  pinMode(LED_BUILTIN, OUTPUT);
   Serial.begin(115200);
 
   // FILESYSTEM INIT
-  startFilesystem();
+  if (startFilesystem()){
+    // Load configuration (if not present, default will be created when webserver will start)
+    loadOptions();      
+  }
 
-  // Load configuration (if not present, default will be created when webserver will start)
-#if CLEAR_OPTIONS
-  if (myWebServer.clearOptions())
-    ESP.restart();
-#endif
-  if (loadOptions())
-    Serial.println(F("Application option loaded\n\n"));
-  else
-    Serial.println(F("Application options NOT loaded!\n\n"));
+  // Try to connect to WiFi (will start AP if not connected after timeout)
+  if (!server.startWiFi(10000)) {
+    Serial.println("\nWiFi not connected! Starting AP mode...");
+    server.startCaptivePortal("ESP_AP", "123456789", "/setup");
+  }
 
-  // Try to connect to stored SSID, start AP if fails after timeout
-  myWebServer.setAP("ESP_AP", "123456789");
-  IPAddress myIP = myWebServer.startWiFi(15000);
-
-  // Configure /setup page and start Web Server
-  myWebServer.addOptionBox("My Options");
-  myWebServer.addOption(LED_LABEL, ledPin);
-  myWebServer.addOption(LONG_LABEL, longVar);
-  // Float fields can be configured with min, max and step properties
-  myWebServer.addOption(FLOAT_LABEL, floatVar, 0.0, 100.0, 0.01);
-  myWebServer.addOption(STRING_LABEL, stringVar);
-  myWebServer.addOption(BOOL_LABEL, boolVar);
-
-  // Add a new options box with custom code injected
-  myWebServer.addOptionBox("Custom HTML");
-  // Add HTML block where you need (for example one in different option box)
-  myWebServer.addHTML(custom_html, "fetch", /*overwite*/ true);
+  // Add custom HTTP request handlers to webserver
+  server.on("/reload", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(200, "text/plain", "Options loaded");
+    loadOptions();
+    Serial.println("Application option loaded after web request");
+  });
 
   // Add a new options box
-  myWebServer.addOptionBox("ThingsBoard");
-  myWebServer.addOption(TB_DEVICE_NAME, tb_deviceName);
-  myWebServer.addOption(TB_DEVICE_LAT, tb_deviceLatitude, -180.0, 180.0, 0.00001);
-  myWebServer.addOption(TB_DEVICE_LON, tb_deviceLongitude, -180.0, 180.0, 0.00001);
-  myWebServer.addOption(TB_SERVER, tb_serverIP);
-  myWebServer.addOption(TB_PORT, tb_port);
-  myWebServer.addOption(TB_DEVICE_KEY, tb_device_key);
-  myWebServer.addOption(TB_SECRET_KEY, tb_secret_key);
-  myWebServer.addOption(TB_DEVICE_TOKEN, tb_deviceToken);
-  // Add HTML block where you need (for example one in different option box)
-  myWebServer.addHTML(thingsboard_htm, "ts", /*overwrite file*/ false);
+  server.addOptionBox("My Options");
+  server.addOption(LED_LABEL, ledPin);
+  server.addOption(LONG_LABEL, longVar);
+  // Float fields can be configured with min, max and step properties
+  server.addOption(FLOAT_LABEL, floatVar, 0.0, 100.0, 0.01);
+  server.addOption(STRING_LABEL, stringVar);
+  server.addOption(BOOL_LABEL, boolVar);
+  server.addOption(BOOL_LABEL "2", boolVar2);
+  static const char* dropItem[] = {"Item1", "Item2", "Item3"};
+  FSWebServer::DropdownList dropdownDef{ DROPDOWN_TEST, dropItem, 3, 0 };
+  server.addDropdownList(dropdownDef);
 
-  // CSS and Javascript will be appended to head and body
-  // (add as last to prevent wrong /setup page  aspect)
-  myWebServer.addJavascript(thingsboard_script, "ts", /*overwrite file*/ false);
-  myWebServer.addCSS(custom_css, "fetch", /*overwite*/ false);
-  myWebServer.addJavascript(custom_script, "fetch", /*overwite*/ false);
+  // Add a new options box with custom code injected
+  server.addOptionBox("Custom HTML");
+  // How many times you need (for example one in different option box)
+  server.addHTML(custom_html, "fetch-test", /*overwrite*/ false);
 
+  // Add a new options box
+  server.addOptionBox("ThingsBoard");
+  server.addOption(TB_DEVICE_NAME, tb_deviceName);
+  server.addOption(TB_DEVICE_LAT, tb_deviceLatitude, -180.0, 180.0, 0.00001);
+  server.addOption(TB_DEVICE_LON, tb_deviceLongitude, -180.0, 180.0, 0.00001);
+  server.addOption(TB_SERVER, tb_serverIP);
+  server.addOption(TB_PORT, tb_port);
+  server.addOption(TB_DEVICE_KEY, tb_device_key);
+  server.addOption(TB_SECRET_KEY, tb_secret_key);
+  server.addOption(TB_DEVICE_TOKEN, tb_deviceToken);
+  server.addHTML(thingsboard_htm, "ts", /*overwrite file*/ false);
+
+  // CSS will be appended to HTML head
+  server.addCSS(custom_css, "fetch", /*overwrite file*/ false);
+  // Javascript will be appended to HTML body
+  server.addJavascript(custom_script, "fetch", /*overwrite file*/ false);
+  server.addJavascript(thingsboard_script, "ts", /*overwrite file*/ false);
+
+  // Add custom page title to /setup
+  server.setSetupPageTitle("Custom HTML Web Server");
   // Add custom logo to /setup page with custom size
-  myWebServer.setLogoBase64(base64_logo, "128", "128", /*overwrite file*/ false);
+  server.setLogoBase64(base64_logo, "128", "128", /*overwrite file*/ false);
 
-  // set /setup and /edit page authentication
-  // myWebServer.setAuthentication("admin", "admin");
+  // Enable ACE FS file web editor and add FS info callback function    
+#ifdef ESP32
+  server.enableFsCodeEditor(getFsInfo);
+#else
+  server.enableFsCodeEditor();
+#endif
 
-  // Enable ACE FS file web editor and add FS info callback function
-  myWebServer.enableFsCodeEditor(getFsInfo);
+  // Inform user when config.json is saved via /edit or /upload
+  server.setConfigSavedCallback(onConfigSaved);
 
-  // Start webserver
-  myWebServer.begin();
-  Serial.print(F("\nESP Web Server started on IP Address: "));
-  Serial.println(myIP);
-  Serial.println(F("Open /setup page to configure optional parameters"));
-  Serial.println(F("Open /edit page to view and edit files"));
+  // Start web server
+  server.begin();
+  Serial.print(F("\n\nWeb Server started on IP Address: "));
+  Serial.println(server.getServerIP());
+  Serial.println(F(
+    "\nThis is \"customHTML.ino\" example.\n"
+    "Open /setup page to configure optional parameters.\n"
+    "Open /edit page to view, edit or upload example or your custom webserver source files."
+  ));
+  Serial.printf("Ready! Open http://%s.local in your browser\n", hostname);
+  if (server.isAccessPointMode())
+    Serial.print(F("Captive portal is running"));
+}
+
 }
 
 
 void loop() {
-  myWebServer.run();
+  server.handleClient();
+  if (server.isAccessPointMode())
+    server.updateDNS();
+  
+  // Nothing to do here, just a small delay for task yield
+  delay(10);  
 }

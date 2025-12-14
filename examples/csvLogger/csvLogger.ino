@@ -1,82 +1,50 @@
+#include <FS.h>
+#include <LittleFS.h>
+#include <FSWebServer.h>
+
+FSWebServer server(80, LittleFS, "esphost");
+
 // Timezone definition to get properly time from NTP server
 #define MYTZ "CET-1CEST,M3.5.0,M10.5.0/3"
 #include <time.h>
-#include <esp-fs-webserver.h>  // https://github.com/cotestatnt/esp-fs-webserver
 
-#include <FS.h>
-#include <LittleFS.h>
-
-// Check board options and select the right partition scheme
-#define FILESYSTEM LittleFS
-FSWebServer myWebServer(FILESYSTEM, 80);
 struct tm ntpTime;
 const char* basePath = "/csv";
 
-
-// This script will set page favicon using a base_64 encoded 32x32 pixel icon
-static const char base64_favicon[] PROGMEM = R"string_literal(
-var favIcon = "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAA7EAAAOxAGVKw4bAAABv0lEQVRYw+3XvWsUURTG4ScYsVEUJUtEEOxiYxTF0i6bSlBSaCXi32B" +
-              "jpU0IEWyClR/Y2AiiLIiKIGhpY7DQRpQUimLEKEkUYjZrcwYuMhuZD4jFXJhi7rnve35z5szMHfLHCDpYQq/AcVENYwQLBRPXCtEJo3toFdTWApGVvVVCW0slMgMVAUpD1Al" +
-              "QCqIKwPc6IKoAzNTxdFQB2BIQlSpRBaCw76ANHg1AA9AANAANwH8JMLARAAMYxRDe4GOyZjOOYhte4RN2YCe+xB4y89iHn/hcBGIIL5LPZRdXIrYfc1jFL/zGeYzH2snE51DM" +
-              "TRX9zN/CCk5iVyTvoY27mMcebEo2G8P4ipeJz4XQHS4KMI+HyfnWuLJjeBKJDuTorke1dsf5c7wrs9FZw40+onEsh/ADbuNgxNoxfxbbo4rTZQC6uLmOcBjn4lb9wGLMDUb17" +
-              "mAizI/08WhFfCkvOBdNmCZ8FKbHo7mycTrpD7iGbwH3fp3k90PXyVtwKYJXcQpPo9tH8Syu8gzG8Dges+y+j4V2BZf/8ZOyED++ue+C6UjUxWuciNhePIikq9H17b+0s3i" +
-              "b0/29pOydfsn/AEofvJL5jAPxAAAAAElFTkSuQmCC";
-var docHead = document.getElementsByTagName('head')[0];
-var newLink = document.createElement('link');
-newLink.rel = 'shortcut icon';
-newLink.href = 'data:image/png;base64,' + favIcon;
-docHead.appendChild(newLink);
-)string_literal";
-
-
 ////////////////////////////////  Filesystem  /////////////////////////////////////////
-void startFilesystem() {
-  // FILESYSTEM INIT
-  if ( !FILESYSTEM.begin()) {
+bool startFilesystem(){
+  if (LittleFS.begin()){
+    server.printFileList(LittleFS, "/", 2);
+    return true;
+  }
+  else {
     Serial.println("ERROR on mounting filesystem. It will be formmatted!");
-    FILESYSTEM.format();
+    LittleFS.format();
     ESP.restart();
   }
-  myWebServer.printFileList(LittleFS, Serial, "/", 2);
+  return false;
 }
-
-/*
-* Getting FS info (total and free bytes) is strictly related to
-* filesystem library used (LittleFS, FFat, SPIFFS etc etc) and ESP framework
-* ESP8266 FS implementation has methods for total and used bytes (only label is missing)
-*/
-#ifdef ESP32
-void getFsInfo(fsInfo_t* fsInfo) {
-	fsInfo->fsName = "LittleFS";
-	fsInfo->totalBytes = LittleFS.totalBytes();
-	fsInfo->usedBytes = LittleFS.usedBytes();
-}
-#else
-void getFsInfo(fsInfo_t* fsInfo) {
-	fsInfo->fsName = "LittleFS";
-}
-#endif
-
 
 //////////////////////////// Append a row to csv file ///////////////////////////////////
-bool appendRow() {
+bool appenRow() {
+
   getLocalTime(&ntpTime, 10);
 
   char filename[32];
   snprintf(filename, sizeof(filename),
-           "%s/%04d_%02d_%02d.csv",
-           basePath,
-           ntpTime.tm_year + 1900,
-           ntpTime.tm_mon + 1,
-           ntpTime.tm_mday
-          );
+    "%s/%04d_%02d_%02d.csv",
+    basePath,
+    ntpTime.tm_year + 1900,
+    ntpTime.tm_mon + 1,
+    ntpTime.tm_mday
+  );
 
   File file;
-  if (FILESYSTEM.exists(filename)) {
-    file = FILESYSTEM.open(filename, "a");   // Append to existing file
+  if (LittleFS.exists(filename)) {
+    file = LittleFS.open(filename, "a");   // Append to existing file
   }
   else {
-    file = FILESYSTEM.open(filename, "w");   // Create a new file
+    file = LittleFS.open(filename, "w");   // Create a new file
     file.println("timestamp, free heap, largest free block, connected, wifi strength");
   }
 
@@ -85,25 +53,25 @@ bool appendRow() {
     strftime(timestamp, sizeof(timestamp), "%c", &ntpTime);
 
     char row[64];
-#ifdef ESP32
-    snprintf(row, sizeof(row), "%s, %d, %d, %s, %d",
-             timestamp,
-             heap_caps_get_free_size(0),
-             heap_caps_get_largest_free_block(0),
-             (WiFi.status() == WL_CONNECTED) ? "true" : "false",
-             WiFi.RSSI()
-            );
-#elif defined(ESP8266)
-    uint32_t free;
-    uint16_t max;
-    ESP.getHeapStats(&free, &max, nullptr);
-    snprintf(row, sizeof(row),
-             "%s, %d, %d, %s, %d",
-             timestamp, free, max,
-             (WiFi.status() == WL_CONNECTED) ? "true" : "false",
-             WiFi.RSSI()
-            );
-#endif
+  #ifdef ESP32
+      snprintf(row, sizeof(row), "%s, %d, %d, %s, %d",
+        timestamp,
+        heap_caps_get_free_size(0),
+        heap_caps_get_largest_free_block(0),
+        (WiFi.status() == WL_CONNECTED) ? "true" : "false",
+        WiFi.RSSI()
+      );
+  #elif defined(ESP8266)
+      uint32_t free;
+      uint32_t max;
+      ESP.getHeapStats(&free, &max, nullptr);
+      snprintf(row, sizeof(row),
+        "%s, %d, %d, %s, %d",
+        timestamp, free, max,
+        (WiFi.status() == WL_CONNECTED) ? "true" : "false",
+        WiFi.RSSI()
+      );
+  #endif
     Serial.println(row);
     file.println(row);
     file.close();
@@ -115,60 +83,60 @@ bool appendRow() {
 
 
 void setup() {
-  Serial.begin(115200);
+    Serial.begin(115200);
+    delay(1000);
+    startFilesystem();
 
-  // FILESYSTEM INIT
-  startFilesystem();
+	// Try to connect to WiFi (will start AP if not connected after timeout)
+	if (!server.startWiFi(10000)) {
+		Serial.println("\nWiFi not connected! Starting AP mode...");
+		server.startCaptivePortal("ESP32_LOGGER", "123456789", "/setup");
+	}
 
-  // Try to connect to stored SSID, start AP if fails after timeout
-  char ssid[20];
-#ifdef ESP8266
-  snprintf(ssid, sizeof(ssid), "ESP-%lX", ESP.getChipId());
-#elif defined(ESP32)
-  snprintf(ssid, sizeof(ssid), "ESP-%llX", ESP.getEfuseMac());
-#endif
+    // Enable ACE FS file web editor and add FS info callback fucntion
+    server.enableFsCodeEditor();
+    #ifdef ESP32
+    server.setFsInfoCallback([](fsInfo_t* fsInfo) {
+        fsInfo->totalBytes = LittleFS.totalBytes();
+        fsInfo->usedBytes = LittleFS.usedBytes();
+        fsInfo->fsName = "LittleFS";
+    });
+    #endif
 
-  myWebServer.setAP(ssid, "123456789");
-  IPAddress myIP = myWebServer.startWiFi(15000);
-  Serial.println("\n");
+    // Start server
+    server.begin();
+    Serial.print(F("Async ESP Web Server started on IP Address: "));
+    Serial.println(server.getServerIP());
+    Serial.println(F(
+        "This is \"scvLogger.ino\" example.\n"
+        "Open /setup page to configure optional parameters.\n"
+        "Open /edit page to view, edit or upload example or your custom webserver source files."
+    ));
 
-  // Sync time with NTP
-#ifdef ESP8266
-  configTime(MYTZ, "time.google.com", "time.windows.com", "pool.ntp.org");
-#elif defined(ESP32)
-  configTzTime(MYTZ, "time.google.com", "time.windows.com", "pool.ntp.org");
-#endif
-  getLocalTime(&ntpTime, 5000);  // Wait for NTP sync
+    // Set NTP servers
+    #ifdef ESP8266
+    configTime(MYTZ, "time.google.com", "time.windows.com", "pool.ntp.org");
+    #elif defined(ESP32)
+    configTzTime(MYTZ, "time.google.com", "time.windows.com", "pool.ntp.org");
+    #endif
+    // Wait for NTP sync (with timeout)
+    getLocalTime(&ntpTime, 5000);
+  
 
-  // Configure /setup page and start Web Server
-  myWebServer.addJavascript(base64_favicon, "favicon");
-
-  // set /setup and /edit page authentication
-  // myWebServer.setAuthentication("admin", "admin");
-
-  // Enable ACE FS file web editor and add FS info callback function
-  myWebServer.enableFsCodeEditor(getFsInfo);
-
-  // Start webserver
-  myWebServer.begin();
-  Serial.print(F("ESP Web Server started on IP Address: "));
-  Serial.println(myIP);
-  Serial.println(F("Open /setup page to configure optional parameters"));
-  Serial.println(F("Open /edit page to view and edit files"));
-
-  // Create csv log folder if not exists
-  if (!FILESYSTEM.exists(basePath)) {
-    FILESYSTEM.mkdir(basePath);
-  }
+    // Create csv logs folder if not exists
+    if (!LittleFS.exists(basePath)) {
+      LittleFS.mkdir(basePath);
+    }
 }
 
-
 void loop() {
-  myWebServer.run();
+    server.handleClient();
+    if (server.isAccessPointMode())
+        server.updateDNS();
 
-  static uint32_t updateTime;
-  if (millis() - updateTime > 30000) {
-    updateTime = millis();
-    appendRow();
-  }
+    static uint32_t updateTime;
+    if (millis()- updateTime > 30000) {
+        updateTime = millis();
+        appenRow();
+    }
 }

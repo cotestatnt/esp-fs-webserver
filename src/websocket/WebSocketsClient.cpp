@@ -84,7 +84,7 @@ void WebSocketsClient::begin(const char * host, uint16_t port, const char * url,
     _lastConnectionFail = 0;
     _lastHeaderSent     = 0;
 
-    log_debug("[WS-Client] Websocket Version: " WEBSOCKETS_VERSION "\n");
+    log_debug("[WS-Client] Websocket started\n");
 }
 
 void WebSocketsClient::begin(String host, uint16_t port, String url, String protocol) {
@@ -653,10 +653,10 @@ void WebSocketsClient::sendHeader(WSclient_t * client) {
 
     handshake += NEW_LINE;
 
-    log_debug("[WS-Client][sendHeader] handshake %s", (uint8_t *)handshake.c_str());
+    log_debug("[WS-Client][sendHeader] handshake %s", handshake.c_str());
     write(client, (uint8_t *)handshake.c_str(), handshake.length());
 
-    log_debug("[WS-Client][sendHeader] sending header... Done (%luus).\n", (micros() - start));
+    log_debug("[WS-Client][sendHeader] sending header... Done.\n");
     _lastHeaderSent = millis();
 }
 

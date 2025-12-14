@@ -1,22 +1,40 @@
 #ifndef CONFIGURATOR_HPP
 #define CONFIGURATOR_HPP
-#include <ArduinoJson.h>
+#include <type_traits>
 #include <FS.h>
+
+#include "Json.h"
 #include "SerialLog.h"
 
 #define MIN_F -3.4028235E+38
 #define MAX_F 3.4028235E+38
+
+// Public dropdown definition type, available only when /setup is enabled
+namespace ServerConfig {
+    struct DropdownList {
+        const char* label;                 // JSON key / UI label id
+        const char* const* values;         // Static array of values (null-terminated strings)
+        size_t size;                       // Number of items in values
+        size_t selectedIndex;              // Currently selected item index
+    };
+
+    struct Slider {
+        const char* label;                 // JSON key / UI label id
+        double min;                        // Minimum value
+        double max;                        // Maximum value
+        double step;                       // Step increment
+        double value;                      // Current value
+    };
+}
+
 
 class SetupConfigurator
 {
     protected:
         uint8_t numOptions = 0;
         fs::FS* m_filesystem = nullptr;
-        #if ARDUINOJSON_VERSION_MAJOR > 6
-        JsonDocument* m_doc = nullptr;
-        #else
-        DynamicJsonDocument* m_doc = nullptr;
-        #endif
+        CJSON::Json* m_doc = nullptr;
+        CJSON::Json* m_savedDoc = nullptr;  // Temporary storage for saved file values
 
         bool m_opened = false;
 
@@ -26,21 +44,29 @@ class SetupConfigurator
 
         bool openConfiguration() {
             if (checkConfigFile()) {
-                File file = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "r");
-                #if ARDUINOJSON_VERSION_MAJOR > 6
-                    m_doc = new JsonDocument();
-                #else
-                    int sz = file.size() * 1.33;
-                    int docSize = max(sz, 2048);
-                    m_doc = new DynamicJsonDocument((size_t)docSize);
-                #endif
-                DeserializationError error = deserializeJson(*m_doc, file);
-                if (error) {
-                    log_error("Failed to deserialize file, may be corrupted\n %s\n", error.c_str());
-                    file.close();
-                    return false;
+                // Read existing file into m_savedDoc (background copy for value lookup)
+                if (m_filesystem->exists(ESP_FS_WS_CONFIG_FILE)) {
+                    File file = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "r");
+                    if (file) {
+                        String content = file.readString();
+                        file.close();
+                        
+                        m_savedDoc = new CJSON::Json();
+                        if (!m_savedDoc->parse(content)) {
+                            log_error("Failed to parse existing configuration");
+                            delete m_savedDoc;
+                            m_savedDoc = nullptr;
+                            // Don't continue if parsing fails
+                            return false;
+                        }
+                    }
                 }
-                file.close();
+                
+                // Create empty m_doc - will be populated in addOption() in the setup order
+                m_doc = new CJSON::Json();
+                m_doc->setString("wifi-box", "");
+                m_doc->setBool("dhcp", false);
+                
                 m_opened = true;
                 return true;
             }
@@ -67,6 +93,7 @@ class SetupConfigurator
                 file.println("{\"wifi-box\": \"\", \"dhcp\": false}");
                 file.close();
             }
+            log_debug("Config file %s OK", ESP_FS_WS_CONFIG_FILE);
             return true;
         }
 
@@ -74,39 +101,82 @@ class SetupConfigurator
         friend class FSWebServer;
         SetupConfigurator(fs::FS *fs) : m_filesystem(fs) { ; }
 
-        bool closeConfiguration( bool write = true) {
-            m_opened = false;
-            if (!write) {
-                m_doc->clear();
-                delete (m_doc);
-                m_doc = nullptr;
+        bool closeConfiguration() {
+            
+
+            // If no options were added in this session, skip writing to avoid overwriting
+            if (numOptions == 0) {
+                log_debug("No options added; skipping config write");
+                if (m_doc) { delete m_doc; m_doc = nullptr; }
+                if (m_savedDoc) { delete m_savedDoc; m_savedDoc = nullptr; }
                 return true;
+            }
+         
+
+
+            // Write configuration to file only if content has changed
+            // Serialize the new content
+            String newContent = m_doc->serialize(true);
+            
+            // Read existing file content
+            String oldContent;
+            if (m_filesystem->exists(ESP_FS_WS_CONFIG_FILE)) {
+                File readFile = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "r");
+                if (readFile) {
+                    oldContent = readFile.readString();
+                    readFile.close();
+                }
+            }
+            
+            // Write only if content is different
+            if (oldContent != newContent) {
+                File file = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "w");
+                if (file) {
+                    file.print(newContent);
+                    file.close();
+                    log_debug("Config file written (content changed)");
+                } 
+                else {
+                    log_error("Error opening config file for write");
+                    delete (m_doc);
+                    m_doc = nullptr;
+                    if (m_savedDoc) { 
+                        delete (m_savedDoc); 
+                        m_savedDoc = nullptr; 
+                    }
+                    m_opened = false;
+                    return false;
+                }
+            } 
+            else {
+                log_debug("Config file unchanged, skipping write");
+            }
+            
+            delete (m_doc);
+            m_doc = nullptr;
+            if (m_savedDoc) { 
+                delete (m_savedDoc); 
+                m_savedDoc = nullptr; 
             }
 
-            File file = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "w");
-            if (file) {
-                if (serializeJsonPretty(*m_doc, file) == 0) {
-                    log_error("Failed to write to file");
-                }
-                file.close();
-                m_doc->clear();
-                delete (m_doc);
-                m_doc = nullptr;
-                return true;
-            }
-            return false;
+            m_opened = false;
+            numOptions = 0;
+            return true;
         }
 
         void setLogoBase64(const char* logo, const char* width, const char* height, bool overwrite) {
-            char filename[32] = {ESP_FS_WS_CONFIG_FOLDER};
-            strcat(filename, "/img-logo-");
-            strcat(filename, width);
-            strcat(filename, "_");
-            strcat(filename, height);
-            strcat(filename, ".txt");
-
-            optionToFile(filename, logo, overwrite);
-            addOption("img-logo", filename);
+            String filename = ESP_FS_WS_CONFIG_FOLDER;
+            filename += "/img-logo-";
+            filename += width;
+            filename += "_";
+            filename += height;
+            filename += ".txt";
+            if (filename.length() >= 120) {
+                log_error("Logo filename too long");
+                return;
+            }
+            optionToFile(filename.c_str(), logo, overwrite);
+            addOption("img-logo", filename.c_str());
         }
 
         bool optionToFile(const char* filename, const char* str, bool overWrite) {
@@ -154,7 +224,7 @@ class SetupConfigurator
                 path += ".js";
 
             if (optionToFile(path.c_str(), source.c_str(), overWrite)){
-                (*m_doc)[tag] = path;
+                m_doc->setString(tag.c_str(), path.c_str());
             }
             else {
                 log_error("Source option not saved");
@@ -189,33 +259,167 @@ class SetupConfigurator
         */
         void addDropdownList(const char *label, const char** array, size_t size) {
 
-        #if ARDUINOJSON_VERSION_MAJOR > 6
-            // If key is present we don't need to create it.          
-            JsonVariant variant = (*m_doc)[label];
-            if (!variant.isNull()) {
+            // If key is present we don't need to create it.
+            if (m_doc->hasObject(label)) {
                 log_debug("Key \"%s\" value present", label);
                 return;
             }
-            JsonObject obj = (*m_doc)[label].to<JsonObject>();
-        #else
-            JsonObject obj = (*m_doc).createNestedObject(label);
-        #endif
+            m_doc->ensureObject(label);
+            
+            // Try to get saved "selected" value from m_savedDoc, otherwise use first item
+            String selectedValue = String(array[0]);
+            if (m_savedDoc) {
+                String savedSelected;
+                if (m_savedDoc->getString(label, "selected", savedSelected)) {
+                    selectedValue = savedSelected;
+                    log_debug("Dropdown \"%s\" using saved value: %s", label, selectedValue.c_str());
+                }
+            }
+            
+            m_doc->setString(label, "selected", selectedValue);
+            std::vector<String> vals; vals.reserve(size);
+            for (unsigned int i=0; i<size; i++) { vals.emplace_back(String(array[i])); }
+            m_doc->setArray(label, "values", vals);
 
-            if (obj.isNull())
-                return;
+            numOptions++ ;
+        }
 
-            obj["selected"] = array[0];     // first element selected as default
-            #if ARDUINOJSON_VERSION_MAJOR > 6
-                JsonArray arr = obj["values"].to<JsonArray>();
-            #else
-                JsonArray arr = obj.createNestedArray("values");
-            #endif
+        /*
+            Add a new dropdown using a static definition that tracks current index
+        */
+        void addDropdownList(ServerConfig::DropdownList &def) {
+            if (m_doc == nullptr) {
+                if (!openConfiguration()) {
+                    log_error("Error! /setup configuration not possible");
+                }
+            }
 
-            for (unsigned int i=0; i<size; i++) {
-                arr.add(array[i]);
+            const char* label = def.label;
+
+            // If key is present we don't need to create it.
+            if (m_doc->hasObject(label)) {
+                log_debug("Key \"%s\" value present", label);
+            } else {
+                m_doc->ensureObject(label);
+
+                // Determine selected value: prefer saved, otherwise provided index, otherwise first
+                String selectedValue = (def.size > 0) ? String(def.values[(def.selectedIndex < def.size) ? def.selectedIndex : 0]) : String("");
+                if (m_savedDoc) {
+                    String savedSelected;
+                    if (m_savedDoc->getString(label, "selected", savedSelected)) {
+                        selectedValue = savedSelected;
+                        log_debug("Dropdown \"%s\" using saved value: %s", label, selectedValue.c_str());
+                    }
+                }
+
+                m_doc->setString(label, "selected", selectedValue);
+                std::vector<String> vals; vals.reserve(def.size);
+                for (size_t i = 0; i < def.size; i++) { vals.emplace_back(String(def.values[i])); }
+                m_doc->setArray(label, "values", vals);
+            }
+
+            // Update selectedIndex to reflect selected string
+            size_t idx = 0;
+            String sel;
+            // Read from current doc (preferred) then saved
+            if (!m_doc->getString(label, "selected", sel)) {
+                if (m_savedDoc) m_savedDoc->getString(label, "selected", sel);
+            }
+            for (idx = 0; idx < def.size; idx++) {
+                if (sel.equals(String(def.values[idx]))) {
+                    def.selectedIndex = idx;
+                    break;
+                }
             }
 
             numOptions++ ;
+        }
+
+        /*
+            Update a dropdown definition's selectedIndex from persisted config
+            Returns true if a matching value was found
+        */
+        bool getDropdownSelection(ServerConfig::DropdownList &def) {
+            // Ensure we have a doc to read from
+            if (m_doc == nullptr && !openConfiguration()) {
+                log_error("Error! /setup configuration not possible");
+                return false;
+            }
+
+            CJSON::Json* sourceDoc = (m_savedDoc != nullptr) ? m_savedDoc : m_doc;
+            if (sourceDoc == nullptr) {
+                log_error("No configuration document available for reading");
+                return false;
+            }
+
+            String sel;
+            // Try object key "selected" under the label
+            if (!sourceDoc->getString(def.label, "selected", sel)) {
+                // Fallback to top-level string (legacy)
+                if (!sourceDoc->getString(def.label, sel)) {
+                    return false;
+                }
+            }
+
+            for (size_t i = 0; i < def.size; i++) {
+                if (sel.equals(String(def.values[i]))) {
+                    def.selectedIndex = i;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /*
+            Add a new slider using a static definition that tracks current value
+        */
+        void addSlider(ServerConfig::Slider &def) {
+            if (m_doc == nullptr) {
+                if (!openConfiguration()) {
+                    log_error("Error! /setup configuration not possible");
+                }
+            }
+
+            const char* label = def.label;
+            m_doc->ensureObject(label);
+
+            // Prefer saved value when available; else use def.value
+            double current = def.value;
+            if (m_savedDoc) {
+                double saved;
+                if (m_savedDoc->getNumber(label, "value", saved) || m_savedDoc->getNumber(label, saved)) {
+                    current = saved;
+                    log_debug("Slider \"%s\" using saved value: %f", label, current);
+                }
+            }
+
+            m_doc->setNumber(label, "value", current);
+            m_doc->setNumber(label, "min", def.min);
+            m_doc->setNumber(label, "max", def.max);
+            m_doc->setNumber(label, "step", def.step);
+            m_doc->setString(label, "type", String("slider"));            
+            numOptions++;
+        }
+
+        /*
+            Read slider value into the provided struct from persisted config
+            Returns true if a value was found
+        */
+        bool getSliderValue(ServerConfig::Slider &def) {
+            if (m_doc == nullptr && !openConfiguration()) {
+                log_error("Error! /setup configuration not possible");
+                return false;
+            }
+
+            CJSON::Json* sourceDoc = (m_savedDoc != nullptr) ? m_savedDoc : m_doc;
+            if (sourceDoc == nullptr) return false;
+
+            double v;
+            if (sourceDoc->getNumber(def.label, "value", v) || sourceDoc->getNumber(def.label, v)) {
+                def.value = v;
+                return true;
+            }
+            return false;
         }
 
         /*
@@ -245,9 +449,10 @@ class SetupConfigurator
                 if (!openConfiguration()) {
                     log_error("Error! /setup configuration not possible");
                 }
-            }
+            }            
 
             String key = label;
+            String savedKey = key; // original label for lookup in saved file
             if (hidden)
                 key += "-hidden";
             // Univoque key name
@@ -256,52 +461,134 @@ class SetupConfigurator
             if (key.equals("raw-javascript"))
                 key += numOptions ;
 
-            // If key is present and value is the same, we don't need to create/update it.      
-            #if ARDUINOJSON_VERSION_MAJOR > 6      
-            if ((*m_doc)[key].is<JsonVariant>())
-                return;
-            #else                        
-            if (m_doc->containsKey(key.c_str()))
-                return;
-            #endif
-
+            // Note: m_doc is a fresh session document. We always create/update the key here,
+            // and prefer values from m_savedDoc when available.
+            
+            // Try to get saved value from m_savedDoc, otherwise use provided default
+            bool valueFromSaved = false;
+            
             // if min, max, step != from default, treat this as object in order to set other properties
             if (d_min != MIN_F || d_max != MAX_F || step != 1.0) {
-                #if ARDUINOJSON_VERSION_MAJOR > 6
-                    JsonObject obj = (*m_doc)[key].to<JsonObject>();
-                #else
-                    JsonObject obj = (*m_doc).createNestedObject(key);
-                #endif
-                obj["value"] = static_cast<T>(val);
-                obj["min"] = d_min;
-                obj["max"] = d_max;
-                obj["step"] = step;
+                m_doc->ensureObject(key.c_str());
+                
+                if constexpr (std::is_same<T, String>::value) {
+                    String savedVal;
+                    if (m_savedDoc && (m_savedDoc->getString(key.c_str(), "value", savedVal) || m_savedDoc->getString(savedKey.c_str(), "value", savedVal))) {
+                        m_doc->setString(key.c_str(), "value", savedVal);
+                        valueFromSaved = true;
+                    } else {
+                        m_doc->setString(key.c_str(), "value", val);
+                    }
+                } else if constexpr (std::is_same<T, const char*>::value || std::is_same<T, char*>::value) {
+                    String savedVal;
+                    if (m_savedDoc && (m_savedDoc->getString(key.c_str(), "value", savedVal) || m_savedDoc->getString(savedKey.c_str(), "value", savedVal))) {
+                        m_doc->setString(key.c_str(), "value", savedVal);
+                        valueFromSaved = true;
+                    } else {
+                        m_doc->setString(key.c_str(), "value", String(val));
+                    }
+                } else {
+                    double savedVal;
+                    if (m_savedDoc && (m_savedDoc->getNumber(key.c_str(), "value", savedVal) || m_savedDoc->getNumber(savedKey.c_str(), "value", savedVal))) {
+                        m_doc->setNumber(key.c_str(), "value", savedVal);
+                        valueFromSaved = true;
+                    } else {
+                        m_doc->setNumber(key.c_str(), "value", static_cast<double>(val));
+                    }
+                }
+                
+                // min, max, step always use defaults (not persisted per se)
+                m_doc->setNumber(key.c_str(), "min", d_min);
+                m_doc->setNumber(key.c_str(), "max", d_max);
+                m_doc->setNumber(key.c_str(), "step", step);
+                m_doc->setString(key.c_str(), "type", String("number"));
             }
             else {
-                (*m_doc)[key] = static_cast<T>(val);
-            }
-
+                if constexpr (std::is_same<T, String>::value) {
+                    String savedVal;
+                    if (m_savedDoc && (m_savedDoc->getString(key.c_str(), savedVal) || m_savedDoc->getString(savedKey.c_str(), savedVal))) {
+                        m_doc->setString(key.c_str(), savedVal);
+                        valueFromSaved = true;
+                    } else {
+                        m_doc->setString(key.c_str(), val);
+                    }
+                } else if constexpr (std::is_same<T, const char*>::value || std::is_same<T, char*>::value) {
+                    String savedVal;
+                    if (m_savedDoc && (m_savedDoc->getString(key.c_str(), savedVal) || m_savedDoc->getString(savedKey.c_str(), savedVal))) {
+                        m_doc->setString(key.c_str(), savedVal);
+                        valueFromSaved = true;
+                    } else {
+                        m_doc->setString(key.c_str(), String(val));
+                    }
+                } else if constexpr (std::is_same<T, bool>::value) {
+                    // Handle bool as boolean JSON type, not number
+                    bool savedVal;
+                    if (m_savedDoc && (m_savedDoc->getBool(key.c_str(), savedVal) || m_savedDoc->getBool(savedKey.c_str(), savedVal))) {
+                        m_doc->setBool(key.c_str(), savedVal);
+                        valueFromSaved = true;
+                    } else {
+                        m_doc->setBool(key.c_str(), val);
+                    }
+                } else {
+                    double savedVal;
+                    if (m_savedDoc && (m_savedDoc->getNumber(key.c_str(), savedVal) || m_savedDoc->getNumber(savedKey.c_str(), savedVal))) {
+                        m_doc->setNumber(key.c_str(), savedVal);
+                        valueFromSaved = true;
+                    } else {
+                        m_doc->setNumber(key.c_str(), static_cast<double>(val));
+                    }
+                }
+            }                        
+            
+            log_debug("Option \"%s\" using %s value", key.c_str(), valueFromSaved ? "saved" : "default");            
             numOptions++;
         }
 
         /*
             Get current value for a specific custom option (true on success)
+            Reads from m_doc if open, or reloads from file if closed
         */
         template <typename T>
         bool getOptionValue(const char *label, T &var) {
+            // If m_doc is nullptr, reload configuration from file
             if (m_doc == nullptr) {
                 if (!openConfiguration()) {
                     log_error("Error! /setup configuration not possible");
                     return false;
                 }
             }
+            
+            // Prefer persisted values when available; fall back to current session doc
+            CJSON::Json* sourceDoc = (m_savedDoc != nullptr) ? m_savedDoc : m_doc;
+            
+            if (sourceDoc == nullptr) {
+                log_error("No configuration document available for reading");
+                return false;
+            }
 
-            if ((*m_doc)[label]["value"])
-                var = (*m_doc)[label]["value"].as<T>();
-            else if ((*m_doc)[label]["selected"])
-                var = (*m_doc)[label]["selected"].as<T>();
-            else
-                var = (*m_doc)[label].as<T>();
+            if constexpr (std::is_same<T, String>::value) {
+                String out;
+                if (sourceDoc->getString(label, "value", out)) var = out;
+                else if (sourceDoc->getString(label, "selected", out)) var = out;
+                else if (sourceDoc->getString(label, out)) var = out;
+            } else if constexpr (std::is_same<T, const char*>::value || std::is_same<T, char*>::value) {
+                // For C-strings, read as string and assign to var via const char*
+                String out;
+                if (sourceDoc->getString(label, "value", out)) var = out.c_str();
+                else if (sourceDoc->getString(label, "selected", out)) var = out.c_str();
+                else if (sourceDoc->getString(label, out)) var = out.c_str();
+            } else if constexpr (std::is_same<T, bool>::value) {
+                // Read booleans strictly as JSON boolean type
+                bool outBool = false;
+                if (sourceDoc->getBool(label, "value", outBool)) var = outBool;
+                else if (sourceDoc->getBool(label, "selected", outBool)) var = outBool;
+                else if (sourceDoc->getBool(label, outBool)) var = outBool;
+            } else {
+                double out;
+                if (sourceDoc->getNumber(label, "value", out)) var = static_cast<T>(out);
+                else if (sourceDoc->getNumber(label, "selected", out)) var = static_cast<T>(out);
+                else if (sourceDoc->getNumber(label, out)) var = static_cast<T>(out);
+            }
             return true;
         }
 
@@ -314,12 +601,28 @@ class SetupConfigurator
                 }
             }
 
-            if ((*m_doc)[label]["value"])
-                (*m_doc)[label]["value"] = val;
-            else if ((*m_doc)[label]["selected"])
-                (*m_doc)[label]["selected"] = val;
-            else
-                (*m_doc)[label] = val;
+            if constexpr (std::is_same<T, String>::value) {
+                String v = val;
+                if (m_doc->hasKey(label, "value")) m_doc->setString(label, "value", v);
+                else if (m_doc->hasKey(label, "selected")) m_doc->setString(label, "selected", v);
+                else m_doc->setString(label, v);
+            } else if constexpr (std::is_same<T, const char*>::value || std::is_same<T, char*>::value) {
+                String v = String(val);
+                if (m_doc->hasKey(label, "value")) m_doc->setString(label, "value", v);
+                else if (m_doc->hasKey(label, "selected")) m_doc->setString(label, "selected", v);
+                else m_doc->setString(label, v);
+            } else if constexpr (std::is_same<T, bool>::value) {
+                // Persist booleans as JSON boolean type
+                bool v = val;
+                if (m_doc->hasKey(label, "value")) m_doc->setBool(label, "value", v);
+                else if (m_doc->hasKey(label, "selected")) m_doc->setBool(label, "selected", v);
+                else m_doc->setBool(label, v);
+            } else {
+                double v = static_cast<double>(val);
+                if (m_doc->hasKey(label, "value")) m_doc->setNumber(label, "value", v);
+                else if (m_doc->hasKey(label, "selected")) m_doc->setNumber(label, "selected", v);
+                else m_doc->setNumber(label, v);
+            }
             return true;
         }
 
