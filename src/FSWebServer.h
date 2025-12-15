@@ -266,6 +266,12 @@ public:
 #endif
     }
 
+
+    /*
+      Redirect to a given URL
+    */
+    void redirect(const char *url);
+
     /*
       Get the webserver IP address
     */
@@ -337,7 +343,7 @@ public:
     /*
      * Redirect to captive portal if we got a request for another domain.
      */
-    bool startCaptivePortal(const char *ssid, const char *pass, const char *redirectTargetURL);
+    bool startCaptivePortal(const char *ssid, const char *pass, const char *redirectTargetURL = "/setup");
 
     /*
      * Need to be run in loop to handle DNS requests

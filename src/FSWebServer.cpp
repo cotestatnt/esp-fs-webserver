@@ -827,15 +827,21 @@ bool FSWebServer::startWiFi(uint32_t timeout, CallbackF fn) {
     return false;
 }
 
+void FSWebServer::redirect(const char* url) {
+    this->sendHeader(PSTR("Location"), "/");
+    this->send(302, "text/plain", "");
+    log_debug("Redirecting %s", url);
+}
+
 bool FSWebServer::startCaptivePortal(const char* ssid, const char* pass, const char* redirectTargetURL) {
 
     // Captive portal OS connectivity probes
-    this->on("/generate_204", HTTP_GET, [this]() { this->handleSetup(); });              // Android probe
-    this->on("/hotspot-detect.html", HTTP_GET, [this]() { this->handleSetup(); });       // iOS/macOS probe
-    this->on("/ncsi.txt", HTTP_GET, [this]() { this->handleSetup(); });                  // Windows NCSI probe
-    this->on("/connecttest.txt", HTTP_GET, [this]() { this->handleSetup(); });           // Windows 8/10 probe
-    this->on("/success.txt", HTTP_GET, [this]() { this->handleSetup(); });
-    this->on("/library/test/success.html", HTTP_GET, [this]() { this->handleSetup(); }); // ChromeOS probe
+    this->on("/generate_204", HTTP_GET, [this, redirectTargetURL]() { this->redirect(redirectTargetURL); }); // Android probe
+    this->on("/hotspot-detect.html", HTTP_GET, [this, redirectTargetURL]() { this->redirect(redirectTargetURL); }); // iOS/macOS probe
+    this->on("/ncsi.txt", HTTP_GET,  [this, redirectTargetURL]() { this->redirect(redirectTargetURL); });  // Windows NCSI probe
+    this->on("/connecttest.txt", HTTP_GET,  [this, redirectTargetURL]() { this->redirect(redirectTargetURL); }); // Windows 8/10 probe
+    this->on("/success.txt", HTTP_GET,  [this, redirectTargetURL]() { this->redirect(redirectTargetURL); }); 
+    this->on("/library/test/success.html", HTTP_GET,  [this, redirectTargetURL]() { this->redirect(redirectTargetURL); }); // ChromeOS probe
 
     // Start AP mode
     delay(100);

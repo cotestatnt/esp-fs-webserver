@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+  <title>ESP simpleServer.ino</title>
+  
+  <!--Pico - Minimal CSS Framework for semantic info: HTML https://picocss.com/ -->
+  <link rel="stylesheet" type="text/css" href="css/pico.fluid.classless.css">
+
+  <!-- Cyustom page styling -->
+  <style>
+    html {
+      background-color: #92938fd1
+    }
+    .container {
+      display: flex;
+      justify-content: center;
+      min-height: calc(100vh - 6rem);
+      padding: 1rem 0;
+      
+    }    
+    .container {
+      max-width: 860px;
+      padding: 40px;
+    }
+  </style>
+
+</head>
+  <body>
+    <main class="container">
+      <article class="grid">
+        <div>
+          <hgroup>
+            <h1>ESP Async FS WebServer - LED Switcher - simpleServer.ino</h1>
+          </hgroup>
+          <label for="remember">
+            <input type="checkbox" role="switch" id="toggle-led" name="toggle-led">
+            Toggle built-in LED
+          </label>
+          <br>
+          <p id="esp-response"></p>
+          <img src="img/espressif.jpg" style="opacity: 0.75"/>
+        </div>
+      </article>
+    </main>
+    
+    <script type="text/javascript">
+      // This function fetch the GET request to the ESP webserver
+      function toggleLed() {
+        const pars = new URLSearchParams({
+          val:  document.getElementById('toggle-led').checked ? '1' : '0'
+        });
+        
+        fetch('/led?' + pars )                // Do the request
+        .then(response => response.text())    // Parse the response 
+        .then(text => {                       // DO something with response
+          console.log(text);
+          document.getElementById('esp-response').innerHTML = text + ' <i>(Builtin LED is ON with a low signal)</i>';
+        });
+      }
+      
+      // Add event listener to the LED checkbox (the function will be called on every change)
+      document.getElementById('toggle-led').addEventListener('change', toggleLed );
+    </script>
+    
+  </body>
+</html>
