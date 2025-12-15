@@ -286,7 +286,7 @@ void FSWebServer::handleFileRequest() {
         }
     }
 
-    this->send(404, "text/plain", "AsyncFsWebServer: resource not found");
+    this->send(404, "text/plain", "FsWebServer: resource not found");
     log_debug("Resource %s not found", this->uri().c_str());
 }
 
@@ -828,7 +828,10 @@ bool FSWebServer::startWiFi(uint32_t timeout, CallbackF fn) {
 }
 
 void FSWebServer::redirect(const char* url) {
-    this->sendHeader(PSTR("Location"), "/");
+    if (strstr(url, "/setup") == 0) 
+        return this->handleSetup();
+
+    this->sendHeader(PSTR("Location"), url);
     this->send(302, "text/plain", "");
     log_debug("Redirecting %s", url);
 }
@@ -842,7 +845,7 @@ bool FSWebServer::startCaptivePortal(const char* ssid, const char* pass, const c
     this->on("/connecttest.txt", HTTP_GET,  [this, redirectTargetURL]() { this->redirect(redirectTargetURL); }); // Windows 8/10 probe
     this->on("/success.txt", HTTP_GET,  [this, redirectTargetURL]() { this->redirect(redirectTargetURL); }); 
     this->on("/library/test/success.html", HTTP_GET,  [this, redirectTargetURL]() { this->redirect(redirectTargetURL); }); // ChromeOS probe
-
+    this->on("/redirect", HTTP_GET,  [this, redirectTargetURL]() { this->redirect(redirectTargetURL); });
     // Start AP mode
     delay(100);
     WiFi.mode(WIFI_AP);

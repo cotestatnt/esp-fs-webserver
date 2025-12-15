@@ -261,8 +261,8 @@ public:
 #endif
         // Handle DNS requests
 #if ESP_FS_WS_MDNS
-        if (this->isAccessPointMode())
-            m_dnsServer->processNextRequest();
+        // if (this->isAccessPointMode())
+        m_dnsServer->processNextRequest();
 #endif
     }
 
