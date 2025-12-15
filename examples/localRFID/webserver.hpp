@@ -144,11 +144,11 @@ void handleMainPage() {
     cookie += myWebServer.arg("username");
     cookie += ",";  cookie += level;  cookie += "; Path=/";
 #if USE_EMBEDDED_HTM
-    myWebServer.setHeader("Content-Encoding", "gzip");
-    myWebServer.setHeader("Set-Cookie", cookie);
-    myWebServer.send(200, "text/html", (const char*)rfid, sizeof(rfid));
+    myWebServer.sendHeader("Content-Encoding", "gzip");
+    myWebServer.sendHeader("Set-Cookie", cookie);
+    myWebServer.send_P(200, "text/html", (const char*)rfid, sizeof(rfid));
 #else
-    myWebServer.setHeader("Set-Cookie", cookie);
+    myWebServer.sendHeader("Set-Cookie", cookie);
     myWebServer.send(200, "text/html", "");  // Send file from filesystem if not embedded
 #endif
   } 
@@ -195,19 +195,16 @@ bool startWebServer(bool clear = false) {
   * let's use a custom login web page (from flash literal string). This web page
   * will send a POST request to /rfid enpoint passing username and password SHA256 hash
   */
-  myWebServer.on("/", HTTP_ANY, [](){
-    myWebServer.sendRedirect("/login");
+  myWebServer.on("/", HTTP_ANY, [](){    
+    // Redirect to login page
+    myWebServer.sendHeader("Location", "/login");
+    myWebServer.send(302, "text/plain", "");
   });
 
   #if USE_EMBEDDED_HTM
   myWebServer.on("/login", HTTP_ANY, [](){
-    myWebServer.setHeader("Content-Encoding", "gzip");
-    myWebServer.send(200, "text/html", (const char*)login, sizeof(login));    
-  });
-  #else
-  // Use flash stored file (remember to upload before using /setup embedded webpage)
-  myWebServer.on("/login", HTTP_ANY, [](){
-    myWebServer.send(200, "text/html", "");  // Send file from filesystem if not embedded    
+    myWebServer.sendHeader("Content-Encoding", "gzip");
+    myWebServer.send_P(200, "text/html", (const char*)rfid, sizeof(rfid));
   });
   #endif
   
@@ -226,13 +223,6 @@ bool startWebServer(bool clear = false) {
 
   // Enable ACE FS file web editor and add FS info callback function
   myWebServer.enableFsCodeEditor();
-#if defined(ESP32)
-  myWebServer.setFsInfoCallback([](fsInfo_t* fsInfo) {
-    fsInfo->fsName = "LittleFS";
-    fsInfo->totalBytes = LittleFS.totalBytes();
-    fsInfo->usedBytes = LittleFS.usedBytes();  
-  });
-#endif
 
   // Start the webserver
   myWebServer.begin();

@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include <FS.h>
 #include <LittleFS.h>
 #include <FSWebServer.h>
@@ -27,7 +28,6 @@ bool startFilesystem(){
 
 //////////////////////////// Append a row to csv file ///////////////////////////////////
 bool appenRow() {
-
   getLocalTime(&ntpTime, 10);
 
   char filename[32];
@@ -95,13 +95,6 @@ void setup() {
 
     // Enable ACE FS file web editor and add FS info callback fucntion
     server.enableFsCodeEditor();
-    #ifdef ESP32
-    server.setFsInfoCallback([](fsInfo_t* fsInfo) {
-        fsInfo->totalBytes = LittleFS.totalBytes();
-        fsInfo->usedBytes = LittleFS.usedBytes();
-        fsInfo->fsName = "LittleFS";
-    });
-    #endif
 
     // Start server
     server.begin();

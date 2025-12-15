@@ -25,8 +25,11 @@ void setTaskWdt(uint32_t timeout) {
 
 void FSWebServer::begin(WebSocketsServer::WebSocketServerEvent wsEventHandler) {
 
-//////////////////////    BUILT-IN HANDLERS    ///////////////////////////
+    // Set build date as default firmware version (YYMMDDHHmm) from Version.h constexprs
+    if (m_version.length() == 0)
+        m_version = String(BUILD_TIMESTAMP);
 
+//////////////////////    BUILT-IN HANDLERS    ///////////////////////////
 #if ESP_FS_WS_SETUP
     m_filesystem_ok = getSetupConfigurator()->checkConfigFile();
     if (getSetupConfigurator()->isOpened()) {
@@ -134,20 +137,28 @@ void FSWebServer::printFileList(fs::FS &fs, const char * dirname, uint8_t levels
     File file = root.openNextFile();
     while (file) {
         if (file.isDirectory()) {
-        if (levels) {
-            #ifdef ESP32
-            printFileList(fs, file.path(), levels - 1, out);
-            #elif defined(ESP8266)
-            printFileList(fs, file.fullName(), levels - 1, out);
-            #endif
-        }
+            if (levels) {
+                #ifdef ESP32
+                printFileList(fs, file.path(), levels - 1, out);
+                #elif defined(ESP8266)
+                printFileList(fs, file.fullName(), levels - 1, out);
+                #endif
+            }
         } else {
-        String line = "|__ FILE: ";
-        line += file.name();
-        line += " (";
-        line += (unsigned long)file.size();
-        line += " bytes)";
-        out.println(line);
+            String line = "|__ FILE: ";
+            if (typeName == "SPIFFS") {
+                #ifdef ESP32
+                line += file.path();
+                #elif defined(ESP8266)
+                line += file.fullName();
+                #endif
+            } else {
+                line += file.name();
+            }            
+            line += " (";
+            line += (unsigned long)file.size();
+            line += " bytes)";
+            out.println(line);
         }
         file = root.openNextFile();
     }
@@ -164,7 +175,8 @@ void FSWebServer::enableFsCodeEditor(FsInfoCallbackF fsCallback) {
         [this]() { this->sendOK(); },
         [this]() { this->handleFileUpload(); }
     );
-    getFsInfo = fsCallback;
+    if (fsCallback)
+        getFsInfo = fsCallback;
 }
 #endif
 
@@ -903,10 +915,22 @@ void FSWebServer::handleFileList()
         while (file) {
             if (!first) output += ",";
             first = false;
-            String filename = file.name();
-            if (filename.lastIndexOf("/") > -1) {
-                filename.remove(0, filename.lastIndexOf("/") + 1);
-            }
+            String filename;
+            if (typeName.equals("SPIFFS")) {
+                // SPIFFS returns full path and subfolders are unsupported, remove leading '/'                
+                #ifdef ESP32
+                filename += file.path();
+                #elif defined(ESP8266)
+                filename += file.fullName();
+                #endif
+                filename.remove(0, 1);
+            } 
+            else {
+                filename = file.name();
+                if (filename.lastIndexOf("/") > -1) {
+                    filename.remove(0, filename.lastIndexOf("/") + 1);
+                }
+            }                    
             CJSON::Json item;
             item.setString("type", (file.isDirectory()) ? "dir" : "file");
             item.setNumber("size", file.size());

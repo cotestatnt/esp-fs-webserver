@@ -12,7 +12,7 @@ extern "C"
 #define DBG_OUTPUT_PORT     Serial
 // Allow external override; default to verbose debug if not provided
 #ifndef LOG_LEVEL
-#define LOG_LEVEL           3       // (0 disable, 1 error, 2 info, 3 debug)
+#define LOG_LEVEL           0       // (0 disable, 1 error, 2 info, 3 debug)
 #endif
 
 #define __SOURCE_FILE_NAME__ (strrchr(__FILE__, '\\') ? strrchr(__FILE__, '\\') + 1 : __FILE__)

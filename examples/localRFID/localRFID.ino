@@ -2,7 +2,7 @@
 #include <FS.h>
 #include <LittleFS.h>
 #include <ArduinoJson.h>
-#include <FSWebServer.h>  // https://github.com/cotestatnt/esp-fs-webserver
+#include <FSWebServer.h>       // https://github.com/cotestatnt/esp-fs-webserver
 #include <MFRC522v2.h>         // https://github.com/OSSLibraries/Arduino_MFRC522v2
 #include <MFRC522DriverSPI.h>
 #include <MFRC522DriverPinSimple.h>
@@ -153,9 +153,7 @@ void setup() {
 }
 
 void loop() {
-  server.handleClient();
-  if (server.isAccessPointMode())
-    server.updateDNS();
+  myWebServer.run();  // Handle webserver events
 
   delay(10);
 

@@ -11,12 +11,10 @@ float testFloat = 123.456f;
 #endif
 const uint8_t ledPin = LED_BUILTIN;
 
-
 ////////////////////////////////  Filesystem  /////////////////////////////////////////
 bool startFilesystem() {
   if (LittleFS.begin()) {
-    server.printFileList(LittleFS, "/", 1);
-    Serial.println();
+    server.printFileList(LittleFS, "/", 1, Serial);    
     return true;
   } else {
     Serial.println("ERROR on mounting filesystem. It will be reformatted!");
@@ -37,25 +35,11 @@ bool loadApplicationConfig() {
   return false;
 }
 
-
-/*
-* Getting FS info (total and free bytes) is strictly related to
-* filesystem library used (LittleFS, FFat, SPIFFS etc etc) and ESP framework
-*/
-#ifdef ESP32
-void getFsInfo(fsInfo_t* fsInfo) {
-  fsInfo->fsName = "LittleFS";
-  fsInfo->totalBytes = LittleFS.totalBytes();
-  fsInfo->usedBytes = LittleFS.usedBytes();
-}
-#endif
-
-
 //---------------------------------------
 void handleLed() {
   static int value = false;
   // http://xxx.xxx.xxx.xxx/led?val=1
-  if (server.hasParam("val")) {
+  if (server.hasArg("val")) {
     value = server.arg("val").toInt();
     digitalWrite(ledPin, value);
   }
@@ -90,12 +74,8 @@ void setup() {
   server.addOption("Test float variable", (double)testFloat, 0.0, 100.0, 0.001);
   server.setSetupPageTitle("Simple Async ESP FS WebServer");
 
-  // Enable ACE FS file web editor and add FS info callback function
-#ifdef ESP32
-  server.enableFsCodeEditor(getFsInfo);
-#else
+  // Enable ACE FS file web editor
   server.enableFsCodeEditor();
-#endif
 
   // Custom endpoint handler
   server.on("/led", HTTP_GET, handleLed);
@@ -111,7 +91,9 @@ void setup() {
 }
 
 void loop() {
-  // This delay is required in order to avoid loopTask() WDT reset on ESP32
-  server.handleClient();
+  // Handle client requests
+  server.run();
+
+  // Nothing to do here for this simple example
   delay(10);
 }

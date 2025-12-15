@@ -6,72 +6,44 @@
 FSWebServer server(80, LittleFS, "esphost");
 
 ////////////////////////////  HTTP Request Handlers  ////////////////////////////////////
-void getDefaultValue (AsyncWebServerRequest *request) {
+void getDefaultValue () {
   // Send to client default values as JSON string because it's very easy to parse JSON in Javascript
   String defaultVal = "{\"car\":\"Ferrari\", \"firstname\":\"Enzo\", \"lastname\":\"Ferrari\",\"age\":90}";
-  request->send(200, "text/json", defaultVal);
+  server.send(200, "text/json", defaultVal);
 }
 
-void handleForm1(AsyncWebServerRequest *request) {
+void handleForm1() {
   String reply;
-  if(request->hasArg("cars")) {
+  if(server.hasArg("cars")) {
     reply += "You have submitted with Form1: ";
-    reply += request->arg("cars");
+    reply += server.arg("cars");
   }
   Serial.println(reply);
-  request->send(200, "text/plain", reply);
+  server.send(200, "text/plain", reply);
 }
 
-void handleForm2(AsyncWebServerRequest *request) {
+void handleForm2() {
   String reply;
-  if(request->hasArg("firstname")) {
+  if(server.hasArg("firstname")) {
     reply += "You have submitted with Form2: ";
-    reply += request->arg("firstname");
+    reply += server.arg("firstname");
   }
-  if(request->hasArg("lastname")) {
+  if(server.hasArg("lastname")) {
     reply += " ";
-    reply += request->arg("lastname");
+    reply += server.arg("lastname");
   }
-  if(request->hasArg("age")) {
+  if(server.hasArg("age")) {
     reply += ", age: ";
-    reply += request->arg("age");
+    reply += server.arg("age");
   }
   Serial.println(reply);
-  request->send(200, "text/plain", reply);
+  server.send(200, "text/plain", reply);
 }
 
 ////////////////////////////////  Filesystem  /////////////////////////////////////////
-void listDir(fs::FS &fs, const char * dirname, uint8_t levels){
-  Serial.printf("\nListing directory: %s\n", dirname);
-  File root = fs.open(dirname, "r");
-  if (!root) {
-    Serial.println("- failed to open directory");
-    return;
-  }
-  if (!root.isDirectory()) {
-    Serial.println(" - not a directory");
-    return;
-  }
-  File file = root.openNextFile();
-  while (file) {
-    if (file.isDirectory()) {
-      if (levels) {
-        #ifdef ESP32
-          listDir(fs, file.path(), levels - 1);
-        #elif defined(ESP8266)
-          listDir(fs, file.fullName(), levels - 1);
-        #endif
-      }
-    } else {
-      Serial.printf("|__ FILE: %s (%d bytes)\n",file.name(), file.size());
-    }
-    file = root.openNextFile();
-  }
-}
-
 bool startFilesystem() {
   if (FILESYSTEM.begin()){
-    listDir(FILESYSTEM, "/", 1);
+    server.printFileList(LittleFS, "/", 1, Serial);   
     return true;
   }
   else {
@@ -102,18 +74,6 @@ void setup(){
 
   // Enable ACE FS file web editor and add FS info callback function
   server.enableFsCodeEditor();
-  /*
-  * Getting FS info (total and free bytes) is strictly related to
-  * filesystem library used (LittleFS, FFat, SPIFFS etc etc) and ESP framework
-  * (On ESP8266 will be used "built-in" fsInfo data type)
-  */
-  #ifdef ESP32
-  server.setFsInfoCallback( [](fsInfo_t* fsInfo) {
-    fsInfo->fsName = "LittleFS";
-    fsInfo->totalBytes = LittleFS.totalBytes();
-    fsInfo->usedBytes = LittleFS.usedBytes();  
-  });
-  #endif
 
   // Start server
   server.begin();
@@ -128,10 +88,9 @@ void setup(){
 
 
 void loop() {
-  server.handleClient();
-  if (server.isAccessPointMode())
-    server.updateDNS();
+  // Handle client requests
+  server.run();
   
-  // This delay is required in order to avoid loopTask() WDT reset on ESP32
-  delay(1);  
+  // Nothing to do here, just a small delay
+  delay(10);  
 }
