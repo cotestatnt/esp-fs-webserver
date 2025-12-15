@@ -189,8 +189,8 @@ void handleMainPage() {
     cookie += myWebServer.arg("username");
     cookie += ",";  cookie += level;  cookie += "; Path=/";
     // For the new API, send response directly with headers
-    myWebServer.setHeader("Set-Cookie", cookie);
-    myWebServer.send(200, "text/html", (const char*)index_htm, sizeof(index_htm));
+    myWebServer.sendHeader("Set-Cookie", cookie);
+    myWebServer.send_P(200, "text/html", (const char*)index_htm, sizeof(index_htm));
   } 
   else {
     myWebServer.send(401, "text/plain", "Wrong password");
@@ -206,6 +206,7 @@ bool loadOptions() {
     myWebServer.getOptionValue(MY_SQL_DB, database);
     myWebServer.getOptionValue(MY_SQL_USER, user);
     myWebServer.getOptionValue(MY_SQL_PASS, password);
+    myWebServer.closeSetupConfiguration();
     Serial.printf(MY_SQL_HOST ": %s\n", dbHost.c_str());
     Serial.printf(MY_SQL_PORT ": %d\n", dbPort);
     Serial.printf(MY_SQL_DB ": %s\n", database.c_str());
@@ -272,10 +273,10 @@ bool startWebServer(bool clear = false) {
   * will send a POST request to /rfid enpoint passing username and password SHA256 hash
   */
   myWebServer.on("/", HTTP_ANY, [](){
-    myWebServer.send(200, "text/html", (const uint8_t*)login_htm, sizeof(login_htm));
+    myWebServer.send_P(200, "text/html", (const char*)login_htm, sizeof(login_htm));
   });
   myWebServer.on("/login", HTTP_ANY, [](){
-    myWebServer.send(200, "text/html", (const uint8_t*)login_htm, sizeof(login_htm));
+    myWebServer.send_P(200, "text/html", (const char*)login_htm, sizeof(login_htm));
   });
   myWebServer.on("/rfid", HTTP_POST, handleCheckHash);
   /*
@@ -289,20 +290,13 @@ bool startWebServer(bool clear = false) {
     DataQuery_t data;
     if (queryExecute(data, "SELECT password, level FROM users WHERE username = '%s';", myWebServer.arg("username"))) {
       String cookie = "user_level=" + String(data.getRowValue(0, "level")) + "; Path=/";
-      myWebServer.setHeader("Set-Cookie", cookie);
+      myWebServer.sendHeader("Set-Cookie", cookie);
       myWebServer.send(200, "text/plain", "OK");
     }
   });
   
   // Enable ACE FS file web editor and add FS info callback function
   myWebServer.enableFsCodeEditor();
-#if defined(ESP32)
-  myWebServer.setFsInfoCallback([](fsInfo_t* fsInfo) {
-    fsInfo->fsName = "LittleFS";
-    fsInfo->totalBytes = LittleFS.totalBytes();
-    fsInfo->usedBytes = LittleFS.usedBytes();  
-  });
-#endif
 
   // Start the webserver
   myWebServer.begin();

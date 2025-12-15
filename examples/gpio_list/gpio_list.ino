@@ -5,6 +5,14 @@
 #define FILESYSTEM LittleFS
 FSWebServer server(80, FILESYSTEM);
 
+#ifndef LED_BUILTIN
+  #define LED_BUILTIN 2 // Pin for built-in LED on ESP32  
+#endif
+
+#ifndef BOOT_PIN
+  #define BOOT_PIN 0 // Pin for BOOT button on ESP32
+#endif  
+
 // Define a struct for store all info about each gpio
 struct gpio_type {
   const char* type;
@@ -14,18 +22,6 @@ struct gpio_type {
 };
 
 // Define an array of struct GPIO and initialize with values
-
-/* (ESP32-C3) */
-/*
-gpio_type gpios[NUM_GPIOS] = {
-  {"input", "INPUT 2", 2},
-  {"input", "INPUT 4", 4},
-  {"input", "INPUT 5", 5},
-  {"output", "OUTPUT 6", 6},
-  {"output", "OUTPUT 7", 7},
-  {"output", "LED BUILTIN", 3} // Led ON with signal HIGH
-};
-*/
 
 /* ESP8266 - Wemos D1-mini */
 /*

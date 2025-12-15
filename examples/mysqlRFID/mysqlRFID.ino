@@ -78,9 +78,7 @@ void setup() {
 }
 
 void loop() {
-  server.handleClient();
-  if (server.isAccessPointMode())
-    server.updateDNS();
+  myWebServer.run();   
 
   delay(10);
   

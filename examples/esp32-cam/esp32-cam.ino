@@ -1,36 +1,40 @@
 
 #include <FS.h>
 #include <SD_MMC.h>
+#include <LittleFS.h>
 #include <FSWebServer.h>   // https://github.com/cotestatnt/esp-fs-webserver/
 #include "esp_camera.h"
 #include "soc/soc.h"          // Brownout error fix
 #include "soc/rtc_cntl_reg.h" // Brownout error fix
-
 #if ESP_ARDUINO_VERSION_MAJOR >= 3
   #include "soc/soc_caps.h"
 #endif
-
-#define FILESYSTEM SD_MMC
-FSWebServer server(80, FILESYSTEM);
-
-// Local include files
+// Local include files with camera pin definition and configuration
 #include "camera_pins.h"
-
-uint16_t grabInterval = 0;  // Grab a picture every x seconds
-uint32_t lastGrabTime = 0;
-
 // Timezone definition to get properly time from NTP server
-#define MYTZ "CET-1CEST,M3.5.0,M10.5.0/3"
+#define MYTZ "CET-1CEST,M3.5.0,M10.5.0/3" 
+
+// Set default file system type
+#define USE_LITTLEFS          1
+#define USE_SDMMC             2
+#define FILESYSTEM_TYPE       USE_LITTLEFS
+
+#if (FILESYSTEM_TYPE == USE_SDMMC)
+  #define FILESYSTEM SD_MMC
+#elif (FILESYSTEM_TYPE == USE_LITTLEFS)
+  #define FILESYSTEM LittleFS
+#endif
+
+FSWebServer server(80, FILESYSTEM, "esp32cam");
+
+// Functions prototype
+void setInterval();
+void getPicture();
 
 // Struct for saving time datas (needed for time-naming the image files)
 struct tm tInfo;
-
-// Functions prototype
-void listDir(const char *, uint8_t);
-void setLamp(int);
-
-// Grab a picture from CAM and store on SD or in flash
-void getPicture(AsyncWebServerRequest *);
+uint16_t grabInterval = 0;  // Grab a picture every x seconds
+uint32_t lastGrabTime = 0;
 const char* getFolder = "/img";
 
 ///////////////////////////////////  SETUP  ///////////////////////////////////////
@@ -38,14 +42,15 @@ void setup() {
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); // disable brownout detect
 
   // Flash LED setup
-  pinMode(LAMP_PIN, OUTPUT);                      // set the lamp pin as output
-#if ESP_ARDUINO_VERSION_MAJOR >= 3
-  ledcAttach(LAMP_PIN, 1000, 8);
-#else
-  ledcSetup(lampChannel, pwmfreq, pwmresolution); // configure LED PWM channel
-  ledcAttachPin(LAMP_PIN, lampChannel);
-#endif
-  setLamp(0);                                     // set default value
+    pinMode(LAMP_PIN, OUTPUT); // set the lamp pin as output
+  #if ESP_ARDUINO_VERSION_MAJOR >= 3
+    // Nuova API: ledcAttach(pin, freq, resolution)
+    ledcAttach(LAMP_PIN, pwmfreq, pwmresolution);
+  #else
+    ledcSetup(lampChannel, pwmfreq, pwmresolution); // configure LED PWM channel
+    ledcAttachPin(LAMP_PIN, lampChannel);
+  #endif
+    setLamp(0); // set default value
 
   Serial.begin(115200);
   Serial.println();
@@ -59,6 +64,8 @@ void setup() {
   // Sync time with NTP
   configTzTime(MYTZ, "time.google.com", "time.windows.com", "pool.ntp.org");
 
+
+#if (FILESYSTEM_TYPE == USE_SDMMC)
   /*
    Init onboard SD filesystem (format if necessary)
    SD_MMC.begin(const char * mountpoint, bool mode1bit, bool format_if_mount_failed, int sdmmc_frequency, uint8_t maxOpenFiles)
@@ -67,21 +74,32 @@ void setup() {
   if (!SD_MMC.begin("/sdcard", true, true, SDMMC_FREQ_HIGHSPEED, 5)) {
     Serial.println("\nSD Mount Failed.\n");
   }
-
-  if (!SD_MMC.exists(getFolder)) {
+  else if (!SD_MMC.exists(getFolder)) {
     if(SD_MMC.mkdir(getFolder))
       Serial.println("Dir created");
     else
       Serial.println("mkdir failed");
   }
-  listDir(getFolder, 1);
+#elif (FILESYSTEM_TYPE == USE_LITTLEFS)
+  if (!LittleFS.begin()) {
+    Serial.println("ERROR on mounting LittleFS. It will be formmatted!");
+    LittleFS.format();
+    ESP.restart();
+  }
+  else if (!LittleFS.exists(getFolder)) {
+    if(LittleFS.mkdir(getFolder))
+      Serial.println("Dir created");
+    else
+      Serial.println("mkdir failed");     
+  }
+  Serial.println("LittleFS mounted successfully");
+#endif
+  
+  // List all files stored in filesystem
+  server.printFileList(FILESYSTEM, "/", 1, Serial);
 
   // Enable ACE FS file web editor and add FS info callback function
   server.enableFsCodeEditor();
-  server.setFsInfoCallback([](fsInfo_t* fsInfo) {
-    fsInfo->totalBytes = SD_MMC.totalBytes();
-    fsInfo->usedBytes = SD_MMC.usedBytes();
-  });
 
   // Add custom handlers to webserver
   server.on("/getPicture", getPicture);
@@ -103,42 +121,44 @@ void setup() {
 
 ///////////////////////////////////  LOOP  ///////////////////////////////////////
 void loop() {
-  server.handleClient();
-  if (server.isAccessPointMode())
-    server.updateDNS();
+  server.run();
 
   if (grabInterval) {
     if (millis() - lastGrabTime > grabInterval *1000) {
       lastGrabTime = millis();
-      getPicture(nullptr);
+      getPicture();
     }
   }
 }
 
 //////////////////////////////////  FUNCTIONS//////////////////////////////////////
-void setInterval(AsyncWebServerRequest *request) {
-  if (request->hasArg("val")) {
-    grabInterval = request->arg("val").toInt();
+void setInterval() {
+  if (server.hasArg("val")) {
+    grabInterval = server.arg("val").toInt();
     Serial.printf("Set grab interval every %d seconds\n", grabInterval);
   }
-  request->send(200, "text/plain", "OK");
+  server.send(200, "text/plain", "OK");
 }
 
 // Lamp Control
 void setLamp(int newVal) {
-  if (newVal != -1) {
-    // Apply a logarithmic function to the scale.
-    int brightness = round((pow(2, (1 + (newVal * 0.02))) - 2) / 6 * pwmMax);
-    ledcWrite(lampChannel, brightness);
-    Serial.print("Lamp: ");
-    Serial.print(newVal);
-    Serial.print("%, pwm = ");
-    Serial.println(brightness);
-  }
+  if (newVal < 0) return;
+  // Apply exponential scaling to have a better visual effect
+  int brightness = round((pow(2, (1 + (newVal * 0.02))) - 2) / 6 * pwmMax);
+#if ESP_ARDUINO_VERSION_MAJOR >= 3
+  // ledcWrite(pin, value) with new API
+  ledcWrite(LAMP_PIN, brightness);
+#else
+  ledcWrite(lampChannel, brightness);
+#endif
+  Serial.print("Lamp: ");
+  Serial.print(newVal);
+  Serial.print("%, pwm = ");
+  Serial.println(brightness);
 }
 
 // Send a picture taken from CAM to a Telegram chat
-void getPicture(AsyncWebServerRequest *request) {
+void getPicture() {
 
   // Take Picture with Camera;
   Serial.println("Camera capture requested");
@@ -150,9 +170,8 @@ void getPicture(AsyncWebServerRequest *request) {
   setLamp(0);
 
   if (!fb) {
-    Serial.println("Camera capture failed");
-    if (request != nullptr)
-      request->send(500, "text/plain", "ERROR. Image grab failed");
+    Serial.println("Camera capture failed");    
+    server.send(500, "text/plain", "ERROR. Image grab failed");
     return;
   }
 
@@ -167,11 +186,10 @@ void getPicture(AsyncWebServerRequest *request) {
   strcpy(filePath, getFolder);
   strcat(filePath, "/");
   strcat(filePath, filename);
-  File file = SD_MMC.open(filePath, "w");
+  File file = FILESYSTEM.open(filePath, "w");
   if (!file) {
     Serial.println("Failed to open file in writing mode");
-    if(request != nullptr)
-      request->send(500, "text/plain", "ERROR. Image grab failed");
+    server.send(500, "text/plain", "ERROR. Image grab failed");
     return;
   }
   // size_t _jpg_buf_len = 0;
@@ -183,37 +201,7 @@ void getPicture(AsyncWebServerRequest *request) {
 
   // Clear buffer
   esp_camera_fb_return(fb);
-  if (request != nullptr)
-    request->send(200, "text/plain", filename);
+  server.send(200, "text/plain", filename);
 }
 
-// List all files saved in the selected filesystem
-void listDir(const char *dirname, uint8_t levels) {
-  uint32_t freeBytes = SD_MMC.totalBytes() - SD_MMC.usedBytes();
-  Serial.print("\nTotal space: ");
-  Serial.println(SD_MMC.totalBytes());
-  Serial.print("Free space: ");
-  Serial.println(freeBytes);
 
-  Serial.printf("Listing directory: %s\r\n", dirname);
-  File root = SD_MMC.open(dirname);
-  if (!root) {
-    Serial.println("- failed to open directory\n");
-    return;
-  }
-  if (!root.isDirectory()) {
-    Serial.println(" - not a directory\n");
-    return;
-  }
-  File file = root.openNextFile();
-  while (file) {
-    if (file.isDirectory()) {
-      if (levels)
-        listDir(file.name(), levels - 1);
-    }
-    else {
-      Serial.printf("|__ FILE: %s (%d bytes)\n",file.name(), file.size());
-    }
-    file = root.openNextFile();
-  }
-}
