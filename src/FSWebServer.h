@@ -235,10 +235,10 @@ public:
         stop();
 
         // Deallocate all dynamically allocated resources
-        if (m_pageUser)
-            delete[] m_pageUser;
-        if (m_pagePswd)
-            delete[] m_pagePswd;
+        if (m_pageUser)            
+            free(m_pageUser);
+        if (m_pagePswd)            
+            free(m_pagePswd);
 #if ESP_FS_WS_WEBSOCKET
         if (m_websocket)
             delete m_websocket;

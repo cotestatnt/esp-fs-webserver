@@ -1,13 +1,13 @@
-# AsyncFsWebServer – API (overview)
+# FSWebServer – API (overview)
 
-This page summarizes the main methods exposed by `AsyncFsWebServer` and when to use them.
+This page summarizes the main methods exposed by `FSWebServer` and when to use them.
 
 > Note: some APIs are available only when the related features are enabled via macros (e.g. `ESP_FS_WS_SETUP`, `ESP_FS_WS_EDIT`).
 
 ## Constructor
 
 ```cpp
-AsyncFsWebServer(uint16_t port, fs::FS &fs, const char* hostname = "");
+FSWebServer(uint16_t port, fs::FS &fs, const char* hostname = "");
 ```
 
 - `port`: HTTP port (typically `80`)
@@ -17,11 +17,12 @@ AsyncFsWebServer(uint16_t port, fs::FS &fs, const char* hostname = "");
 ## Server start
 
 ```cpp
-bool init(AwsEventHandler wsHandle = nullptr);
+void begin(WebSocketsServer::WebSocketServerEvent wsEventHandler = nullptr);
 ```
 
 - Registers built-in handlers (setup/edit if enabled), static file serving, and notFound.
-- If `wsHandle != nullptr`, creates (or reuses) a websocket on `/ws`.
+- If `wsEventHandler != nullptr`, creates and starts a websocket server.
+- Starts the webserver.
 
 ## Runtime info
 
@@ -67,10 +68,10 @@ bool startCaptivePortal(const char* ssid, const char* pass, const char* redirect
 ## WebSocket (runtime)
 
 ```cpp
-AsyncWebSocket* getWebSocket();
-void enableWebSocket(const char* path, AwsEventHandler handler);
-void wsBroadcast(const char * buffer);
-void wsBroadcastBinary(uint8_t * message, size_t len);
+WebSocketsServer* getWebSocketServer();
+bool broadcastWebSocket(const String &payload);
+bool broadcastWebSocket(const uint8_t *payload, size_t length);
+bool sendWebSocket(uint8_t num, const String &payload);
 ```
 
 ## Setup page (only if `ESP_FS_WS_SETUP`)
@@ -103,8 +104,8 @@ bool saveOptionValue(const char *lbl, T val);
 Dropdown/Slider:
 
 ```cpp
-using DropdownList = AsyncFSWebServer::DropdownList;
-using Slider = AsyncFSWebServer::Slider;
+using DropdownList = FSWebServer::DropdownList;
+using Slider = FSWebServer::Slider;
 
 void addDropdownList(DropdownList &def);
 void addSlider(Slider &def);

@@ -13,7 +13,10 @@ FSWebServer server(80, FILESYSTEM, "myserver");
 #ifndef LED_BUILTIN
 #define LED_BUILTIN 2
 #endif
+
+#ifndef BOOT_PIN
 #define BOOT_PIN    0
+#endif
 
 // Labels used in /setup webpage for options
 #define LED_LABEL "The LED pin number"

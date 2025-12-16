@@ -329,8 +329,7 @@ void FSWebServer::getStatus() {
     doc.setString("hostname", m_host);
     doc.setString("path", String(ESP_FS_WS_CONFIG_FILE).substring(1));   // remove first '/'
     doc.setString("liburl", LIB_URL);
-    String reply = doc.serialize();
-    this->send(200, "application/json", reply);
+    this->send(200, "application/json", doc.serialize());
 }
 
 void FSWebServer::clearConfig() {
@@ -382,12 +381,10 @@ void FSWebServer::handleScanNetworks() {
     // res >= 0: Scan completed with res networks found
     if (res >= 0) {
         log_info("Scan completed! Number of networks: %d", res);
-        // Build JSON array manually
-        String json;
-        json.reserve(res * 100);
-        json = "[";
+        // Build JSON array using the wrapper
+        CJSON::Json json_array;
+        json_array.createArray();
         for (int i = 0; i < res; ++i) {
-            if (i > 0) json += ",";
             CJSON::Json item;
             item.setNumber("strength", WiFi.RSSI(i));
             item.setString("ssid", WiFi.SSID(i));
@@ -396,9 +393,9 @@ void FSWebServer::handleScanNetworks() {
             #elif defined(ESP32)
             item.setString("security", WIFI_AUTH_OPEN ? "none" : "enabled");
             #endif
-            json += item.serialize();
+            json_array.add(item);
         }
-        json += "]";
+        String json = json_array.serialize();
         this->send(200, "application/json", json);
         log_debug("%s", json.c_str());
 
@@ -533,7 +530,7 @@ void FSWebServer::doWifiConnection() {
         resp += "</b> WiFi!<br>Do you want close this connection and attempt to connect to <b>";
         resp += ssid;
         resp += "</b>?<br><br><i>Note:<br>Flash stored WiFi credentials will be updated.<br>The ESP will no longer be reachable from this web page due to the change of WiFi network.<br>To find out the new IP address, check the serial monitor or your router.<br></i>";
-        this->send(200, "application/json", resp);
+        this->send(200, "text/html", resp);
         return;
     }
 
@@ -657,7 +654,7 @@ void FSWebServer::doWifiConnection() {
             resp += ".local</a></i>";
 
             log_debug("%s", resp.c_str());
-            this->send(200, "application/json", resp);
+            this->send(200, "text/html", resp);
             delay(500);  // Give client time to receive response before system changes
             setTaskWdt(AWS_WDT_TIMEOUT);
             return;
@@ -932,15 +929,11 @@ void FSWebServer::handleFileList()
     }
 
     File root = m_filesystem->open(path, "r");
-    String output;
-    output.reserve(512);
-    output = "[";
+    CJSON::Json json_array;
+    json_array.createArray();
     if (root.isDirectory()) {
         File file = root.openNextFile();
-        bool first = true;
         while (file) {
-            if (!first) output += ",";
-            first = false;
             String filename;
             if (typeName.equals("SPIFFS")) {
                 // SPIFFS returns full path and subfolders are unsupported, remove leading '/'                
@@ -961,12 +954,11 @@ void FSWebServer::handleFileList()
             item.setString("type", (file.isDirectory()) ? "dir" : "file");
             item.setNumber("size", file.size());
             item.setString("name", filename);
-            output += item.serialize();
+            json_array.add(item);
             file = root.openNextFile();
         }
     }
-    output += "]";
-    this->send(200, "text/json", output);
+    this->send(200, "text/json", json_array.serialize());
 }
 
 /*
@@ -1122,8 +1114,7 @@ void FSWebServer::handleFsStatus()
         doc.setString("ip", ip.toString());
     }
     doc.setString("unsupportedFiles", "");
-    String json = doc.serialize();
-    this->send(200, "application/json", json);
+    this->send(200, "application/json", doc.serialize());
 }
 #endif // ESP_FS_WS_EDIT
 

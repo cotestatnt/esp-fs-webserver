@@ -15,7 +15,7 @@ const char* basePath = "/csv";
 ////////////////////////////////  Filesystem  /////////////////////////////////////////
 bool startFilesystem(){
   if (LittleFS.begin()){
-    server.printFileList(LittleFS, "/", 2);
+    server.printFileList(LittleFS, "/", 2, Serial);
     return true;
   }
   else {

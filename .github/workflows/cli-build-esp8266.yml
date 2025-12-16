@@ -6,8 +6,9 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - master
-      - release/*
+      # - master
+      # - release/*
+      - old
   pull_request:
 
 concurrency:
