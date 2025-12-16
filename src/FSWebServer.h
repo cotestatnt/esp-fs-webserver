@@ -260,9 +260,9 @@ public:
             m_websocket->loop();
 #endif
         // Handle DNS requests
-#if ESP_FS_WS_MDNS
-        // if (this->isAccessPointMode())
-        m_dnsServer->processNextRequest();
+#if ESP_FS_WS_MDNS        
+        if (m_dnsServer)
+            m_dnsServer->processNextRequest();
 #endif
     }
 
@@ -344,6 +344,11 @@ public:
      * Redirect to captive portal if we got a request for another domain.
      */
     bool startCaptivePortal(const char *ssid, const char *pass, const char *redirectTargetURL = "/setup");
+
+    /*
+    * Setup and start mDNS responder
+    */
+    bool startMDNSResponder();
 
     /*
      * Need to be run in loop to handle DNS requests

@@ -77,6 +77,14 @@ void FSWebServer::begin(WebSocketsServer::WebSocketServerEvent wsEventHandler) {
 
     // Handler for all other files
     onNotFound([this]() { this->handleFileRequest(); });    
+    
+    // Start MDNS responder if hostname is set
+    if (m_host.length()) {
+        if (m_dnsServer)
+            this->startMDNSResponder();
+
+        this->setHostname(m_host.c_str());        
+    }
 
     // WebSocket setup
 #if ESP_FS_WS_WEBSOCKET
@@ -90,7 +98,7 @@ void FSWebServer::begin(WebSocketsServer::WebSocketServerEvent wsEventHandler) {
 #endif
 
 #ifdef ESP32
-    this->enableCrossOrigin(true);
+    this->enableCrossOrigin(true);    
 #endif
     WebServerClass::begin();
 }
@@ -827,6 +835,33 @@ bool FSWebServer::startWiFi(uint32_t timeout, CallbackF fn) {
     return false;
 }
 
+
+bool FSWebServer::startMDNSResponder() {
+#if ESP_FS_WS_MDNS
+    if (m_dnsServer) {
+        delete m_dnsServer;
+        m_dnsServer = nullptr;
+    }
+    m_dnsServer = new DNSServer();
+    m_dnsServer->setErrorReplyCode(DNSReplyCode::NoError);
+    if (! m_dnsServer->start(53, "*", m_serverIp)) {
+        log_error("Captive portal failed to start: no sockets for DNS server available!");        
+        return false;
+    }    
+    
+    // Start MDNS only in AP mode for connection verification to the captive SSID or if explicitly requested
+    if (!MDNS.begin(m_host.c_str())){
+        log_error("MDNS responder not started");
+        return false;
+    } else {
+        log_debug("MDNS responder started %s (AP mode)", m_host.c_str());
+        MDNS.addService("http", "tcp", m_port);
+        MDNS.setInstanceName("async-fs-webserver");
+    }    
+#endif
+    return true;
+}
+
 void FSWebServer::redirect(const char* url) {
     if (strstr(url, "/setup") == 0) 
         return this->handleSetup();
@@ -861,25 +896,7 @@ bool FSWebServer::startCaptivePortal(const char* ssid, const char* pass, const c
     }
     m_serverIp = WiFi.softAPIP();
     m_isApMode = true;
-
-    m_dnsServer = new DNSServer();
-    m_dnsServer->setErrorReplyCode(DNSReplyCode::NoError);
-    if (! m_dnsServer->start(53, "*", m_serverIp)) {
-        log_error("Captive portal failed to start: no sockets for DNS server available!");
-        return false;
-    }
-    
-    #if ESP_FS_WS_MDNS
-    // Start MDNS only in AP mode for connection verification to the captive SSID
-    if (!MDNS.begin(m_host.c_str())){
-        log_error("MDNS responder not started");
-    } else {
-        log_debug("MDNS responder started %s (AP mode)", m_host.c_str());
-        MDNS.addService("http", "tcp", m_port);
-        MDNS.setInstanceName("async-fs-webserver");
-    }
-    #endif
-
+    this->startMDNSResponder();
     log_info("Captive portal started. Redirecting all requests to %s", redirectTargetURL);
     return true;
 }
