@@ -6,11 +6,13 @@ A library for ESP8266/ESP32 that provides a web server with an integrated file s
 
 ## Features
 
--   **File System Management**: Browse, view, upload, and delete files on your ESP's file system (LittleFS, SPIFFS, etc.) directly from a web browser.
--   **WiFi Configuration**: An integrated setup page (`/setup`) allows you to scan for WiFi networks and connect the ESP to your local network.
--   **Customizable Options**: Easily add your own configuration parameters (text boxes, checkboxes, sliders) to the setup page, which are saved to a JSON file.
--   **WebSocket Support**: Built-in support for WebSocket communication.
--   **OTA Updates**: Allows for firmware updates through the web interface.
+-   **Dynamic WiFi Configuration**: An integrated setup page (`/setup`) allows you to scan for WiFi networks and connect the ESP to your local network.
+-   **Powerful & Customizable UI**:
+    -   Easily add your own configuration parameters (text boxes, checkboxes, sliders, dropdown lists) to the setup page.
+    -   Inject custom **HTML, CSS, and JavaScript** snippets into the setup page to create rich, dynamic user interfaces for your specific project needs.
+-   **Over-the-Air (OTA) Updates**: Update your device's firmware securely and conveniently through the web interface. You can easily upload also your entire web project's `data` folder to the ESP's filesystem.
+-   **WebSocket Support**: Built-in support for real-time, two-way communication between the web client and the ESP.
+-   **Advanced File Management**: An embedded file manager (`/edit`) allows you to browse, view, upload, and delete files and folders. 
 
 ## Documentation
 
@@ -24,7 +26,6 @@ For more detailed information, please refer to the documentation in the `docs` f
 ## Dependencies
 
 -   ESP8266/ESP32 Core for Arduino
--   [WebSockets](https://github.com/Links2004/arduino-WebSockets) by Markus Sattler
 
 ## Basic Usage
 
@@ -69,3 +70,14 @@ void loop() {
   server.run();
 }
 ```
+### Custom application "options manager"
+![options](docs/options_manager.png)
+
+### OTA update and `data` folder upload
+![OTA](docs/ota_data.png)
+
+### Custom 'code snippets'
+![snippet](docs/custom_html.png)
+
+### ACE file editor
+![File Manager](docs/file_manager.png)
