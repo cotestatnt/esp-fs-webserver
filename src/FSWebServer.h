@@ -302,9 +302,10 @@ public:
 
     // Backward compatibility method
     [[deprecated("Use enableFsCodeEditor() instead (use built-in callback to provide FS info).")]]
-    void enableFsCodeEditor(FsInfoCallbackF fsCallback = nullptr) {
+    void enableFsCodeEditor(FsInfoCallbackF fsCallback) {
         if (fsCallback)
             getFsInfo = fsCallback;
+        enableFsCodeEditor();
     }
 
     /*
