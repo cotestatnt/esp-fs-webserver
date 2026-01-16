@@ -3,8 +3,8 @@
 #include <FSWebServer.h>   // https://github.com/cotestatnt/esp-fs-webserver/
 
 #define FILESYSTEM LittleFS
-FSWebServer server(80, FILESYSTEM);
-
+FSWebServer server(80, FILESYSTEM, 80);
+  
 #ifndef LED_BUILTIN
   #define LED_BUILTIN 2 // Pin for built-in LED on ESP32  
 #endif

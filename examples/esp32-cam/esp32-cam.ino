@@ -25,7 +25,7 @@
   #define FILESYSTEM LittleFS
 #endif
 
-FSWebServer server(80, FILESYSTEM, "esp32cam");
+FSWebServer server(FILESYSTEM, 80, "esp32cam");
 
 // Functions prototype
 void setInterval();

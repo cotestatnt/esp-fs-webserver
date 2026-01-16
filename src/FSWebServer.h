@@ -1,5 +1,5 @@
-#ifndef ASYNC_FS_WEBSERVER_H
-#define ASYNC_FS_WEBSERVER_H
+#ifndef FS_WEBSERVER_H
+#define FS_WEBSERVER_H
 
 #include <FS.h>
 #include <DNSServer.h>
@@ -116,6 +116,9 @@ protected:
     DNSServer *m_dnsServer = nullptr;
     bool m_isApMode = false;
     bool m_authAll = false; // Flag to require authentication for all pages
+    char m_apSSID[33] = {0};
+    char m_apPassword[65] = {0};
+
     String typeName = "FileSystem";
 
     void handleFileRequest();
@@ -186,7 +189,7 @@ private:
 public:
     // Template Constructor for derived filesystem classes (LittleFS, SPIFFS, etc)
     template <typename T>
-    FSWebServer(uint16_t port, T &fs, const char *hostname = "") : WebServerClass(port), m_filesystem(&fs)
+    FSWebServer(T &fs, uint16_t port = 80, const char *hostname = "") : WebServerClass(port), m_filesystem(&fs)
     {
         m_port = port;
         // Set hostname if provided from constructor
@@ -291,16 +294,25 @@ public:
     virtual void begin(WebSocketsServerCore::WebSocketServerEvent wsEventHandler = nullptr);
 
 #if ESP_FS_WS_EDIT
+
     /*
       Enable the built-in ACE web file editor
     */
-    void enableFsCodeEditor(FsInfoCallbackF fsCallback = nullptr);
+    void enableFsCodeEditor();
+
+    // Backward compatibility method
+    [[deprecated("Use enableFsCodeEditor() instead (use built-in callback to provide FS info).")]]
+    void enableFsCodeEditor(FsInfoCallbackF fsCallback = nullptr) {
+        if (fsCallback)
+            getFsInfo = fsCallback;
+    }
 
     /*
      * Set callback function to provide updated FS info to library
      * This it is necessary due to the different implementation of
      * libraries for the filesystem (LittleFS, FFat, SPIFFS etc etc)
      */
+    [[deprecated("Use enableFsCodeEditor() instead (use built-in callback to provide FS info)")]]
     inline void setFsInfoCallback(FsInfoCallbackF fsCallback)
     {
         getFsInfo = fsCallback;
@@ -331,6 +343,12 @@ public:
     void printFileList(fs::FS &fs, const char *dirname, uint8_t levels, Print &out);
 
     /*
+        Old API for backward compatibility
+    */ 
+    void printFileList(fs::FS &fs,  Print& out, const char * dirname, uint8_t levels) {
+        printFileList(fs, dirname, levels, out);
+    }
+    /*
       Send a default "OK" reply to client
     */
     void sendOK();
@@ -344,6 +362,14 @@ public:
      * Redirect to captive portal if we got a request for another domain.
      */
     bool startCaptivePortal(const char *ssid, const char *pass, const char *redirectTargetURL = "/setup");
+
+    /*
+      Set AP SSID and Password (backward compatibility)
+    */
+    void setAP(const char *ssid, const char *pass) {
+        strlcpy(m_apSSID, ssid, sizeof(m_apSSID));
+        strlcpy(m_apPassword, pass, sizeof(m_apPassword));
+    }
 
     /*
     * Setup and start mDNS responder

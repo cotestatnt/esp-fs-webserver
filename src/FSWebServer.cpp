@@ -173,7 +173,7 @@ void FSWebServer::printFileList(fs::FS &fs, const char * dirname, uint8_t levels
 }
 
 #if ESP_FS_WS_EDIT
-void FSWebServer::enableFsCodeEditor(FsInfoCallbackF fsCallback) {
+void FSWebServer::enableFsCodeEditor() {
     on("/status", HTTP_GET, [this]() { this->handleFsStatus(); });
     on("/list", HTTP_GET, [this]() { this->handleFileList(); });
     on("/edit", HTTP_PUT, [this]() { this->handleFileCreate(); });
@@ -183,8 +183,6 @@ void FSWebServer::enableFsCodeEditor(FsInfoCallbackF fsCallback) {
         [this]() { this->sendOK(); },
         [this]() { this->handleFileUpload(); }
     );
-    if (fsCallback)
-        getFsInfo = fsCallback;
 }
 #endif
 
@@ -829,6 +827,12 @@ bool FSWebServer::startWiFi(uint32_t timeout, CallbackF fn) {
             }
         }
     }
+
+    if (strlen(m_apSSID) > 0) {
+        log_info("Starting AP mode: SSID=%s", m_apSSID);
+        startCaptivePortal(m_apSSID, m_apPassword, "/setup");
+        return true;
+    }
     return false;
 }
 
@@ -886,6 +890,7 @@ bool FSWebServer::startCaptivePortal(const char* ssid, const char* pass, const c
     IPAddress apIP(192, 168, 4, 1);
     IPAddress netmask(255, 255, 255, 0);
     WiFi.softAPConfig(apIP, apIP, netmask);
+    
     
     if (!WiFi.softAP(ssid, pass)) {
         log_error("Captive portal failed to start: WiFi.softAP() failed!");

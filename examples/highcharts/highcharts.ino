@@ -6,7 +6,7 @@
 #define FILESYSTEM LittleFS
 
 const char* hostname = "highchart";
-FSWebServer server(80, FILESYSTEM, hostname);
+FSWebServer server(FILESYSTEM, 80, hostname);
 
 #ifndef LED_BUILTIN
 #define LED_BUILTIN 2

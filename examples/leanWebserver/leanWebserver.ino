@@ -44,7 +44,7 @@
 #include <FSWebServer.h>  //https://github.com/cotestatnt/async-esp-fs-webserver
 
 #define FILESYSTEM LittleFS
-FSWebServer server(80, FILESYSTEM, "myserver");
+FSWebServer server(FILESYSTEM, 80, "myserver");
 
 // Define built-in LED if not defined by board (eg. generic dev boards)
 #ifndef LED_BUILTIN

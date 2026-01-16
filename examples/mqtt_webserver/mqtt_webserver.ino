@@ -18,7 +18,7 @@
 #define BUILTIN_LED 2  // Pin number for the built-in LED on ESP32 boards
 #endif
 
-FSWebServer myWebServer(80, LittleFS, "hostname");
+FSWebServer myWebServer(LittleFS, 80, "hostname");
 
 // Update these with values suitable for your network.
 const char* mqtt_server = "broker.mqtt-dashboard.com";

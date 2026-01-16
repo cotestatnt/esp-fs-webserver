@@ -3,7 +3,7 @@
 #include <FSWebServer.h>   // https://github.com/cotestatnt/esp-fs-webserver/
 
 #define FILESYSTEM LittleFS
-FSWebServer server(80, LittleFS, "esphost");
+FSWebServer server(LittleFS, 80, "esphost");
 
 ////////////////////////////  HTTP Request Handlers  ////////////////////////////////////
 void getDefaultValue () {

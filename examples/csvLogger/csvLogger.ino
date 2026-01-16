@@ -3,7 +3,7 @@
 #include <LittleFS.h>
 #include <FSWebServer.h>
 
-FSWebServer server(80, LittleFS, "esphost");
+FSWebServer server(LittleFS, 80, "esphost");
 
 // Timezone definition to get properly time from NTP server
 #define MYTZ "CET-1CEST,M3.5.0,M10.5.0/3"
