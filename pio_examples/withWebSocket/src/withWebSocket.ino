@@ -8,8 +8,8 @@
 const char* hostname = "fsbrowser";
 
 // If you edit server port, remember to change also websocket port in index_htm.h
-// By default websocket port with FSWebServer library is server port + 1
-FSWebServer server(80, FILESYSTEM, hostname);
+// By default websocket port with F,WebServer library is server port + 1
+FSWebServer server(FILESYSTEM, 80, hostname);
 
 #ifndef LED_BUILTIN
 #define LED_BUILTIN 2
