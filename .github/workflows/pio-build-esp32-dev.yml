@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - dev
+      - master
       
   pull_request:
 
