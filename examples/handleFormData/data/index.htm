@@ -1,10 +1,92 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <!-- Load document style sheet-->
-  <link rel="stylesheet" href="myStyle.css">
+  <style>
+    .container {
+      box-shadow:
+        0 0.125rem 1rem rgba(27, 40, 50, 0.04),
+        0 0.125rem 2rem rgba(27, 40, 50, 0.08),
+        0 0 0 0.0625rem rgba(27, 40, 50, 0.024);
+      border-radius: 5px;
+      box-sizing: border-box;
+      width: 100%;
+      margin: auto;
+      max-width: 860px;
+      padding: 40px;
+    }
+
+    h3 {
+      text-align: center;
+    }
+
+    .collapsible {
+      background-color: #777;
+      color: white;
+      cursor: pointer;
+      padding: 18px;
+      width: 100%;
+      border: none;
+      text-align: left;
+      outline: none;
+      font-size: 15px;
+      max-width: 800px;
+    }
+
+    .collapsible:after {
+      content: '\002B';   /* The '+' character*/
+      color: white;
+      font-weight: bold;
+      float: right;
+      margin-left: 5px;
+    }
+
+    .content {
+      padding: 0 15px;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease-out;
+      background-color: #f1f1f1;
+      border-bottom: solid 1px #f1f1f1;
+    }
+
+    p{
+      margin-left: 10px;
+      padding: 5px;
+    }
+
+    /* Form button styling */
+    input, select  {
+      border-radius: 5px;
+      border: solid 1px #ccc;
+      padding: 10px 20px;
+      cursor: pointer;
+      margin-top: 5px;
+    }
+
+    input[type=submit] {
+      background-color: green;
+      color: white;
+    }
+
+    input[type=submit]:hover {
+      background-color: #45a049;
+      border: solid 1px #000;
+    }
+
+    label {
+      text-align: right;
+      margin: auto 0 auto 0;
+    }
+
+    form {
+      margin-top: 10px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      grid-gap: 20px;
+    }
+  </style>
 </head>
-  
+
 <body>
   <div class="container">
     <h3>Collapsible form option menu</h3>
@@ -13,10 +95,10 @@
       <p>This example show how to handle a form without reload web page on submit.</p>
       <p>In addition show a way to build a nice collapsible menu with CSS and JS</p>
     </div>
-    
+
     <button class="collapsible">Open Section 2</button>
     <div class="content">
-      
+
       <!-- With HTML 5 we can use custom element attributes, so keep track where we want the result of form submit -->
       <!-- By default, HTML forms will send to request to the action link with GET method -->
       <form action="/setForm1" data-result="form1-result" enctype="text/plain" method="post">
@@ -32,14 +114,14 @@
       <br><br>
       <p id="form1-result"></p>
     </div>
-      
+
     <button class="collapsible">Open Section 3</button>
     <div class="content">
        <!-- With HTML 5 we can use custom element attributes, so keep track where we want the result of form submit -->
       <form action="/setForm2" data-result="form2-result" enctype="text/plain" method="post">
         <p><label for="fname">Firstname</label><input type="text" id="fname" name="firstname" placeholder="Your name.."></p>
         <p><label for="lname">Lastname</label><input type="text" id="lname" name="lastname" placeholder="Your last name.."></p>
-        <p><label for="age">Your Age</label><input type="number" id="age" name="age"></p> 
+        <p><label for="age">Your Age</label><input type="number" id="age" name="age"></p>
         <br>
     	  <input type="submit">
       </form>
@@ -47,9 +129,58 @@
       <p id="form2-result"></p>
     </div>
   </div>
-  
+
   <!-- Load document Javascript  -->
-  <script src="myScript.js"></script>
+  <script>
+    // Expand or collapse the content according to current state
+    function expandCollapse() {
+      // Get the HTML element immediately following the button (content)
+      var content = this.nextElementSibling;
+      if (content.style.maxHeight)
+        content.style.maxHeight = null;
+      else
+        content.style.maxHeight = content.scrollHeight + "px";
+    }
+
+    // Select all "+" HTML buttons in webpage and add a listener for each one
+    const btnList = document.querySelectorAll(".collapsible");
+    btnList.forEach(elem => {
+      elem.addEventListener("click", expandCollapse ); // Set callback function linked to the button click
+    });
+
+    // This listener will execute an "arrow" function once the page was fully loaded
+    document.addEventListener("DOMContentLoaded", () => {
+      console.log('Webpage is fully loaded');
+
+      // At first, get the default values for form input elements from ESP
+      fetch('/getDefault')
+        .then(response => response.json())  // Parse the server response
+        .then(jsonObj => {                     // Do something with parsed response
+          console.log(jsonObj);
+          document.getElementById('cars').value = jsonObj.car;
+          document.getElementById('fname').value = jsonObj.firstname;
+          document.getElementById('lname').value = jsonObj.lastname;
+          document.getElementById('age').value = jsonObj.age;
+        });
+    });
+
+    // This listener will prevent each form to reload page after submitting data
+    document.addEventListener("submit", (e) => {
+      const form = e.target;        // Store reference to form to make later code easier to read
+      fetch(form.action, {          // Send form data to server using the Fetch API
+          method: form.method,
+          body: new FormData(form),
+        })
+
+        .then(response => response.text())  // Parse the server response
+        .then(text => {                     // Do something with parsed response
+          console.log(text);
+          const resEl = document.getElementById(form.dataset.result).innerHTML= text;
+        });
+
+      e.preventDefault();                 // Prevent the default form submit wich reload page
+    });
+  </script>
 
 </body>
 </html>

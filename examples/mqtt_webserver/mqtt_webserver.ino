@@ -12,13 +12,13 @@
 #include <WiFiClient.h>
 
 #include <PubSubClient.h>      // https://github.com/knolleary/pubsubclient/
-#include <esp-fs-webserver.h>  // https://github.com/cotestatnt/esp-fs-webserver
+#include <FSWebServer.h>       // https://github.com/cotestatnt/esp-fs-webserver
 
 #ifndef BUILTIN_LED
 #define BUILTIN_LED 2  // Pin number for the built-in LED on ESP32 boards
 #endif
 
-FSWebServer myWebServer(LittleFS, 80);
+FSWebServer myWebServer(LittleFS, 80, "hostname");
 
 // Update these with values suitable for your network.
 const char* mqtt_server = "broker.mqtt-dashboard.com";
@@ -30,7 +30,7 @@ void startFilesystem() {
     LittleFS.format();
     ESP.restart();
   }
-  myWebServer.printFileList(LittleFS, Serial, "/", 2);
+  myWebServer.printFileList(LittleFS, "/", 1, Serial);
 }
 
 ///////////////////////////  MQTT callback function  ///////////////////////////////////
@@ -134,21 +134,18 @@ void setup() {
   startFilesystem();
 
   // Try to connect to stored SSID, start AP if fails after timeout
-  myWebServer.setAP("ESP32", "123456789");
-  IPAddress myIP = myWebServer.startWiFi(15000);
-  Serial.println("\n");
+  if (!myWebServer.startWiFi(15000)) {
+    Serial.println("\nWiFi not connected! Starting AP mode...");
+    myWebServer.startCaptivePortal("ESP32_RFID", "123456789", "/setup");
+  }
 
   // Enable ACE FS file web editor and add FS info callback function
-  myWebServer.enableFsCodeEditor([](fsInfo_t* fsInfo) {
-    fsInfo->fsName = "LittleFS";
-    fsInfo->totalBytes = LittleFS.totalBytes();
-    fsInfo->usedBytes = LittleFS.usedBytes();
-  });
+  myWebServer.enableFsCodeEditor();
 
   // Start webserver
   myWebServer.begin();
   Serial.print(F("ESP Web Server started on IP Address: "));
-  Serial.println(myIP);
+  Serial.println(myWebServer.getServerIP());
   Serial.println(F("Open /setup page to configure optional parameters"));
   Serial.println(F("Open /edit page to view and edit files"));
 

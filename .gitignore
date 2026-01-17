@@ -1,2 +1,41 @@
-/examples/mqtt_webserver/build
-/examples/mqtt_webserver/.vscode
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# PlatformIO in VScode
+.pio/
+.vscode/
+*.lnk
+*.bak
+/build
+/built-in-webpages/setup/build_setup/node_modules
+/examples/customHTML/build

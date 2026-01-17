@@ -1,107 +1,96 @@
-#include <esp-fs-webserver.h>   // https://github.com/cotestatnt/esp-fs-webserver
-
 #include <FS.h>
 #include <LittleFS.h>
-#define FILESYSTEM LittleFS
+#include <FSWebServer.h>   // https://github.com/cotestatnt/esp-fs-webserver/
 
-FSWebServer myWebServer(FILESYSTEM, 80);
+#define FILESYSTEM LittleFS
+FSWebServer server(LittleFS, 80, "esphost");
 
 ////////////////////////////  HTTP Request Handlers  ////////////////////////////////////
-void getDefaultValue() {  
+void getDefaultValue () {
   // Send to client default values as JSON string because it's very easy to parse JSON in Javascript
   String defaultVal = "{\"car\":\"Ferrari\", \"firstname\":\"Enzo\", \"lastname\":\"Ferrari\",\"age\":90}";
-  myWebServer.send(200, "text/json", defaultVal);
+  server.send(200, "text/json", defaultVal);
 }
 
-void handleForm1() {  
+void handleForm1() {
   String reply;
-  if(myWebServer.hasArg("cars")) {
+  if(server.hasArg("cars")) {
     reply += "You have submitted with Form1: ";
-    reply += myWebServer.arg("cars");
+    reply += server.arg("cars");
   }
   Serial.println(reply);
-  myWebServer.send(200, "text/plain", reply);
+  server.send(200, "text/plain", reply);
 }
 
-void handleForm2() {  
+void handleForm2() {
   String reply;
-  if(myWebServer.hasArg("firstname")) {
+  if(server.hasArg("firstname")) {
     reply += "You have submitted with Form2: ";
-    reply += myWebServer.arg("firstname");
+    reply += server.arg("firstname");
   }
-  if(myWebServer.hasArg("lastname")) {
+  if(server.hasArg("lastname")) {
     reply += " ";
-    reply += myWebServer.arg("lastname");
+    reply += server.arg("lastname");
   }
-  if(myWebServer.hasArg("age")) {
+  if(server.hasArg("age")) {
     reply += ", age: ";
-    reply += myWebServer.arg("age");
+    reply += server.arg("age");
   }
   Serial.println(reply);
-  myWebServer.send(200, "text/plain", reply);
+  server.send(200, "text/plain", reply);
 }
-
 
 ////////////////////////////////  Filesystem  /////////////////////////////////////////
-void startFilesystem() {
-  // FILESYSTEM INIT
-  if ( !FILESYSTEM.begin()) {
-    Serial.println("ERROR on mounting filesystem. It will be formmatted!");
-    FILESYSTEM.format();
-    ESP.restart();
+bool startFilesystem() {
+  if (FILESYSTEM.begin()){
+    server.printFileList(LittleFS, "/", 1, Serial);   
+    return true;
   }
-  myWebServer.printFileList(LittleFS, Serial, "/", 2);
+  else {
+      Serial.println("ERROR on mounting filesystem. It will be reformatted!");
+      FILESYSTEM.format();
+      ESP.restart();
+  }
+  return false;
 }
-
-/*
-* Getting FS info (total and free bytes) is strictly related to
-* filesystem library used (LittleFS, FFat, SPIFFS etc etc) and ESP framework
-* ESP8266 FS implementation has methods for total and used bytes (only label is missing)
-*/
-#ifdef ESP32
-void getFsInfo(fsInfo_t* fsInfo) {
-	fsInfo->fsName = "LittleFS";
-	fsInfo->totalBytes = LittleFS.totalBytes();
-	fsInfo->usedBytes = LittleFS.usedBytes();
-}
-#else
-void getFsInfo(fsInfo_t* fsInfo) {
-	fsInfo->fsName = "LittleFS";
-}
-#endif
 
 
 void setup(){
   Serial.begin(115200);
-
+  
   // FILESYSTEM INIT
   startFilesystem();
 
-  // Try to connect to stored SSID, start AP if fails after timeout
-  myWebServer.setAP("ESP_AP", "123456789");
-  IPAddress myIP = myWebServer.startWiFi(15000);
+  // Try to connect to WiFi (will start AP if not connected after timeout)
+  if (!server.startWiFi(10000)) {
+    Serial.println("\nWiFi not connected! Starting AP mode...");
+    server.startCaptivePortal("ESP_AP", "123456789", "/setup");
+  }
 
   // Add custom page handlers to webserver
-  myWebServer.on("/getDefault", HTTP_GET, getDefaultValue);
-  myWebServer.on("/setForm1", HTTP_POST, handleForm1);
-  myWebServer.on("/setForm2", HTTP_POST, handleForm2);
-  
-  // set /setup and /edit page authentication
-  // myWebServer.setAuthentication("admin", "admin");
+  server.on("/getDefault", HTTP_GET, getDefaultValue);
+  server.on("/setForm1", HTTP_POST, handleForm1);
+  server.on("/setForm2", HTTP_POST, handleForm2);
 
   // Enable ACE FS file web editor and add FS info callback function
-  myWebServer.enableFsCodeEditor(getFsInfo);
-  
-  myWebServer.begin();
+  server.enableFsCodeEditor();
+
+  // Start server
+  server.begin();
   Serial.print(F("ESP Web Server started on IP Address: "));
-  Serial.println(myIP);
-  Serial.println(F("Open /setup page to configure optional parameters"));
-  Serial.println(F("Open /edit page to view and edit files"));
-  Serial.println(F("Open /update page to upload firmware and filesystem updates"));
-    
+  Serial.println(server.getServerIP());
+  Serial.println(F(
+    "This is \"handleFormData.ino\" example.\n"
+    "Open /setup page to configure optional parameters.\n"
+    "Open /edit page to view, edit or upload example or your custom webserver source files."
+  ));
 }
 
 
 void loop() {
-  myWebServer.run();
+  // Handle client requests
+  server.run();
+  
+  // Nothing to do here, just a small delay
+  delay(10);  
 }

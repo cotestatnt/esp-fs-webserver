@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RFID Log</title>
+  <style>
+    /* Base Styles */
+    body {background:#f5f5f5; margin:0; font-family:Arial,sans-serif; margin-top:20px;}
+    header, footer {padding:10px; background:#024c5b; color:#fff; width:90%; text-align:center;}
+    label {display:block; margin-bottom:5px;}
+    input[type="text"], input[type="password"], input[type="email"] {width:100%; padding:8px; border:1px solid #ddd; border-radius:3px;}
+    button.submit {margin:0 20px -10px 20px; width:80%; min-width:60px; padding:10px; background:#607D8B; color:white; border:none; cursor:pointer;}
+    button.submit:hover {background:#16729F;}
+    button[disabled]:hover, button[disabled] {background:#ccc; color:#666;}
+    select.submit {width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 3px; background-color: white; cursor: pointer;}
+    select.submit:hover {border-color: #16729F;}
+    
+    /* Layout */
+    .container {display:flex; flex-direction:column; align-items:center; min-height:100vh;}
+    .custom-container {padding:10px; width:90%; box-shadow:0 0 10px rgba(0,0,0,0.1); background:#fff;}
+    .sidebar {background:#f8f9fa; flex:0 0 10%; transition:all 0.3s ease;}
+    .tab {padding:10px 20px; cursor:pointer;}
+    .tab.active {background:#e9ecef;}
+    .content {flex-grow:1; display:flex; justify-content:center; align-items:flex-start;}
+    .main-content {width:100%; padding:0 0 20px 20px; min-height:70vh;}
+    .section {position:relative;}
+    .collapse-container {margin-bottom:20px;}
+    .collapse-content {display:none; padding:10px; border:1px solid #ddd; border-radius:5px; margin-bottom:20px;}
+    .collapse-content.show {display:block;}
+    .form-row {display:flex; flex-wrap:wrap; margin-bottom:10px; align-items:flex-end;}
+    .form-column {flex:1; margin:0 20px 0 20px;}
+    .form-column:last-child {margin-right:40px;}
+    .but-row {display:flex; margin:20px 0 10px 0;}
+    
+    /* Interactive Elements */
+    .button:hover {cursor:pointer; background:#16729F;}
+    .button:active {transform:scale(0.8);}
+    #about {color:lightgray;}
+    details, main, summary {display:block;}
+    
+    /* Floating Elements */
+    .floating {position:absolute; float:right; z-index:1; right:-4px;}
+    .floating.top {top:-8px;}
+    .floating.bottom {bottom:-8px;}
+    .floating.inline {position:sticky;}
+    .floating .button {
+      width:24px; height:24px; margin-top:2px; border-radius:50%; 
+      box-shadow:0 2px 4px rgba(0,0,0,0.8); border:1px solid transparent; 
+      font-family:monospace; font-size:larger; color:cornsilk;
+    }
+    
+    /* Color Classes */
+    .green {background:rgba(0,128,0,0.73);}
+    .blue {background:#607D8B;}
+    
+    /* Tables */
+    .responsive-table {width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; margin-bottom:1rem;}
+    .table-container {min-width:600px; border:1px solid #ddd; border-radius:5px; overflow:hidden;}
+    .table-header, .table-row {display:flex; flex-wrap:nowrap;}
+    .table-header {background:#f2f2f2; font-weight:bold; margin-top:10px;}
+    .table-header>div, .table-row>div {padding:10px 5px; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+    .table-row {border-bottom:1px solid #ddd;}
+    .table-row:nth-child(even) {background:#f9f9f9;}
+    .table-row.selected {background:#d3d3d3; border:1px solid orange; color:blue;}
+    
+    /* Table Columns */
+    .col-tag {flex:1 1 25%; text-align:center;}
+    .col-reader {flex:1 1 10%; text-align:center;}
+    .col-level {flex:0 0 5%; text-align:center;}
+    .col-timestamp {flex:1 1 30%;}
+    .col-name {flex:1 1 25%;}
+    .col-email {flex:1 1 25%;}
+    .col-username {flex:1 1 20%;}
+    
+    
+    /* Modal */
+    .d-modal {
+      width:-webkit-fill-available; border-radius:10px; border:1px solid rgba(51,51,51,0.43);
+      box-shadow:0 3px 8px rgba(0,0,0,0.24); left:50%; position:absolute; top:60%; 
+      transform:translate(-50%,-50%); flex-direction:column; background:hsla(200,18%,46%,0.9); z-index:999;
+    }
+    .d-modal-title {color:#111827; padding:1.5em; position:relative; width:calc(100% - 4.5em);}
+    .d-modal-content {border-top:1px solid #e0e0e0; padding:1.5em; overflow:auto;}
+    .btn {display:inline-flex; padding:10px 15px; background:#2E8BC0; color:#fff; border:0; cursor:pointer; min-width:40%; border-radius:5px; justify-content:center;}
+    .btn:hover {filter:brightness(85%);}
+    .btn-bar {display:flex; padding:20px; justify-content:center; flex-wrap:wrap; gap:30px 20px; order:998;}
+    
+    /* Utility Classes */
+    .hide {display:none;}
+    .loader {
+      width:120px; height:120px; border:24px solid rgba(222,219,219,0.66); 
+      border-top:24px solid rgba(52,152,219,0.89); border-radius:50%;
+      animation:spin 2s linear infinite; position:fixed; top:50%; left:50%; 
+      margin:-60px; display:none;
+    }
+    @keyframes spin {0%{transform:rotate(0deg);} 100%{transform:rotate(360deg);}}
+    
+    /* Mobile */
+    @media (max-width:768px) {
+      .custom-container {width:95%; padding:5px;}
+      .table-header>div, .table-row>div {padding:8px 10px; font-size:0.9em;}
+      .form-column {flex:1 1 100%; margin:0 0 10px 0;}
+      .form-column:last-child {margin-right:0;}
+      .but-row {flex-wrap:wrap;}
+      button.submit {margin:5px 0; width:100%;}
+    }
+  </style>
+</head>
+<body>
+  <div class="loader" id="loader"></div>
+  
+  <details id=modal-message>
+    <summary style="display: block"></summary>
+    <div class=d-modal>
+      <div class=d-modal-title><h2 id=message-title>t</h2></div>
+      <div class=d-modal-content><p id=message-body></p></div>
+      <div class=btn-bar>
+          <a id=ok-modal class="btn hide" onclick=closeModal(true)><span>OK</span></a>
+          <a id=close-modal class="btn" onclick=closeModal(false)><span>Close</span></a>
+      </div>
+    </div>
+  </details>
+          
+  <div id="main-box" class="container">
+    <header>
+      <h1 class="title is-3">ESP32 RFID Logs</h1> 
+    </header>
+    <div class="custom-container">
+      <div class="content">
+        <div class="sidebar">
+          <div class="tab" id="logsTab" data-target="logsContent">Logs</div>
+          <div class="tab" id="usersTab" data-target="usersContent">Users</div>
+          <div class="tab"><a id="setup" style="color: inherit; text-decoration: none;" href="#" disabled>Setup</a></div>
+        </div>
+        <div class="main-content">
+          <div id="logsContent" class="section">
+            
+            <div class="floating top">
+              <button class="button green" onclick="toggleCollapse('collapse-logs')"><b id='toggle-logs'>+</b></button>
+            </div>
+            
+            <div class="floating bottom">
+              <button class="button blue" id="prev-log"><b>&lt;</b></button>
+              <button class="button blue" id="next-log"><b>&gt;</b></button>
+            </div>
+            
+            <div class="collapsible">
+              <div id="collapse-logs" class="collapse-content">
+               <div id="insertForm">
+                  <div class="form-row">
+                    <div class="form-column">
+                      <label for="log-file-select">Select Log File:</label>
+                      <select id="log-file-select" class="submit">
+                        <!-- Options will be added dynamically -->
+                      </select>
+                    </div>
+                    <div class="form-column">
+                      <label for="username-log">Username:</label>
+                      <input type="text" id="username-log" name="username-log" placeholder="Username">
+                    </div>
+                    <div class="form-column">
+                      <label for="reader-log">Reader:</label>
+                      <input type="text" id="reader-log" name="reader-log" placeholder="Reader number">
+                    </div>
+                    
+                    <div class="but-row">
+                      <button class="submit" id="export-log">Export</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+    
+            <div class="responsive-table">
+              <div class="table-container">
+                <div class="table-header">
+                  <div class="col-reader">Reader</div>
+                  <div class="col-username">Username</div>
+                  <div class="col-tag">Tag Code</div>
+                  <div class="col-timestamp">Timestamp</div>
+                </div>
+                <div id="logsTable" class="table-body">
+                  <!-- Rows will be added dynamically -->
+                </div>
+              </div>
+            </div>
+          </div>
+        
+          <div id="usersContent" class="section hide">
+            <div class="floating top">
+              <button class="button green" id="handle-users" onclick="toggleCollapse('collapse-user')" disabled><b id='toggle-user'>+</b></button>
+            </div>
+            <div class="collapsible">
+              <div id="collapse-user" class="collapse-content">
+                <div id="insertForm">
+                  <div class="form-row">
+                    <div class="form-column">
+                      <label for="tag">Tag Code:</label>
+                      <span style="display: inline-flex;">
+                        <input type="text" id="tag" name="tag" placeholder="Tag Code">
+                        <div class="floating inline">
+                          <button id="get-tag" class="button blue" title="Read RFID tag code"><b>@</b></button>
+                        </div>
+                      </span>
+                    </div>
+                    <div class="form-column">
+                      <label for="name">Name:</label>
+                      <input type="text" id="name" name="name" placeholder="Name">
+                    </div>
+                    <div class="form-column">
+                      <label for="level">Level:</label>
+                      <input type="text" id="level" name="level" placeholder="Level">
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-column">
+                      <label for="username">Username:</label>
+                      <input type="text" id="username" name="username" placeholder="Username">
+                    </div>
+                    <div class="form-column">
+                      <label for="password">Password:</label>
+                      <input type="password" id="password" name="password" placeholder="password">
+                    </div>
+                    <div class="form-column">
+                      <label for="email">Email:</label>
+                      <input type="email" id="email" name="email" placeholder="Email">
+                    </div>
+                  </div>
+                  
+                  <div class="but-row">
+                    <button class="submit" id="add-user">Insert</button>
+                    <button class="submit" id="delete-user" disabled>Delete</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="responsive-table">
+              <div class="table-container">
+                <div class="table-header">
+                  <div class="col-username">Username</div>
+                  <div class="col-name">Name</div>
+                  <div class="col-email">Email</div>
+                  <div class="col-tag">Tag Code</div>
+                  <div class="col-level">Role</div>
+                </div>
+                <div id="usersTable" class="table-body">
+                  <!-- Rows will be added dynamically -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="footer">
+      <div class="has-text-centered">
+        <p> RFID Log &copy; 2025. All rights reserved.</p>
+        <a id=about target=_blank rel=noopener href="https://github.com/cotestatnt/async-esp-fs-webserver">Created with https://github.com/cotestatnt/async-esp-fs-webserver</a>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    var userLevel = 0;
+    let currentCsvData = [];
+    let currentPage = 0;
+    const recordsPerPage = 15;
+    let totalFilteredRecords = 0;
+    
+    
+    // Callback function called on modal box close
+    var closeCb = function(){};
+  
+    // ID Element selector shorthands
+    var $ = function(el) {
+        return document.getElementById(el);
+    };
+    
+    // Switch active page
+    function tabClick() {
+      const tabs = document.querySelectorAll('.tab');
+      const sections = document.querySelectorAll('.section');
+      tabs.forEach(t => t.classList.remove('active'));
+      sections.forEach(s => s.classList.add('hide'));
+      const target = this.dataset.target;
+      $(target).classList.remove('hide');
+      this.classList.remove('hide');
+      this.classList.add('active');
+    }
+    
+    // Toggle the collapsible user section 
+    function toggleCollapse(id, keep) {
+      if (keep)
+        $(id).classList.add('show');
+      else
+        $(id).classList.toggle('show');
+        
+      const allRows = document.querySelectorAll('.table-row');
+      allRows.forEach(row => row.classList.remove('selected'));
+      const allInput = $('insertForm').querySelectorAll('input');
+      allInput.forEach(inp => inp.value = '');
+      $('add-user').innerHTML = 'Insert';
+      $('delete-user').disabled = true;
+      $('add-user').disabled = true;
+      const btnId = id.split('-')[1];
+      $('toggle-' + btnId).innerHTML = $(id).classList.contains('show') ? '-' : '+';
+    }
+    
+    // Show a message, if fn != undefinded run as callback on OK button press
+    function openModal(title, msg, fn) {
+      $('message-title').innerHTML = title;
+      $('message-body').innerHTML = msg;
+      $('modal-message').open = true;
+      $('main-box').style.filter = "blur(3px)";
+      if (typeof fn != 'undefined') {
+        closeCb = fn;
+        $('ok-modal').classList.remove('hide');
+      }
+      else
+        $('ok-modal').classList.add('hide');
+    }
+    
+    // Close modal box
+    function closeModal(do_cb) {
+      $('modal-message').open = false;
+      $('main-box').style.filter = "";
+      if (typeof closeCb != 'undefined' && do_cb)
+        closeCb();
+    }
+    
+    // Helper to format timestamp
+    function formatTimestamp(timestamp) {
+      const date = new Date(timestamp);
+      return isNaN(date.getTime()) ? timestamp : date.toLocaleString();
+    }
+    
+    
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////   Users setup handling ////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+    
+    
+    // Send command to MCU before the readings in order to handle properly logs record
+    function readTagCode() {
+      fetch('/waitCode')
+      .then(response => {
+        openModal('Read new TAG', "<br>Please hold your tag close to the RFID reader", getTagCode);
+      })
+    }
+    
+    // Read the RFID code for current user
+    function getTagCode() {
+      fetch('/getCode')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Request error');
+        }
+        return response.json();
+      })
+      .then(data => {
+        $('tag').value = data.tag;
+        $('add-user').disabled = false;
+      })
+      .catch(error => {
+        alert('Error:' + error);
+      });
+    }
+    
+    // Get list of registered users
+    function getUsers() {
+      const usersTable = $('usersTable');
+      fetch('/users')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Request error');
+        }
+        return response.json();
+      })
+      .then(data => {
+        usersTable.innerHTML = '';
+        data.forEach((user, index) => {
+          const userEntry = document.createElement('div');
+          userEntry.className = 'table-row';
+          userEntry.innerHTML = `
+            <div class="col-username">${user.username}</div>
+            <div class="col-name">${user.name}</div>
+            <div class="col-email">${user.email}</div>
+            <div class="col-tag">${user.tag}</div>
+            <div class="col-level">${user.level}</div>`;
+          usersTable.appendChild(userEntry);
+          
+          userEntry.addEventListener('click', function(ev) {
+            const allRows = document.querySelectorAll('.table-row');
+            allRows.forEach(row => row.classList.remove('selected'));
+            
+            if(userLevel >= 5) {
+              toggleCollapse('collapse-user', true);
+              this.classList.add('selected');
+              const cols = Array.from(this.querySelectorAll('div')).map(el => {
+                const id = el.className.replace('col-', '');
+                return {
+                  id: id,
+                  value: el.innerHTML
+                };
+              });
+              
+              cols.forEach(item => {
+                if ($(item.id)) {
+                  $(item.id).value = item.value; 
+                  $(item.id).addEventListener('input', function() {
+                    $('add-user').disabled = false;
+                  });
+                }
+              });
+              
+              $('delete-user').disabled = false;
+              $('add-user').innerHTML = 'Update';
+            }
+          });
+        });
+        
+        $('loader').style.display = "none";
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
+    }
+        
+    // Send command to MCU before the readings in order to handle properly logs record
+    function deleteUser() {
+      $('delete-user').disabled = true;
+      sendUserForm('/delUser');
+    }
+    
+    // Insert or update a new user record
+    function sendUserForm(url) {
+      var formData = new FormData();
+      formData.append("username", $('username').value);
+      formData.append("password", $('password').value);
+      formData.append("name", $('name').value);
+      formData.append("email", $('email').value);    
+      formData.append("tag", $('tag').value);
+      formData.append("level", $('level').value);
+      formData.append("type", $('add-user').innerHTML);
+      const option = {
+        method: 'POST',
+        body: formData
+      };
+      fetch(url, option)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Request error');
+          }
+          return response.text();
+        })
+        .then(result => {
+          openModal('Users', "<br>New record inserted or updated");
+          getUsers();
+        })
+        .catch(error => {
+          openModal('Error', error);
+        });
+    }
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////    CSV logs handling //////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+    function listLogFiles() {
+      const url = '/list?dir=/logs';
+      $('loader').style.display = "block";
+      
+      fetch(url)
+      .then(response => {
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        return response.json();
+      })
+      .then(files => {
+        const select = $('log-file-select');
+        select.innerHTML = '';
+        
+        if (!files || files.length === 0) {
+          select.innerHTML = '<option value="-1">No log files found</option>';
+          $('loader').style.display = "none";
+          return;
+        }
+    
+        const csvFiles = files
+        .filter(file => file.name.endsWith('.csv'))
+        .sort((a, b) => {
+          const dateA = a.name.split('.')[0].split('_');
+          const dateB = b.name.split('.')[0].split('_');
+          const dateObjA = new Date(dateA[0], dateA[1] - 1, dateA[2]);
+          const dateObjB = new Date(dateB[0], dateB[1] - 1, dateB[2]);
+          return dateObjB - dateObjA;
+        });
+        
+        csvFiles.forEach(file => {
+          const dateParts = file.name.split('.')[0].split('_');
+          const formattedDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
+          const option = new Option(
+            formattedDate,
+            file.name,
+            false,
+            false
+          );
+          select.add(option);
+        });
+    
+        if (csvFiles.length > 0) {
+          select.value = csvFiles[0].name;
+          loadCsvFile(csvFiles[0].name);
+        }
+      })
+      .catch(error => {
+        console.error('Error listing files:', error);
+        openModal('Error', `Failed to list log files: ${error.message}`);
+      })
+      .finally(() => {
+        $('loader').style.display = "none";
+      });
+    
+      $('log-file-select').addEventListener('change', function() {
+        const selectedFile = this.value;
+        if (selectedFile && selectedFile !== '-1') {
+          $('loader').style.display = "block";
+          loadCsvFile(selectedFile)
+          .catch(error => {
+            console.error('Error loading file:', error);
+            openModal('Error', 'Failed to load selected file');
+          })
+          .finally(() => {
+            $('loader').style.display = "none";
+          });
+        }
+      });
+    }
+    
+    
+    function loadCsvFile(filename) {
+      $('loader').style.display = "block";
+      currentCsvData = []; // Reset data
+      
+      fetch(`/logs/${encodeURIComponent(filename)}`)
+        .then(response => response.text())
+        .then(csvText => {
+            // Convert CSV to array of arrays
+            currentCsvData = csvText.split('\n')
+                .filter(line => line.trim())
+                .map(line => line.split(',').map(cell => cell.replace(/"/g, '').trim()));
+            
+            applyFilters(); // Apply filters immediately after loading
+        })
+        .catch(error => {
+            console.error("Error loading file:", error);
+            $('logsTable').innerHTML = `<div class="table-row error">Error loading file</div>`;
+        })
+        .finally(() => {
+            $('loader').style.display = "none";
+        });
+    }
+    
+    function updatePaginationButtons() {
+      $('prev-log').disabled = currentPage === 0;
+      $('next-log').disabled = (currentPage + 1) * recordsPerPage >= totalFilteredRecords;
+    }
+    
+    function applyFilters() {
+      if (currentCsvData.length === 0) return;
+      const usernameFilter = $('username-log').value.toLowerCase();
+      const readerFilter = $('reader-log').value.toLowerCase();
+      
+      // Filter data (skip header row)
+      let filteredData = currentCsvData.slice(1).filter(row => {
+          return (!usernameFilter || row[1].toLowerCase().includes(usernameFilter)) &&
+                 (!readerFilter || row[0].toLowerCase().includes(readerFilter));
+      });
+      
+      totalFilteredRecords = filteredData.length;
+      currentPage = 0; // Reset to first page when filters change
+      
+      // Get data for current page
+      const pagedData = filteredData.slice(
+        currentPage * recordsPerPage,
+        (currentPage + 1) * recordsPerPage
+      );
+      
+      // Update table
+      updateTable(pagedData);
+      updatePaginationButtons();
+      return filteredData;
+    }
+    
+    function updateTable(data) {
+      const tableBody = $('logsTable');
+      tableBody.innerHTML = '';
+      
+      if (data.length === 0) {
+        tableBody.innerHTML = '<div class="table-row"><div class="col-empty">No matching records</div></div>';
+        return;
+      }
+      
+      data.forEach(row => {
+        const rowElement = document.createElement('div');
+        rowElement.className = 'table-row';
+        rowElement.innerHTML = `
+          <div class="col-reader">${row[0]}</div>
+          <div class="col-username">${row[1]}</div>
+          <div class="col-tag">${row[2]}</div>
+          <div class="col-timestamp">${formatTimestamp(row[3])}</div>
+        `;
+        tableBody.appendChild(rowElement);
+      });
+    
+      // Mostra informazioni sulla paginazione (opzionale)
+      const startRecord = currentPage * recordsPerPage + 1;
+      const endRecord = Math.min((currentPage + 1) * recordsPerPage, totalFilteredRecords);
+      console.log(`Showing records ${startRecord}-${endRecord} of ${totalFilteredRecords}`);
+    }
+    
+    // Setup event listeners
+    function setupFilters() {
+      const inputs = [$('username-log'), $('reader-log')];
+      inputs.forEach(input => {
+        input.addEventListener('input', () => {
+          applyFilters(); // Reapply filters on each change
+        });
+      });
+    }
+    
+    function goToPrevPage() {
+      if (currentPage > 0) {
+        currentPage--;
+        showCurrentPage();
+      }
+    }
+    
+    function goToNextPage() {
+      if ((currentPage + 1) * recordsPerPage < totalFilteredRecords) {
+        currentPage++;
+        showCurrentPage();
+      }
+    }
+    
+    function showCurrentPage() {
+      const usernameFilter = $('username-log').value.toLowerCase();
+      const readerFilter = $('reader-log').value.toLowerCase();
+      
+      let filteredData = currentCsvData.slice(1).filter(row => {
+          return (!usernameFilter || row[1].toLowerCase().includes(usernameFilter)) &&
+                 (!readerFilter || row[0].toLowerCase().includes(readerFilter));
+      });
+      
+      const pagedData = filteredData.slice(
+        currentPage * recordsPerPage,
+        (currentPage + 1) * recordsPerPage
+      );
+      
+      updateTable(pagedData);
+      updatePaginationButtons();
+    }
+
+    // Export and download filtered data
+    function exportCSV() {
+      let csvString = 'reader, username, tag, timestamp\n'
+      let filteredData = applyFilters();
+      filteredData.forEach( row => {
+        csvString += row.join(', ') + '\n';
+      });
+      
+      // Download as CSV file
+      const blob = new Blob([csvString], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'data.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    }
+    
+    // Initialization
+    document.addEventListener('DOMContentLoaded', function() {   
+      $('loader').style.display = "block";
+      
+      setupFilters();
+      listLogFiles();
+      getUsers();
+      
+      // Event listeners
+      $('logsTab').addEventListener('click', tabClick);
+      $('usersTab').addEventListener('click', tabClick);
+      $('get-tag').addEventListener('click', readTagCode);
+      $('export-log').addEventListener('click', exportCSV);
+      $('prev-log').addEventListener('click', goToPrevPage);
+      $('next-log').addEventListener('click', goToNextPage);
+      
+      $('add-user').addEventListener('click', function(event) {
+        event.preventDefault(); 
+        $('add-user').disabled = true;
+        $('delete-user').disabled = true;
+        sendUserForm('/addUser');
+      });
+      
+      $('delete-user').addEventListener('click', function(event) {
+        event.preventDefault(); 
+        openModal('Delete user', "Do you really want to drop current user record?", deleteUser);
+      });
+
+      // Check if user has admin level (>= 5)
+      var usernameValue = document.cookie.replace(/(?:(?:^|.*;\s*)username\s*=\s*([^;]*).*$)|^.*$/, "$1");
+      userLevel = usernameValue.split(',')[1];
+      if(userLevel >= 5) {
+        console.log(usernameValue.split(',')[0], "is admin");
+        $('handle-users').disabled = false;
+        $('setup').href = '/setup';
+      }
+    });
+  </script>
+</body>
+</html>

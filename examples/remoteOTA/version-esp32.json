@@ -1,4 +1,4 @@
 {
-"version": "1.0.1",
-"raw_url": "https://raw.githubusercontent.com/cotestatnt/esp-fs-webserver/main/examples/remoteOTA/fw-esp32/firmware.bin"
+    "version": "1.0.1",
+    "raw_url": "https://github.com/cotestatnt/async-esp-fs-webserver/raw/master/examples/remoteOTA/fw-esp32/firmware.bin"
 }

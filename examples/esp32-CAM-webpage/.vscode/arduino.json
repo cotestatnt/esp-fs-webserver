@@ -1,5 +1,0 @@
-{
-    "configuration": "CPUFreq=240,FlashMode=qio,PartitionScheme=huge_app,FlashFreq=80,DebugLevel=none,EraseFlash=none",
-    "board": "esp32:esp32:esp32cam",
-    "sketch": "esp32-CAM-webpage.ino"
-}
