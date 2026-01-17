@@ -1,4 +1,8 @@
-const char thingsboard_htm[] PROGMEM = R"EOF(
+#pragma once
+#include <Arduino.h>
+
+
+inline const char thingsboard_htm[] PROGMEM = R"EOF(
 <div>
   <br>If you don't have a valid <b>device token</b> press button "Device Provisioning" to start procedure in order to get a new token from ThingsBoard server.<br>
   <br>To perform <a href="https://thingsboard.io/docs/user-guide/device-provisioning/">device provisioning</a>, this functionality must be enabled in the ThingsBoard profile of your devices.
@@ -16,7 +20,7 @@ const char thingsboard_htm[] PROGMEM = R"EOF(
 )EOF";
 
 
-const char thingsboard_script[] PROGMEM = R"EOF(
+inline const char thingsboard_script[] PROGMEM = R"EOF(
 const TB_DEVICE_NAME = 'Device Name';
 const TB_DEVICE_LAT = 'Device Latitude';
 const TB_DEVICE_LON = 'Device Longitude';
@@ -85,7 +89,8 @@ function createNewDevice() {
     var token = $(TB_DEVICE_TOKEN);
     token.focus();
     token.value = obj.credentialsValue;
-    openModalMessage('Write device attributes', 'Device provisioned correctly.<br>Do you want set client attirbutes on ThingsBoard server?', setDeviceClientAttribute);
+    options[token.id] = token.value;     // Manual update, because, it doesn't fire "change" event...
+    openModal('Write device attributes', 'Device provisioned correctly.<br>Do you want to set client attributes on ThingsBoard server?', setDeviceClientAttribute);
   });
 }
 

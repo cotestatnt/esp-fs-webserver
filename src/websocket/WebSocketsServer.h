@@ -35,6 +35,9 @@ class WebSocketsServerCore : protected WebSockets {
   public:
     WebSocketsServerCore(const String & origin = "", const String & protocol = "arduino");
     virtual ~WebSocketsServerCore(void);
+    inline WebSocketsServerCore* getWebSocketServer() {
+        return this;
+    }
 
     void begin(void);
     void close(void);

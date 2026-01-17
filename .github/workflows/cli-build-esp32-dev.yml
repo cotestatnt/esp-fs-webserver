@@ -1,0 +1,181 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+
+name: (ESP32) Build dev with Arduino CLI
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - dev
+      
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  arduino-esp32:
+    name: ESP32 (arduino-cli) (shard=${{ matrix.shard }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install arduino-cli
+        run: curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | BINDIR=/usr/local/bin sh
+
+      - name: Cache Arduino CLI data
+        uses: actions/cache@v4
+        with:
+          key: ${{ runner.os }}-arduino-esp32-${{ hashFiles('.github/workflows/cli-build-esp32-dev.yml') }}-${{ github.run_id }}-${{ matrix.shard }}
+          restore-keys: |
+            ${{ runner.os }}-arduino-esp32-${{ hashFiles('.github/workflows/cli-build-esp32-dev.yml') }}-
+            ${{ runner.os }}-arduino-esp32-
+          path: |
+            ~/.arduino15
+            ~/Arduino
+            ~/.cache/arduino-cli
+
+      - name: Update core index
+        run: arduino-cli core update-index --additional-urls https://espressif.github.io/arduino-esp32/package_esp32_index.json
+
+      - name: Install core
+        run: arduino-cli core install --additional-urls https://espressif.github.io/arduino-esp32/package_esp32_index.json esp32:esp32
+
+      - name: Install ArduinoJson
+        run: arduino-cli lib install ArduinoJson
+
+      - name: Install AsyncTCP (ESP32)
+        run: ARDUINO_LIBRARY_ENABLE_UNSAFE_INSTALL=true arduino-cli lib install --git-url https://github.com/ESP32Async/AsyncTCP#v3.3.7
+
+      - name: Install ESPAsyncWebServer
+        run: ARDUINO_LIBRARY_ENABLE_UNSAFE_INSTALL=true arduino-cli lib install --git-url https://github.com/ESP32Async/ESPAsyncWebServer#v3.7.3
+
+      - name: Install Arduino-MySQL
+        run: ARDUINO_LIBRARY_ENABLE_UNSAFE_INSTALL=true arduino-cli lib install --git-url https://github.com/cotestatnt/Arduino-MySQL
+
+      - name: Install Arduino_MFRC522v2
+        run: ARDUINO_LIBRARY_ENABLE_UNSAFE_INSTALL=true arduino-cli lib install --git-url https://github.com/OSSLibraries/Arduino_MFRC522v2
+
+      - name: Install PubSubCLient
+        run: ARDUINO_LIBRARY_ENABLE_UNSAFE_INSTALL=true arduino-cli lib install --git-url https://github.com/knolleary/pubsubclient        
+
+      - name: Build Examples
+        run: |
+          set -uo pipefail
+
+          total_shards=4
+          shard="${{ matrix.shard }}"
+
+          report_file="build-report-esp32-arduino-cli-shard${{ matrix.shard }}.txt"
+          : > "$report_file"
+
+          failures=0
+          total=0
+          index=0
+
+          for dir in examples/*; do
+            if [[ ! -d "$dir" ]]; then
+              continue
+            fi
+
+            example="$(basename "$dir")"
+
+            # Split examples across shards for faster CI.
+            index=$((index + 1))
+            example_shard=$(( (index - 1) % total_shards + 1 ))
+            if [[ "$example_shard" != "$shard" ]]; then
+              continue
+            fi
+
+            sketch="examples/${example}/${example}.ino"
+            total=$((total + 1))
+
+            echo "============================================================="
+            echo "Building ${sketch}..."
+            echo "============================================================="
+
+            if [[ ! -f "$sketch" ]]; then
+              failures=$((failures + 1))
+              printf '%-25s : FAIL (missing %s)\n' "${example}" "${sketch}" >> "$report_file"
+              continue
+            fi
+
+            echo "::group::arduino-cli compile - ${example}"
+            set +e
+            arduino-cli compile \
+              --library . \
+              --warnings none \
+              --build-cache-path "$HOME/.cache/arduino-cli" \
+              -b esp32:esp32:esp32 \
+              "$sketch"
+            rc=$?
+            set -e
+            echo "::endgroup::"
+
+            if [[ $rc -eq 0 ]]; then
+              printf '%-25s : OK\n' "${example}" >> "$report_file"
+            else
+              failures=$((failures + 1))
+              printf '%-25s : FAIL (exit=%s)\n' "${example}" "$rc" >> "$report_file"
+            fi
+          done
+
+          echo ""
+          echo "==================== Build report (arduino-cli) ===================="
+          cat "$report_file"
+          echo "==================================================================="
+          echo "Total attempted: ${total} | Failures: ${failures}"
+
+          # Do not fail the job here: the final report job will decide.
+
+      - name: Upload build report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arduino-cli-esp32-report-shard${{ matrix.shard }}
+          path: build-report-esp32-arduino-cli-shard${{ matrix.shard }}.txt
+
+  report:
+    name: ESP32 (arduino-cli) - Final report
+    runs-on: ubuntu-latest
+    needs: arduino-esp32
+    if: always()
+    steps:
+      - name: Download all reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: arduino-cli-esp32-report-*
+          merge-multiple: true
+          path: reports
+
+      - name: Print final report and set status
+        run: |
+          set -uo pipefail
+          echo "==================== Final build report (ESP32/arduino-cli) ===================="
+          failures=0
+          files=0
+          shopt -s nullglob
+          for f in reports/*.txt; do
+            files=$((files + 1))
+            echo "--- ${f} ---"
+            cat "$f"
+            if grep -q " : FAIL" "$f"; then
+              failures=$((failures + 1))
+            fi
+          done
+          if [[ $files -eq 0 ]]; then
+            echo "No report files found (artifact download failed?)"
+            exit 1
+          fi
+          echo "==========================================================================="
+          if [[ $failures -gt 0 ]]; then
+            echo "One or more shards reported FAIL."
+            exit 1
+          fi
+

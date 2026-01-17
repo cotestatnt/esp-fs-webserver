@@ -1,10 +1,13 @@
+#pragma once
+#include <Arduino.h>
+
 
 /*
 * This HTML code will be injected in /setup webpage using a <div></div> element as parent
-* The parent element will hhve the HTML id properties equal to 'raw-html-<id>'
+* The parent element will have the HTML id properties equal to 'raw-html-<id>'
 * where the id value will be equal to the id parameter passed to the function addHTML(html_code, id).
 */
-static const char custom_html[] = R"EOF(
+inline const char custom_html[] PROGMEM = R"EOF(
 <label for=url class=input-label>Endpoint</label>
 <input type=text placeholder='https://httpbin.org/' id=url value='https://httpbin.org/' />
 <br>
@@ -25,9 +28,9 @@ static const char custom_html[] = R"EOF(
 * In this example, a style sections is added in order to render properly the new
 * <select> and <pre> elements introduced. Since this section will be added at the end of the body,
 * it is also possible to override the style of the elements already present:
-* for example the background color of body will be ovverrided with a different color
+* for example the background color of body will be overridden with a different color
 */
-static const char custom_css[] = R"EOF(
+inline const char custom_css[] PROGMEM = R"EOF(
 pre{
     font-family: Monaco,Menlo,Consolas,'Courier New',monospace;
     color: #333;
@@ -55,7 +58,7 @@ pre{
 *        return document.getElementById(el);
 *      };
 */
-static const char custom_script[] = R"EOF(
+inline const char custom_script[] PROGMEM = R"EOF(
 function fetchEndpoint() {
   var mt;
   document.getElementsByName('httpmethod').forEach(el => {
@@ -80,7 +83,7 @@ $('fetch').addEventListener('click', fetchEndpoint);
 )EOF";
 
 
-static const char base64_logo[] = R"EOF(
+inline const char base64_logo[] PROGMEM = R"EOF(
 iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAMAAADVRocKAAAABGdBTUEAALGPC/xhBQAAAAFzUkdC
 AK7OHOkAAAIKUExURQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA

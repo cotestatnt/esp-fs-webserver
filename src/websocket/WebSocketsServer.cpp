@@ -87,7 +87,7 @@ void WebSocketsServerCore::begin(void) {
 
     _runnning = true;
 
-    log_debug("[WS-Server] Websocket Version: " WEBSOCKETS_VERSION "\n");
+    log_debug("[WS-Server] Websocket server started\n");
 }
 
 void WebSocketsServerCore::close(void) {
@@ -430,8 +430,10 @@ WSclient_t * WebSocketsServerCore::newClient(WEBSOCKETS_NETWORK_CLASS * TCPclien
             client->isSSL = false;
             client->tcp->setNoDelay(true);
             client->status = WSC_HEADER;
+            #if  (LOG_LEVEL > 2)
             IPAddress ip = client->tcp->remoteIP();
             log_debug("[WS-Server][%d] new client from %d.%d.%d.%d\n", client->num, ip[0], ip[1], ip[2], ip[3]);
+            #endif
 
             client->pingInterval           = _pingInterval;
             client->pongTimeout            = _pongTimeout;

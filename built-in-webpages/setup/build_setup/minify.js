@@ -38,7 +38,7 @@ let appjs = fs.readFileSync('./min/app.js');
 console.log(css.length);
 console.log(appjs.length);
 
-html = html.replace('<link href=style.css rel=stylesheet type=text/css>', `<style>${css}</style>`);
+html = html.replace('<link href=style.css rel=stylesheet>', `<style>${css}</style>`);
 html = html.replace('<script src=app.js></script>', `<script>${appjs}</script>`);
 
 // minify({

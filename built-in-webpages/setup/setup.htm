@@ -4,13 +4,13 @@
     <meta charset=utf-8>
     <title>ESP FS Web Server</title>
     <meta content="width=device-width, initial-scale=1" name=viewport>
-    <link href=style.css rel=stylesheet type=text/css>
+    <link href=style.css rel=stylesheet>
 </head>
 <body>
     <main id=main-box>
-        <header class="ctn">
+        <header class=ctn>
             <div class=title>
-                <div id=img-logo title='Click to upload your logo file'></div>
+                <div id=img-logo title="Click to upload your logo file"></div>
                 <div class=heading>
                   <h1 id=name-logo>ESP FS Web Server</h1>
                   <span id=esp-ip></span><br>
@@ -18,10 +18,10 @@
                 </div>
             </div>
             <div class=topnav id=top-nav>
-                <span id="nav-link"><a id=set-wifi class="a-link active" data-box="wifi-box">WiFi Setup</a></span>
-                <span id="upd-link"><a id=set-update class="a-link" data-box="update-box">Update & FS</a></span>
+                <span id=nav-link><a id=set-wifi class="a-link active" data-box=wifi-box>WiFi Setup</a></span>
+                <span id=upd-link><a id=set-update class="a-link" data-box=update-box>Update & FS</a></span>
                 <a class="a-link icon" id=hum-btn>
-                    <div class=svg style=margin:-2px >
+                    <div class="svg svg-menu-icon">
                         <svg id=svg-menu height="16pt" fill=currentColor viewBox="0 0 20 18"></svg>
                     </div>
                 </a>
@@ -33,20 +33,24 @@
             <div id=wifi-table class=hide>
                 <hr>
                 <table class=table>
-                    <tbody id=wifi-list></tbody>
+                  <tbody id=wifi-list></tbody>
                 </table>
                 <br>
             </div>
             <div id=wifi>
                 <div class=tf-wrapper>
                     <label for=ssid class=input-label>SSID</label>
-                    <input type=text placeholder="Enter your WiFI SSID name" id="ssid">
+                    <div class=pswd>
+                        <input type=text placeholder="Enter your WiFI SSID name" id=ssid>
+                        <span class=show-hide-wrap id=show-hide-networks>
+                            <a class="show-hide hide chevron-networks" id=show-networks>▼</a>
+                        </span>
+                    </div>
                 </div>
                 <div class=tf-wrapper>
                     <label for=password class=input-label>Password</label>
                     <div class=pswd>
-                      <input type=password placeholder="Enter your WiFi password"
-                        id=password autocomplete=current-password data-ms-member="password">
+                      <input type=password placeholder="Enter your WiFi password" id=password autocomplete=current-password data-ms-member=password>
                       <span class=show-hide-wrap id=show-hide-password>
                         <a class="show-hide hide" id=show-pass>
                             <div class=svg><svg class=svg-e id=svg-eye viewBox="0 0 24 24"></svg></div>
@@ -75,7 +79,7 @@
                   </div>
                   <div class="tf-wrapper">
                       <label for=subnet class=input-label>Subnet</label>
-                      <input type=text placeholder="Subnet mask" id=subnet value="255.255.255.0">
+                      <input type=text placeholder="Subnet mask" id=subnet value=255.255.255.0>
                   </div>
                 </div>
                     
@@ -88,7 +92,7 @@
                 </div>
             </div>
             <hr>
-            <div class="btn-bar ">
+            <div class=btn-bar>
                 <a id=scan-wifi class="btn">
                     <div class=svg><svg id=svg-scan fill=currentColor viewBox="0 0 24 24"></svg></div>
                     <span>Scan WiFi networks</span>
@@ -104,34 +108,34 @@
             </div>
         </div>
 
-        <div id="update-box" class="ctn opt-box hide">
-          <h2 class="heading-2">Update ESP Firmware</h2>
+        <div id=update-box class="ctn opt-box hide">
+          <h2 class=heading-2>Update ESP Firmware</h2>
           <div class=tf-wrapper>
-            <form id=update-form class=form action="/update" method="post" enctype="multipart/form-data">
+            <form id=update-form class=form action=/update method=post enctype=multipart/form-data>
               <div class=firmware>
-                <label for="file-input" id="fw-label" class="fw-upload">Select firmware binary file</label>
-                <input id="file-input" type="file"/>
+                <label for=file-input id=fw-label class=fw-upload>Select firmware binary file</label>
+                <input id=file-input type=file>
                 <a id=update-btn class="btn submit">
                   <div class=svg>
-                    <svg fill=currentColor viewBox="0 0 24 24"><path d="M9,16V10H5L12,3L19,10H15V16H9M5,20V18H19V20H5Z"/></svg>
+                    <svg fill=currentColor viewBox="0 0 24 24"><path d="M9,16V10H5L12,3L19,10H15V16H9M5,20V18H19V20H5Z"></path></svg>
                   </div>
                   <span>Submit!</span>
                 </a><br>
               </div>
-            	<div class="progress-wrap hide" id="progress-wrap" data-progress-style="fill-back">
-            	  <div id="update-log"></div>
-            	  <div class="progress" id='progress-anim'></div>
+            	<div class="progress-wrap hide" id=progress-wrap data-progress-style=fill-back>
+            	  <div id=update-log></div>
+            	  <div class=progress id=progress-anim></div>
             	</div>
             </form>
           </div>
           
-          <h2 class="heading-2">Load file to ESP FileSystem</h2>
+          <h2 class=heading-2>Load file to ESP FileSystem</h2>
           <div class=tf-wrapper>
-            <form class=form action="/edit" method="post" enctype="multipart/form-data">
-              <ul id="listing"></ul>
-              <label for="picker" id="pick-label" class="fw-upload">Select the folder containing your files</label>
-              <input type="file" id="picker" name="fileList" webkitdirectory multiple>
-              <p>N.B.: if folder name is <b>"/data"</b>, the files will be uploaded at root "/" level </p>
+            <form class=form action=/edit method=post enctype=multipart/form-data>
+              <ul id=listing></ul>
+              <label for=picker id=pick-label class=fw-upload>Select the folder containing your files</label>
+              <input type=file id=picker name=fileList webkitdirectory multiple>
+              <p class=upload-note>N.B.: if folder name is <b>"/data"</b>, the files will be uploaded at root "/" level</p>
             </form>
           </div>
         </div>
@@ -168,7 +172,8 @@
         </div>
     </details>
     <footer class=foot>
-        <hr>Created with <a id=about target=_blank rel=noopener></a>
+        <hr>
+        <a id=about target=_blank rel=noopener></a>
     </footer>
     <script src=app.js></script>
 </body>

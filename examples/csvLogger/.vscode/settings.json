@@ -1,5 +1,7 @@
 {
     "files.associations": {
-        "functional": "cpp"
-    }
+        "functional": "cpp",
+        "mutex": "cpp"
+    },
+    "idf.pythonInstallPath": "/usr/bin/python"
 }

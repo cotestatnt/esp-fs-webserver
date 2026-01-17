@@ -1,24 +1,20 @@
-#include <esp-fs-webserver.h>   // https://github.com/cotestatnt/esp-fs-webserver
-
+#include <Arduino.h>
 #include <FS.h>
 #include <LittleFS.h>
+#include <FSWebServer.h>   // https://github.com/cotestatnt/esp-fs-webserver/
+
 #define FILESYSTEM LittleFS
+
+const char* hostname = "highchart";
+FSWebServer server(FILESYSTEM, 80, hostname);
 
 #ifndef LED_BUILTIN
 #define LED_BUILTIN 2
 #endif
 
-// In order to set SSID and password open the /setup webserver page
-// const char* ssid;
-// const char* password;
-const char* hostname = "heap-chart";
-
 // Timezone definition to get properly time from NTP server
 #define MYTZ "CET-1CEST,M3.5.0,M10.5.0/3"
 struct tm Time;
-
-FSWebServer myWebServer(FILESYSTEM, 80);
-WebSocketsServer webSocket = WebSocketsServer(81);
 
 ////////////////////////////////   WebSocket Handler  /////////////////////////////
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length) {
@@ -26,20 +22,13 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
     case WStype_DISCONNECTED:
       Serial.printf("[%u] Disconnected!\n", num);
       break;
-    case WStype_CONNECTED:
-      {
-        IPAddress ip = webSocket.remoteIP(num);
-        Serial.printf("[%u] Connected from %d.%d.%d.%d url: %s\n", num, ip[0], ip[1], ip[2], ip[3], payload);
-        // send message to client
-        webSocket.sendTXT(num, "{\"Connected\": true}");
+    case WStype_CONNECTED: {
+        IPAddress ip = server.getWebSocketServer()->remoteIP(num);
+        Serial.printf("Hello client #%d [%s]\n", (int)num, ip.toString().c_str());
       }
       break;
     case WStype_TEXT:
       Serial.printf("[%u] get Text: %s\n", num, payload);
-      // send message to client
-      // webSocket.sendTXT(num, "message here");
-      // send data to all connected clients
-      // webSocket.broadcastTXT("message here");
       break;
     case WStype_BIN:
       Serial.printf("[%u] get binary length: %u\n", num, length);
@@ -47,12 +36,11 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
     default:
       break;
   }
-
 }
 
+
 ////////////////////////////////  NTP Time  /////////////////////////////////////
-void getUpdatedtime(const uint32_t timeout)
-{
+void getUpdatedtime(const uint32_t timeout) {
   uint32_t start = millis();
   Serial.print("Sync time...");
   while (millis() - start < timeout  && Time.tm_year <= (1970 - 1900)) {
@@ -65,69 +53,63 @@ void getUpdatedtime(const uint32_t timeout)
 
 
 ////////////////////////////////  Filesystem  /////////////////////////////////////////
-void startFilesystem() {
-  // FILESYSTEM INIT
-  if ( !FILESYSTEM.begin()) {
-    Serial.println("ERROR on mounting filesystem. It will be formmatted!");
+bool startFilesystem() {
+  if (FILESYSTEM.begin()){
+    server.printFileList(FILESYSTEM, "/", 1, Serial);
+    return true;
+  }
+  else {
+    Serial.println("ERROR on mounting filesystem. It will be reformatted!");
     FILESYSTEM.format();
     ESP.restart();
   }
-  myWebServer.printFileList(LittleFS, Serial, "/", 2);
+  return false;
 }
 
-/*
-* Getting FS info (total and free bytes) is strictly related to
-* filesystem library used (LittleFS, FFat, SPIFFS etc etc) and ESP framework
-* ESP8266 FS implementation has methods for total and used bytes (only label is missing)
-*/
-#ifdef ESP32
-void getFsInfo(fsInfo_t* fsInfo) {
-	fsInfo->fsName = "LittleFS";
-	fsInfo->totalBytes = LittleFS.totalBytes();
-	fsInfo->usedBytes = LittleFS.usedBytes();
-}
-#else
-void getFsInfo(fsInfo_t* fsInfo) {
-	fsInfo->fsName = "LittleFS";
-}
-#endif
+
 
 void setup() {
+  pinMode(LED_BUILTIN, OUTPUT);
   Serial.begin(115200);
 
   // FILESYSTEM INIT
   startFilesystem();
 
-  // Try to connect to stored SSID, start AP if fails after timeout
-  myWebServer.setAP("ESP_AP", "123456789");
-  IPAddress myIP = myWebServer.startWiFi(15000);
-
-  // Start WebSocket server on port 81
-  webSocket.begin();
-  webSocket.onEvent(webSocketEvent);
-  
-  // set /setup and /edit page authentication
-  // myWebServer.setAuthentication("admin", "admin");
+  // Try to connect to WiFi (will start AP if not connected after timeout)
+  if (!server.startWiFi(10000)) {
+    Serial.println("\nWiFi not connected! Starting AP mode...");
+    server.startCaptivePortal("ESP_AP", "123456789", "/setup");
+  }
 
   // Enable ACE FS file web editor and add FS info callback function
-  myWebServer.enableFsCodeEditor(getFsInfo);
+  server.enableFsCodeEditor();
 
-  // Start webserver
-  myWebServer.begin();
+  /*
+  * Getting FS info (total and free bytes) is strictly related to
+  * filesystem library used (LittleFS, FFat, SPIFFS etc etc) and ESP framework
+  */
+  #ifdef ESP32
+  server.setFsInfoCallback([](fsInfo_t* fsInfo) {
+    fsInfo->fsName = "LittleFS";
+    fsInfo->totalBytes = LittleFS.totalBytes();
+    fsInfo->usedBytes = LittleFS.usedBytes();  
+  });
+  #endif
+
+  // Start server with custom websocket event handler
+  server.begin(webSocketEvent);
   Serial.print(F("ESP Web Server started on IP Address: "));
-  Serial.println(myIP);
-  Serial.println(F("Open /setup page to configure optional parameters"));
-  Serial.println(F("Open /edit page to view and edit files"));
-  Serial.println(F("Open /update page to upload firmware and filesystem updates"));
-
-  pinMode(LED_BUILTIN, OUTPUT);
+  Serial.println(server.getServerIP());
+  Serial.println(F(
+    "This is \"highcharts.ino\" example.\n"
+    "Open /setup page to configure optional parameters.\n"
+    "Open /edit page to view, edit or upload example or your custom webserver source files."
+  ));
 }
 
 
 void loop() {
-
-  myWebServer.run();
-  webSocket.loop();
+  server.run();  // Handle client requests and websocket events
 
   // Send ESP system time (epoch) and heap stats to WS client
   static uint32_t sendToClientTime;
@@ -136,22 +118,21 @@ void loop() {
     digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
 
     time_t now = time(nullptr);
-    StaticJsonDocument<1024> doc;
-    doc["addPoint"] = true;
-    doc["timestamp"] = now;
+    CJSON::Json doc;
+    doc.setBool("addPoint", true);
+    doc.setNumber("timestamp", (double)now);
 #ifdef ESP32
-    doc["totalHeap"] = heap_caps_get_free_size(0);
-    doc["maxBlock"]  =  heap_caps_get_largest_free_block(0);
+    doc.setNumber("totalHeap", (double)heap_caps_get_free_size(0));
+    doc.setNumber("maxBlock", (double)heap_caps_get_largest_free_block(0));
 #elif defined(ESP8266)
     uint32_t free;
-    uint16_t max;
+    uint32_t max;
     ESP.getHeapStats(&free, &max, nullptr);
-    doc["totalHeap"] = free;
-    doc["maxBlock"]  =  max;
+    doc.setNumber("totalHeap", (double)free);
+    doc.setNumber("maxBlock", (double)max);
 #endif
-    String msg;
-    serializeJson(doc, msg);
-    webSocket.broadcastTXT(msg);
+    String msg = doc.serialize();
+    server.broadcastWebSocket(msg);
   }
 
 }
