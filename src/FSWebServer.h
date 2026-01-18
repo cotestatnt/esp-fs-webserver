@@ -1,27 +1,27 @@
 #ifndef FS_WEBSERVER_H
 #define FS_WEBSERVER_H
 
-#include <FS.h>
-#include <DNSServer.h>
+#include "Json.h"
 #include "SerialLog.h"
 #include "Version.h"
-#include "Json.h"
 #include "websocket/WebSocketsServer.h"
+#include <DNSServer.h>
+#include <FS.h>
 
 #if defined(ESP8266)
-#include <ESP8266WiFi.h>
-#include <ESP8266WebServer.h>
-#include <ESP8266mDNS.h>
 #include <ESP8266HTTPUpdateServer.h> // from Arduino core, OTA update via webbrowser
+#include <ESP8266WebServer.h>
+#include <ESP8266WiFi.h>
+#include <ESP8266mDNS.h>
 using WebServerClass = ESP8266WebServer;
 #elif defined(ESP32)
-#include <esp_wifi.h>
 #include "esp_task_wdt.h"
 #include "sys/stat.h"
-#include <WiFi.h>
-#include <mdns.h>
 #include <Update.h>
 #include <WebServer.h>
+#include <WiFi.h>
+#include <esp_wifi.h>
+#include <mdns.h>
 using WebServerClass = WebServer;
 #endif
 
@@ -29,18 +29,18 @@ class Print;
 
 #ifdef ESP32
 // Arduino-ESP32 v3 splits networking primitives into a dedicated core library.
-// PlatformIO's dependency finder doesn't always pull it in via transitive includes,
-// so include it explicitly to ensure it gets compiled and linked.
+// PlatformIO's dependency finder doesn't always pull it in via transitive
+// includes, so include it explicitly to ensure it gets compiled and linked.
 #if defined(ESP_ARDUINO_VERSION_MAJOR) && (ESP_ARDUINO_VERSION_MAJOR >= 3)
 #include <Network.h>
 #endif
+#include "esp_task_wdt.h"
+#include "esp_wifi.h"
+#include "sys/stat.h"
+#include <ESPmDNS.h>
+#include <Update.h>
 #include <WiFi.h>
 #include <WiFiAP.h>
-#include <Update.h>
-#include <ESPmDNS.h>
-#include "esp_wifi.h"
-#include "esp_task_wdt.h"
-#include "sys/stat.h"
 #elif defined(ESP8266)
 #include <ESP8266mDNS.h>
 #include <Updater.h>
@@ -71,8 +71,9 @@ class Print;
 #if ESP_FS_WS_SETUP_HTM
 #define ESP_FS_WS_CONFIG_FOLDER "/config"
 #define ESP_FS_WS_CONFIG_FILE ESP_FS_WS_CONFIG_FOLDER "/config.json"
-#include "setup_htm.h"
+#include "CredentialManager.h"
 #include "SetupConfig.hpp"
+#include "setup_htm.h"
 #endif
 
 #ifndef ESP_FS_WS_MDNS
@@ -96,439 +97,429 @@ class Print;
 #define AWS_LONG_WDT_TIMEOUT 15000
 #endif
 
-typedef struct
-{
-    size_t totalBytes;
-    size_t usedBytes;
-    String fsName;
+typedef struct {
+  size_t totalBytes;
+  size_t usedBytes;
+  String fsName;
 } fsInfo_t;
 
 using FsInfoCallbackF = std::function<void(fsInfo_t *)>;
 using CallbackF = std::function<void(void)>;
 using ConfigSavedCallbackF = std::function<void(const char *)>; // Callback for config file saves
 
-class FSWebServer : public WebServerClass
-{
+class FSWebServer : public WebServerClass {
 protected:
 #if ESP_FS_WS_WEBSOCKET
-    WebSocketsServer *m_websocket;
+  WebSocketsServer *m_websocket;
 #endif
-    DNSServer *m_dnsServer = nullptr;
-    bool m_isApMode = false;
-    bool m_authAll = false; // Flag to require authentication for all pages
-    char m_apSSID[33] = {0};
-    char m_apPassword[65] = {0};
+  DNSServer *m_dnsServer = nullptr;
+  bool m_isApMode = false;
+  bool m_authAll = false; // Flag to require authentication for all pages
+  char m_apSSID[33] = {0};
+  char m_apPassword[65] = {0};
 
-    String typeName = "FileSystem";
+  String typeName = "FileSystem";
 
-    void handleFileRequest();
-    void handleFileName();
-    void handleIndex();
+  void handleFileRequest();
+  void handleFileName();
+  void handleIndex();
 
 #if ESP_FS_WS_SETUP
-    File m_uploadFile;
-    uint8_t otaDone = 0;
-    void handleSetup();
-    void getStatus();
-    void clearConfig();
-    void doWifiConnection();
-    void handleScanNetworks();
-    void handleFileUpload();
-    void checkForUnsupportedPath(String &filename, String &error);
-    void update_second();
-    void update_first();
+  File m_uploadFile;
+  uint8_t otaDone = 0;
+  void handleSetup();
+  void getStatus();
+  void clearConfig();
+  void doWifiConnection();
+  void handleScanNetworks();
+  void handleFileUpload();
+  void checkForUnsupportedPath(String &filename, String &error);
+  void update_second();
+  void update_first();
 #endif
 
-    // edit page, in useful in some situation, but if you need to provide only a web interface, you can disable
+  // edit page, in useful in some situation, but if you need to provide only a
+  // web interface, you can disable
 #if ESP_FS_WS_EDIT_HTM
-    void deleteContent(String &path);
-    void handleFileDelete();
-    void handleFileCreate();
-    void handleFsStatus();
-    void handleFileList();
-    void handleFileEdit();
+  void deleteContent(String &path);
+  void handleFileDelete();
+  void handleFileCreate();
+  void handleFsStatus();
+  void handleFileList();
+  void handleFileEdit();
 #endif
 
-    /*
-      Create a dir if not exist on uploading files
-    */
-    bool createDirFromPath(const String &path);
+  /*
+    Create a dir if not exist on uploading files
+  */
+  bool createDirFromPath(const String &path);
 
 private:
-    char *m_pageUser = nullptr;
-    char *m_pagePswd = nullptr;
-    String m_host = "esphost";
-    String m_captiveUrl = "/setup";
+  char *m_pageUser = nullptr;
+  char *m_pagePswd = nullptr;
+  String m_host = "esphost";
+  String m_captiveUrl = "/setup";
 
-    uint16_t m_port;
-    uint32_t m_timeout = AWS_LONG_WDT_TIMEOUT;
+  uint16_t m_port;
+  uint32_t m_timeout = AWS_LONG_WDT_TIMEOUT;
 
-    // Firmware version buffer (expanded to accommodate custom version strings)
-    String m_version;
-    bool m_filesystem_ok = false;
+  // Firmware version buffer (expanded to accommodate custom version strings)
+  String m_version;
+  bool m_filesystem_ok = false;
 
-    fs::FS *m_filesystem = nullptr;
-    FsInfoCallbackF getFsInfo = nullptr;
-    ConfigSavedCallbackF m_configSavedCallback = nullptr; // Callback for config file saves
-    IPAddress m_serverIp = IPAddress(192, 168, 4, 1);
+  fs::FS *m_filesystem = nullptr;
+  FsInfoCallbackF getFsInfo = nullptr;
+  ConfigSavedCallbackF m_configSavedCallback = nullptr; // Callback for config file saves
+  IPAddress m_serverIp = IPAddress(192, 168, 4, 1);
+
+  CredentialManager *m_credentialManager = nullptr;
 
 #if ESP_FS_WS_SETUP
-    SetupConfigurator *setup = nullptr;
+  SetupConfigurator *setup = nullptr;
 
-    // Lazy initialization: create setup object only when first needed
-    SetupConfigurator *getSetupConfigurator()
-    {
-        if (!setup)
-        {
-            setup = new SetupConfigurator(m_filesystem);
-        }
-        return setup;
+  // Lazy initialization: create setup object only when first needed
+  SetupConfigurator *getSetupConfigurator() {
+    if (!setup) {
+      setup = new SetupConfigurator(m_filesystem);
     }
+    return setup;
+  }
 #endif
 
 public:
-    // Template Constructor for derived filesystem classes (LittleFS, SPIFFS, etc)
-    template <typename T>
-    FSWebServer(T &fs, uint16_t port = 80, const char *hostname = "") : WebServerClass(port), m_filesystem(&fs)
-    {
-        m_port = port;
-        // Set hostname if provided from constructor
-        if (strlen(hostname))
-            m_host = hostname;       
+  // Template Constructor for derived filesystem classes (LittleFS, SPIFFS, etc)
+  template <typename T>
+  FSWebServer(T &fs, uint16_t port = 80, const char *hostname = "") : WebServerClass(port), m_filesystem(&fs) {
+    m_port = port;
+    // Set hostname if provided from constructor
+    if (strlen(hostname))
+      m_host = hostname;
 
 #ifdef ESP32
-        // Auto-configure getFsInfo for ESP32 filesystems
-        // Try to infer filesystem name from template type
-        String pretty = __PRETTY_FUNCTION__;
-        int start = pretty.indexOf("T = ");
-        if (start != -1)
-        {
-            start += 4;
-            int end = pretty.indexOf("]", start);
-            int semi = pretty.indexOf(";", start);
-            if (semi != -1 && semi < end)
-            {
-                end = semi;
-            }
-            if (end != -1)
-            {
-                typeName = pretty.substring(start, end);
-                // Clean up common prefixes/suffixes
-                typeName.replace("fs::", "");
-                if (typeName.endsWith("FS"))
-                {
-                    typeName = typeName.substring(0, typeName.length() - 2);
-                }
-            }
+    // Auto-configure getFsInfo for ESP32 filesystems
+    // Try to infer filesystem name from template type
+    String pretty = __PRETTY_FUNCTION__;
+    int start = pretty.indexOf("T = ");
+    if (start != -1) {
+      start += 4;
+      int end = pretty.indexOf("]", start);
+      int semi = pretty.indexOf(";", start);
+      if (semi != -1 && semi < end) {
+        end = semi;
+      }
+      if (end != -1) {
+        typeName = pretty.substring(start, end);
+        // Clean up common prefixes/suffixes
+        typeName.replace("fs::", "");
+        if (typeName.endsWith("FS")) {
+          typeName = typeName.substring(0, typeName.length() - 2);
         }
-
-        getFsInfo = [&fs, this](fsInfo_t *info)
-        {
-            info->totalBytes = fs.totalBytes();
-            info->usedBytes = fs.usedBytes();
-            info->fsName = this->typeName;
-        };
-#endif
+      }
     }
 
-
-    // Class destructor
-    ~FSWebServer()
-    {
-        stop();
-
-        // Deallocate all dynamically allocated resources
-        if (m_pageUser)            
-            free(m_pageUser);
-        if (m_pagePswd)            
-            free(m_pagePswd);
-#if ESP_FS_WS_WEBSOCKET
-        if (m_websocket)
-            delete m_websocket;
+    getFsInfo = [&fs, this](fsInfo_t *info) {
+      info->totalBytes = fs.totalBytes();
+      info->usedBytes = fs.usedBytes();
+      info->fsName = this->typeName;
+    };
 #endif
-        if (m_dnsServer)
-            delete m_dnsServer;
+
+    // Start credential manager
+    m_credentialManager = new CredentialManager();
+    m_credentialManager->begin();
+
+  #ifdef ESP8266
+    // Set FS for persistence
+    m_credentialManager->setFilesystem(&fs);
+  #endif
+
+  }
+
+  // Class destructor
+  ~FSWebServer() {
+    stop();
+
+    // Deallocate all dynamically allocated resources
+    if (m_pageUser)
+      free(m_pageUser);
+    if (m_pagePswd)
+      free(m_pagePswd);
+
+    if (m_credentialManager)
+      delete m_credentialManager;
+
+#if ESP_FS_WS_WEBSOCKET
+    if (m_websocket)
+      delete m_websocket;
+#endif
+    if (m_dnsServer)
+      delete m_dnsServer;
 #if ESP_FS_WS_SETUP
-        if (setup)
-            delete setup; // Only delete if it was lazily initialized
+    if (setup)
+      delete setup; // Only delete if it was lazily initialized
 #endif
-    }
+  }
 
-    inline void run()
-    {
-        this->handleClient();
-        // Handle websocket events
+  inline void run() {
+    this->handleClient();
+    // Handle websocket events
 #if ESP_FS_WS_WEBSOCKET
-        if (m_websocket)
-            m_websocket->loop();
+    if (m_websocket)
+      m_websocket->loop();
 #endif
-        // Handle DNS requests
-#if ESP_FS_WS_MDNS        
-        if (m_dnsServer)
-            m_dnsServer->processNextRequest();
+    // Handle DNS requests
+#if ESP_FS_WS_MDNS
+    if (m_dnsServer)
+      m_dnsServer->processNextRequest();
 #endif
-    }
+  }
 
+  /*
+    Redirect to a given URL
+  */
+  void redirect(const char *url);
 
-    /*
-      Redirect to a given URL
-    */
-    void redirect(const char *url);
+  /*
+    Get the webserver IP address
+  */
+  inline IPAddress getServerIP() { return m_serverIp; }
+  /*
+    Return true if the device is currently running in Access Point mode
+  */
+  inline bool isAccessPointMode() const { return m_isApMode; }
 
-    /*
-      Get the webserver IP address
-    */
-    inline IPAddress getServerIP()
-    {
-        return m_serverIp;
-    }
-    /*
-      Return true if the device is currently running in Access Point mode
-    */
-    inline bool isAccessPointMode() const { return m_isApMode; }
-
-    /*
-      Start webserver and bind a websocket event handler (optional)
-    */
-    using WebServerClass::begin;
-    virtual void begin(WebSocketsServerCore::WebSocketServerEvent wsEventHandler = nullptr);
+  /*
+    Start webserver and bind a websocket event handler (optional)
+  */
+  using WebServerClass::begin;
+  virtual void
+  begin(WebSocketsServerCore::WebSocketServerEvent wsEventHandler = nullptr);
 
 #if ESP_FS_WS_EDIT
 
-    /*
-      Enable the built-in ACE web file editor
-    */
-    void enableFsCodeEditor();
+  /*
+    Enable the built-in ACE web file editor
+  */
+  void enableFsCodeEditor();
 
-    // Backward compatibility method
-    [[deprecated("Use enableFsCodeEditor() instead (use built-in callback to provide FS info).")]]
-    void enableFsCodeEditor(FsInfoCallbackF fsCallback) {
-        if (fsCallback)
-            getFsInfo = fsCallback;
-        enableFsCodeEditor();
-    }
+  // Backward compatibility method
+  [[deprecated("Use enableFsCodeEditor() instead (use built-in callback to provide FS info).")]]
+  void enableFsCodeEditor(FsInfoCallbackF fsCallback) {
+    if (fsCallback)
+      getFsInfo = fsCallback;
+    enableFsCodeEditor();
+  }
 
-    /*
-     * Set callback function to provide updated FS info to library
-     * This it is necessary due to the different implementation of
-     * libraries for the filesystem (LittleFS, FFat, SPIFFS etc etc)
-     */
-    [[deprecated("Use enableFsCodeEditor() instead (use built-in callback to provide FS info)")]]
-    inline void setFsInfoCallback(FsInfoCallbackF fsCallback)
-    {
-        getFsInfo = fsCallback;
-    }
+  /*
+   * Set callback function to provide updated FS info to library
+   * This it is necessary due to the different implementation of
+   * libraries for the filesystem (LittleFS, FFat, SPIFFS etc etc)
+   */
+  [[deprecated("Use enableFsCodeEditor() instead (use built-in callback to provide FS info)")]]
+  inline void setFsInfoCallback(FsInfoCallbackF fsCallback) {
+    getFsInfo = fsCallback;
+  }
 #endif
 
-    /*
-      Enable authenticate for /setup webpage
-    */
-    void setAuthentication(const char *user, const char *pswd);
+  /*
+    Enable authenticate for /setup webpage
+  */
+  void setAuthentication(const char *user, const char *pswd);
 
-    /*
-    Enable the flag which turns on basic authentication for all pages
-    */
-    inline void requireAuthentication(bool require)
-    {
-        m_authAll = require;
-    }
+  /*
+  Enable the flag which turns on basic authentication for all pages
+  */
+  inline void requireAuthentication(bool require) { m_authAll = require; }
 
-    /*
-      List FS content
-    */
-    void printFileList(fs::FS &fs, const char *dirname, uint8_t levels);
+  /*
+    List FS content
+  */
+  void printFileList(fs::FS &fs, const char *dirname, uint8_t levels);
 
-    /*
-      List FS content to a destination stream (e.g. Serial, WiFiClient)
-    */
-    void printFileList(fs::FS &fs, const char *dirname, uint8_t levels, Print &out);
+  /*
+    List FS content to a destination stream (e.g. Serial, WiFiClient)
+  */
+  void printFileList(fs::FS &fs, const char *dirname, uint8_t levels, Print &out);
 
-    /*
-        Old API for backward compatibility
-    */ 
-    void printFileList(fs::FS &fs,  Print& out, const char * dirname, uint8_t levels) {
-        printFileList(fs, dirname, levels, out);
-    }
-    /*
-      Send a default "OK" reply to client
-    */
-    void sendOK();
+  /*
+      Old API for backward compatibility
+  */
+  void printFileList(fs::FS &fs, Print &out, const char *dirname,  uint8_t levels) {
+    printFileList(fs, dirname, levels, out);
+  }
+  /*
+    Send a default "OK" reply to client
+  */
+  void sendOK();
 
-    /*
-      Start WiFi connection, callback function is called when trying to connect
-    */
-    bool startWiFi(uint32_t timeout, CallbackF fn = nullptr);
+  /*
+    Start WiFi connection, callback function is called when trying to connect
+  */
+  bool startWiFi(uint32_t timeout, CallbackF fn = nullptr);
 
-    /*
-     * Redirect to captive portal if we got a request for another domain.
-     */
-    bool startCaptivePortal(const char *ssid, const char *pass, const char *redirectTargetURL = "/setup");
+  /*
+   * Redirect to captive portal if we got a request for another domain.
+   */
+  bool startCaptivePortal(const char *ssid, const char *pass, const char *redirectTargetURL = "/setup");
 
-    /*
-      Set AP SSID and Password (backward compatibility)
-    */
-    void setAP(const char *ssid, const char *pass) {
-        strlcpy(m_apSSID, ssid, sizeof(m_apSSID));
-        strlcpy(m_apPassword, pass, sizeof(m_apPassword));
-    }
+  /*
+    Set AP SSID and Password (backward compatibility)
+  */
+  void setAP(const char *ssid, const char *pass) {
+    strlcpy(m_apSSID, ssid, sizeof(m_apSSID));
+    strlcpy(m_apPassword, pass, sizeof(m_apPassword));
+  }
 
-    /*
-    * Setup and start mDNS responder
-    */
-    bool startMDNSResponder();
+  /*
+   * Setup and start mDNS responder
+   */
+  bool startMDNSResponder();
 
-    /*
-     * Need to be run in loop to handle DNS requests
-     */
-    inline void updateDNS()
-    {
-        m_dnsServer->processNextRequest();
-    }
+  /*
+   * Need to be run in loop to handle DNS requests
+   */
+  inline void updateDNS() { m_dnsServer->processNextRequest(); }
 
-    /*
-     * Set current firmware version (shown in /setup webpage)
-     */
-    inline void setFirmwareVersion(const char *version)
-    {
-        m_version = String(version);
-    }
+  /*
+   * Set current firmware version (shown in /setup webpage)
+   */
+  inline void setFirmwareVersion(const char *version) {
+    m_version = String(version);
+  }
 
-    inline void setFirmwareVersion(const String &version)
-    {
-        m_version = version;
-    }
+  inline void setFirmwareVersion(const String &version) { m_version = version; }
 
-    /*
-     * Set hostmane
-     */
-    inline void setHostname(const char *host)
-    {
-        m_host = host;
-    }
+  /*
+   * Set hostmane
+   */
+  inline void setHostname(const char *host) { m_host = host; }
 
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////////   WEBSOCKET  ///////////////////////////////////////////////
-    /////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////   WEBSOCKET  ///////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////
 #if ESP_FS_WS_WEBSOCKET
-    /*
-      Enable built-in websocket server. Events like connect/disconnect or
-      messages can be handled using callback function
-    */
+  /*
+    Enable built-in websocket server. Events like connect/disconnect or
+    messages can be handled using callback function
+  */
 
-    inline WebSocketsServer *getWebSocketServer()
-    {
-        return m_websocket;
-    }
+  inline WebSocketsServer *getWebSocketServer() { return m_websocket; }
 
-    inline bool broadcastWebSocket(const String &payload)
-    {
-        if (m_websocket)
-            return m_websocket->broadcastTXT(payload.c_str());
-        return false;
-    }
+  inline bool broadcastWebSocket(const String &payload) {
+    if (m_websocket)
+      return m_websocket->broadcastTXT(payload.c_str());
+    return false;
+  }
 
-    inline bool broadcastWebSocket(const uint8_t *payload, size_t length)
-    {
-        if (m_websocket)
-            return m_websocket->broadcastBIN(payload, length);
-        return false;
-    }
+  inline bool broadcastWebSocket(const uint8_t *payload, size_t length) {
+    if (m_websocket)
+      return m_websocket->broadcastBIN(payload, length);
+    return false;
+  }
 
-    inline bool sendWebSocket(uint8_t num, const String &payload)
-    {
-        if (m_websocket)
-            return m_websocket->sendTXT(num, payload.c_str());
-        return false;
-    }
+  inline bool sendWebSocket(uint8_t num, const String &payload) {
+    if (m_websocket)
+      return m_websocket->sendTXT(num, payload.c_str());
+    return false;
+  }
 #endif
 
 #if ESP_FS_WS_SETUP
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////   SETUP PAGE CONFIGURATION /////////////////////////////////////////
-    /////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////   SETUP PAGE CONFIGURATION /////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////
 
-    // Public alias to dropdown definition type (available only when /setup is enabled)
-    using DropdownList = ServerConfig::DropdownList;
-    // Public alias to slider definition type
-    using Slider = ServerConfig::Slider;
+  // Public alias to dropdown definition type (available only when /setup is
+  // enabled)
+  using DropdownList = ServerConfig::DropdownList;
+  // Public alias to slider definition type
+  using Slider = ServerConfig::Slider;
 
-    /*
-     * Set callback function to be called when configuration file is saved via /edit POST
-     * The callback receives the filename path as parameter
-     */
-    inline void setConfigSavedCallback(ConfigSavedCallbackF callback)
-    {
-        m_configSavedCallback = callback;
-    }
+  /*
+   * Set callback function to be called when configuration file is saved via
+   * /edit POST The callback receives the filename path as parameter
+   */
+  inline void setConfigSavedCallback(ConfigSavedCallbackF callback) {
+    m_configSavedCallback = callback;
+  }
 
-    /*
-     * Get reference to current config.json file
-     */
-    inline File getConfigFile(const char *mode)
-    {
-        File file = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, mode);
-        return file;
-    }
+  /*
+   * Get reference to current config.json file
+   */
+  inline File getConfigFile(const char *mode) {
+    File file = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, mode);
+    return file;
+  }
 
-    /*
-     * Clear the saved configuration options by removing config.json.
-     * Returns true if the file was removed or did not exist.
-     */
-    inline bool clearConfigFile()
-    {
-        if (m_filesystem->exists(ESP_FS_WS_CONFIG_FILE))
-        {
-            return m_filesystem->remove(ESP_FS_WS_CONFIG_FILE);
-        }
-        return true;
+  /*
+   * Clear the saved configuration options by removing config.json.
+   * Returns true if the file was removed or did not exist.
+   */
+  inline bool clearConfigFile() {
+    if (m_filesystem->exists(ESP_FS_WS_CONFIG_FILE)) {
+      return m_filesystem->remove(ESP_FS_WS_CONFIG_FILE);
     }
+    return true;
+  }
 
-    /*
-     * Get complete path of config.json file
-     */
-    inline const char *getConfiFileName()
-    {
-        return ESP_FS_WS_CONFIG_FILE;
-    }
+  /*
+   * Get complete path of config.json file
+   */
+  inline const char *getConfiFileName() { return ESP_FS_WS_CONFIG_FILE; }
 
-    void setSetupPageTitle(const char *title) { getSetupConfigurator()->addOption("name-logo", title); }
-    void addHTML(const char *html, const char *id, bool ow = false) { getSetupConfigurator()->addHTML(html, id, ow); }
-    void addCSS(const char *css, const char *id, bool ow = false) { getSetupConfigurator()->addCSS(css, id, ow); }
-    void addJavascript(const char *script, const char *id, bool ow = false) { getSetupConfigurator()->addJavascript(script, id, ow); }
-    void addDropdownList(const char *lbl, const char **a, size_t size) { getSetupConfigurator()->addDropdownList(lbl, a, size); }
-    void addDropdownList(DropdownList &def) { getSetupConfigurator()->addDropdownList(def); }
-    void addSlider(Slider &def) { getSetupConfigurator()->addSlider(def); }
-    void addOptionBox(const char *title) { getSetupConfigurator()->addOption("param-box", title); }
-    void setLogoBase64(const char *logo, const char *w = "128", const char *h = "128", bool ow = false)
-    {
-        getSetupConfigurator()->setLogoBase64(logo, w, h, ow);
-    }
-    template <typename T>
-    void addOption(const char *lbl, T val, double min, double max, double st)
-    {
-        getSetupConfigurator()->addOption(lbl, val, false, min, max, st);
-    }
-    template <typename T>
-    void addOption(const char *lbl, T val, bool hidden = false, double min = MIN_F,
-                   double max = MAX_F, double st = 1.0)
-    {
-        getSetupConfigurator()->addOption(lbl, val, hidden, min, max, st);
-    }
-    template <typename T>
-    bool getOptionValue(const char *lbl, T &var) { return getSetupConfigurator()->getOptionValue(lbl, var); }
-    template <typename T>
-    bool saveOptionValue(const char *lbl, T val) { return getSetupConfigurator()->saveOptionValue(lbl, val); }
+  void setSetupPageTitle(const char *title) {
+    getSetupConfigurator()->addOption("name-logo", title);
+  }
+  void addHTML(const char *html, const char *id, bool ow = false) {
+    getSetupConfigurator()->addHTML(html, id, ow);
+  }
+  void addCSS(const char *css, const char *id, bool ow = false) {
+    getSetupConfigurator()->addCSS(css, id, ow);
+  }
+  void addJavascript(const char *script, const char *id, bool ow = false) {
+    getSetupConfigurator()->addJavascript(script, id, ow);
+  }
+  void addDropdownList(const char *lbl, const char **a, size_t size) {
+    getSetupConfigurator()->addDropdownList(lbl, a, size);
+  }
+  void addDropdownList(DropdownList &def) {
+    getSetupConfigurator()->addDropdownList(def);
+  }
+  void addSlider(Slider &def) { getSetupConfigurator()->addSlider(def); }
+  void addOptionBox(const char *title) {
+    getSetupConfigurator()->addOption("param-box", title);
+  }
+  void setLogoBase64(const char *logo, const char *w = "128", const char *h = "128", bool ow = false) {
+    getSetupConfigurator()->setLogoBase64(logo, w, h, ow);
+  }
+  template <typename T>
+  void addOption(const char *lbl, T val, double min, double max, double st) {
+    getSetupConfigurator()->addOption(lbl, val, false, min, max, st);
+  }
+  template <typename T>
+  void addOption(const char *lbl, T val, bool hidden = false, double min = MIN_F, double max = MAX_F, double st = 1.0) {
+    getSetupConfigurator()->addOption(lbl, val, hidden, min, max, st);
+  }
+  template <typename T> bool getOptionValue(const char *lbl, T &var) {
+    return getSetupConfigurator()->getOptionValue(lbl, var);
+  }
+  template <typename T> bool saveOptionValue(const char *lbl, T val) {
+    return getSetupConfigurator()->saveOptionValue(lbl, val);
+  }
 
-    // Update a dropdown definition's selectedIndex from persisted config
-    bool getDropdownSelection(DropdownList &def) { return getSetupConfigurator()->getDropdownSelection(def); }
-    // Read slider value back into struct
-    bool getSliderValue(Slider &def) { return getSetupConfigurator()->getSliderValue(def); }
+  // Update a dropdown definition's selectedIndex from persisted config
+  bool getDropdownSelection(DropdownList &def) {
+    return getSetupConfigurator()->getDropdownSelection(def);
+  }
+  // Read slider value back into struct
+  bool getSliderValue(Slider &def) {
+    return getSetupConfigurator()->getSliderValue(def);
+  }
 
-    void closeSetupConfiguration()
-    {
-        getSetupConfigurator()->closeConfiguration();
-    }
-    /////////////////////////////////////////////////////////////////////////////////////////////////
+  void closeSetupConfiguration() {
+    getSetupConfigurator()->closeConfiguration();
+  }
+  /////////////////////////////////////////////////////////////////////////////////////////////////
 #endif
 };
 

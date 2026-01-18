@@ -2,7 +2,7 @@
 #include <LittleFS.h>
 #include "FSWebServer.h"
 
-FSWebServer server(80, LittleFS, "myServer");
+FSWebServer server(LittleFS, 80, "myServer");
 uint16_t testInt = 150;
 float testFloat = 123.456f;
 
