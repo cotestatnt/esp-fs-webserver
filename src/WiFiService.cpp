@@ -1,6 +1,14 @@
 #include "WiFiService.h"
 #include "Json.h"
 
+#if defined(ESP32)
+static inline void resetTaskWdtIfSubscribed() {
+    if (esp_task_wdt_status(NULL) == ESP_OK) {
+        esp_task_wdt_reset();
+    }
+}
+#endif
+
 void WiFiService::setTaskWdt(uint32_t timeout) {
 #if defined(ESP32)
     #if ESP_ARDUINO_VERSION_MAJOR > 2
@@ -13,8 +21,8 @@ void WiFiService::setTaskWdt(uint32_t timeout) {
     #else
     ESP_ERROR_CHECK(esp_task_wdt_init(timeout / 1000, 0));
     #endif
-    // Ensure current task is subscribed to WDT
-    esp_task_wdt_add(NULL);
+    // The Arduino core already subscribes loopTask to the WDT.
+    // Adding it again logs "task is already subscribed". Avoid duplicate add.
 #elif defined(ESP8266)
     ESP.wdtDisable();
     ESP.wdtEnable(timeout);
@@ -150,9 +158,10 @@ WiFiConnectResult WiFiService::connectWithParams(const WiFiConnectParams& params
                 log_error("STA Failed to configure");
             }
         }
+        
 
-        Serial.print("\n\n\nConnecting to ");
-        Serial.println(params.ssid);
+        DBG_OUTPUT_PORT.print("\n\n\nConnecting to ");
+        DBG_OUTPUT_PORT.println(params.ssid);
         WiFi.begin(params.ssid.c_str(), params.password.c_str());
 
         if (WiFi.status() == WL_CONNECTED && params.changeSSID) {
@@ -164,11 +173,11 @@ WiFiConnectResult WiFiService::connectWithParams(const WiFiConnectParams& params
         uint32_t beginTime = millis();
         while (WiFi.status() != WL_CONNECTED) {
             delay(250);
-            Serial.print("*");
+            DBG_OUTPUT_PORT.print("*");
 #if defined(ESP8266)
             ESP.wdtFeed();
 #else
-            esp_task_wdt_reset();
+            resetTaskWdtIfSubscribed();
 #endif
             if (millis() - beginTime > params.timeout) {
                 result.status = 408;
@@ -181,6 +190,10 @@ WiFiConnectResult WiFiService::connectWithParams(const WiFiConnectParams& params
         if (WiFi.status() == WL_CONNECTED) {
             result.ip = WiFi.localIP();
             result.connected = true;
+            DBG_OUTPUT_PORT.print("\nConnected to ");
+            DBG_OUTPUT_PORT.print(params.ssid);
+            DBG_OUTPUT_PORT.print(". IP address: ");
+            DBG_OUTPUT_PORT.println(result.ip);
             String serverLoc = F("http://");
             for (int i = 0; i < 4; i++) {
                 if (i) serverLoc += ".";
@@ -316,6 +329,11 @@ WiFiStartResult WiFiService::startWiFi(CredentialManager* credentialManager, fs:
                                 break;
                             }
                             delay(tryDelay);
+#if defined(ESP8266)
+                            ESP.wdtFeed();
+#else
+                            resetTaskWdtIfSubscribed();
+#endif
                             numberOfTries--;
                         }
 
@@ -376,6 +394,11 @@ WiFiStartResult WiFiService::startWiFi(CredentialManager* credentialManager, fs:
                 break;
             }
             delay(tryDelay);
+#if defined(ESP8266)
+            ESP.wdtFeed();
+#else
+            resetTaskWdtIfSubscribed();
+#endif
             if (numberOfTries <= 0) {
                 log_debug("[WiFi] Failed to connect to WiFi!");
                 WiFi.disconnect();
