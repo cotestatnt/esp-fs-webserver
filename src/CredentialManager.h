@@ -2,6 +2,7 @@
 #define CREDENTIAL_MANAGER_H
 
 #include <Arduino.h>
+#include <IPAddress.h>
 #include <vector>
 #include <cstring>
 

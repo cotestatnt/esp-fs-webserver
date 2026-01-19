@@ -443,8 +443,7 @@ void FSWebServer::doWifiConnection() {
     }
 
     if (persistent && ssid.length() && pass.length() && m_credentialManager) {
-        WiFiCredential cred;
-        memset(&cred, 0, sizeof(cred));
+        WiFiCredential cred{};
         strncpy(cred.ssid, ssid.c_str(), sizeof(cred.ssid) - 1);
         cred.ssid[sizeof(cred.ssid) - 1] = '\0';
 
@@ -461,7 +460,11 @@ void FSWebServer::doWifiConnection() {
         if (!m_credentialManager->updateCredential(cred, pass.c_str())) {
             m_credentialManager->addCredential(cred, pass.c_str());
         }
+    #if defined(ESP32)
         m_credentialManager->saveToNVS();
+    #elif defined(ESP8266)
+        m_credentialManager->saveToFS();
+    #endif
     }
 
     WiFiConnectParams params;
@@ -601,8 +604,9 @@ bool FSWebServer::startMDNSResponder() {
 }
 
 void FSWebServer::redirect(const char* url) {
-    if (strstr(url, "/setup") == 0) 
+    if (strcmp(url, "/setup") == 0) {
         return this->handleSetup();
+    }
 
     this->sendHeader(PSTR("Location"), url);
     this->send(302, "text/plain", "");

@@ -71,7 +71,7 @@ void setup() {
     params.local_ip = IPAddress(192, 168, 1, 1);
     params.gateway = IPAddress(192, 168, 1, 1);
     params.subnet = IPAddress(255, 255, 255, 0);    
-    server.startCaptivePortal(params, "/setup");
+    server.startCaptivePortal(params, "/edit");
   }
 
   // Add custom application options tab and set custom title

@@ -4,6 +4,9 @@
 
 CredentialManager::CredentialManager() : m_efuse_initialized(false) {
   memset(m_encryption_key, 0, ENCRYPTION_KEY_SIZE);
+#if defined(ESP8266)
+  m_filesystem = nullptr;
+#endif
 }
 
 CredentialManager::~CredentialManager() {
@@ -350,6 +353,113 @@ uint16_t CredentialManager::removePKCS7Padding(uint8_t *data, uint16_t data_len)
 
   return data_len - pad_value;
 }
+
+#if defined(ESP8266)
+void CredentialManager::setFilesystem(fs::FS* fs) {
+  m_filesystem = fs;
+}
+
+bool CredentialManager::saveToFS(const char* filepath) {
+  if (!m_filesystem) {
+    log_error("Filesystem not set");
+    return false;
+  }
+
+  File file = m_filesystem->open(filepath, "w");
+  if (!file) {
+    log_error("Failed to open %s for write", filepath);
+    return false;
+  }
+
+  uint8_t count = m_credentials.size();
+  if (count > MAX_CREDENTIALS) {
+    count = MAX_CREDENTIALS;
+  }
+
+  file.write(&count, 1);
+
+  for (uint8_t i = 0; i < count; i++) {
+    const WiFiCredential &cred = m_credentials[i];
+
+    file.write((const uint8_t*)cred.ssid, sizeof(cred.ssid));
+    file.write((const uint8_t*)&cred.password_len, sizeof(cred.password_len));
+    file.write((const uint8_t*)cred.password_encrypted, sizeof(cred.password_encrypted));
+
+    uint32_t gw_addr = cred.gateway;
+    uint32_t sn_addr = cred.subnet;
+    uint32_t ip_addr = cred.local_ip;
+    file.write((const uint8_t*)&gw_addr, sizeof(gw_addr));
+    file.write((const uint8_t*)&sn_addr, sizeof(sn_addr));
+    file.write((const uint8_t*)&ip_addr, sizeof(ip_addr));
+  }
+
+  file.close();
+  log_info("Credentials saved to FS (%d entries)", count);
+  return true;
+}
+
+bool CredentialManager::loadFromFS(const char* filepath) {
+  if (!m_filesystem) {
+    log_error("Filesystem not set");
+    return false;
+  }
+
+  if (!m_filesystem->exists(filepath)) {
+    log_info("No credentials file found: %s", filepath);
+    return false;
+  }
+
+  File file = m_filesystem->open(filepath, "r");
+  if (!file) {
+    log_error("Failed to open %s for read", filepath);
+    return false;
+  }
+
+  m_credentials.clear();
+
+  uint8_t count = 0;
+  if (file.read(&count, 1) != 1 || count == 0) {
+    file.close();
+    log_debug("No credentials in FS");
+    return false;
+  }
+
+  if (count > MAX_CREDENTIALS) {
+    count = MAX_CREDENTIALS;
+  }
+
+  for (uint8_t i = 0; i < count; i++) {
+    WiFiCredential cred{};
+
+    if (file.read((uint8_t*)cred.ssid, sizeof(cred.ssid)) != sizeof(cred.ssid)) break;
+    if (file.read((uint8_t*)&cred.password_len, sizeof(cred.password_len)) != sizeof(cred.password_len)) break;
+    if (cred.password_len == 0 || cred.password_len > sizeof(cred.password_encrypted)) break;
+    if (file.read((uint8_t*)cred.password_encrypted, sizeof(cred.password_encrypted)) != sizeof(cred.password_encrypted)) break;
+
+    uint32_t gw_addr = 0;
+    uint32_t sn_addr = 0;
+    uint32_t ip_addr = 0;
+    if (file.read((uint8_t*)&gw_addr, sizeof(gw_addr)) != sizeof(gw_addr)) break;
+    if (file.read((uint8_t*)&sn_addr, sizeof(sn_addr)) != sizeof(sn_addr)) break;
+    if (file.read((uint8_t*)&ip_addr, sizeof(ip_addr)) != sizeof(ip_addr)) break;
+
+    cred.gateway = IPAddress(gw_addr);
+    cred.subnet = IPAddress(sn_addr);
+    cred.local_ip = IPAddress(ip_addr);
+
+    m_credentials.push_back(cred);
+  }
+
+  file.close();
+
+  if (m_credentials.size() > 0) {
+    log_info("Loaded %d credentials from FS", m_credentials.size());
+    return true;
+  }
+
+  return false;
+}
+#endif
 
 
 #if defined(ESP32)
