@@ -65,7 +65,13 @@ void setup() {
   // Try to connect to WiFi (will start AP if not connected after timeout)
   if (!server.startWiFi(10000)) {
     Serial.println("\nWiFi not connected! Starting AP mode...");
-    server.startCaptivePortal("ESP_AP", "123456789", "/setup");
+    WiFiConnectParams params;
+    params.ssid = "ESP_AP";
+    params.password = "123456789";
+    params.local_ip = IPAddress(192, 168, 1, 1);
+    params.gateway = IPAddress(192, 168, 1, 1);
+    params.subnet = IPAddress(255, 255, 255, 0);    
+    server.startCaptivePortal(params, "/setup");
   }
 
   // Add custom application options tab and set custom title

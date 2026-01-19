@@ -392,15 +392,31 @@ WiFiStartResult WiFiService::startWiFi(CredentialManager* credentialManager, fs:
     return result;
 }
 
-bool WiFiService::startAccessPoint(const char* ssid, const char* pass, IPAddress& outIp) {
+
+bool WiFiService::startAccessPoint(WiFiConnectParams& params, IPAddress& outIp) {    
     delay(100);
     WiFi.mode(WIFI_AP);
 
     IPAddress apIP(192, 168, 4, 1);
+    IPAddress gateway(192, 168, 4, 1);
     IPAddress netmask(255, 255, 255, 0);
-    WiFi.softAPConfig(apIP, apIP, netmask);
 
-    if (!WiFi.softAP(ssid, pass)) {
+    if (params.local_ip != IPAddress(0,0,0,0)) {
+        apIP = params.local_ip;        
+    }
+
+    if (params.gateway != IPAddress(0,0,0,0)) {     
+        gateway = params.gateway;
+    }
+
+    if (params.subnet != IPAddress(0,0,0,0)) {
+        netmask = params.subnet;
+    }
+
+    // Configure AP IP parameters
+    WiFi.softAPConfig(apIP, gateway, netmask);
+
+    if (!WiFi.softAP(params.ssid.c_str(), params.password.c_str())) {
         log_error("Captive portal failed to start: WiFi.softAP() failed!");
         return false;
     }

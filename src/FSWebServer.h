@@ -1,6 +1,8 @@
 #ifndef FS_WEBSERVER_H
 #define FS_WEBSERVER_H
 
+
+#include "WiFiService.h"
 #include "Json.h"
 #include "SerialLog.h"
 #include "Version.h"
@@ -47,6 +49,7 @@ class Print;
 #else
 #error Platform not supported
 #endif
+
 
 #ifndef ESP_FS_WS_EDIT
 #define ESP_FS_WS_EDIT 1 // Library has edit methods
@@ -361,6 +364,7 @@ public:
    * Redirect to captive portal if we got a request for another domain.
    */
   bool startCaptivePortal(const char *ssid, const char *pass, const char *redirectTargetURL = "/setup");
+  bool startCaptivePortal(WiFiConnectParams& params, const char *redirectTargetURL = "/setup"); 
 
   /*
     Set AP SSID and Password (backward compatibility)

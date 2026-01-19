@@ -1,5 +1,5 @@
 #include "FSWebServer.h"
-#include "WiFiService.h"
+
 #if defined(ESP32)
     #include "mimetable/mimetable.h"
 #endif
@@ -610,7 +610,14 @@ void FSWebServer::redirect(const char* url) {
 }
 
 bool FSWebServer::startCaptivePortal(const char* ssid, const char* pass, const char* redirectTargetURL) {
+    WiFiConnectParams params;
+    params.ssid = ssid;
+    params.password = pass;     
+    return startCaptivePortal(params, redirectTargetURL);
+}
 
+
+bool FSWebServer::startCaptivePortal(WiFiConnectParams& params, const char *redirectTargetURL) {
     // Captive portal OS connectivity probes
     this->on("/generate_204", HTTP_GET, [this, redirectTargetURL]() { this->redirect(redirectTargetURL); }); // Android probe
     this->on("/hotspot-detect.html", HTTP_GET, [this, redirectTargetURL]() { this->redirect(redirectTargetURL); }); // iOS/macOS probe
@@ -619,7 +626,7 @@ bool FSWebServer::startCaptivePortal(const char* ssid, const char* pass, const c
     this->on("/success.txt", HTTP_GET,  [this, redirectTargetURL]() { this->redirect(redirectTargetURL); }); 
     this->on("/library/test/success.html", HTTP_GET,  [this, redirectTargetURL]() { this->redirect(redirectTargetURL); }); // ChromeOS probe
     this->on("/redirect", HTTP_GET,  [this, redirectTargetURL]() { this->redirect(redirectTargetURL); });
-    if (!WiFiService::startAccessPoint(ssid, pass, m_serverIp)) {
+    if (!WiFiService::startAccessPoint(params, m_serverIp)) {
         return false;
     }
     m_isApMode = true;

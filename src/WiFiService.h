@@ -61,8 +61,8 @@ public:
     static void applyPersistentConfig(bool persistentEnabled, const String& ssid, const String& pass);
     static WiFiScanResult scanNetworks();
     static WiFiConnectResult connectWithParams(const WiFiConnectParams& params);
-    static WiFiStartResult startWiFi(CredentialManager* credentialManager, fs::FS* filesystem, const char* configFile, uint32_t timeout);
-    static bool startAccessPoint(const char* ssid, const char* pass, IPAddress& outIp);
+    static WiFiStartResult startWiFi(CredentialManager* credentialManager, fs::FS* filesystem, const char* configFile, uint32_t timeout);    
+    static bool startAccessPoint(WiFiConnectParams& params, IPAddress& outIp);
     static bool startMDNSResponder(DNSServer*& dnsServer, const String& host, uint16_t port, const IPAddress& serverIp);
     static bool startMDNSOnly(const String& host, uint16_t port);
 };
