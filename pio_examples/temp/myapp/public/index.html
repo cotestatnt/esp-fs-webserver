@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MyApp Products</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="page">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="logo">M</div>
+          <div>
+            <div class="brand-name">MyApp</div>
+            <div class="brand-sub">Products</div>
+          </div>
+        </div>
+        <nav class="nav">
+          <a class="nav-item active" href="#" data-section="products">Prodotti</a>
+          <a class="nav-item" href="#" data-section="customers">Clienti</a>
+          <a class="nav-item" href="#" data-section="orders">Ordini</a>
+        </nav>
+        <div class="sidebar-footer">
+          <div class="status-dot"></div>
+          <span>MariaDB connesso</span>
+        </div>
+      </aside>
+
+      <main class="content">
+        <section class="section" data-section="products">
+          <header class="topbar">
+            <div>
+              <h1>Catalogo prodotti</h1>
+              <p>Gestisci il tuo inventario in modo semplice.</p>
+            </div>
+            <button id="openCreate" class="btn primary">Nuovo prodotto</button>
+          </header>
+
+          <section class="card stats">
+            <div>
+              <div class="stat-label">Totale prodotti</div>
+              <div id="totalProducts" class="stat-value">0</div>
+            </div>
+            <div>
+              <div class="stat-label">Stock totale</div>
+              <div id="totalStock" class="stat-value">0</div>
+            </div>
+            <div>
+              <div class="stat-label">Valore inventario</div>
+              <div id="totalValue" class="stat-value">€ 0,00</div>
+            </div>
+          </section>
+
+          <section class="card">
+            <div class="card-header">
+              <div class="search">
+                <input id="searchInput" type="text" placeholder="Cerca per nome o SKU" />
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>SKU</th>
+                    <th>Nome</th>
+                    <th>Prezzo</th>
+                    <th>Stock</th>
+                    <th>Attivo</th>
+                    <th class="actions">Azioni</th>
+                  </tr>
+                </thead>
+                <tbody id="productsBody"></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <section class="section hidden" data-section="customers">
+          <header class="topbar">
+            <div>
+              <h1>Clienti</h1>
+              <p>Anagrafica clienti per gli ordini.</p>
+            </div>
+            <button id="openCustomerCreate" class="btn primary">Nuovo cliente</button>
+          </header>
+
+          <section class="card">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Email</th>
+                    <th>Nome</th>
+                    <th>Telefono</th>
+                    <th>Creato il</th>
+                    <th class="actions">Azioni</th>
+                  </tr>
+                </thead>
+                <tbody id="customersBody"></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <section class="section hidden" data-section="orders">
+          <header class="topbar">
+            <div>
+              <h1>Ordini</h1>
+              <p>Gestisci lo stato degli ordini.</p>
+            </div>
+            <button id="openOrderCreate" class="btn primary">Nuovo ordine</button>
+          </header>
+
+          <section class="card">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Cliente</th>
+                    <th>Stato</th>
+                    <th>Totale</th>
+                    <th>Creato il</th>
+                    <th class="actions">Azioni</th>
+                  </tr>
+                </thead>
+                <tbody id="ordersBody"></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <div id="modal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="modalTitle">Nuovo prodotto</h2>
+          <button id="closeModal" class="icon-btn">×</button>
+        </div>
+        <form id="productForm" class="form">
+          <input type="hidden" id="productId" />
+          <label>
+            SKU
+            <input id="sku" required />
+          </label>
+          <label>
+            Nome
+            <input id="name" required />
+          </label>
+          <label>
+            Prezzo (cent)
+            <input id="price_cents" type="number" min="0" required />
+          </label>
+          <label>
+            Stock
+            <input id="stock" type="number" min="0" value="0" />
+          </label>
+          <label class="toggle">
+            <input id="active" type="checkbox" checked />
+            Attivo
+          </label>
+          <div class="form-actions">
+            <button type="button" id="cancelModal" class="btn">Annulla</button>
+            <button type="submit" class="btn primary">Salva</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="customerModal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="customerModalTitle">Nuovo cliente</h2>
+          <button id="closeCustomerModal" class="icon-btn">×</button>
+        </div>
+        <form id="customerForm" class="form">
+          <input type="hidden" id="customerId" />
+          <label>
+            Email
+            <input id="customerEmail" type="email" required />
+          </label>
+          <label>
+            Nome
+            <input id="customerName" required />
+          </label>
+          <label>
+            Telefono
+            <input id="customerPhone" />
+          </label>
+          <div class="form-actions">
+            <button type="button" id="cancelCustomerModal" class="btn">Annulla</button>
+            <button type="submit" class="btn primary">Salva</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="orderModal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="orderModalTitle">Nuovo ordine</h2>
+          <button id="closeOrderModal" class="icon-btn">×</button>
+        </div>
+        <form id="orderForm" class="form">
+          <input type="hidden" id="orderId" />
+          <label>
+            Cliente
+            <select id="orderCustomer" required></select>
+          </label>
+          <label>
+            Stato
+            <select id="orderStatus">
+              <option value="NEW">NEW</option>
+              <option value="PAID">PAID</option>
+              <option value="SHIPPED">SHIPPED</option>
+              <option value="CANCELLED">CANCELLED</option>
+            </select>
+          </label>
+          <label>
+            Totale (cent)
+            <input id="orderTotal" type="number" min="0" value="0" />
+          </label>
+          <div class="form-actions">
+            <button type="button" id="cancelOrderModal" class="btn">Annulla</button>
+            <button type="submit" class="btn primary">Salva</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
