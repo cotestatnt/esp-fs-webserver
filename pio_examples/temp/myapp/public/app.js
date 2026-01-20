@@ -17,6 +17,7 @@ const stockInput = document.getElementById('stock');
 const activeInput = document.getElementById('active');
 
 const openCreate = document.getElementById('openCreate');
+const sendLabel = document.getElementById('sendLabel');
 const closeModal = document.getElementById('closeModal');
 const cancelModal = document.getElementById('cancelModal');
 
@@ -41,6 +42,8 @@ const orderTotal = document.getElementById('orderTotal');
 const openOrderCreate = document.getElementById('openOrderCreate');
 const closeOrderModal = document.getElementById('closeOrderModal');
 const cancelOrderModal = document.getElementById('cancelOrderModal');
+const tcpStatusDot = document.getElementById('tcpStatusDot');
+const tcpStatusText = document.getElementById('tcpStatusText');
 
 const navItems = document.querySelectorAll('.nav-item');
 const sections = document.querySelectorAll('.section');
@@ -355,6 +358,42 @@ const deleteOrder = async (id) => {
   await loadOrders();
 };
 
+const sendLabelRequest = async () => {
+  if (!sendLabel) return;
+  sendLabel.disabled = true;
+  try {
+    const response = await fetch('/labels/send', { method: 'POST' });
+    if (!response.ok) {
+      console.error('Errore invio etichetta:', response.status);
+      alert('Errore invio etichetta');
+      return;
+    }
+    console.log('Etichetta inviata');
+  } catch (err) {
+    console.error('Errore invio etichetta:', err);
+    alert('Errore invio etichetta');
+  } finally {
+    sendLabel.disabled = false;
+  }
+};
+
+const updateTcpStatus = async () => {
+  if (!tcpStatusDot || !tcpStatusText) return;
+  try {
+    const response = await fetch('/labels/status');
+    if (!response.ok) return;
+    const data = await response.json();
+    const connected = Boolean(data.connected);
+    tcpStatusDot.classList.toggle('off', !connected);
+    tcpStatusText.textContent = connected
+      ? `TCP connesso ${data.host}:${data.port}`
+      : 'TCP disconnesso';
+  } catch (err) {
+    tcpStatusDot.classList.add('off');
+    tcpStatusText.textContent = 'TCP disconnesso';
+  }
+};
+
 productsBody.addEventListener('click', (event) => {
   const editId = event.target.dataset.edit;
   const deleteId = event.target.dataset.delete;
@@ -404,6 +443,9 @@ navItems.forEach((item) => {
 });
 
 openCreate.addEventListener('click', () => openModal());
+if (sendLabel) {
+  sendLabel.addEventListener('click', sendLabelRequest);
+}
 closeModal.addEventListener('click', closeModalFn);
 cancelModal.addEventListener('click', closeModalFn);
 productForm.addEventListener('submit', saveProduct);
@@ -422,3 +464,5 @@ orderForm.addEventListener('submit', saveOrder);
 loadProducts();
 loadCustomers();
 loadOrders();
+updateTcpStatus();
+setInterval(updateTcpStatus, 5000);

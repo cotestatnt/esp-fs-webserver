@@ -39,3 +39,4 @@
 /build
 /built-in-webpages/setup/build_setup/node_modules
 /examples/customHTML/build
+/pio_examples/temp

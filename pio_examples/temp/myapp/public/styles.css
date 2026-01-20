@@ -87,10 +87,16 @@ body {
 .sidebar-footer {
   margin-top: auto;
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  gap: 8px;
   color: #9ca3af;
   font-size: 14px;
+}
+
+.status-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .status-dot {
@@ -98,6 +104,10 @@ body {
   height: 10px;
   border-radius: 50%;
   background: #22c55e;
+}
+
+.status-dot.off {
+  background: #9ca3af;
 }
 
 .content {
@@ -115,6 +125,12 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .topbar h1 {

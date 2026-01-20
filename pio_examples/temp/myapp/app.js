@@ -5,6 +5,8 @@ const db = require('./db');
 const productsRouter = require('./routes/products');
 const customersRouter = require('./routes/customers');
 const ordersRouter = require('./routes/orders');
+const labelsRouter = require('./routes/labels');
+const { startPersistentConnection } = require('./tcpClient');
 
 const app = express();
 app.use(express.json());
@@ -29,7 +31,9 @@ app.get('/test-db', async (req, res) => {
 app.use('/products', productsRouter);
 app.use('/customers', customersRouter);
 app.use('/orders', ordersRouter);
+app.use('/labels', labelsRouter);
 
 app.listen(PORT, () => {
   console.log(`Server in esecuzione sulla porta ${PORT}`);
+  startPersistentConnection();
 });

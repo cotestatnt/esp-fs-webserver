@@ -28,8 +28,14 @@
           <a class="nav-item" href="#" data-section="orders">Ordini</a>
         </nav>
         <div class="sidebar-footer">
-          <div class="status-dot"></div>
-          <span>MariaDB connesso</span>
+          <div class="status-row">
+            <div class="status-dot"></div>
+            <span>MariaDB connesso</span>
+          </div>
+          <div class="status-row">
+            <div id="tcpStatusDot" class="status-dot off"></div>
+            <span id="tcpStatusText">TCP disconnesso</span>
+          </div>
         </div>
       </aside>
 
@@ -40,7 +46,10 @@
               <h1>Catalogo prodotti</h1>
               <p>Gestisci il tuo inventario in modo semplice.</p>
             </div>
-            <button id="openCreate" class="btn primary">Nuovo prodotto</button>
+            <div class="topbar-actions">
+              <button id="sendLabel" class="btn">Invia etichetta</button>
+              <button id="openCreate" class="btn primary">Nuovo prodotto</button>
+            </div>
           </header>
 
           <section class="card stats">
