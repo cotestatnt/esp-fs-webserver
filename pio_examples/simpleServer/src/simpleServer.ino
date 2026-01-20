@@ -2,7 +2,7 @@
 #include <LittleFS.h>
 #include "FSWebServer.h"
 
-FSWebServer server(80, LittleFS, "myServer");
+FSWebServer server(LittleFS, 80, "myServer");
 uint16_t testInt = 150;
 float testFloat = 123.456f;
 
@@ -65,7 +65,13 @@ void setup() {
   // Try to connect to WiFi (will start AP if not connected after timeout)
   if (!server.startWiFi(10000)) {
     Serial.println("\nWiFi not connected! Starting AP mode...");
-    server.startCaptivePortal("ESP_AP", "123456789", "/setup");
+    WiFiConnectParams params;
+    params.ssid = "ESP_AP";
+    params.password = "123456789";
+    params.local_ip = IPAddress(192, 168, 1, 1);
+    params.gateway = IPAddress(192, 168, 1, 1);
+    params.subnet = IPAddress(255, 255, 255, 0);    
+    server.startCaptivePortal(params, "/edit");
   }
 
   // Add custom application options tab and set custom title
