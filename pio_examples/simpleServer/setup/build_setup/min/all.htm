@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset=utf-8>
+    <title>ESP FS Web Server</title>
+    <meta content="width=device-width, initial-scale=1" name=viewport>
+    <style>html{font-family:sans-serif}body{background:linear-gradient(135deg,#0f172a,#1e3a5f);min-height:100vh;padding:20px}a{background-color:transparent;cursor:pointer;margin:0;padding:0}a:active,a:hover{outline:0}b{font-weight:700}h1{font-size:36px;margin:10px 0 5px}h1,h2{color:#1e3a5f}h2{font-size:24px}input:-webkit-autofill,input:-webkit-autofill:active,input:-webkit-autofill:focus,input:-webkit-autofill:hover{-webkit-box-shadow:inset 0 0 0 30px #fff!important}input[type=checkbox]{box-sizing:border-box;padding:0}input[type=number],input[type=password],input[type=text],select{background-color:#f0f9ff;border:2px solid #e0f2fe;border-radius:8px;color:#0f172a;font-size:16px;height:40px;padding:0 0 0 20px;transition:.3s;width:90%}input[type=file]{display:none}input::placeholder{color:#64748b}input:hover{border-color:#06b6d4;box-shadow:0 0 12px rgba(6,182,212,.2)}input:focus,select:focus{border-color:#0891b2;box-shadow:0 0 16px rgba(6,182,212,.3);outline:0}input[type=number]:hover::-webkit-inner-spin-button{-webkit-appearance:none;-moz-appearance:textfield}input[type=number]{appearance:textfield}footer{color:#cbd5e1;font-size:12px;margin:40px;text-align:center}.btn,button{background:linear-gradient(135deg,#06b6d4,#0891b2);border:0;border-radius:8px;box-shadow:0 4px 12px rgba(6,182,212,.3);color:#fff;cursor:pointer;display:inline-flex;font-weight:600;justify-content:center;min-width:40%;padding:12px 24px;transition:.3s}.btn:hover,button:hover{box-shadow:0 6px 16px rgba(6,182,212,.4);filter:brightness(1.2)}ul{color:#e2e8f0;display:table;margin:0 auto 10px;text-align:left}hr{border:1px solid rgba(6,182,212,.3);order:997;width:100%}select{width:92.5%}.input-label,select{background-color:#f0f9ff}.input-label{align-self:self-start;border:2px solid #e0f2fe;border-radius:6px;bottom:-5px;color:#0891b2;font-size:13.5px;font-weight:600;left:5%;padding:2px 10px 0;position:relative;transition:.3s}.input-label:hover{background-color:#cffafe;border-color:#06b6d4}.esp-info{color:#e2e8f0;margin-bottom:12px;text-align:center}.row-wrapper{align-items:baseline;display:flex;flex-wrap:nowrap;gap:20px}.loading{color:#06b6d4;font-weight:600;text-align:center}.loader{height:auto;overflow:hidden;position:relative}.spinH{background:#06b6d4;border-radius:100%;box-shadow:0 0 8px #06b6d4;height:8px;position:absolute;top:50%;width:8px}.spin-1H{animation:spinnerH 3s linear infinite}.spin-2H{animation:spinnerH 3s linear .1s infinite}.spin-3H{animation:spinnerH 3s linear .2s infinite}.spin-4H{animation:spinnerH 3s linear .3s infinite}@keyframes spinnerH{0%{transform:translateX(0)}20%{transform:translate(200px)}70%{transform:translateX(505px)}to{transform:translateX(800px)}}.progress-wrap{background:rgba(6,182,212,.1);border:2px solid #06b6d4;border-radius:8px;font-size:20px;height:25px;margin:20px auto;position:relative;text-align:center;transition:.4s;width:80%}.progress-wrap:not(.active){background:rgba(6,182,212,.05);cursor:pointer}.progress-wrap .progress{background:linear-gradient(90deg,#06b6d4,#0891b2);opacity:0;transition:.3s;width:0;z-index:5}.progress-wrap.active .progress{animation:progress-anim 10s ease 0s;opacity:1}.progress-wrap[data-progress-style=fill-back] .progress{bottom:0;left:0;position:absolute;right:0;top:0}.d-modal{background:linear-gradient(135deg,#f0f9ff,#e0f2fe);border:2px solid #06b6d4;border-radius:12px;box-shadow:0 8px 32px rgba(6,182,212,.3);flex-direction:column;min-width:400px;position:relative}.d-modal:focus{outline:none}#modal-message{align-items:center;display:none;inset:0;justify-content:center;position:fixed;z-index:1000}#modal-message[open]{display:flex}#modal-message:before{backdrop-filter:blur(1px);background:rgba(0,0,0,.35);content:"";inset:0;position:fixed;z-index:-1}.d-modal-title{color:#0f172a;font-weight:600;padding:1.5em;position:relative;width:calc(100% - 4.5em)}.d-modal-content{border-top:2px solid #06b6d4;color:#0f172a;overflow:auto;padding:1.5em}.topnav{align-self:flex-end;background:linear-gradient(135deg,#0f172a,#1e3a5f);border:2px solid #06b6d4;border-radius:8px;bottom:5px;display:flex;flex-wrap:nowrap;float:right;max-width:100%;overflow:hidden;right:20px;white-space:nowrap;width:auto}.topnav a{color:#e2e8f0;float:left;font-size:16px;padding:6px 12px}.topnav a:hover{color:#06b6d4}.topnav a.active{background:linear-gradient(180deg,#06b6d4,#026881);color:#fff;font-weight:600}.topnav .icon{display:none}.logo{width:100%}.lbl-wifi{align-self:flex-end;color:#e2e8f0}.table{border-collapse:collapse;border-spacing:0;margin:auto;width:90%}.svg{display:flex;margin-right:10px;width:20px}.svg-e{margin-top:5px}.output{color:#e2e8f0}.form{padding:10px 0;text-align:center;width:85%}.ctn:after,.ctn:before{content:" ";display:table;grid-column-end:2;grid-column-start:1;grid-row-end:2;grid-row-start:1}.ctn:after{clear:both}.ctn{background:linear-gradient(135deg,rgba(224,242,254,.65),rgba(240,249,255,.95));border:2px solid #06b6d4;border-radius:12px;box-shadow:0 8px 24px rgba(6,182,212,.2);display:flex;flex-direction:column;margin:0 auto 10px;max-width:840px;overflow:visible;padding:10px 40px;position:relative}.btn-bar{grid-column-gap:30px;grid-row-gap:20px;display:flex;flex-wrap:wrap;justify-content:center;order:998;padding:20px}.tf-wrapper{flex-direction:column;margin-bottom:10px}.slider-wrapper,.tf-wrapper{align-items:center;display:flex}.slider-wrapper{background-color:#f0f9ff;border-radius:8px;gap:14px;width:92.5%}.slider-wrapper .slider{appearance:none;background:#e2e8f0;border-radius:999px;box-shadow:inset 0 1px 2px rgba(15,23,42,.12);height:10px;margin-left:20px;outline:none;transition:box-shadow .2s,background .2s;width:100%}.slider-wrapper .slider:hover{box-shadow:0 0 0 3px rgba(6,182,212,.15),inset 0 1px 2px rgba(15,23,42,.12)}.slider-wrapper .slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;background:linear-gradient(135deg,#06b6d4,#0891b2);border:2px solid #e0f2fe;border-radius:50%;box-shadow:0 2px 6px rgba(6,182,212,.4);cursor:pointer;height:20px;width:20px}.slider-wrapper .slider:active::-webkit-slider-thumb{filter:brightness(1.05)}.slider-wrapper .slider::-moz-range-track{background:#e2e8f0;border:none;border-radius:999px;height:10px}.slider-wrapper .slider::-moz-range-thumb{background:linear-gradient(135deg,#06b6d4,#0891b2);border:2px solid #e0f2fe;border-radius:50%;box-shadow:0 2px 6px rgba(6,182,212,.4);cursor:pointer;height:20px;width:20px}.slider-wrapper .slider-readout{border:none;height:40px;text-align:center;width:60px}.slider-wrapper .slider-readout:hover{border-color:#06b6d4;box-shadow:0 0 12px rgba(6,182,212,.2)}.title{display:flex}.heading{color:#0891b2;margin-right:0;text-align:right;width:100%}.heading-2{color:#0891b2;font-weight:600;margin:10px auto;text-align:center}.toggle{cursor:pointer;display:block;margin:0 0 18px -10px;padding:4px;width:fit-content}.toggle-label{color:#0f172a;font-weight:500;margin:0 20px;position:relative;top:2px}.toggle-switch{background:#cbd5e1;border-radius:16px;display:inline-block;height:32px;position:relative;transition:background .25s;vertical-align:middle;width:58px}.toggle-switch:after,.toggle-switch:before{content:""}.toggle-switch:before{background:linear-gradient(180deg,#fff 0,#f0f9ff);border-radius:50%;box-shadow:0 0 0 1px rgba(6,182,212,.3);display:block;height:24px;left:4px;position:absolute;top:4px;transition:left .25s;width:24px}.toggle:hover .toggle-switch:before{background:linear-gradient(180deg,#cffafe 0,#a5f3fc);box-shadow:0 0 0 1px rgba(6,182,212,.6)}.t-check:checked+.toggle-switch{background:linear-gradient(135deg,#06b6d4,#0891b2);box-shadow:0 0 12px rgba(6,182,212,.4)}.t-check:checked+.toggle-switch:before{background:linear-gradient(180deg,#f0f9ff 0,#e0f2fe);left:30px}.t-check{position:absolute;visibility:hidden}.pswd{align-items:center;display:flex;flex-direction:row;justify-content:center;width:100%}.show-hide-wrap{color:#06b6d4;cursor:pointer;position:absolute;right:8%;transition:.3s}.show-hide-wrap:hover{color:#0891b2}.firmware{align-items:center;display:flex;flex-direction:column}.fw-upload{background:linear-gradient(135deg,#06b6d4,#0891b2);border-radius:8px;box-shadow:0 4px 12px rgba(6,182,212,.3);color:#fff;cursor:pointer;display:inline-block;font-weight:600;margin-bottom:20px;padding:12px 20px;transition:.3s}.fw-upload:hover{box-shadow:0 6px 16px rgba(6,182,212,.4)}.btn,.submit{min-width:25%}#update-log{position:relative;z-index:99}#about{color:#cbd5e1;transition:.3s}#about:hover{color:#06b6d4}#esp-ip{color:#e2e8f0;display:inline-block;margin-bottom:5px}@media screen and (max-width:991px){.wifi-connect{padding-left:20px;padding-right:20px}}@media screen and (max-width:767px){.wifi-connect{padding-left:10px;padding-right:10px}select{width:93.5%}}@media screen and (max-width:608px){h1{font-size:24px}.btn-bar{flex-direction:column;margin-top:20px}.topnav{flex-wrap:wrap;margin-bottom:5px;max-width:calc(100% - 20px);right:10px;width:auto}.topnav a{min-width:auto;padding:5px 12px}.topnav a:not(.active){display:none}.topnav a.icon{display:block;float:right}.topnav.responsive{flex-direction:column;width:auto}.topnav.responsive .icon{display:none;position:static}.topnav.responsive a{display:block;float:none;text-align:left;width:100%}.hide-tiny{display:none}.toggle-label{margin:0 5px}.show-hide-wrap{right:10%}}@media screen and (max-width:479px){body{padding:2px}select{width:95.5%}.heading-2{margin-top:10px;padding:0}.form{padding:0}.ctn{max-width:100%;padding:0 10px}.show-hide-wrap{right:3%}}.hide{display:none}.svg-menu-icon{margin:-2px}.chevron-networks{color:#06b6d4;font-size:12px;margin-right:15px}.upload-note{color:#0891b2}summary{display:none}</style>
+</head>
+<body>
+    <main id=main-box>
+        <header class=ctn>
+            <div class=title>
+                <div id=img-logo title="Click to upload your logo file"></div>
+                <div class=heading>
+                  <h1 id=name-logo>ESP FS Web Server</h1>
+                  <span id=esp-ip></span><br>
+                  <span id=esp-mode></span> - v<span id=firmware></span>
+                </div>
+            </div>
+            <div class=topnav id=top-nav>
+                <span id=nav-link><a id=set-wifi class="a-link active" data-box=wifi-box>WiFi Setup</a></span>
+                <span id=upd-link><a id=set-update class="a-link" data-box=update-box>Update & FS</a></span>
+                <a class="a-link icon" id=hum-btn>
+                    <div class="svg svg-menu-icon">
+                        <svg id=svg-menu height="16pt" fill=currentColor viewBox="0 0 20 18"></svg>
+                    </div>
+                </a>
+            </div>
+        </header>
+        <div id=wifi-box class="ctn opt-box">
+            <h2 class=heading-2>Connect to WiFi</h2>
+            
+            <div id=wifi-table class=hide>
+                <hr>
+                <table class=table>
+                  <tbody id=wifi-list></tbody>
+                </table>
+                <br>
+            </div>
+            <div id=wifi>
+                <div class=tf-wrapper>
+                    <label for=ssid class=input-label>SSID</label>
+                    <div class=pswd>
+                        <input type=text placeholder="Enter your WiFI SSID name" id=ssid>
+                        <span class=show-hide-wrap id=show-hide-networks>
+                            <a class="show-hide hide chevron-networks" id=show-networks>▼</a>
+                        </span>
+                    </div>
+                </div>
+                <div class=tf-wrapper>
+                    <label for=password class=input-label>Password</label>
+                    <div class=pswd>
+                      <input type=password placeholder="Enter your WiFi password" id=password autocomplete=current-password data-ms-member=password>
+                      <span class=show-hide-wrap id=show-hide-password>
+                        <a class="show-hide hide" id=show-pass>
+                            <div class=svg><svg class=svg-e id=svg-eye viewBox="0 0 24 24"></svg></div>
+                        </a>
+                        <a class="show-hide" id=hide-pass>
+                            <div class=svg><svg class=svg-e id=svg-no-eye viewBox="0 0 24 24"></svg></div>
+                        </a>
+                      </span>  
+                    </div>
+                </div>
+                <div class="tf-wrapper">
+                  <label class="input-label toggle">
+                    <input id=no-dhcp type=checkbox class="t-check">
+                    <div class=toggle-switch></div>
+                    <span class=toggle-label>Manual configuration (no DHCP)</span>
+                  </label>
+                </div>
+                <div class=hide id=conf-wifi> 
+                  <div class="tf-wrapper">
+                      <label for=ip class=input-label>IP Address</label>
+                      <input type=text placeholder="IP Address" id=ip value=192.168.0.10>
+                  </div>
+                  <div class="tf-wrapper">
+                      <label for=gateway class=input-label>Gateway</label>
+                      <input type=text placeholder="Gateway address" id=gateway value=192.168.0.1>
+                  </div>
+                  <div class="tf-wrapper">
+                      <label for=subnet class=input-label>Subnet</label>
+                      <input type=text placeholder="Subnet mask" id=subnet value=255.255.255.0>
+                  </div>
+                </div>
+                    
+                <div class=tf-wrapper>
+                  <label class="lbl-wifi toggle">
+                    <input id=persistent type=checkbox class="t-check" checked>
+                    <div class=toggle-switch></div>
+                    <span class=toggle-label>Store WiFi credentials</span>
+                  </label>
+                </div>
+            </div>
+            <hr>
+            <div class=btn-bar>
+                <a id=scan-wifi class="btn">
+                    <div class=svg><svg id=svg-scan fill=currentColor viewBox="0 0 24 24"></svg></div>
+                    <span>Scan WiFi networks</span>
+                </a>
+                <a id=connect-wifi class="btn">
+                    <div class=svg><svg id=svg-connect fill=currentColor viewBox="0 0 24 24"></svg></div>
+                    <span>Connect to <span id=ssid-name>SSID</span></span>
+                </a>
+                <a id=save-wifi class="btn hide">
+                    <div class=svg><svg id=svg-save2 fill=currentColor viewBox="0 0 24 24"></svg></div>
+                    <span>Save configuration</span>
+                </a>
+            </div>
+        </div>
+
+        <div id=update-box class="ctn opt-box hide">
+          <h2 class=heading-2>Update ESP Firmware</h2>
+          <div class=tf-wrapper>
+            <form id=update-form class=form action=/update method=post enctype=multipart/form-data>
+              <div class=firmware>
+                <label for=file-input id=fw-label class=fw-upload>Select firmware binary file</label>
+                <input id=file-input type=file>
+                <a id=update-btn class="btn submit">
+                  <div class=svg>
+                    <svg fill=currentColor viewBox="0 0 24 24"><path d="M9,16V10H5L12,3L19,10H15V16H9M5,20V18H19V20H5Z"></path></svg>
+                  </div>
+                  <span>Submit!</span>
+                </a><br>
+              </div>
+            	<div class="progress-wrap hide" id=progress-wrap data-progress-style=fill-back>
+            	  <div id=update-log></div>
+            	  <div class=progress id=progress-anim></div>
+            	</div>
+            </form>
+          </div>
+          
+          <h2 class=heading-2>Load file to ESP FileSystem</h2>
+          <div class=tf-wrapper>
+            <form class=form action=/edit method=post enctype=multipart/form-data>
+              <ul id=listing></ul>
+              <label for=picker id=pick-label class=fw-upload>Select the folder containing your files</label>
+              <input type=file id=picker name=fileList webkitdirectory multiple>
+              <p class=upload-note>N.B.: if folder name is <b>"/data"</b>, the files will be uploaded at root "/" level</p>
+            </form>
+          </div>
+        </div>
+        <hr id=btn-hr class=hide>
+        <div id=btn-box class="btn-bar hide">
+            <a id=restart class="btn">
+                <div class=svg><svg id=svg-restart fill=currentColor viewBox="0 0 24 24"></svg></div>
+                <span>Restart ESP</span>
+            </a>
+            <a id=save-params class="btn">
+                <div class=svg><svg id=svg-save fill=currentColor viewBox="0 0 24 24"></svg></div>
+                <span>Save configuration</span>
+            </a>
+        </div>
+    </main>
+    
+    <div class="loader hide" id=loader>
+      <div class="loading">Loading...</div>
+      <div class="spinH spin-1H"></div>
+      <div class="spinH spin-2H"></div>
+      <div class="spinH spin-3H"></div>
+      <div class="spinH spin-4H"></div>
+    </div>
+    
+    <details id=modal-message>
+        <summary></summary>
+        <div class=d-modal>
+            <div class=d-modal-title><h2 id=message-title>t</h2></div>
+            <div class=d-modal-content><p id=message-body></p></div>
+            <div class=btn-bar>
+                <a id=ok-modal class="btn hide" onclick=closeModal(true)><span>OK</span></a>
+                <a id=close-modal class="btn" onclick=closeModal(false)><span>Close</span></a>
+            </div>
+        </div>
+    </details>
+    <footer class=foot>
+        <hr>
+        <a id=about target=_blank rel=noopener></a>
+    </footer>
+    <script>const svgLogo='<svg fill="brown" height="120" viewBox="0 0 24 24"><path d="M5 3C3.9 3 3 3.9 3 5S2.1 7 1 7v2c1.1 0 2 .9 2 2s.9 2 2 2h2v-2H5v-1c0-1.1-.9-2-2-2 1.1 0 2-.9 2-2V5h2V3M11 3c1.1 0 2 .9 2 2s.9 2 2 2v2c-1.1 0-2 .9-2 2s-.9 2-2 2H9v-2h2v-1c0-1.1.9-2 2-2-1.1 0-2-.9-2-2V5H9V3h2m11 3v12c0 1.11-.89 2-2 2H4a2 2 0 01-2-2v-3h2v3h16V6h-2.97V4H20c1.11 0 2 .89 2 2z"/></svg>',svgLock='<svg height="16" viewBox="0 0 24 24"><path d="M12 17a2 2 0 002-2c0-1.11-.9-2-2-2a2 2 0 00-2 2 2 2 0 002 2m6-9a2 2 0 012 2v10a2 2 0 01-2 2H6a2 2 0 01-2-2V10c0-1.11.9-2 2-2h1V6a5 5 0 0110 0v2h1M12 3a3 3 0 00-3 3v2h6V6a3 3 0 00-3-3z"/></svg>',svgUnlock='<svg height="16" viewBox="0 0 24 24"><path d="M18 1c-2.76 0-5 2.24-5 5v2H4c-1.1 0-2 .89-2 2v10c0 1.11.9 2 2 2h12c1.11 0 2-.89 2-2V10c0-1.1-.89-2-2-2h-1V6c0-1.66 1.34-3 3-3s3 1.34 3 3v2h2V6c0-2.76-2.24-5-5-5M10 13c1.1 0 2 .89 2 2 0 1.11-.9 2-2 2s-2-.89-2-2c0-1.1.9-2 2-2z"/></svg>',svgScan='<path d="M12 20l-3.6-4.8c1 .75 2.25 1.2 3.6 1.2s2.6-.45 3.6-1.2L12 20M4.8 10.4l1.8 2.4C8.1 11.67 10 11 12 11s3.9.67 5.4 1.8l1.8-2.4C17.19 8.89 14.7 8 12 8s-5.19.89-8.2 2.4M12 2a10 10 0 00-10.8 3.6L3 8c2.5-1.88 5.62-3 9-3s6.5 1.12 9 3l1.8-2.4C19.79 3.34 16.05 2 12 2M7 24h2v-2H7v2m8 0h2v-2h-2v2m-4 0h2v-2h-2v2z"/>',svgConnect='<path d="M12 21l3.6-4.8c-1-.75-2.25-1.2-3.6-1.2s-2.6.45-3.6 1.2L12 21M12 3C7.95 3 4.21 4.34 1.2 6.6L3 9c2.5-1.88 5.62-3 9-3s6.5 1.12 9 3l1.8-2.4C19.79 4.34 16.05 3 12 3m0 6c-2.7 0-5.19.89-7.2 2.4l1.8 2.4c1.5-1.13 3.37-1.8 5.4-1.8s3.9.67 5.4 1.8l1.8-2.4C17.19 9.89 14.7 9 12 9z"/>',svgSave='<path d="M15 9H5V5h10m-3 10a3 3 0 01-3-3 3 3 0 013-3 3 3 0 013 3 3 3 0 01-3 3m8-16H5c-1.11 0-2 .9-2 2v14a2 2 0 002 2h14a2 2 0 002-2V7l-4-4z"/>',svgRestart='<path d="M12 4a8 8 0 015.6 2.3C20.7 9.4 20.7 14.5 17.6 17.6a8 8 0 01-6.7 2.3l.5-2a6 6 0 004.8-1.7c2.3-2.3 2.3-6.1 0-8.5a6 6 0 00-4.2-1.7V10.6L7 5.6 12 .6V4M6.3 17.6C3.7 15 3.3 11 5.1 7.9l1.5 1.5A6 6 0 007.8 16.2c.5.5 1.1.9 1.8 1.2l-.6 2a8 8 0 01-2.7-1.8z"/>',svgEye='<path d="M12 9a3 3 0 013 3 3 3 0 01-3 3 3 3 0 01-3-3 3 3 0 013-3m0-4.5c5 0 9.27 3.11 11 7.5-1.73 4.39-6 7.5-11 7.5s-9.27-3.11-11-7.5C2.73 7.61 7 4.5 12 4.5M3.18 12a9.821 9.821 0 0017.64 0A9.821 9.821 0 003.18 12z"/>',svgNoEye='<path d="M0 0h24v24H0V0z" fill="none"/><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>',svgMenu='<path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/>';let closeCb=function(){};const port=location.port||("https:"===window.location.protocol?"443":"80"),esp=`${window.location.protocol}//${window.location.hostname}:${port}/`;let configFile,lastBox,options={};const $=e=>document.getElementById(e),hide=e=>$(e).classList.add("hide"),show=e=>$(e).classList.remove("hide"),newEl=(e,t)=>{const s=document.createElement(e);if(t&&"object"==typeof t)for(const[e,n]of Object.entries(t))s.setAttribute(e,n);return s},getParameters=()=>{let e;show("loader"),fetch(`${esp}getStatus`).then((e=>e.json())).then((t=>{$("esp-mode").innerHTML=t.mode,$("esp-ip").innerHTML=`<a href="http://${t.hostname}.local/">http://${t.hostname}.local</a><a href="${esp}"> (${t.ip})</a>`,$("firmware").innerHTML=t.firmware,$("about").innerHTML="Created with "+t.liburl,$("about").setAttribute("href",t.liburl),configFile=t.path,fetch(`${esp}${configFile}`).then((e=>e.json())).then((t=>{for(const s in t)if(t.hasOwnProperty(s)){if("name-logo"===s){$("name-logo").innerHTML=t[s].replace(/(<([^>]+)>)/gi,""),document.title=t[s].replace(/(<([^>]+)>)/gi,""),delete t[s];continue}if("img-logo"===s){e=t[s],delete t[s];continue}}e&&fetch(e).then((e=>e.text())).then((t=>setLogoBase64(e,t))),options=t,createOptionsBox(options),hide("loader")}))}))},setLogoBase64=(e,t)=>{const s=e.replace(/[^\d_]/g,"").split("_"),n=newEl("img",{class:"logo",src:`data:image/png;base64, ${t}`,style:`width:${s[0]}px;height:${s[1]}px`});$("img-logo").innerHTML="",$("img-logo").append(n),$("img-logo").setAttribute("type","number"),$("img-logo").setAttribute("title","")},addOptionsElement=e=>{const t=Object.keys(e).filter((t=>"boolean"==typeof e[t])).reduce(((t,s)=>(t[s]=e[s],t)),{});if(0!==Object.entries(t).length){const e=newEl("div",{class:"row-wrapper"});Object.entries(t).forEach((([t,s])=>{const n=newEl("label",{class:"input-label toggle"}),o=newEl("input",{class:"t-check opt-input",type:"checkbox",id:t});o.checked=s;const i=newEl("div",{class:"toggle-switch"}),a=newEl("span",{class:"toggle-label"});a.textContent=t,n.appendChild(o),n.appendChild(i),n.appendChild(a),addInputListener(o),e.appendChild(n)})),lastBox.appendChild(e)}const s=Object.keys(e).filter((t=>"boolean"!=typeof e[t])).reduce(((t,s)=>(t[s]=e[s],t)),{});Object.entries(s).forEach((([e,t])=>{const s=newEl("label",{class:"input-label","label-for":e});s.textContent=e;let n=newEl("input",{class:"opt-input",type:"text",id:e});if(n.value=t,"number"==typeof t&&n.setAttribute("type","number"),"object"==typeof t)if(t.values)n=newEl("select",{id:e}),t.values.forEach((e=>{const t=newEl("option");t.textContent=e,t.value=e,n.appendChild(t)})),n.value=t.selected,lastBox.appendChild(n);else if("slider"===t.type&&"number"==typeof t.value&&"min"in t&&"max"in t&&"step"in t){const s=Math.round(t.value*(1/t.step))/(1/t.step),o=String(t.step),i=o.includes(".")?o.split(".")[1].length:0,a=newEl("input",{class:"opt-input slider",type:"range",id:e});a.setAttribute("step",t.step),a.setAttribute("min",t.min),a.setAttribute("max",t.max),a.value=Number(s).toFixed(i);const c=newEl("input",{class:"opt-input slider-readout",type:"number",id:`${e}-readout`});c.setAttribute("step",t.step),c.setAttribute("min",t.min),c.setAttribute("max",t.max),c.value=Number(s).toFixed(i),a.addEventListener("input",(s=>{c.value=s.target.value;const n=options[e]&&"object"==typeof options[e]?options[e]:{};options[e]={...n,value:Number(s.target.value),step:t.step,min:t.min,max:t.max,type:n.type||"slider"}})),c.addEventListener("change",(s=>{const n=Number(s.target.value),o=Math.min(Math.max(n,t.min),t.max),l=Math.round(o*(1/t.step))/(1/t.step),r=Number(l).toFixed(i);a.value=r,c.value=r;const d=options[e]&&"object"==typeof options[e]?options[e]:{};options[e]={...d,value:Number(r),step:t.step,min:t.min,max:t.max,type:d.type||"slider"}}));const l=newEl("div",{class:"slider-wrapper"});l.appendChild(a),l.appendChild(c),n=l}else if("number"===t.type&&"number"==typeof t.value&&"min"in t&&"max"in t&&"step"in t){const e=Math.round(t.value*(1/t.step))/(1/t.step),s=String(t.step),o=s.includes(".")?s.split(".")[1].length:0;n.setAttribute("type","number"),n.setAttribute("step",t.step),n.setAttribute("min",t.min),n.setAttribute("max",t.max),n.value=Number(e).toFixed(o)}addInputListener(n);const o=newEl("div",{class:"tf-wrapper"});o.appendChild(s),o.appendChild(n),lastBox.appendChild(o),e.endsWith("-hidden")&&o.classList.add("hide")}))},createNewBox=(e,t)=>{const s=newEl("div",{class:"ctn opt-box hide",id:`option-box${e}`}),n=newEl("h2",{class:"heading-2"});n.innerHTML=t,s.appendChild(n),$("main-box").appendChild(s);const o=newEl("a",{class:"a-link",id:`set-opt${e}`,"data-box":`option-box${e}`});return o.innerHTML=t,o.addEventListener("click",switchPage),$("nav-link").appendChild(o),s},createOptionsBox=async e=>{const t=!!e.dhcp;$("no-dhcp").checked=t,$("ip").value=e.ip_address,$("gateway").value=e.gateway,$("subnet").value=e.subnet,t&&(show("conf-wifi"),show("save-wifi"));let s={},n="wifi-box";lastBox=$(n),Object.entries(e).forEach((([e,t],o)=>{if(e.startsWith("param-box"))addOptionsElement(s),lastBox=createNewBox(o,t),s={},n=t;else if("wifi-box"!==n){let n=!1;if(e.startsWith("img-logo")||e.startsWith("name-logo"))n=!0;else if(e.startsWith("raw-css")){const e=newEl("link",{rel:"stylesheet",href:t});document.head.appendChild(e),n=!0}else if(e.startsWith("raw-javascript")){const e=newEl("script",{src:t});document.body.appendChild(e),n=!0}else if(e.startsWith("raw-html")){const e=newEl("div",{class:"tf-wrapper raw-html",id:t,"data-box":lastBox.id});lastBox.appendChild(e),fetch(t).then((e=>e.text())).then((e=>$(t).innerHTML=e)),n=!0}n||(s[e]=t)}})),0!==Object.entries(s).length&&addOptionsElement(s)};function addInputListener(e){e.addEventListener("change",(e=>{const t=e.target;switch(t.type){case"number":{const e=t.step?Number(t.step):0;if(t.id.endsWith("-readout"))return;if(e){const s=options[t.id]&&"object"==typeof options[t.id]?options[t.id]:{};options[t.id]={...s,value:Math.round(Number(t.value)*(1/e))/(1/e),step:e,min:Number(t.getAttribute("min")),max:Number(t.getAttribute("max")),type:s&&s.type?s.type:"number"}}else options[t.id]=parseInt(t.value,10);break}case"text":options[t.id]=t.value;break;case"checkbox":options[t.id]=t.checked;break;default:"select-one"===t.type&&(options[t.id].selected=t.value)}}))}function insertKey(e,t,s,n){const o={};return Object.keys(s).forEach(((i,a)=>{a===n&&(o[e]=t),o[i]=s[i]})),o}function saveParameters(){if(Object.keys(options)[0]?.startsWith("param-box")){const e="param-box0"===Object.keys(options)[0];options={...e?{"param-box-0":options["wifi-box"]}:{"wifi-box":""},dhcp:!1,...options}}const e=$("no-dhcp").checked;if(options.dhcp=e,e){const e={ip_address:$("ip").value,gateway:$("gateway").value,subnet:$("subnet").value};Object.entries(e).forEach((([e,t],s)=>{options=insertKey(e,t,options,s+2),options[e]=t}))}const t=new Blob([JSON.stringify(options,null,2)],{type:"application/json"}),s=new FormData;s.append("data",t,"/"+configFile),fetch("/edit",{method:"POST",body:s}).then((e=>e.text())).then((()=>openModal("Save options",`<br><b>"/${configFile}"</b> saved successfully on flash memory!<br><br>`))).catch((e=>openModal("Error!",`Failed to save: ${e}`)))}function showHidePassword(){const e=$("password"),t="password"===e.type;e.type=t?"text":"password",show(t?"show-pass":"hide-pass"),hide(t?"hide-pass":"show-pass")}function getWiFiList(){show("loader"),fetch(`${esp}scan`).then((e=>e.json())).then((e=>{listWifi(e),hide("loader")})).catch((e=>{console.error("Error fetching WiFi list:",e),hide("loader")}))}function selectWifi(e){const t=e.currentTarget,s=t.id,n=t.cells[1].textContent;try{$(`select-${s}`).checked=!0}catch(e){$(s).checked=!0}$("ssid").value=n,$("ssid-name").textContent=n,$("password").focus(),$("wifi-table").classList.add("hide"),show("show-networks")}function listWifi(e){e.reload&&setTimeout(getWiFiList,2e3),e.sort(((e,t)=>t.strength-e.strength));const t=document.querySelector("#wifi-list");t.innerHTML="";const s=document.createDocumentFragment();e.forEach(((e,t)=>{const n=newEl("tr",{id:`wifi-${t}`});n.addEventListener("click",selectWifi),n.innerHTML=`\n      <td><input type="radio" name="select" id="select-wifi-${t}"></td>\n      <td id="ssid-wifi-${t}">${e.ssid}</td>\n      <td class="hide-tiny">${e.strength} dBm</td>\n      <td>${e.security?svgLock:svgUnlock}</td>\n    `,s.appendChild(n)})),t.appendChild(s),show("wifi-table")}function doConnection(e,t){const s=$("ssid").value,n=$("password").value;if(!s||!n)return void openModal("Connect to WiFi","Please insert a SSID and a Password");const o=new FormData;o.append("ssid",s),o.append("password",n),o.append("persistent",$("persistent").checked),t&&o.append("newSSID",!0),$("no-dhcp").checked&&(o.append("ip_address",$("ip").value),o.append("gateway",$("gateway").value),o.append("subnet",$("subnet").value));const i={method:"POST",body:o,redirect:"follow"};show("loader"),fetch("/connect",i).then((e=>e.text().then((t=>({status:e.status,data:t}))))).then((({status:t,data:s})=>{200===t?s.includes("already")?openModal("Connect to WiFi",s,(()=>doConnection(e,!0))):openModal("Connect to WiFi",s,restartESP):openModal("Error!",s),hide("loader")})).catch((e=>{openModal("Connect to WiFi",e),hide("loader")}))}function switchPage(e){const t=e.target,s=t.getAttribute("data-box");$("top-nav").classList.remove("responsive"),document.querySelectorAll("a").forEach((e=>e.classList.remove("active"))),t.classList.add("active"),document.querySelectorAll(".opt-box").forEach((e=>e.classList.add("hide"))),show(s);if("set-wifi"===t.id)hide("btn-box"),hide("btn-hr");else{const e=$(s),t=document.createDocumentFragment();t.appendChild($("btn-hr")),t.appendChild($("btn-box")),e.appendChild(t),document.querySelectorAll(".raw-html").forEach((t=>{t.getAttribute("data-box")===e.id&&e.insertBefore(t,$("btn-hr"))})),show("btn-box"),show("btn-hr")}}function showMenu(){$("top-nav").classList.toggle("responsive")}function openModal(e,t,s){const n=$("modal-message"),o=$("main-box");$("message-title").innerHTML=e,$("message-body").innerHTML=t,n.open=!0,o.style.filter="blur(3px)",s?(closeCb=s,show("ok-modal")):hide("ok-modal")}function closeModal(e){$("modal-message").open=!1,$("main-box").style.filter="",closeCb&&e&&closeCb()}function confirmRestart(){openModal("Restart ESP","<br>Do you want to restart now?",restartESP)}function restartESP(){fetch(`${esp}reset`).then((()=>{closeModal(),openModal("Restart!","<br>ESP restarted!")})).catch((e=>openModal("Error!",`Failed to restart ESP: ${e}`)))}function handleSubmit(){const e=$("file-input").files;if(0===e.length)return void alert("Please choose a file");const t=$("update-log"),s=$("progress-wrap"),n=$("progress-anim");show("loader"),show("progress-wrap"),s.classList.add("active"),t.innerHTML="Update in progress";const o=new FormData;o.set("update",e[0]);const i=new XMLHttpRequest;i.open("POST",`/update?size=${e[0].size}`),i.onload=()=>{hide("loader"),s.classList.remove("active"),t.innerHTML=200===i.status?i.response:`Error ${i.status}: ${i.statusText}`},i.upload.addEventListener("progress",(e=>{if(e.lengthComputable){const s=`${Math.round(e.loaded/e.total*100)}%`;n.style.width=s,t.innerHTML=`Update in progress: ${s}`}})),i.send(o)}async function uploadFolder(e){const t=$("listing"),s=async(e,s)=>{const n=newEl("li");n.textContent=s,t.appendChild(n);try{const t=new FormData;t.set("data",e,"/"+s);if(!(await fetch("/edit",{method:"POST",body:t})).ok)throw new Error("Upload failed")}catch(e){console.error(`Error uploading ${s}:`,e),n.style.color="red"}};for(const t of e.target.files){const e=t.webkitRelativePath.replace(/^data\//,"");await s(t,e)}}const svgIcons={"svg-menu":svgMenu,"svg-eye":svgEye,"svg-no-eye":svgNoEye,"svg-scan":svgScan,"svg-connect":svgConnect,"svg-save":svgSave,"svg-save2":svgSave,"svg-restart":svgRestart,"img-logo":svgLogo};Object.entries(svgIcons).forEach((([e,t])=>{$(e).innerHTML=t}));const eventListeners={"hum-btn":["click",showMenu],"scan-wifi":["click",getWiFiList],"connect-wifi":["click",doConnection],"save-params":["click",saveParameters],"save-wifi":["click",saveParameters],"show-hide-password":["click",showHidePassword],"set-wifi":["click",switchPage],"set-update":["click",switchPage],about:["click",switchPage],restart:["click",confirmRestart],picker:["change",uploadFolder],"update-btn":["click",handleSubmit]};Object.entries(eventListeners).forEach((([e,[t,s]])=>{$(e).addEventListener(t,s)})),$("file-input").addEventListener("change",(()=>{const e=$("file-input").files[0];$("fw-label").innerHTML=`${e.name} (${e.size} bytes)`,$("fw-label").style.background="brown"})),$("no-dhcp").addEventListener("change",(function(){const e=this.checked?"remove":"add";["conf-wifi","save-wifi"].forEach((t=>$(t).classList[e]("hide")))})),$("show-networks")&&$("show-networks").addEventListener("click",(()=>{$("wifi-table").classList.toggle("hide"),$("show-networks").classList.toggle("hide")})),window.addEventListener("load",getParameters);</script>
+</body>
+</html>
