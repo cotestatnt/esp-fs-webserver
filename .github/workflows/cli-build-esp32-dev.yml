@@ -17,6 +17,7 @@ concurrency:
 jobs:
   arduino-esp32:
     name: ESP32 (arduino-cli) (shard=${{ matrix.shard }})
+    if: github.event_name == 'workflow_dispatch' || vars.ENABLE_BUILDS == 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -145,7 +146,7 @@ jobs:
     name: ESP32 (arduino-cli) - Final report
     runs-on: ubuntu-latest
     needs: arduino-esp32
-    if: always()
+    if: always() && needs.arduino-esp32.result != 'skipped'
     steps:
       - name: Download all reports
         uses: actions/download-artifact@v4
