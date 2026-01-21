@@ -1,6 +1,5 @@
-/* Readable formatting for maintainability */
 html { font-family: sans-serif; }
-body { padding: 20px; background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%); min-height: 100vh; }
+body { padding: 0px 20px 20px 20px; background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%); min-height: 100vh; }
 a { background-color: transparent; cursor: pointer; padding: 0; margin: 0; }
 a:active, a:hover { outline: 0; }
 b { font-weight: 700; }
@@ -14,8 +13,7 @@ input[type=checkbox] { box-sizing: border-box; padding: 0; }
 input[type=text],
 input[type=number],
 input[type=password],
-select {
-	height: 40px;
+select {height: 40px;
 	width: 90%;
 	padding: 0 0 0 20px;
 	border: 2px solid #e0f2fe;
@@ -106,12 +104,10 @@ select { width: 92.5%; background-color: #f0f9ff; }
 	min-width: 400px;
 }
 .d-modal:focus { outline: none; }
-
-/* Modal overlay container */
 #modal-message {
 	position: fixed;
 	inset: 0;
-	display: none; /* default hidden until opened via JS */
+	display: none;
 	align-items: center;
 	justify-content: center;
 	z-index: 1000;
@@ -129,18 +125,7 @@ select { width: 92.5%; background-color: #f0f9ff; }
 .d-modal-content { border-top: 2px solid #06b6d4; padding: 1.5em; overflow: auto; color: #0f172a; }
 .topnav {
 	background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
-	overflow: hidden;
-	width: auto;
-	max-width: 100%;
-	float: right;
-	border-radius: 8px;
-	align-self: flex-end;
-	bottom: 5px;
-	right: 20px;
-	border: 2px solid #06b6d4;
-	white-space: nowrap;
-	display: flex;
-	flex-wrap: nowrap;
+	border-radius: 8px; align-self: flex-end;	border: 2px solid #06b6d4;
 }
 .topnav a { float: left; color: #e2e8f0; padding: 6px 12px; font-size: 16px; }
 .topnav a:hover { color: #06b6d4; }
@@ -161,17 +146,16 @@ select { width: 92.5%; background-color: #f0f9ff; }
 	position: relative;
 	overflow: visible;
 	max-width: 840px;
-	margin: 0 auto 10px;
-	padding: 10px 40px;
+	margin: 0 auto 6px;
+	padding: 8px 40px;
 	border-radius: 12px;
-	border: 2px solid #06b6d4;
+	border: 1px solid #06b6d4;
 	background: linear-gradient(135deg, rgba(224, 242, 254, 0.65) 0%, rgba(240, 249, 255, 0.95) 100%);
 	box-shadow: 0 8px 24px rgba(6, 182, 212, 0.2);
 }
-.btn-bar { display: flex; padding: 20px; justify-content: center; flex-wrap: wrap; grid-column-gap: 30px; grid-row-gap: 20px; order: 998; }
+.btn-bar { display: flex; padding: 10px; justify-content: center; flex-wrap: wrap; grid-column-gap: 30px; grid-row-gap: 20px; order: 998; }
 .tf-wrapper { display: flex; margin-bottom: 10px; flex-direction: column; align-items: center; }
 .slider-wrapper { display: flex; align-items: center; gap: 14px; width: 92.5%; background-color: #f0f9ff; border-radius: 8px;}
-/* Slider track */
 .slider-wrapper .slider {
   appearance: none;
 	margin-left: 20px;
@@ -184,7 +168,6 @@ select { width: 92.5%; background-color: #f0f9ff; }
 	box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.12);
 }
 .slider-wrapper .slider:hover { box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.15), inset 0 1px 2px rgba(15, 23, 42, 0.12); }
-/* WebKit thumb */
 .slider-wrapper .slider::-webkit-slider-thumb {
 	-webkit-appearance: none;
 	appearance: none;
@@ -197,7 +180,6 @@ select { width: 92.5%; background-color: #f0f9ff; }
 	cursor: pointer;
 }
 .slider-wrapper .slider:active::-webkit-slider-thumb { filter: brightness(1.05); }
-/* Firefox track & thumb */
 .slider-wrapper .slider::-moz-range-track {
 	height: 10px;
 	background: #e2e8f0;
@@ -213,18 +195,16 @@ select { width: 92.5%; background-color: #f0f9ff; }
 	box-shadow: 0 2px 6px rgba(6, 182, 212, 0.4);
 	cursor: pointer;
 }
-/* Numeric readout styling */
 .slider-wrapper .slider-readout {
 	width: 60px;
 	height: 40px;
 	text-align: center;
-	
 	border: none;
 }
 .slider-wrapper .slider-readout:hover { border-color: #06b6d4; box-shadow: 0 0 12px rgba(6, 182, 212, 0.2); }
-.title { display: flex; }
-.heading { width: 100%; text-align: right; margin-right: 0; color: #0891b2; }
-.heading-2 { font-weight: 600; text-align: center; margin: 10px auto; color: #0891b2; }
+.title { display: flex; margin: -10px 0 -14px 0;}
+.heading { width: 100%; text-align: right; color: #0891b2; }
+.heading-2 { font-weight: 600; margin: 0px auto; color: #0891b2; }
 .toggle { cursor: pointer; display: block; padding: 4px; width: fit-content; margin: 0 0 18px -10px; }
 .toggle-label { margin: 0 20px; position: relative; top: 2px; color: #0f172a; font-weight: 500; }
 .toggle-switch { display: inline-block; background: #cbd5e1; border-radius: 16px; width: 58px; height: 32px; position: relative; vertical-align: middle; transition: background .25s; }
@@ -245,13 +225,8 @@ select { width: 92.5%; background-color: #f0f9ff; }
 #about { color: #cbd5e1; transition: 0.3s; }
 #about:hover { color: #06b6d4; }
 #esp-ip { display: inline-block; margin-bottom: 5px; color: #e2e8f0; }
-@media screen and (max-width: 991px) {
-	.wifi-connect { padding-right: 20px; padding-left: 20px; }
-}
-@media screen and (max-width: 767px) {
-	.wifi-connect { padding-right: 10px; padding-left: 10px; }
-	select { width: 93.5% }
-}
+@media screen and (max-width: 991px) {.wifi-connect { padding-right: 20px; padding-left: 20px; }}
+@media screen and (max-width: 767px) {.wifi-connect { padding-right: 10px; padding-left: 10px; }select { width: 93.5% }}
 @media screen and (max-width: 608px) {
 	h1 { font-size: 24px; }
 	.btn-bar { margin-top: 20px; flex-direction: column; }
@@ -279,12 +254,8 @@ select { width: 92.5%; background-color: #f0f9ff; }
 .chevron-networks { font-size: 12px; color: #06b6d4; margin-right: 15px; }
 .upload-note { color: #0891b2; }
 summary { display: none; }
-
-/* Inline credential action buttons next to the checkbox */
 .btn-bar.compact { padding: 8px 0 0; justify-content: flex-start; grid-column-gap: 12px; grid-row-gap: 8px; }
 .btn.small { padding: 8px 12px; min-width: auto; border-radius: 6px; }
-
-/* FIX: Better tab integration and coloring */
 .cred-tabs {
 	display: flex;
 	flex-wrap: nowrap;
@@ -323,33 +294,27 @@ summary { display: none; }
     border: 2px solid #06b6d4;
     border-bottom: 2px solid #e0f2fe;
 }
-
-/* Dropdown style when tabs overflow */
 .cred-tabs select {
     width: 100%;
     margin: 0;
     border-radius: 8px 8px 0 0;
     border: 2px solid #06b6d4;
-    border-bottom: 2px solid #e0f2fe; /* Blend with content */
+    border-bottom: 2px solid #e0f2fe;
     background: #e0f2fe;
     color: #0891b2;
     font-weight: 600;
-    height: 42px; /* Accessiblity */
+    height: 42px;
     padding-left: 12px;
 }
-
-/* The "Tab Content" Pane */
-#wifi {
+#wifi, #wifi-table {
 	border: 2px solid #06b6d4;
-	background: #e0f2fe; /* Matches the active tab background */
+	background: #e0f2fe;
 	padding: 20px;
-	border-radius: 0 8px 8px 8px; /* Top-left sharp to match first tab */
+	border-radius: 0 8px 8px 8px;
 	position: relative;
 	z-index: 1;
-	margin-bottom: 20px;
+	margin-bottom: 10px;
 }
-
-/* Inline credential action buttons */
 .tf-wrapper.inline-creds {
 	flex-direction: row;
 	align-items: center;
@@ -374,7 +339,7 @@ summary { display: none; }
 	border-radius: 6px;
 	font-size: 13px;
 	box-shadow: none;
-	background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); /* Red for danger actions */
+	background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
 	justify-content: center;
 }
 .btn.small:hover {

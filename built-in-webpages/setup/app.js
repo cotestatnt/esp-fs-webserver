@@ -1,13 +1,18 @@
+// Icona logo originale in SVG (lasciata com'è per l'header)
 const svgLogo = '<svg fill="brown" height="120" viewBox="0 0 24 24"><path d="M5 3C3.9 3 3 3.9 3 5S2.1 7 1 7v2c1.1 0 2 .9 2 2s.9 2 2 2h2v-2H5v-1c0-1.1-.9-2-2-2 1.1 0 2-.9 2-2V5h2V3M11 3c1.1 0 2 .9 2 2s.9 2 2 2v2c-1.1 0-2 .9-2 2s-.9 2-2 2H9v-2h2v-1c0-1.1.9-2 2-2-1.1 0-2-.9-2-2V5H9V3h2m11 3v12c0 1.11-.89 2-2 2H4a2 2 0 01-2-2v-3h2v3h16V6h-2.97V4H20c1.11 0 2 .89 2 2z"/></svg>';
-const svgLock = '<svg height="16" viewBox="0 0 24 24"><path d="M12 17a2 2 0 002-2c0-1.11-.9-2-2-2a2 2 0 00-2 2 2 2 0 002 2m6-9a2 2 0 012 2v10a2 2 0 01-2 2H6a2 2 0 01-2-2V10c0-1.11.9-2 2-2h1V6a5 5 0 0110 0v2h1M12 3a3 3 0 00-3 3v2h6V6a3 3 0 00-3-3z"/></svg>';
-const svgUnlock = '<svg height="16" viewBox="0 0 24 24"><path d="M18 1c-2.76 0-5 2.24-5 5v2H4c-1.1 0-2 .89-2 2v10c0 1.11.9 2 2 2h12c1.11 0 2-.89 2-2V10c0-1.1-.89-2-2-2h-1V6c0-1.66 1.34-3 3-3s3 1.34 3 3v2h2V6c0-2.76-2.24-5-5-5M10 13c1.1 0 2 .89 2 2 0 1.11-.9 2-2 2s-2-.89-2-2c0-1.1.9-2 2-2z"/></svg>';
-const svgScan = '<path d="M12 20l-3.6-4.8c1 .75 2.25 1.2 3.6 1.2s2.6-.45 3.6-1.2L12 20M4.8 10.4l1.8 2.4C8.1 11.67 10 11 12 11s3.9.67 5.4 1.8l1.8-2.4C17.19 8.89 14.7 8 12 8s-5.19.89-8.2 2.4M12 2a10 10 0 00-10.8 3.6L3 8c2.5-1.88 5.62-3 9-3s6.5 1.12 9 3l1.8-2.4C19.79 3.34 16.05 2 12 2M7 24h2v-2H7v2m8 0h2v-2h-2v2m-4 0h2v-2h-2v2z"/>';
-const svgConnect = '<path d="M12 21l3.6-4.8c-1-.75-2.25-1.2-3.6-1.2s-2.6.45-3.6 1.2L12 21M12 3C7.95 3 4.21 4.34 1.2 6.6L3 9c2.5-1.88 5.62-3 9-3s6.5 1.12 9 3l1.8-2.4C19.79 4.34 16.05 3 12 3m0 6c-2.7 0-5.19.89-7.2 2.4l1.8 2.4c1.5-1.13 3.37-1.8 5.4-1.8s3.9.67 5.4 1.8l1.8-2.4C17.19 9.89 14.7 9 12 9z"/>';
-const svgSave = '<path d="M15 9H5V5h10m-3 10a3 3 0 01-3-3 3 3 0 013-3 3 3 0 013 3 3 3 0 01-3 3m8-16H5c-1.11 0-2 .9-2 2v14a2 2 0 002 2h14a2 2 0 002-2V7l-4-4z"/>';
-const svgRestart = '<path d="M12 4a8 8 0 015.6 2.3C20.7 9.4 20.7 14.5 17.6 17.6a8 8 0 01-6.7 2.3l.5-2a6 6 0 004.8-1.7c2.3-2.3 2.3-6.1 0-8.5a6 6 0 00-4.2-1.7V10.6L7 5.6 12 .6V4M6.3 17.6C3.7 15 3.3 11 5.1 7.9l1.5 1.5A6 6 0 007.8 16.2c.5.5 1.1.9 1.8 1.2l-.6 2a8 8 0 01-2.7-1.8z"/>';
-const svgEye = '<path d="M12 9a3 3 0 013 3 3 3 0 01-3 3 3 3 0 01-3-3 3 3 0 013-3m0-4.5c5 0 9.27 3.11 11 7.5-1.73 4.39-6 7.5-11 7.5s-9.27-3.11-11-7.5C2.73 7.61 7 4.5 12 4.5M3.18 12a9.821 9.821 0 0017.64 0A9.821 9.821 0 003.18 12z"/>';
-const svgNoEye = '<path d="M0 0h24v24H0V0z" fill="none"/><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>';
-const svgMenu = '<path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/>';
+
+// Icone come semplici caratteri Unicode (niente SVG complessi) per il resto della UI
+const iconLock = '🔒';
+const iconUnlock = '🔓';
+const iconScan = '📡';
+const iconConnect = '📶';
+const iconSave = '💾';
+const iconRestart = '↻';
+const iconEye = '🐵';
+const iconNoEye = '🙈';
+const iconMenu = '☰';
+const iconDelete = '🗑️';
+const iconClear = '✖';
 
 // Global Variables
 let closeCb = function() {};
@@ -16,6 +21,8 @@ const esp = `${window.location.protocol}//${window.location.hostname}:${port}/`;
 let options = {};
 let configFile;
 let lastBox;
+let wifiCredentials = [];
+let selectedCredentialIndex = -1;
 
 // Element selector shorthand
 const $ = (el) => document.getElementById(el);
@@ -283,6 +290,70 @@ const createOptionsBox = async (raw) => {
   if (Object.entries(nest).length !== 0) addOptionsElement(nest);
 };
 
+// ----- WiFi credentials management (multiple entries) -----
+
+const hasStoredCredentialFor = (ssid) => {
+  return wifiCredentials.some(c => c.ssid === ssid);
+};
+
+const applyCredentialToForm = (cred) => {
+  $('ssid').value = cred.ssid || '';
+  $('ssid-name').textContent = cred.ssid || 'SSID';
+
+  const hasStaticIp = cred.ip && cred.gateway && cred.subnet && cred.ip !== '0.0.0.0';
+  $('no-dhcp').checked = hasStaticIp;
+  if (hasStaticIp) {
+    show('conf-wifi');
+    show('save-wifi');
+    $('ip').value = cred.ip;
+    $('gateway').value = cred.gateway;
+    $('subnet').value = cred.subnet;
+  } else {
+    hide('conf-wifi');
+    hide('save-wifi');
+  }
+
+  // Never pre-fill password; user can enter a new one, or leave empty
+  // to reuse stored password on the device.
+  $('password').value = '';
+};
+
+// Dynamic loader for heavy credentials logic
+const loadCredentials = async () => {
+  try {
+    const res = await fetch(`${esp}wifi/credentials`, { cache: 'no-store' });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!Array.isArray(data)) return;
+    wifiCredentials = data;
+    selectedCredentialIndex = wifiCredentials.length ? 0 : -1;
+
+    if (wifiCredentials.length > 1) {
+      if (typeof renderCredentialTabs === 'undefined') {
+        await new Promise((resolve) => {
+           const script = document.createElement('script');
+           script.src = 'creds.js';
+           script.onload = resolve;
+           document.body.appendChild(script);
+        });
+      }
+      renderCredentialTabs();
+    } else {
+       const container = $('wifi-cred-tabs');
+       if(container) container.innerHTML = '';
+       hide('delete-cred');
+       hide('clear-creds');
+       hide('cred-actions-inline');
+    }
+
+    if (selectedCredentialIndex >= 0) {
+      applyCredentialToForm(wifiCredentials[selectedCredentialIndex]);
+    }
+  } catch (err) {
+    console.error('Error loading credentials:', err);
+  }
+};
+
 function addInputListener(item) {
   const onChange = (e) => {
     const t = e.target;
@@ -428,7 +499,7 @@ function listWifi(obj) {
       <td><input type="radio" name="select" id="select-wifi-${i}"></td>
       <td id="ssid-wifi-${i}">${net.ssid}</td>
       <td class="hide-tiny">${net.strength} dBm</td>
-      <td>${net.security ? svgLock : svgUnlock}</td>
+      <td>${net.security ? iconLock : iconUnlock}</td>
     `;
     frag.appendChild(row);
   });
@@ -439,9 +510,10 @@ function listWifi(obj) {
 function doConnection(e, f) {
   const ssid = $('ssid').value;
   const password = $('password').value;
+  const hasStored = hasStoredCredentialFor(ssid);
 
-  if (!ssid || !password) {
-    openModal('Connect to WiFi', 'Please insert a SSID and a Password');
+  if (!ssid || (!password && !hasStored)) {
+    openModal('Connect to WiFi', 'Please insert a SSID and a Password, or select a saved network.');
     return;
   }
 
@@ -466,24 +538,86 @@ function doConnection(e, f) {
 
   show('loader');
 
+  const startPolling = () => {
+    startConnectPolling(ssid);
+  };
+
   fetch('/connect', requestOptions)
     .then(res => res.text().then(data => ({ status: res.status, data })))
     .then(({ status, data }) => {
       if (status === 200) {
         if (data.includes("already")) {
+          stopConnectPolling();
           openModal('Connect to WiFi', data, () => doConnection(e, true));
-        } else {
-          openModal('Connect to WiFi', data, restartESP);
+          hide('loader');
+          return;
         }
+        // Connection is switching; start polling for new SSID
+        startPolling();
+        loadCredentials();
       } else {
+        stopConnectPolling();
         openModal('Error!', data);
+        hide('loader');
       }
-      hide('loader');
     })
-    .catch(error => {
-      openModal('Connect to WiFi', error);
-      hide('loader');
+    .catch(() => {
+      // Likely disconnected while switching networks; start polling
+      startPolling();
     });
+}
+
+let connectPollTimer = null;
+const CONNECT_POLL_INTERVAL = 2000;
+const CONNECT_POLL_MAX_TRIES = 40;
+
+function stopConnectPolling() {
+  if (connectPollTimer) {
+    clearTimeout(connectPollTimer);
+    connectPollTimer = null;
+  }
+}
+
+function startConnectPolling(targetSsid) {
+  stopConnectPolling();
+  let tries = 0;
+  const host = window.location.hostname;
+
+  openModal('Connect to WiFi', `Connecting to <b>${targetSsid}</b>...<br>Trying to reach the device on the new network.`);
+
+  const poll = () => {
+    tries++;
+    fetch(`http://${host}.local/getStatus`, { cache: 'no-store' })
+      .then(res => res.json())
+      .then(data => {
+        const mode = data.mode || '';
+        if (mode.includes(targetSsid)) {
+          stopConnectPolling();
+          hide('loader');
+          const url = `http://${host}.local/`;
+          openModal('Connect to WiFi', `Connected to <b>${targetSsid}</b>.<br><a href="${url}">${url}</a> (IP: ${data.ip})`);
+          return;
+        }
+        if (tries < CONNECT_POLL_MAX_TRIES) {
+          connectPollTimer = setTimeout(poll, CONNECT_POLL_INTERVAL);
+        } else {
+          stopConnectPolling();
+          hide('loader');
+          openModal('Connect to WiFi', 'Timeout while waiting for connection. Check your router or serial log for the new IP.');
+        }
+      })
+      .catch(() => {
+        if (tries < CONNECT_POLL_MAX_TRIES) {
+          connectPollTimer = setTimeout(poll, CONNECT_POLL_INTERVAL);
+        } else {
+          stopConnectPolling();
+          hide('loader');
+          openModal('Connect to WiFi', 'Timeout while waiting for connection. Check your router or serial log for the new IP.');
+        }
+      });
+  };
+
+  poll();
 }
 
 function switchPage(el) {
@@ -626,22 +760,28 @@ async function uploadFolder(e) {
   }
 }
 // Initialize SVG icons
-const svgIcons = {
-  'svg-menu': svgMenu,
-  'svg-eye': svgEye, 
-  'svg-no-eye': svgNoEye,
-  'svg-scan': svgScan,
-  'svg-connect': svgConnect,
-  'svg-save': svgSave,
-  'svg-save2': svgSave,
-  'svg-restart': svgRestart,
-  'img-logo': svgLogo
+const uiIcons = {
+  'svg-menu': iconMenu,
+  'svg-eye': iconEye, 
+  'svg-no-eye': iconNoEye,
+  'svg-scan': iconScan,
+  'svg-connect': iconConnect,
+  'svg-save': iconSave,
+  'svg-save2': iconSave,
+  'svg-restart': iconRestart,
+  'svg-delete': iconDelete,
+  'svg-clear': iconClear,
 };
 
-// Set SVG icons
-Object.entries(svgIcons).forEach(([id, svg]) => {
-  $(id).innerHTML = svg;
+// Imposta icone Unicode nei rispettivi contenitori
+Object.entries(uiIcons).forEach(([id, icon]) => {
+  const el = $(id);
+  if (el) el.textContent = icon;
 });
+
+// Imposta il logo SVG di default (se non verrà poi sovrascritto da un logo custom)
+const logoEl = $('img-logo');
+if (logoEl) logoEl.innerHTML = svgLogo;
 
 // Add event listeners
 const eventListeners = {
@@ -650,13 +790,17 @@ const eventListeners = {
   'connect-wifi': ['click', doConnection],
   'save-params': ['click', saveParameters],
   'save-wifi': ['click', saveParameters], 
+  'delete-cred': ['click', () => window.deleteSelectedCredential && window.deleteSelectedCredential()],
+  'clear-creds': ['click', () => window.clearAllCredentials && window.clearAllCredentials()],
   'show-hide-password': ['click', showHidePassword],
   'set-wifi': ['click', switchPage],
   'set-update': ['click', switchPage],
   'about': ['click', switchPage],
   'restart': ['click', confirmRestart],
   'picker': ['change', uploadFolder],
-  'update-btn': ['click', handleSubmit]
+  'update-btn': ['click', handleSubmit],
+  'ok-modal': ['click', () => closeModal(true)],
+  'close-modal': ['click', () => closeModal(false)]
 };
 
 Object.entries(eventListeners).forEach(([id, [event, handler]]) => {
@@ -676,6 +820,13 @@ $('no-dhcp').addEventListener('change', function() {
   ['conf-wifi', 'save-wifi'].forEach(id => $(id).classList[method]('hide'));
 });
 
+// Update Connect button text when typing SSID manually
+if ($('ssid')) {
+  $('ssid').addEventListener('input', function() {
+    $('ssid-name').textContent = this.value || 'SSID';
+  });
+}
+
 // WiFi list chevron handler - toggle visibility
 if ($('show-networks')) {
   $('show-networks').addEventListener('click', () => {
@@ -685,4 +836,20 @@ if ($('show-networks')) {
 }
 
 // Initialize on page load
-window.addEventListener('load', getParameters);
+window.addEventListener('load', () => {
+  getParameters();
+  loadCredentials();
+
+  // Move management buttons near the persistent checkbox (inline)
+  const inline = $('cred-actions-inline');
+  if (inline) {
+    const del = $('delete-cred');
+    const clr = $('clear-creds');
+    if (del && clr) {
+      del.classList.add('small');
+      clr.classList.add('small');
+      inline.appendChild(del);
+      inline.appendChild(clr);
+    }
+  }
+});

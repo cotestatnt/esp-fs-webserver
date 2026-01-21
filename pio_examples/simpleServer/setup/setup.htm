@@ -21,9 +21,9 @@
                 <span id=nav-link><a id=set-wifi class="a-link active" data-box=wifi-box>WiFi Setup</a></span>
                 <span id=upd-link><a id=set-update class="a-link" data-box=update-box>Update & FS</a></span>
                 <a class="a-link icon" id=hum-btn>
-                    <div class="svg svg-menu-icon">
-                        <svg id=svg-menu height="16pt" fill=currentColor viewBox="0 0 20 18"></svg>
-                    </div>
+                  <div class="svg svg-menu-icon">
+                    <span id=svg-menu></span>
+                  </div>
                 </a>
             </div>
         </header>
@@ -53,10 +53,10 @@
                       <input type=password placeholder="Enter your WiFi password" id=password autocomplete=current-password data-ms-member=password>
                       <span class=show-hide-wrap id=show-hide-password>
                         <a class="show-hide hide" id=show-pass>
-                            <div class=svg><svg class=svg-e id=svg-eye viewBox="0 0 24 24"></svg></div>
+                          <div class=svg><span class=svg-e id=svg-eye></span></div>
                         </a>
                         <a class="show-hide" id=hide-pass>
-                            <div class=svg><svg class=svg-e id=svg-no-eye viewBox="0 0 24 24"></svg></div>
+                          <div class=svg><span class=svg-e id=svg-no-eye></span></div>
                         </a>
                       </span>  
                     </div>
@@ -95,23 +95,23 @@
             <hr>
             <div class=btn-bar>
                 <a id=scan-wifi class="btn">
-                    <div class=svg><svg id=svg-scan fill=currentColor viewBox="0 0 24 24"></svg></div>
+                  <div class=svg><span id=svg-scan></span></div>
                     <span>Scan WiFi networks</span>
                 </a>
                 <a id=connect-wifi class="btn">
-                    <div class=svg><svg id=svg-connect fill=currentColor viewBox="0 0 24 24"></svg></div>
+                  <div class=svg><span id=svg-connect></span></div>
                     <span>Connect to <span id=ssid-name>SSID</span></span>
                 </a>
                 <a id=save-wifi class="btn hide">
-                    <div class=svg><svg id=svg-save2 fill=currentColor viewBox="0 0 24 24"></svg></div>
+                  <div class=svg><span id=svg-save2></span></div>
                     <span>Save configuration</span>
                 </a>
                 <a id=delete-cred class="btn hide">
-                  <div class=svg><svg id=svg-delete fill=currentColor viewBox="0 0 24 24"></svg></div>
+                  <div class=svg><span id=svg-delete></span></div>
                   <span>Delete SSID</span>
                 </a>
                 <a id=clear-creds class="btn hide">
-                  <div class=svg><svg id=svg-clear fill=currentColor viewBox="0 0 24 24"></svg></div>
+                  <div class=svg><span id=svg-clear></span></div>
                   <span>Delete All</span>
                 </a>
             </div>
@@ -151,11 +151,11 @@
         <hr id=btn-hr class=hide>
         <div id=btn-box class="btn-bar hide">
             <a id=restart class="btn">
-                <div class=svg><svg id=svg-restart fill=currentColor viewBox="0 0 24 24"></svg></div>
+              <div class=svg><span id=svg-restart></span></div>
                 <span>Restart ESP</span>
             </a>
             <a id=save-params class="btn">
-                <div class=svg><svg id=svg-save fill=currentColor viewBox="0 0 24 24"></svg></div>
+              <div class=svg><span id=svg-save></span></div>
                 <span>Save configuration</span>
             </a>
         </div>

@@ -68,7 +68,7 @@ class Print;
 #endif
 
 #if ESP_FS_WS_EDIT_HTM
-#include "edit_htm.h"
+#include "assets/edit_htm.h"
 #endif
 
 #if ESP_FS_WS_SETUP_HTM
@@ -76,8 +76,8 @@ class Print;
 #define ESP_FS_WS_CONFIG_FILE ESP_FS_WS_CONFIG_FOLDER "/config.json"
 #include "CredentialManager.h"
 #include "SetupConfig.hpp"
-#include "setup_htm.h"
-#include "creds_js.h"
+#include "assets/setup_htm.h"
+#include "assets/creds_js.h"
 #endif
 
 #ifndef ESP_FS_WS_MDNS

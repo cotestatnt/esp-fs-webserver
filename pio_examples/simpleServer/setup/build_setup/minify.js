@@ -15,39 +15,69 @@ const { pipeline } = require('stream');
 const { createReadStream, createWriteStream } = require('fs');
 
 // MAPPING FOR AGGRESSIVE RENAMING
+// ATTENZIONE: viene applicato a HTML, CSS e JS come semplice sostituzione di stringa.
+// Per evitare di rompere i tag HTML o nomi troppo generici, qui usiamo SOLO classi/ID
+// "parlanti" con trattino che non coincidono con nomi di tag o parole comuni.
 const mangleMap = {
-    // Classes
-    'slider-wrapper': 'sw',
-    'slider-readout': 'sr',
-    'tf-wrapper': 'tw',
-    'opt-box': 'ob',
-    'heading-2': 'h2',
-    'nav-link': 'nl',
-    'wifi-table': 'wt',
-    'row-wrapper': 'rw',
-    'input-label': 'il',
-    'toggle-switch': 'ts',
-    'toggle-label': 'tl',
-    'opt-input': 'oi',
-    // IDs
-    'main-box': 'mb',
-    'top-nav': 'tn',
-    'img-logo': 'lg',
-    'name-logo': 'nm',
-    'show-pass': 'sp',
-    'hide-pass': 'hp',
-    'conf-wifi': 'cw',
-    'save-wifi': 'swi'
+  // Classi layout / contenitori più lunghe e specifiche
+  'slider-wrapper': 'sw',
+  'slider-readout': 'sr',
+  'tf-wrapper': 'tw',
+  'opt-box': 'ob',
+  'heading-2': 'h2',
+  'row-wrapper': 'rw',
+  'btn-bar': 'bb',
+  'inline-creds': 'ic',
+  'show-hide-wrap': 'shw',
+  'fw-upload': 'fwu',
+  'progress-wrap': 'pw1',
+  'esp-info': 'ei',
+  'svg-menu-icon': 'smi',
+  'chevron-networks': 'cn',
+  'hide-tiny': 'ht',
+  'upload-note': 'un',
+  'raw-html': 'rh',
+
+  // Classi di input/toggle più specifiche
+  'input-label': 'il',
+  'opt-input': 'oi',
+  'toggle-switch': 'ts',
+  'toggle-label': 'tl',
+
+  // IDs usati solo come riferimenti DOM (NON config JSON)
+  // NOTA: 'img-logo' e 'name-logo' sono chiavi di configurazione speciali
+  // nel file JSON e NON vanno manglate, altrimenti la logica in app.js
+  // non le riconosce più e smette di aggiornare logo/titolo.
+  'main-box': 'mb',
+  'top-nav': 'tn',
+  'nav-link': 'nl',
+  'wifi-table': 'wt',
+  'show-pass': 'sp',
+  'hide-pass': 'hp',
+  'conf-wifi': 'cw',
+  'save-wifi': 'swi',
+
+  // ID contenitori per le icone SVG (solo DOM)
+  'svg-menu': 'sm',
+  'svg-eye': 'sy',
+  'svg-no-eye': 'sne',
+  'svg-scan': 'ssc',
+  'svg-connect': 'sc',
+  'svg-save': 'ssa',
+  'svg-save2': 'ss2',
+  'svg-restart': 'sr',
+  'svg-delete': 'sdel',
+  'svg-clear': 'sclr'
 };
 
 function applyMangle(content) {
-    let res = content;
-    for (const [key, val] of Object.entries(mangleMap)) {
-        // Replace all occurrences globally
-        // Escaping check only minimal
-        res = res.split(key).join(val);
-    }
-    return res;
+  let res = content;
+  // Ordina per lunghezza decrescente per evitare conflitti tra chiavi simili (es. btn / btn-bar)
+  const entries = Object.entries(mangleMap).sort((a, b) => b[0].length - a[0].length);
+  for (const [key, val] of entries) {
+    res = res.split(key).join(val);
+  }
+  return res;
 }
 
 async function build() {
@@ -72,6 +102,8 @@ async function build() {
     console.log('App JS minified & mangled');
 
     // 2. Minify JS (Creds)
+    // IMPORTANTE: non applichiamo applyMangle qui, per non rompere
+    // le funzioni globali e la logica condivisa con app.js.
     await minify({
       compressor: terser,
       input: '../creds.js',
@@ -81,11 +113,7 @@ async function build() {
       }
     });
 
-    // Apply Mangle to Creds JS
-    let credsVal = fs.readFileSync('./min/creds.js', 'utf8');
-    credsVal = applyMangle(credsVal);
-    fs.writeFileSync('./min/creds.js', credsVal);
-    console.log('Creds JS minified & mangled');
+    console.log('Creds JS minified (no extra mangle)');
 
     // Copy creds to data
     try {
