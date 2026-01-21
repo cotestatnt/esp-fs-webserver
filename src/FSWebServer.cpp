@@ -22,6 +22,16 @@ void FSWebServer::begin(WebSocketsServer::WebSocketServerEvent wsEventHandler) {
     on("*", HTTP_HEAD, [this]() { this->handleFileName(); });
     on("/", HTTP_GET, [this]() { this->handleIndex(); });
     on("/setup", HTTP_GET, [this]() { this->handleSetup(); });
+    // Handler for serving the isolated credentials script (Gzipped from PROGMEM)
+    on("/creds.js", HTTP_GET, [this]() {
+        if (m_pageUser != nullptr) {
+            if(!this->authenticate(m_pageUser, m_pagePswd))
+                return this->requestAuthentication();
+        }
+        this->sendHeader(PSTR("Content-Encoding"), "gzip");
+        this->sendHeader(PSTR("Cache-Control"), "public, max-age=86400");
+        this->send_P(200, "application/javascript", (const char*)_accreds_js, sizeof(_accreds_js));
+    });
     on("/connect", HTTP_POST, [this]() { this->doWifiConnection(); });
     on("/scan", HTTP_GET, [this]() { this->handleScanNetworks(); });
     on("/getStatus", HTTP_GET, [this]() { this->getStatus(); });

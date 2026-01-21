@@ -77,6 +77,7 @@ class Print;
 #include "CredentialManager.h"
 #include "SetupConfig.hpp"
 #include "setup_htm.h"
+#include "creds_js.h"
 #endif
 
 #ifndef ESP_FS_WS_MDNS
