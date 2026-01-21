@@ -791,7 +791,9 @@ const eventListeners = {
   'about': ['click', switchPage],
   'restart': ['click', confirmRestart],
   'picker': ['change', uploadFolder],
-  'update-btn': ['click', handleSubmit]
+  'update-btn': ['click', handleSubmit],
+  'ok-modal': ['click', () => closeModal(true)],
+  'close-modal': ['click', () => closeModal(false)]
 };
 
 Object.entries(eventListeners).forEach(([id, [event, handler]]) => {

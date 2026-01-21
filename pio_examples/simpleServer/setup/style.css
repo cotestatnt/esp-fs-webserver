@@ -222,60 +222,6 @@ select { width: 92.5%; background-color: #f0f9ff; }
 	border: none;
 }
 .slider-wrapper .slider-readout:hover { border-color: #06b6d4; box-shadow: 0 0 12px rgba(6, 182, 212, 0.2); }
-.slider-wrapper { display: flex; align-items: center; gap: 14px; width: 92.5%; background-color: #f0f9ff; border-radius: 8px;}
-/* Slider track */
-.slider-wrapper .slider {
-  appearance: none;
-	margin-left: 20px;
-	width: 100%;
-	height: 10px;
-	border-radius: 999px;
-	background: #e2e8f0;
-	outline: none;
-	transition: box-shadow .2s, background .2s;
-	box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.12);
-}
-.slider-wrapper .slider:hover { box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.15), inset 0 1px 2px rgba(15, 23, 42, 0.12); }
-/* WebKit thumb */
-.slider-wrapper .slider::-webkit-slider-thumb {
-	-webkit-appearance: none;
-	appearance: none;
-	width: 20px;
-	height: 20px;
-	border-radius: 50%;
-	background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
-	border: 2px solid #e0f2fe;
-	box-shadow: 0 2px 6px rgba(6, 182, 212, 0.4);
-	cursor: pointer;
-}
-.slider-wrapper .slider:active::-webkit-slider-thumb { filter: brightness(1.05); }
-/* Firefox track & thumb */
-.slider-wrapper .slider::-moz-range-track {
-	height: 10px;
-	background: #e2e8f0;
-	border-radius: 999px;
-	border: none;
-}
-.slider-wrapper .slider::-moz-range-thumb {
-	width: 20px;
-	height: 20px;
-	border-radius: 50%;
-	background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
-	border: 2px solid #e0f2fe;
-	box-shadow: 0 2px 6px rgba(6, 182, 212, 0.4);
-	cursor: pointer;
-}
-/* Numeric readout styling */
-.slider-wrapper .slider-readout {
-	width: 60px;
-	height: 40px;
-	text-align: center;
-	
-	border: none;
-}
-.slider-wrapper .slider-readout:hover { border-color: #06b6d4; box-shadow: 0 0 12px rgba(6, 182, 212, 0.2); }
-
-/* Numeric readout styling */
 .title { display: flex; }
 .heading { width: 100%; text-align: right; margin-right: 0; color: #0891b2; }
 .heading-2 { font-weight: 600; text-align: center; margin: 10px auto; color: #0891b2; }
@@ -351,8 +297,8 @@ summary { display: none; }
 .cred-tab {
 	border-radius: 8px 8px 0 0;
 	border: 2px solid #1f22236e;
-  background: #1e3a5f;
-  color: #8f9195;
+	background: #1e3a5f;
+	color: #8f9195;
 	padding: 8px 12px;
 	font-size: 14px;
 	cursor: pointer;
@@ -360,12 +306,12 @@ summary { display: none; }
 	transition: background 0.2s;
 	position: relative;
 	top: 2px;
-  box-shadow: none;
-  max-width: 150px;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  text-align: center;
+	box-shadow: none;
+	max-width: 150px;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	text-align: center;
 }
 .cred-tab:hover {
 	background: #0f172a;

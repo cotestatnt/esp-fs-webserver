@@ -8,10 +8,47 @@ const fs = require('fs');
 const minify = require('@node-minify/core');
 const terser = require('@node-minify/terser');
 const cssnano = require('@node-minify/cssnano');
+const htmlMinifier = require('@node-minify/html-minifier');
 const converter = require('./stringConverter');
 const { createGzip, constants } = require('zlib');
 const { pipeline } = require('stream');
 const { createReadStream, createWriteStream } = require('fs');
+
+// MAPPING FOR AGGRESSIVE RENAMING
+const mangleMap = {
+    // Classes
+    'slider-wrapper': 'sw',
+    'slider-readout': 'sr',
+    'tf-wrapper': 'tw',
+    'opt-box': 'ob',
+    'heading-2': 'h2',
+    'nav-link': 'nl',
+    'wifi-table': 'wt',
+    'row-wrapper': 'rw',
+    'input-label': 'il',
+    'toggle-switch': 'ts',
+    'toggle-label': 'tl',
+    'opt-input': 'oi',
+    // IDs
+    'main-box': 'mb',
+    'top-nav': 'tn',
+    'img-logo': 'lg',
+    'name-logo': 'nm',
+    'show-pass': 'sp',
+    'hide-pass': 'hp',
+    'conf-wifi': 'cw',
+    'save-wifi': 'swi'
+};
+
+function applyMangle(content) {
+    let res = content;
+    for (const [key, val] of Object.entries(mangleMap)) {
+        // Replace all occurrences globally
+        // Escaping check only minimal
+        res = res.split(key).join(val);
+    }
+    return res;
+}
 
 async function build() {
   try {
@@ -21,17 +58,34 @@ async function build() {
     await minify({
       compressor: terser,
       input: '../app.js',
-      output: './min/app.js'
+      output: './min/app.js',
+      options: {
+        toplevel: false, // Must be false so global vars (wifiCredentials, etc) are accessible by creds.js
+        mangle: { properties: false }
+      }
     });
-    console.log('App JS minified');
+    
+    // Apply Mangle to App JS
+    let appVal = fs.readFileSync('./min/app.js', 'utf8');
+    appVal = applyMangle(appVal);
+    fs.writeFileSync('./min/app.js', appVal);
+    console.log('App JS minified & mangled');
 
     // 2. Minify JS (Creds)
     await minify({
       compressor: terser,
       input: '../creds.js',
-      output: './min/creds.js'
+      output: './min/creds.js',
+      options: {
+        toplevel: false // KEEP FALSE to satisfy dynamic loading requirement!
+      }
     });
-    console.log('Creds JS minified');
+
+    // Apply Mangle to Creds JS
+    let credsVal = fs.readFileSync('./min/creds.js', 'utf8');
+    credsVal = applyMangle(credsVal);
+    fs.writeFileSync('./min/creds.js', credsVal);
+    console.log('Creds JS minified & mangled');
 
     // Copy creds to data
     try {
@@ -45,10 +99,19 @@ async function build() {
       input: '../style.css',
       output: './min/style.css'
     });
-    console.log('CSS minified');
+    
+    // Apply Mangle to CSS
+    let cssVal = fs.readFileSync('./min/style.css', 'utf8');
+    cssVal = applyMangle(cssVal);
+    fs.writeFileSync('./min/style.css', cssVal);
+    console.log('CSS minified & mangled');
 
     // 4. Inline into HTML
     let html = fs.readFileSync('../setup.htm').toString();
+    
+    // Apply Mangle to HTML Source
+    html = applyMangle(html);
+
     const css = fs.readFileSync('./min/style.css'); 
     const appjs = fs.readFileSync('./min/app.js');
 
@@ -61,6 +124,24 @@ async function build() {
 
     html = html.replace('<link href=style.css rel=stylesheet>', `<style>${cssStr}</style>`);
     html = html.replace('<script src=app.js></script>', `<script>${jsStr}</script>`);
+
+    /*
+    // Minify HTML
+    await minify({
+      compressor: htmlMinifier,
+      content: html,
+      options: {
+        collapseWhitespace: true,
+        removeComments: true,
+        removeAttributeQuotes: true,
+        minifyCSS: true,
+        minifyJS: true
+      }
+    }).then(min => {
+        html = min;
+        console.log('HTML Minified');
+    });
+    */
 
     fs.writeFileSync('./min/all.htm', html);
     console.log('all.htm created');
