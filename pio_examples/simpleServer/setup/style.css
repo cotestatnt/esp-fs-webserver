@@ -279,3 +279,104 @@ select { width: 92.5%; background-color: #f0f9ff; }
 .chevron-networks { font-size: 12px; color: #06b6d4; margin-right: 15px; }
 .upload-note { color: #0891b2; }
 summary { display: none; }
+
+/* Inline credential action buttons next to the checkbox */
+.btn-bar.compact { padding: 8px 0 0; justify-content: flex-start; grid-column-gap: 12px; grid-row-gap: 8px; }
+.btn.small { padding: 8px 12px; min-width: auto; border-radius: 6px; }
+
+/* FIX: Better tab integration and coloring */
+.cred-tabs {
+	display: flex;
+	flex-wrap: nowrap;
+	gap: 0;
+	align-items: flex-end;
+	justify-content: flex-start;
+	margin: 10px 0 0;
+	padding-left: 0;
+}
+.cred-tab {
+	border-radius: 8px 8px 0 0;
+	border: 2px solid #1f22236e;
+  background: #1e3a5f;
+  color: #8f9195;
+	padding: 8px 12px;
+	font-size: 14px;
+	cursor: pointer;
+	margin-right: 4px;
+	transition: background 0.2s;
+	position: relative;
+	top: 2px;
+  box-shadow: none;
+  max-width: 150px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+.cred-tab:hover {
+	background: #0f172a;
+}
+.cred-tab.active {
+    background: #e0f2fe;
+    color: #0891b2;
+    z-index: 2;
+    border: 2px solid #06b6d4;
+    border-bottom: 2px solid #e0f2fe;
+}
+
+/* Dropdown style when tabs overflow */
+.cred-tabs select {
+    width: 100%;
+    margin: 0;
+    border-radius: 8px 8px 0 0;
+    border: 2px solid #06b6d4;
+    border-bottom: 2px solid #e0f2fe; /* Blend with content */
+    background: #e0f2fe;
+    color: #0891b2;
+    font-weight: 600;
+    height: 42px; /* Accessiblity */
+    padding-left: 12px;
+}
+
+/* The "Tab Content" Pane */
+#wifi {
+	border: 2px solid #06b6d4;
+	background: #e0f2fe; /* Matches the active tab background */
+	padding: 20px;
+	border-radius: 0 8px 8px 8px; /* Top-left sharp to match first tab */
+	position: relative;
+	z-index: 1;
+	margin-bottom: 20px;
+}
+
+/* Inline credential action buttons */
+.tf-wrapper.inline-creds {
+	flex-direction: row;
+	align-items: center;
+	justify-content: space-between;
+	width: 100%;
+}
+.tf-wrapper.inline-creds .toggle {
+	margin: 10px 0 10px 30px;
+}
+.btn-bar.compact {
+	padding: 0;
+	justify-content: flex-start;
+	grid-column-gap: 10px;
+	grid-row-gap: 8px;
+	margin-top: 0;
+	display: inline-flex;
+}
+.btn.small {
+	padding: 6px 10px;
+	width: 120px;
+	min-width: 120px;
+	border-radius: 6px;
+	font-size: 13px;
+	box-shadow: none;
+	background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); /* Red for danger actions */
+	justify-content: center;
+}
+.btn.small:hover {
+	box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}

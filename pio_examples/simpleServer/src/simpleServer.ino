@@ -78,7 +78,7 @@ void setup() {
   server.addOptionBox("Custom options");
   server.addOption("Test int variable", testInt);
   server.addOption("Test float variable", (double)testFloat, 0.0, 100.0, 0.001);
-  server.setSetupPageTitle("Simple Async ESP FS WebServer");
+  server.setSetupPageTitle("ESP FS WebServer");
 
   // Enable ACE FS file web editor
   server.enableFsCodeEditor();

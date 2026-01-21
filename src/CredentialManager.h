@@ -8,11 +8,12 @@
 
 
 #if defined(ESP32)
-    #include "mbedtls/aes.h"
+    #include <mbedtls/aes.h>
     #include "esp_efuse.h"
     #include "nvs_flash.h"
 #elif defined(ESP8266)
-    #include "mbedtls/aes.h"
+    // Use local compatibility shim for AES on ESP8266 (BearSSL-backed)
+    #include "compat/mbedtls_aes.h"
     #include "LittleFS.h"
 #endif
 
@@ -160,6 +161,20 @@ public:
      * @brief Clear all credentials from memory
      */
     void clearAll();
+
+    /**
+     * @brief Remove a single credential by index
+     * @param index Credential index
+     * @return true if removed
+     */
+    bool removeCredential(uint8_t index);
+
+    /**
+     * @brief Remove a single credential by SSID
+     * @param ssid Network SSID
+     * @return true if removed
+     */
+    bool removeCredential(const char* ssid);
 
     #if defined(ESP8266)
     /**

@@ -28,10 +28,10 @@
             </div>
         </header>
         <div id=wifi-box class="ctn opt-box">
-            <h2 class=heading-2>Connect to WiFi</h2>
+          <h2 class=heading-2>WiFi Credential Manager</h2>
+          <div id=wifi-cred-tabs class=cred-tabs></div>
             
             <div id=wifi-table class=hide>
-                <hr>
                 <table class=table>
                   <tbody id=wifi-list></tbody>
                 </table>
@@ -83,11 +83,12 @@
                   </div>
                 </div>
                     
-                <div class=tf-wrapper>
+                <div class="tf-wrapper inline-creds">
+                  <div id=cred-actions-inline class="btn-bar compact hide"></div>
                   <label class="lbl-wifi toggle">
                     <input id=persistent type=checkbox class="t-check" checked>
                     <div class=toggle-switch></div>
-                    <span class=toggle-label>Store WiFi credentials</span>
+                    <span class=toggle-label>Save WiFi credentials</span>
                   </label>
                 </div>
             </div>
@@ -104,6 +105,14 @@
                 <a id=save-wifi class="btn hide">
                     <div class=svg><svg id=svg-save2 fill=currentColor viewBox="0 0 24 24"></svg></div>
                     <span>Save configuration</span>
+                </a>
+                <a id=delete-cred class="btn hide">
+                  <div class=svg><svg id=svg-delete fill=currentColor viewBox="0 0 24 24"></svg></div>
+                  <span>Delete WiFi</span>
+                </a>
+                <a id=clear-creds class="btn hide">
+                  <div class=svg><svg id=svg-clear fill=currentColor viewBox="0 0 24 24"></svg></div>
+                  <span>Clear All</span>
                 </a>
             </div>
         </div>

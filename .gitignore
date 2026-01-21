@@ -40,3 +40,4 @@
 /built-in-webpages/setup/build_setup/node_modules
 /examples/customHTML/build
 /pio_examples/temp
+/pio_examples/simpleServer/setup/build_setup/node_modules

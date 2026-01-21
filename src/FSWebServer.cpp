@@ -33,6 +33,54 @@ void FSWebServer::begin(WebSocketsServer::WebSocketServerEvent wsEventHandler) {
         doc.setNumber("rssi", WiFi.RSSI());
         this->send(200, "application/json", doc.serialize());
     });
+    // WiFi credentials management (no plaintext passwords exposed)
+    on("/wifi/credentials", HTTP_GET, [this]() {
+        CJSON::Json json_array;
+        json_array.createArray();
+        if (m_credentialManager) {
+            std::vector<WiFiCredential>* creds = m_credentialManager->getCredentials();
+            if (creds) {
+                for (size_t i = 0; i < creds->size(); ++i) {
+                    const WiFiCredential &c = (*creds)[i];
+                    CJSON::Json item;
+                    item.setNumber("index", static_cast<int>(i));
+                    item.setString("ssid", c.ssid);
+                    if (c.local_ip != IPAddress(0, 0, 0, 0)) {
+                        item.setString("ip", c.local_ip.toString());
+                        item.setString("gateway", c.gateway.toString());
+                        item.setString("subnet", c.subnet.toString());
+                    }
+                    item.setNumber("hasPassword", c.password_len > 0 ? 1 : 0);
+                    json_array.add(item);
+                }
+            }
+        }
+        this->send(200, "application/json", json_array.serialize());
+    });
+    // Delete a single credential (by index) or clear all if no index is provided
+    on("/wifi/credentials", HTTP_DELETE, [this]() {
+        if (!m_credentialManager) {
+            this->send(404, "text/plain", "Credential manager not available");
+            return;
+        }
+
+        bool ok = false;
+        if (this->hasArg("index")) {
+            int idx = this->arg("index").toInt();
+            ok = m_credentialManager->removeCredential(static_cast<uint8_t>(idx));
+        } else {
+            m_credentialManager->clearAll();
+            ok = true;
+        }
+
+#if defined(ESP32)
+        m_credentialManager->saveToNVS();
+#elif defined(ESP8266)
+        m_credentialManager->saveToFS();
+#endif
+
+        this->send(ok ? 200 : 400, "text/plain", ok ? "OK" : "Invalid index");
+    });
     // File upload handler for /setup page
     on("/upload", HTTP_POST,
         [this]() { this->sendOK();},
@@ -433,6 +481,16 @@ void FSWebServer::doWifiConnection() {
 
     if (this->hasArg("newSSID")) {
         newSSID = true;
+    }
+
+    // If no password provided but a stored credential exists for this SSID,
+    // reuse the stored password without exposing it to the client.
+    if (pass.length() == 0 && ssid.length() && m_credentialManager &&
+        m_credentialManager->checkSSIDExists(ssid.c_str())) {
+        String stored = m_credentialManager->getPassword(ssid.c_str());
+        if (stored.length()) {
+            pass = stored;
+        }
     }
 
     bool hasPersistentArg = this->hasArg("persistent");

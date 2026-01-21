@@ -8,6 +8,8 @@ const svgRestart = '<path d="M12 4a8 8 0 015.6 2.3C20.7 9.4 20.7 14.5 17.6 17.6a
 const svgEye = '<path d="M12 9a3 3 0 013 3 3 3 0 01-3 3 3 3 0 01-3-3 3 3 0 013-3m0-4.5c5 0 9.27 3.11 11 7.5-1.73 4.39-6 7.5-11 7.5s-9.27-3.11-11-7.5C2.73 7.61 7 4.5 12 4.5M3.18 12a9.821 9.821 0 0017.64 0A9.821 9.821 0 003.18 12z"/>';
 const svgNoEye = '<path d="M0 0h24v24H0V0z" fill="none"/><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>';
 const svgMenu = '<path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/>';
+const svgDelete = '<path d="M9,3V4H4V6H5V19A2,2 0 0,0 7,21H17A2,2 0 0,0 19,19V6H20V4H15V3H9M7,6H17V19H7V6Z"/>';
+const svgClear = '<path d="M5,5V7H19V5H5M7,9V11H17V9H7M9,13V15H15V13H9M11,17V19H13V17H11Z"/>';
 
 // Global Variables
 let closeCb = function() {};
@@ -16,6 +18,8 @@ const esp = `${window.location.protocol}//${window.location.hostname}:${port}/`;
 let options = {};
 let configFile;
 let lastBox;
+let wifiCredentials = [];
+let selectedCredentialIndex = -1;
 
 // Element selector shorthand
 const $ = (el) => document.getElementById(el);
@@ -283,6 +287,140 @@ const createOptionsBox = async (raw) => {
   if (Object.entries(nest).length !== 0) addOptionsElement(nest);
 };
 
+// ----- WiFi credentials management (multiple entries) -----
+
+const hasStoredCredentialFor = (ssid) => {
+  return wifiCredentials.some(c => c.ssid === ssid);
+};
+
+const applyCredentialToForm = (cred) => {
+  $('ssid').value = cred.ssid || '';
+  $('ssid-name').textContent = cred.ssid || 'SSID';
+
+  const hasStaticIp = cred.ip && cred.gateway && cred.subnet && cred.ip !== '0.0.0.0';
+  $('no-dhcp').checked = hasStaticIp;
+  if (hasStaticIp) {
+    show('conf-wifi');
+    show('save-wifi');
+    $('ip').value = cred.ip;
+    $('gateway').value = cred.gateway;
+    $('subnet').value = cred.subnet;
+  } else {
+    hide('conf-wifi');
+    hide('save-wifi');
+  }
+
+  // Never pre-fill password; user can enter a new one, or leave empty
+  // to reuse stored password on the device.
+  $('password').value = '';
+};
+
+const renderCredentialTabs = () => {
+  let container = $('wifi-cred-tabs');
+  if (!container) return;
+  container.innerHTML = '';
+
+  // Dynamic check: calculate how many tabs fit
+  const box = $('wifi-box');
+  // .ctn has 40px padding-left and 40px padding-right -> 80px total
+  // We approximate available width. 
+  // If box isn't rendered yet (hidden), default to window width or explicit fallback
+  const totalWidth = box.offsetWidth || (Math.min(window.innerWidth, 840)); 
+  const availableWidth = totalWidth - 100; // 80px padding + 20px buffer
+  // We assume a comfortable tab needs around 130-150px. 
+  // Minimum usable tab width before it looks bad is ~100px? 
+  // User said "5 tabs da 150px" fit in 840px. 
+  // Let's use 140px as the divider.
+  const maxTabs = Math.floor(availableWidth / 140);
+
+  // If tabs limit exceeded, show a dropdown menu
+  if (wifiCredentials.length > maxTabs) {
+    const sel = newEl('select');
+    wifiCredentials.forEach((cred, idx) => {
+      const opt = newEl('option', { 'value': idx });
+      opt.textContent = cred.ssid || '(empty SSID)';
+      if (idx === selectedCredentialIndex) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    sel.addEventListener('change', () => {
+      selectedCredentialIndex = parseInt(sel.value);
+      applyCredentialToForm(wifiCredentials[selectedCredentialIndex]);
+    });
+    container.appendChild(sel);
+  } else {
+    wifiCredentials.forEach((cred, idx) => {
+      const btn = newEl('button', { 'class': 'cred-tab', 'data-index': idx });
+      btn.textContent = cred.ssid || '(empty SSID)';
+      if (idx === selectedCredentialIndex) btn.classList.add('active');
+      btn.addEventListener('click', () => {
+        selectedCredentialIndex = idx;
+        renderCredentialTabs();
+        applyCredentialToForm(cred);
+      });
+      container.appendChild(btn);
+    });
+  }
+
+  const showMgmt = wifiCredentials.length > 0;
+  if (showMgmt) {
+    show('delete-cred');
+    show('clear-creds');
+    show('cred-actions-inline');
+  } else {
+    hide('delete-cred');
+    hide('clear-creds');
+    hide('cred-actions-inline');
+  }
+};
+
+const loadCredentials = async () => {
+  try {
+    const res = await fetch(`${esp}wifi/credentials`, { cache: 'no-store' });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!Array.isArray(data)) return;
+    wifiCredentials = data;
+    selectedCredentialIndex = wifiCredentials.length ? 0 : -1;
+    renderCredentialTabs();
+    if (selectedCredentialIndex >= 0) {
+      applyCredentialToForm(wifiCredentials[selectedCredentialIndex]);
+    }
+  } catch (err) {
+    console.error('Error loading credentials:', err);
+  }
+};
+
+function deleteSelectedCredential() {
+  if (selectedCredentialIndex < 0 || selectedCredentialIndex >= wifiCredentials.length) return;
+  const cred = wifiCredentials[selectedCredentialIndex];
+
+  openModal('Delete WiFi credential', `Delete saved credential for <b>${cred.ssid}</b>?`, async () => {
+    try {
+      await fetch(`${esp}wifi/credentials?index=${selectedCredentialIndex}`, { method: 'DELETE' });
+      await loadCredentials();
+      closeModal(false);
+    } catch (err) {
+      console.error('Error deleting credential:', err);
+      openModal('Error!', 'Failed to delete credential');
+    }
+  });
+}
+
+function clearAllCredentials() {
+  if (!wifiCredentials.length) return;
+
+  openModal('Clear WiFi credentials', 'Delete all saved WiFi credentials?', async () => {
+    try {
+      await fetch(`${esp}wifi/credentials`, { method: 'DELETE' });
+      await loadCredentials();
+      closeModal(false);
+    } catch (err) {
+      console.error('Error clearing credentials:', err);
+      openModal('Error!', 'Failed to clear credentials');
+    }
+  });
+}
+
 function addInputListener(item) {
   const onChange = (e) => {
     const t = e.target;
@@ -439,9 +577,10 @@ function listWifi(obj) {
 function doConnection(e, f) {
   const ssid = $('ssid').value;
   const password = $('password').value;
+  const hasStored = hasStoredCredentialFor(ssid);
 
-  if (!ssid || !password) {
-    openModal('Connect to WiFi', 'Please insert a SSID and a Password');
+  if (!ssid || (!password && !hasStored)) {
+    openModal('Connect to WiFi', 'Please insert a SSID and a Password, or select a saved network.');
     return;
   }
 
@@ -482,6 +621,7 @@ function doConnection(e, f) {
         }
         // Connection is switching; start polling for new SSID
         startPolling();
+        loadCredentials();
       } else {
         stopConnectPolling();
         openModal('Error!', data);
@@ -696,6 +836,8 @@ const svgIcons = {
   'svg-save': svgSave,
   'svg-save2': svgSave,
   'svg-restart': svgRestart,
+  'svg-delete': svgDelete,
+  'svg-clear': svgClear,
   'img-logo': svgLogo
 };
 
@@ -711,6 +853,8 @@ const eventListeners = {
   'connect-wifi': ['click', doConnection],
   'save-params': ['click', saveParameters],
   'save-wifi': ['click', saveParameters], 
+  'delete-cred': ['click', deleteSelectedCredential],
+  'clear-creds': ['click', clearAllCredentials],
   'show-hide-password': ['click', showHidePassword],
   'set-wifi': ['click', switchPage],
   'set-update': ['click', switchPage],
@@ -737,6 +881,22 @@ $('no-dhcp').addEventListener('change', function() {
   ['conf-wifi', 'save-wifi'].forEach(id => $(id).classList[method]('hide'));
 });
 
+// Update Connect button text when typing SSID manually
+if ($('ssid')) {
+  $('ssid').addEventListener('input', function() {
+    $('ssid-name').textContent = this.value || 'SSID';
+  });
+}
+
+// Window resize handler: re-calculate tabs vs dropdown
+let resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    renderCredentialTabs();
+  }, 200);
+});
+
 // WiFi list chevron handler - toggle visibility
 if ($('show-networks')) {
   $('show-networks').addEventListener('click', () => {
@@ -746,4 +906,20 @@ if ($('show-networks')) {
 }
 
 // Initialize on page load
-window.addEventListener('load', getParameters);
+window.addEventListener('load', () => {
+  getParameters();
+  loadCredentials();
+
+  // Move management buttons near the persistent checkbox (inline)
+  const inline = $('cred-actions-inline');
+  if (inline) {
+    const del = $('delete-cred');
+    const clr = $('clear-creds');
+    if (del && clr) {
+      del.classList.add('small');
+      clr.classList.add('small');
+      inline.appendChild(del);
+      inline.appendChild(clr);
+    }
+  }
+});

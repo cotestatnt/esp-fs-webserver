@@ -69,7 +69,6 @@ bool CredentialManager::addCredential(const WiFiCredential& credential, const ch
     log_error("Invalid SSID");
     return false;
   }
-
   if (!plaintext_password || strlen(plaintext_password) == 0) {
     log_error("Invalid password");
     return false;
@@ -101,6 +100,34 @@ bool CredentialManager::addCredential(const WiFiCredential& credential, const ch
   log_debug("Credential added: %s.", cred.ssid);
 
   return true;
+}
+
+bool CredentialManager::removeCredential(uint8_t index) {
+  if (index >= m_credentials.size()) {
+    log_error("Invalid credential index %d", index);
+    return false;
+  }
+
+  log_debug("Removing credential: %s", m_credentials[index].ssid);
+  memset(m_credentials[index].password_encrypted, 0, sizeof(m_credentials[index].password_encrypted));
+  memset(m_credentials[index].ssid, 0, sizeof(m_credentials[index].ssid));
+  m_credentials.erase(m_credentials.begin() + index);
+  return true;
+}
+
+bool CredentialManager::removeCredential(const char* ssid) {
+  if (!ssid) {
+    return false;
+  }
+
+  for (size_t i = 0; i < m_credentials.size(); i++) {
+    if (strcmp(m_credentials[i].ssid, ssid) == 0) {
+      return removeCredential(static_cast<uint8_t>(i));
+    }
+  }
+
+  log_error("Credential not found: %s", ssid);
+  return false;
 }
 
 bool CredentialManager::updateCredential(const WiFiCredential& credential, const char* plaintext_password) {
