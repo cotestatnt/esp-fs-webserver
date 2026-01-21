@@ -6,7 +6,7 @@ A library for ESP8266/ESP32 that provides a web server with an integrated file s
 
 ## Features
 
--   **Dynamic WiFi Configuration**: An integrated setup page (`/setup`) allows you to scan for WiFi networks and connect the ESP to your local network.
+-   **Dynamic WiFi Configuration**: An integrated setup page (`/setup`) allows you to scan for WiFi networks and connect the ESP to your local network. Passwords are stored using AES-256-CBC encryption (hardware on ESP32 platform) with multiple SSIDs manager (up to 5 different WiFi credentials).
 -   **Powerful & Customizable UI**:
     -   Easily add your own configuration parameters (text boxes, checkboxes, sliders, dropdown lists) to the setup page.
     -   Inject custom **HTML, CSS, and JavaScript** snippets into the setup page to create rich, dynamic user interfaces for your specific project needs.
