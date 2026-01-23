@@ -30,7 +30,7 @@ Then:
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│         User's Arduino Sketch (simpleServer.ino)    │
+│              User's Arduino Sketch                  │
 │                                                     │
 │  - Calls: server.begin()                            │
 │  - Calls: server.run()                              │

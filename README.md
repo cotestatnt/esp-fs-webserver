@@ -22,6 +22,7 @@ For more detailed information, please refer to the documentation in the `docs` f
 -   **[Setup and WiFi](docs/SetupAndWiFi.md)** – Guide to `startWiFi()`, captive portal, and the `/setup` page.
 -   **[Filesystem and Editor](docs/FileEditorAndFS.md)** – How to serve static files and use the `/edit` page.
 -   **[WebSocket](docs/WebSocket.md)** – Information on using the WebSocket server.
+-   **[Password Encryption](docs/pwd_encrypt.md)** – Information on how passwords are managed.
 
 ## Dependencies
 
@@ -69,6 +70,20 @@ void setup() {
 void loop() {
   server.run();
 }
+
+```
+
+## WiFi Management Enhancements
+
+### Dedicated WiFiService class
+- `WiFiService` centralizes scanning, connections, captive portal setup, MDNS, and watchdog handling so the sketch can stay focused on application logic.
+- When `startWiFi()` runs it loads credentials from `CredentialManager`, picks the SSID with the strongest RSSI (optionally honoring static IP data saved per credential), and reports a `WiFiStartResult` that tells `FSWebServer` whether to stay in STA or fall back to the captive portal.
+- `doWifiConnection()` now persists updated credentials before calling `WiFiService::connectWithParams()`, which feeds the long-timeout watchdog, reuses stored passwords when the form leaves the password blank, and advertises `http://<hostname>.local` through `startMDNSOnly()` as soon as the STA link is up. `FSWebServer` logs when mDNS becomes reachable so you can verify the hostname was published.
+
+### Setup page reconnection experience
+- The `/getStatus` handler exposes firmware version, active mode, hostname, IP, and the configuration file path so the UI knows where to direct the user after a network change.
+- After `/connect` begins switching SSIDs the browser starts polling `http://<hostname>.local/getStatus` (falling back to the captured AP when necessary) until the ESP reappears on the new network, automatically updates the credential list, and surfaces a timeout message only after several failed polls.
+- This polling loop keeps the loader visible, shows a modal once the device is reachable again, and points users to either the new `http://<hostname>.local` URL or the IP reported by the ESP without forcing them to refresh manually.
 ```
 ### Custom application "options manager"
 ![options](docs/options_manager.png)
