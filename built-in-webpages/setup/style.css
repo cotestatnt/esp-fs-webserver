@@ -96,7 +96,7 @@ select { width: 92.5%; background-color: var(--c-bg); }
 .topnav { margin-top: 12px; background: linear-gradient(135deg, var(--c-grad-a) 0%, var(--c-grad-b) 100%); border-radius: 8px; align-self: flex-end; border: 2px solid var(--c-prim); }
 .topnav a { float: left; color: #e2e8f0; padding: 6px 12px; font-size: 16px; }
 .topnav a:hover { color: var(--c-prim); }
-.topnav a.active { background: linear-gradient(180deg, var(--c-prim) 0%, #026881 100%); color: #fff; font-weight: 600; background: none; }
+.topnav a.active { background: linear-gradient(180deg, var(--c-prim) 0%, #026881 100%); color: #fff; font-weight: 600;}
 .topnav .icon { display: none; }
 
 .ctn {
@@ -150,6 +150,7 @@ select { width: 92.5%; background-color: var(--c-bg); }
   .btn-bar { margin-top: 20px;}
   .topnav { margin: 4px; width: auto; min-width: 200px; align-self: flex-start;}
   .topnav a { padding: 5px 12px; }
+  .topnav a.active { background: none; }
   .topnav a:not(.active) { display: none; }
   .topnav a.icon {display: block; }
   .topnav.responsive { flex-direction: column; width: auto; }
@@ -167,7 +168,8 @@ select { width: 92.5%; background-color: var(--c-bg); }
 /* Creds & Inline */
 .cred-tabs { display: flex; align-items: flex-end; margin: 10px 0 0; }
 .cred-tab { display: inline-flex; align-items: center; justify-content: center; min-width: auto; border-radius: 8px 8px 0 0; background: var(--c-grad-b); color: #8f9195; padding: 8px 12px; font-size: 14px; margin-right: 4px; max-width: 150px; overflow: hidden; text-overflow: ellipsis; }
-.cred-tab.active { background: var(--c-bg-dk); color: var(--c-prim-dk); border: 2px solid var(--c-prim); border-bottom: 2px solid var(--c-bg-dk); z-index: 2; }
+.cred-tab.active { background: var(--c-bg-dk); color: var(--c-prim-dk); border: 2px solid var(--c-prim); 
+  border-bottom: 2px solid var(--c-bg-dk); z-index: 2; position: relative; top: 2px; box-shadow: none;}
 #wifi, #wifi-table { border: 2px solid var(--c-prim); background: var(--c-bg-dk); padding: 20px; margin-bottom: 10px; }
 
 .tf-wrapper.inline-creds { flex-direction: row-reverse; justify-content: end; width: 100%; }
