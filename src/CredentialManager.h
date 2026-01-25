@@ -6,7 +6,6 @@
 #include <vector>
 #include <cstring>
 
-
 #if defined(ESP32)
     #include <mbedtls/aes.h>
     #include "esp_efuse.h"

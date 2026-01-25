@@ -51,19 +51,13 @@ jobs:
       - name: Install ArduinoJson
         run: arduino-cli lib install ArduinoJson
 
-      - name: Install AsyncTCP (ESP32)
-        run: ARDUINO_LIBRARY_ENABLE_UNSAFE_INSTALL=true arduino-cli lib install --git-url https://github.com/ESP32Async/AsyncTCP#v3.3.7
-
-      - name: Install ESPAsyncWebServer
-        run: ARDUINO_LIBRARY_ENABLE_UNSAFE_INSTALL=true arduino-cli lib install --git-url https://github.com/ESP32Async/ESPAsyncWebServer#v3.7.3
-
       - name: Install Arduino-MySQL
         run: ARDUINO_LIBRARY_ENABLE_UNSAFE_INSTALL=true arduino-cli lib install --git-url https://github.com/cotestatnt/Arduino-MySQL
 
       - name: Install Arduino_MFRC522v2
         run: ARDUINO_LIBRARY_ENABLE_UNSAFE_INSTALL=true arduino-cli lib install --git-url https://github.com/OSSLibraries/Arduino_MFRC522v2
 
-      - name: Install PubSubCLient
+      - name: Install PubSubClient
         run: ARDUINO_LIBRARY_ENABLE_UNSAFE_INSTALL=true arduino-cli lib install --git-url https://github.com/knolleary/pubsubclient        
 
       - name: Build Examples

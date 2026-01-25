@@ -235,6 +235,11 @@ void CredentialManager::clearAll() {
     memset(cred.ssid, 0, sizeof(cred.ssid));
   }
   m_credentials.clear();
+  #if defined(ESP8266)
+    saveToFS();
+  #elif defined(ESP32)
+    saveToNVS();
+  #endif
   log_debug("All credentials cleared");
 }
 

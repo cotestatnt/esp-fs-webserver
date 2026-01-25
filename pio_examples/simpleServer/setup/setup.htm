@@ -1,189 +1,187 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset=utf-8>
+    <meta charset="utf-8">
     <title>ESP FS Web Server</title>
-    <meta content="width=device-width, initial-scale=1" name=viewport>
-    <link href=style.css rel=stylesheet>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="style.css" rel="stylesheet">
+    <script src="app.js" defer></script>
 </head>
 <body>
-    <main id=main-box>
-        <header class=ctn>
-            <div class=title>
-                <div id=img-logo title="Click to upload your logo file"></div>
-                <div class=heading>
-                  <h1 id=name-logo>ESP FS Web Server</h1>
-                  <span id=esp-ip></span><br>
-                  <span id=esp-mode></span> - v<span id=firmware></span>
-                </div>
-            </div>
-            <div class=topnav id=top-nav>
-                <span id=nav-link><a id=set-wifi class="a-link active" data-box=wifi-box>WiFi Setup</a></span>
-                <span id=upd-link><a id=set-update class="a-link" data-box=update-box>Update & FS</a></span>
-                <a class="a-link icon" id=hum-btn>
-                  <div class="svg svg-menu-icon">
-                    <span id=svg-menu></span>
-                  </div>
-                </a>
-            </div>
-        </header>
-        <div id=wifi-box class="ctn opt-box">
-          <h2 class=heading-2>WiFi Credential Manager</h2>
-          <div id=wifi-cred-tabs class=cred-tabs></div>
-            
-            <div id=wifi-table class=hide>
-                <table class=table>
-                  <tbody id=wifi-list></tbody>
-                </table>
-                <br>
-            </div>
-            <div id=wifi>
-                <div class=tf-wrapper>
-                    <label for=ssid class=input-label>SSID</label>
-                    <div class=pswd>
-                        <input type=text placeholder="Enter your WiFI SSID name" id=ssid>
-                        <span class=show-hide-wrap id=show-hide-networks>
-                            <a class="show-hide hide chevron-networks" id=show-networks>▼</a>
-                        </span>
-                    </div>
-                </div>
-                <div class=tf-wrapper>
-                    <label for=password class=input-label>Password</label>
-                    <div class=pswd>
-                      <input type=password placeholder="Enter your WiFi password" id=password autocomplete=current-password data-ms-member=password>
-                      <span class=show-hide-wrap id=show-hide-password>
-                        <a class="show-hide hide" id=show-pass>
-                          <div class=svg><span class=svg-e id=svg-eye></span></div>
-                        </a>
-                        <a class="show-hide" id=hide-pass>
-                          <div class=svg><span class=svg-e id=svg-no-eye></span></div>
-                        </a>
-                      </span>  
-                    </div>
-                </div>
-                <div class="tf-wrapper">
-                  <label class="input-label toggle">
-                    <input id=no-dhcp type=checkbox class="t-check">
-                    <div class=toggle-switch></div>
-                    <span class=toggle-label>Manual configuration (no DHCP)</span>
-                  </label>
-                </div>
-                <div class=hide id=conf-wifi> 
-                  <div class="tf-wrapper">
-                      <label for=ip class=input-label>IP Address</label>
-                      <input type=text placeholder="IP Address" id=ip value=192.168.0.10>
-                  </div>
-                  <div class="tf-wrapper">
-                      <label for=gateway class=input-label>Gateway</label>
-                      <input type=text placeholder="Gateway address" id=gateway value=192.168.0.1>
-                  </div>
-                  <div class="tf-wrapper">
-                      <label for=subnet class=input-label>Subnet</label>
-                      <input type=text placeholder="Subnet mask" id=subnet value=255.255.255.0>
-                  </div>
-                </div>
-                    
-                <div class="tf-wrapper inline-creds">
-                  <div id=cred-actions-inline class="btn-bar compact hide"></div>
-                  <label class="lbl-wifi toggle">
-                    <input id=persistent type=checkbox class="t-check" checked>
-                    <div class=toggle-switch></div>
-                    <span class=toggle-label>Save WiFi credentials</span>
-                  </label>
-                </div>
-            </div>
-            <hr>
-            <div class=btn-bar>
-                <a id=scan-wifi class="btn">
-                  <div class=svg><span id=svg-scan></span></div>
-                    <span>Scan WiFi networks</span>
-                </a>
-                <a id=connect-wifi class="btn">
-                  <div class=svg><span id=svg-connect></span></div>
-                    <span>Connect to <span id=ssid-name>SSID</span></span>
-                </a>
-                <a id=save-wifi class="btn hide">
-                  <div class=svg><span id=svg-save2></span></div>
-                    <span>Save configuration</span>
-                </a>
-                <a id=delete-cred class="btn hide">
-                  <div class=svg><span id=svg-delete></span></div>
-                  <span>Delete SSID</span>
-                </a>
-                <a id=clear-creds class="btn hide">
-                  <div class=svg><span id=svg-clear></span></div>
-                  <span>Delete All</span>
-                </a>
-            </div>
-        </div>
+  <template id="logo-tpl">
+      <svg fill="brown" height="120" viewBox="0 0 24 24">
+          <path d="M5 3C3.9 3 3 3.9 3 5S2.1 7 1 7v2c1.1 0 2 .9 2 2s.9 2 2 2h2v-2H5v-1c0-1.1-.9-2-2-2 1.1 0 2-.9 2-2V5h2V3M11 3c1.1 0 2 .9 2 2s.9 2 2 2v2c-1.1 0-2 .9-2 2s-.9 2-2 2H9v-2h2v-1c0-1.1.9-2 2-2-1.1 0-2-.9-2-2V5H9V3h2m11 3v12c0 1.11-.89 2-2 2H4a2 2 0 01-2-2v-3h2v3h16V6h-2.97V4H20c1.11 0 2 .89 2 2z"/>
+      </svg>
+  </template>
 
-        <div id=update-box class="ctn opt-box hide">
-          <h2 class=heading-2>Update ESP Firmware</h2>
-          <div class=tf-wrapper>
-            <form id=update-form class=form action=/update method=post enctype=multipart/form-data>
-              <div class=firmware>
-                <label for=file-input id=fw-label class=fw-upload>Select firmware binary file</label>
-                <input id=file-input type=file>
-                <a id=update-btn class="btn submit">
-                  <div class=svg>
-                    <svg fill=currentColor viewBox="0 0 24 24"><path d="M9,16V10H5L12,3L19,10H15V16H9M5,20V18H19V20H5Z"></path></svg>
-                  </div>
-                  <span>Submit!</span>
-                </a><br>
-              </div>
-            	<div class="progress-wrap hide" id=progress-wrap data-progress-style=fill-back>
-            	  <div id=update-log></div>
-            	  <div class=progress id=progress-anim></div>
-            	</div>
-            </form>
+  <main id="main-box">
+    <header class="ctn">
+      <div class="title">
+        <div id="img-logo" title="Click to upload your logo file"></div>
+        <div class="heading">
+          <h1 id="name-logo">ESP FS Web Server</h1>
+          <span id="esp-ip"></span><br>
+          <span id="esp-mode"></span> - v<span id="firmware"></span>
+        </div>
+      </div>
+      <div class="topnav" id="top-nav">
+        <a class="a-link icon" id="hum-btn">
+          <div class="svg svg-menu-icon"><span id="svg-menu"></span></div>
+        </a>
+        <span id="nav-link"><a id="set-wifi" class="a-link active" data-box="wifi-box">WiFi Setup</a></span>
+        <span id="upd-link"><a id="set-update" class="a-link" data-box="update-box">Update & FS</a></span>
+      </div>
+    </header>
+
+    <div id="wifi-box" class="ctn opt-box">
+      <h2 class="heading-2">WiFi Credential Manager</h2>
+      <div id="wifi-cred-tabs" class="cred-tabs"></div>
+        <div id="wifi-table" class="hide">
+          <table class="table">
+            <tbody id="wifi-list"></tbody>
+          </table>
+          <br>
+        </div>
+        <div id="wifi">
+          <div class="tf-wrapper">
+            <label for="ssid" class="input-label">SSID</label>
+            <div class="pswd">
+                <input type="text" placeholder="Enter your WiFI SSID name" id="ssid" class="opt-input">
+                <span class="show-hide-wrap" id="show-hide-networks">
+                    <a class="show-hide hide chevron-networks" id="show-networks">▼</a>
+                </span>
+            </div>
+          </div>
+          <div class="tf-wrapper">
+            <label for="password" class="input-label">Password</label>
+            <div class="pswd">
+              <input type="password" placeholder="Enter your WiFi password" id="password" autocomplete="current-password" class="opt-input">
+              <span class="show-hide-wrap" id="show-hide-password">
+                <a class="show-hide hide" id="show-pass"><div class="svg"><span class="svg-e" id="svg-eye"></span></div></a>
+                <a class="show-hide" id="hide-pass"><div class="svg"><span class="svg-e" id="svg-no-eye"></span></div></a>
+              </span>  
+            </div>
           </div>
           
-          <h2 class=heading-2>Load file to ESP FileSystem</h2>
-          <div class=tf-wrapper>
-            <form class=form action=/edit method=post enctype=multipart/form-data>
-              <ul id=listing></ul>
-              <label for=picker id=pick-label class=fw-upload>Select the folder containing your files</label>
-              <input type=file id=picker name=fileList webkitdirectory multiple>
-              <p class=upload-note>N.B.: if folder name is <b>"/data"</b>, the files will be uploaded at root "/" level</p>
-            </form>
+          <div class="tf-wrapper">
+            <label class="input-label toggle">
+              <input id="dhcp" type="checkbox" class="t-check opt-input" checked>
+              <div class="toggle-switch"></div>
+              <span class="toggle-label">DHCP enabled</span>
+            </label>
+          </div>
+          
+          <div class="hide" id="conf-wifi"> 
+            <div class="tf-wrapper">
+                <label for="ip" class="input-label">IP Address</label>
+                <input type="text" placeholder="IP Address" id="ip" value="192.168.0.10" class="opt-input">
+            </div>
+            <div class="tf-wrapper">
+                <label for="gateway" class="input-label">Gateway</label>
+                <input type="text" placeholder="Gateway address" id="gateway" value="192.168.0.1" class="opt-input">
+            </div>
+            <div class="tf-wrapper">
+                <label for="subnet" class="input-label">Subnet</label>
+                <input type="text" placeholder="Subnet mask" id="subnet" value="255.255.255.0" class="opt-input">
+            </div>
+          </div>
+              
+          <div class="tf-wrapper inline-creds">
+            <div id="cred-actions-inline" class="btn-bar compact hide">
+              <a id="delete-cred" class="btn small hide">
+                <div class="svg"><span id="svg-delete"></span></div>
+                <span>Delete SSID</span>
+              </a>
+              <a id="clear-creds" class="btn small hide">
+                <div class="svg"><span id="svg-clear"></span></div>
+                <span>Delete All</span>
+              </a>
+              <label class="lbl-wifi toggle">
+                <input id="persistent" type="checkbox" class="t-check opt-input" checked>
+                <div class="toggle-switch"></div>
+                <span class="toggle-label">Save WiFi</span>
+              </label>
+            </div>
           </div>
         </div>
-        <hr id=btn-hr class=hide>
-        <div id=btn-box class="btn-bar hide">
-            <a id=restart class="btn">
-              <div class=svg><span id=svg-restart></span></div>
-                <span>Restart ESP</span>
+        <hr>
+        <div class="btn-bar">
+            <a id="scan-wifi" class="btn">
+              <div class="svg"><span id="svg-scan"></span></div>
+                <span>Scan WiFi networks</span>
             </a>
-            <a id=save-params class="btn">
-              <div class=svg><span id=svg-save></span></div>
-                <span>Save configuration</span>
+            <a id="connect-wifi" class="btn">
+              <div class="svg"><span id="svg-connect"></span></div>
+                <span>Connect to <span id="ssid-name">SSID</span></span>
             </a>
         </div>
-    </main>
-    
-    <div class="loader hide" id=loader>
-      <div class="loading">Loading...</div>
-      <div class="spinH spin-1H"></div>
-      <div class="spinH spin-2H"></div>
-      <div class="spinH spin-3H"></div>
-      <div class="spinH spin-4H"></div>
+    </div>
+
+    <div id="update-box" class="ctn opt-box hide">
+      <h2 class="heading-2">Update ESP Firmware</h2>
+      <div class="tf-wrapper">
+        <form id="update-form" class="form" action="/update" method="post" enctype="multipart/form-data">
+          <div class="firmware">
+            <label for="file-input" id="fw-label" class="fw-upload">Select firmware binary file</label>
+            <input id="file-input" type="file">
+            <a id="update-btn" class="btn submit">
+              <div class="svg"><span id="svg-update"></span></div>
+              <span>Submit!</span>
+            </a>
+          </div>
+        	<div class="progress-wrap hide" id="progress-wrap" data-progress-style="fill-back">
+        	  <div id="update-log"></div>
+        	  <div class="progress" id="progress-anim"></div>
+        	</div>
+        </form>
+      </div>
+      
+      <h2 class="heading-2">Load file to ESP FileSystem</h2>
+      <div class="tf-wrapper">
+        <form class="form" action="/edit" method="post" enctype="multipart/form-data">
+          <ul id="listing"></ul>
+          <label for="picker" id="pick-label" class="fw-upload">Select the folder containing your files</label>
+          <input type="file" id="picker" name="fileList" webkitdirectory multiple>
+          <p class="upload-note">N.B.: if folder name is <b>"/data"</b>, the files will be uploaded at root "/" level</p>
+        </form>
+      </div>
     </div>
     
-    <details id=modal-message>
-        <summary></summary>
-        <div class=d-modal>
-            <div class=d-modal-title><h2 id=message-title>t</h2></div>
-            <div class=d-modal-content><p id=message-body></p></div>
-            <div class=btn-bar>
-                <a id=ok-modal class="btn hide"><span>OK</span></a>
-                <a id=close-modal class="btn"><span>Close</span></a>
-            </div>
-        </div>
-    </details>
-    <footer class=foot>
-        <hr>
-        <a id=about target=_blank rel=noopener></a>
-    </footer>
-    <script src=app.js></script>
+    <hr id="btn-hr" class="hide">
+    <div id="btn-box" class="btn-bar hide">
+      <a id="restart" class="btn">
+        <div class="svg"><span id="svg-restart"></span></div>
+          <span>Restart ESP</span>
+      </a>
+      <a id="save-params" class="btn">
+        <div class="svg"><span id="svg-save"></span></div>
+          <span>Save configuration</span>
+      </a>
+    </div>
+  </main>
+  
+  <div class="loader hide" id="loader">
+    <div class="loading">Loading...</div>
+    <div class="spinH spin-1H"></div>
+    <div class="spinH spin-2H"></div>
+    <div class="spinH spin-3H"></div>
+    <div class="spinH spin-4H"></div>
+  </div>
+  
+  <details id="modal-message">
+      <summary></summary>
+      <div class="d-modal">
+          <div class="d-modal-title"><h2 id="message-title">t</h2></div>
+          <div class="d-modal-content"><p id="message-body"></p></div>
+          <div class="btn-bar">
+              <a id="ok-modal" class="btn hide"><span>OK</span></a>
+              <a id="close-modal" class="btn"><span>Close</span></a>
+          </div>
+      </div>
+  </details>
+  <footer class="foot">
+      <hr>
+      <a id="about" target="_blank" rel="noopener"></a>
+  </footer>
 </body>
 </html>

@@ -63,9 +63,10 @@ class SetupConfigurator
                 }
                 
                 // Create empty m_doc - will be populated in addOption() in the setup order
+                // WiFi configuration (SSID, password, DHCP/static IP) is now fully
+                // managed by CredentialManager and must NOT be persisted in
+                // config.json. Start from an empty JSON document here.
                 m_doc = new CJSON::Json();
-                m_doc->setString("wifi-box", "");
-                m_doc->setBool("dhcp", false);
                 
                 m_opened = true;
                 return true;
@@ -90,7 +91,10 @@ class SetupConfigurator
                     log_error("Error. File %s not created", ESP_FS_WS_CONFIG_FILE);
                     return false;
                 }
-                file.println("{\"wifi-box\": \"\", \"dhcp\": false}");
+                // Start with an empty JSON object. WiFi-related keys (ssid, password,
+                // dhcp, ip_address, gateway, subnet, etc.) are now handled by
+                // CredentialManager and MUST NOT be stored inside config.json.
+                file.println("{}");
                 file.close();
             }
             log_debug("Config file %s OK", ESP_FS_WS_CONFIG_FILE);

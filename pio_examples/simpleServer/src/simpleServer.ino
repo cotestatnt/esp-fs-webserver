@@ -62,6 +62,9 @@ void setup() {
   } else
     Serial.println("LittleFS error!");
 
+  // Clear saved config and wifi credentials (for testing purposes) 
+  //server.clearAll(); // Uncomment to clear saved config on each boot (for testing)
+
   // Try to connect to WiFi (will start AP if not connected after timeout)
   if (!server.startWiFi(10000)) {
     Serial.println("\nWiFi not connected! Starting AP mode...");
@@ -71,7 +74,7 @@ void setup() {
     params.local_ip = IPAddress(192, 168, 1, 1);
     params.gateway = IPAddress(192, 168, 1, 1);
     params.subnet = IPAddress(255, 255, 255, 0);    
-    server.startCaptivePortal(params, "/edit");
+    server.startCaptivePortal(params, "/setup.htm");
   }
 
   // Add custom application options tab and set custom title

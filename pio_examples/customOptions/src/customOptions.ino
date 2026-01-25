@@ -8,7 +8,7 @@
 struct tm Time;
 
 #define FILESYSTEM LittleFS
-FSWebServer server(80, FILESYSTEM, "myserver");
+FSWebServer server(FILESYSTEM, 80, "myserver");
 
 // Define built-in LED if not defined by board (eg. generic dev boards)
 #ifndef LED_BUILTIN
@@ -53,8 +53,7 @@ static const char reload_btn_htm[] PROGMEM = R"EOF(
 
 static const char reload_btn_script[] PROGMEM = R"EOF(
 /* Add click listener to button */
-document.getElementById('reload-btn').addEventListener('click', reload);
-function reload() {
+const reloadCfg = () => {
   console.log('Reload configuration options');
   fetch('/reload')
   .then((response) => {
@@ -67,7 +66,8 @@ function reload() {
   .catch((error) => {
     openModal('Error', 'Something goes wrong with your request');
   });
-}
+};
+document.getElementById('reload-btn').addEventListener('click', reloadCfg);
 )EOF";
 
 
@@ -167,21 +167,10 @@ void setup() {
   server.addJavascript(reload_btn_script, "js", /*overwrite*/ false);
 
   // Enable ACE FS file web editor and add FS info callback function
-#if ESP_FS_WS_EDIT
-  #ifdef ESP32
-    server.enableFsCodeEditor([](fsInfo_t* fsInfo) {
-      fsInfo->fsName = "LittleFS";
-      fsInfo->totalBytes = LittleFS.totalBytes();
-      fsInfo->usedBytes = LittleFS.usedBytes();
-    });
-  #else
-    // ESP8266 core support LittleFS by default
-    server.enableFsCodeEditor();
-  #endif
-#endif
+  server.enableFsCodeEditor();
 
   // set /setup and /edit page authentication
-  server.setAuthentication("admin", "admin");
+  // server.setAuthentication("admin", "admin");
 
   // Inform user when config.json is saved via /edit or /upload
   server.setConfigSavedCallback(onConfigSaved);
@@ -201,10 +190,7 @@ void setup() {
 }
 
 void loop() {
-  server.handleClient();
-
-  if (server.isAccessPointMode())
-    server.updateDNS();
+  server.run(); // Handle client requests
 
   // Keep BOOT_PIN pressed 5 seconds to clear application options
   static uint32_t buttonPressStart = 0;

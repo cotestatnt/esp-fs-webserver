@@ -52,8 +52,7 @@ static const char reload_btn_htm[] PROGMEM = R"EOF(
 
 static const char reload_btn_script[] PROGMEM = R"EOF(
 /* Add click listener to button */
-document.getElementById('reload-btn').addEventListener('click', reload);
-function reload() {
+const reloadCfg = () => {
   console.log('Reload configuration options');
   fetch('/reload')
   .then((response) => {
@@ -66,7 +65,8 @@ function reload() {
   .catch((error) => {
     openModal('Error', 'Something goes wrong with your request');
   });
-}
+};
+document.getElementById('reload-btn').addEventListener('click', reloadCfg);
 )EOF";
 
 

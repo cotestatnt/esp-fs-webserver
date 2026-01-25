@@ -3,7 +3,8 @@
 This library can:
 - try to connect to a previously saved WiFi network (STA)
 - if it fails, start an Access Point + captive portal and serve `/setup`
-- persist configuration into `config.json` on the filesystem
+- persist **application options** into `config.json` on the filesystem  
+  (WiFi credentials are now handled separately by `CredentialManager` and **never** stored in `config.json`)
 
 ## Typical flow
 
@@ -16,7 +17,8 @@ server.init(onWsEvent);
 
 1. `startWiFi(timeout)` attempts to connect using saved credentials.
 2. If it fails, `startCaptivePortal(ssid, pass, "/setup")` switches the ESP to AP mode and redirects requests to `/setup`.
-3. On `/setup` the user selects the network and options; the library saves them to the FS.
+3. On `/setup` the user selects the WiFi network (managed by `CredentialManager`) and any extra application options;  
+  the library saves **only the application options** to `config.json` and stores WiFi credentials in encrypted form via `CredentialManager`.
 
 ## Application options on /setup
 
@@ -29,7 +31,7 @@ server.addOption("Option 1", option1.c_str());
 server.addOption("Option 2", option2);
 ```
 
-Read values at boot (from `config.json`):
+Read your application options at boot (from `config.json`, WiFi excluded):
 
 ```cpp
 uint32_t option2;
@@ -49,6 +51,17 @@ server.setConfigSavedCallback([](const char* filename){
   Serial.printf("Config saved: %s\n", filename);
 });
 ```
+
+## WiFi credentials storage (CredentialManager)
+
+- WiFi SSID, password, DHCP/static IP and related data are **not** stored in `config.json`.
+- They are managed and stored (encrypted) by the internal `CredentialManager`:
+  - ESP32: NVS
+  - ESP8266: filesystem (e.g. LittleFS)
+- The `/setup` page talks directly with the WiFi APIs (`/wifi/credentials`, `/connect`, etc.),  
+  so your sketch usually does **not** need to read or write WiFi data manually.
+
+See also: `pwd_encrypt.md` for a deeper overview of `CredentialManager` and encrypted WiFi storage.
 
 ## Protect /setup with basic-auth
 

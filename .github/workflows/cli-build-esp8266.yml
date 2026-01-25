@@ -50,12 +50,6 @@ jobs:
       - name: Install ArduinoJson
         run: arduino-cli lib install ArduinoJson
 
-      - name: Install ESPAsyncTCP (ESP8266)
-        run: ARDUINO_LIBRARY_ENABLE_UNSAFE_INSTALL=true arduino-cli lib install --git-url https://github.com/ESP32Async/ESPAsyncTCP#v2.0.0
-
-      - name: Install ESPAsyncWebServer
-        run: ARDUINO_LIBRARY_ENABLE_UNSAFE_INSTALL=true arduino-cli lib install --git-url https://github.com/ESP32Async/ESPAsyncWebServer#v3.7.3
-
       - name: Build Examples
         run: |
           set -uo pipefail

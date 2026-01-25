@@ -275,8 +275,13 @@ public:
 #if ESP_FS_WS_MDNS
     if (m_dnsServer)
       m_dnsServer->processNextRequest();
+
+    // ESP8266 mDNS requires periodic update calls while running
+    #if !defined(ESP32)
+    MDNS.update();
+    #endif
 #endif
-  }
+}
 
   /*
     Redirect to a given URL
@@ -465,6 +470,14 @@ public:
       return m_filesystem->remove(ESP_FS_WS_CONFIG_FILE);
     }
     return true;
+  }
+
+  inline bool clearAll() {
+    m_credentialManager->clearAll();
+    if (m_filesystem->exists(ESP_FS_WS_CONFIG_FILE)) {
+      return m_filesystem->remove(ESP_FS_WS_CONFIG_FILE);
+    }
+    return false;
   }
 
   /*

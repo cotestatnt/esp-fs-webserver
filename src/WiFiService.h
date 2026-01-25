@@ -39,6 +39,9 @@ struct WiFiConnectParams {
     String password;
     bool changeSSID = false;
     bool noDHCP = false;
+    // True if the /connect request was initiated by a client
+    // connected to the ESP's own AP (captive portal).
+    bool fromApClient = false;
     IPAddress local_ip;
     IPAddress gateway;
     IPAddress subnet;

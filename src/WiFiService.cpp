@@ -32,54 +32,13 @@ void WiFiService::setTaskWdt(uint32_t timeout) {
 void WiFiService::applyPersistentConfig(bool persistentEnabled, const String& ssid, const String& pass) {
     if (!persistentEnabled) {
         WiFi.persistent(false);
-#if defined(ESP8266)
-        struct station_config stationConf;
-        wifi_station_get_config_default(&stationConf);
-        memset(&stationConf, 0, sizeof(stationConf));
-        wifi_station_set_config(&stationConf);
-#elif defined(ESP32)
-        wifi_config_t stationConf;
-        esp_err_t err = esp_wifi_get_config(WIFI_IF_STA, &stationConf);
-        if (err == ESP_OK) {
-            memset(&stationConf, 0, sizeof(stationConf));
-            memcpy(&stationConf.sta.ssid, ssid.c_str(), ssid.length());
-            memcpy(&stationConf.sta.password, pass.c_str(), pass.length());
-            err = esp_wifi_set_config(WIFI_IF_STA, &stationConf);
-            if (err) {
-                log_error("Set WiFi config: %s", esp_err_to_name(err));
-            }
-        }
-#endif
         return;
     }
-
     WiFi.persistent(true);
-#if defined(ESP8266)
-    struct station_config stationConf;
-    wifi_station_get_config_default(&stationConf);
-    memset(&stationConf, 0, sizeof(stationConf));
-    os_memcpy(&stationConf.ssid, ssid.c_str(), ssid.length());
-    os_memcpy(&stationConf.password, pass.c_str(), pass.length());
-    wifi_set_opmode(STATION_MODE);
-    wifi_station_set_config(&stationConf);
-#elif defined(ESP32)
-    wifi_config_t stationConf;
-    esp_err_t err = esp_wifi_get_config(WIFI_IF_STA, &stationConf);
-    if (err == ESP_OK) {
-        memset(&stationConf, 0, sizeof(stationConf));
-        memcpy(&stationConf.sta.ssid, ssid.c_str(), ssid.length());
-        memcpy(&stationConf.sta.password, pass.c_str(), pass.length());
-        err = esp_wifi_set_config(WIFI_IF_STA, &stationConf);
-        if (err) {
-            log_error("Set WiFi config: %s", esp_err_to_name(err));
-        }
-    }
-#endif
 }
 
 WiFiScanResult WiFiService::scanNetworks() {
     WiFiScanResult result;
-
     int res = WiFi.scanComplete();
 
 #ifdef WIFI_SCAN_RUNNING
@@ -148,7 +107,7 @@ WiFiConnectResult WiFiService::connectWithParams(const WiFiConnectParams& params
         return result;
     }
 
-    if (params.ssid.length() && params.password.length()) {
+    if (params.ssid.length()) {
         setTaskWdt(params.wdtLongTimeout);
         WiFi.mode(WIFI_AP_STA);
 
@@ -203,15 +162,31 @@ WiFiConnectResult WiFiService::connectWithParams(const WiFiConnectParams& params
             String resp;
             resp  = "ESP successfully connected to ";
             resp += params.ssid;
-            resp += " WiFi network. <br><b>Restart ESP now?</b><br><br><i>Note: disconnect your browser from ESP AP and then reload <a href='";
-            resp += serverLoc;
-            resp += "'>";
-            resp += serverLoc;
-            resp += "</a> or <a href='http://";
-            resp += params.host;
-            resp += ".local'>http://";
-            resp += params.host;
-            resp += ".local</a></i>";
+            resp += " WiFi network.";
+
+            if (params.fromApClient) {
+                // Case 1: request came from a client connected to the ESP AP.
+                // We stay in WIFI_AP_STA, so we can still deliver this page over the AP and then let the user switch WiFi.
+                resp += " <br><br><i>Note:<br>Disconnect your browser from ESP's access point and connect it to the new WiFi network.<br><br>IP address <a href='";
+                resp += serverLoc;
+                resp += "'>";
+                resp += serverLoc;
+                resp += "</a><br> Hostname <a href='http://";
+                resp += params.host;
+                resp += ".local/setup'>http://";
+                resp += params.host;
+                resp += ".local/setup</a></i><br><p style='text-align: center'>Do you want to proceed with a ESP restart right now?</p>";
+            } else {
+                // Case 2: request came from a client already on the same WiFi as the ESP (pure SSID switch). 
+                // After the switch this page will no longer reach the device until the client changes WiFi as well.
+                resp += " <br><br><i>Note:<br>This setup page may stop communicating with the device due to the WiFi network change.<br>After you switch your PC/phone to the new WiFi network, open <a href='http://";
+                resp += params.host;
+                resp += ".local'>http://";
+                resp += params.host;
+                resp += ".local</a> (or the new IP: ";
+                resp += result.ip.toString();
+                resp += ") to reach the ESP again.</i><br><p style='text-align: center'>Do you want to proceed with a ESP restart right now?</p>";
+            }
             result.status = 200;
             result.body = resp;
             setTaskWdt(params.wdtTimeout);
@@ -227,39 +202,9 @@ WiFiConnectResult WiFiService::connectWithParams(const WiFiConnectParams& params
 
 WiFiStartResult WiFiService::startWiFi(CredentialManager* credentialManager, fs::FS* filesystem, const char* configFile, uint32_t timeout) {
     WiFiStartResult result;
-
-#if ESP_FS_WS_SETUP
-    if (filesystem && configFile) {
-        File file = filesystem->open(configFile, "r");
-        if (file) {
-            CJSON::Json doc;
-            String content = "";
-            while (file.available()) {
-                content += (char)file.read();
-            }
-            file.close();
-            if (doc.parse(content)) {
-                bool dhcp = false;
-                IPAddress local_ip, subnet, gateway;
-                if (doc.getBool("dhcp", dhcp) && dhcp == true) {
-                    String gw, sn, ip;
-                    if (doc.getString("gateway", gw)) gateway.fromString(gw);
-                    if (doc.getString("subnet", sn)) subnet.fromString(sn);
-                    if (doc.getString("ip_address", ip)) local_ip.fromString(ip);
-                    log_info("Manual config WiFi connection with IP: %s\n", local_ip.toString().c_str());
-                    if (!WiFi.config(local_ip, gateway, subnet)) {
-                        log_error("STA Failed to configure");
-                    }
-                    delay(100);
-                }
-            } else {
-                log_error("Failed to parse WiFi config file");
-            }
-        }
-    }
-#endif
-
     WiFi.mode(WIFI_STA);
+    String _ssid = "";
+    String _pass = "";
 
     if (credentialManager) {
 #ifdef ESP32
@@ -283,6 +228,8 @@ WiFiStartResult WiFiService::startWiFi(CredentialManager* credentialManager, fs:
                             if (scannedRSSI > bestRSSI) {
                                 bestRSSI = scannedRSSI;
                                 bestCred = &(*creds)[j];
+                                _ssid = bestCred->ssid;
+                                _pass = credentialManager->getPassword(bestCred->ssid);
                             }
                             break;
                         }
@@ -350,26 +297,9 @@ WiFiStartResult WiFiService::startWiFi(CredentialManager* credentialManager, fs:
         }
     }
 
-#if defined(ESP8266)
-    struct station_config conf;
-    wifi_station_get_config_default(&conf);
-    const char* _ssid = reinterpret_cast<const char*>(conf.ssid);
-    const char* _pass = reinterpret_cast<const char*>(conf.password);
-#elif defined(ESP32)
-    wifi_config_t conf;
-    esp_err_t err = esp_wifi_get_config(WIFI_IF_STA, &conf);
-    if (err) {
-        log_error("Get WiFi config: %s", esp_err_to_name(err));
-        result.action = WiFiStartAction::Failed;
-        return result;
-    }
-    const char* _ssid = reinterpret_cast<const char*>(conf.sta.ssid);
-    const char* _pass = reinterpret_cast<const char*>(conf.sta.password);
-#endif
-
-    if (strlen(_ssid) && strlen(_pass)) {
-        WiFi.begin(_ssid, _pass);
-        log_debug("Connecting to %s, %s", _ssid, _pass);
+    if (_ssid.length() > 0) {
+        WiFi.begin(_ssid.c_str(), _pass.c_str());
+        log_debug("Connecting to %s, %s", _ssid.c_str(), _pass.c_str());
 
         int tryDelay = timeout / 10;
         int numberOfTries = 10;
@@ -465,7 +395,7 @@ bool WiFiService::startMDNSResponder(DNSServer*& dnsServer, const String& host, 
     } else {
         log_debug("MDNS responder started %s (AP mode)", host.c_str());
         MDNS.addService("http", "tcp", port);
-        MDNS.setInstanceName("async-fs-webserver");
+        MDNS.setInstanceName("esp-fs-webserver");
     }
     return true;
 }
@@ -475,8 +405,9 @@ bool WiFiService::startMDNSOnly(const String& host, uint16_t port) {
         log_error("MDNS responder not started");
         return false;
     }
+
     log_debug("MDNS responder started %s (STA mode)", host.c_str());
     MDNS.addService("http", "tcp", port);
-    MDNS.setInstanceName("async-fs-webserver");
+    MDNS.setInstanceName("esp-fs-webserver");
     return true;
 }

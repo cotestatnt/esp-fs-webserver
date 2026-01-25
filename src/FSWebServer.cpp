@@ -375,6 +375,7 @@ void FSWebServer::clearConfig() {
         this->send(200, "text/plain", "Clear config OK");
     else
         this->send(200, "text/plain", "Clear config not done");
+    m_credentialManager->clearAll();
 }
 
 void FSWebServer::handleScanNetworks() {
@@ -481,6 +482,10 @@ void FSWebServer::doWifiConnection() {
         subnet.fromString(this->arg("subnet"));
         local_ip.fromString(this->arg("ip_address"));
         noDHCP = true;
+        log_debug("Static IP requested: %s, GW: %s, SN: %s",
+                 local_ip.toString().c_str(),
+                 gateway.toString().c_str(),
+                 subnet.toString().c_str());
     }
 
     if (this->hasArg("ssid"))
@@ -540,6 +545,9 @@ void FSWebServer::doWifiConnection() {
     params.password = pass;
     params.changeSSID = newSSID;
     params.noDHCP = noDHCP;
+    // Remember if this /connect was requested while we are
+    // serving the captive portal (AP mode).
+    params.fromApClient = m_isApMode;
     params.local_ip = local_ip;
     params.gateway = gateway;
     params.subnet = subnet;
@@ -647,7 +655,6 @@ bool FSWebServer::startWiFi(uint32_t timeout, CallbackF fn) {
         m_serverIp = result.ip;
         m_isApMode = false;
     #if ESP_FS_WS_MDNS
-        MDNS.end();
         WiFiService::startMDNSOnly(m_host, m_port);
         log_info("mDNS started on http://%s.local", m_host.c_str());
     #endif

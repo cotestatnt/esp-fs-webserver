@@ -1,6 +1,6 @@
 #include <FS.h>
 #include <LittleFS.h>
-#include "FSWebServer.h"
+#include <FSWebServer.h>
 
 FSWebServer server(LittleFS, 80, "myServer");
 uint16_t testInt = 150;
@@ -72,7 +72,7 @@ void setup() {
   server.addOptionBox("Custom options");
   server.addOption("Test int variable", testInt);
   server.addOption("Test float variable", (double)testFloat, 0.0, 100.0, 0.001);
-  server.setSetupPageTitle("Simple Async ESP FS WebServer");
+  server.setSetupPageTitle("Simple ESP FS WebServer");
 
   // Enable ACE FS file web editor
   server.enableFsCodeEditor();
@@ -95,5 +95,5 @@ void loop() {
   server.run();
 
   // Nothing to do here for this simple example
-  delay(10);
+  delay(1);
 }
