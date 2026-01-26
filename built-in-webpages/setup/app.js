@@ -169,9 +169,10 @@ const getParameters = () => {
 
       fetch(`${esp}${configFile}`).then(r => r.json()).then(cfg => {
           if (cfg['img-logo']) {
-              fetch(cfg['img-logo']).then(r => r.text()).then(b64 => {
-                  const s = cfg['img-logo'].replace(/[^\d_]/g, '').split('_');
-                  const img = newEl('img', { class: 'logo', src: `data:image/png;base64,${b64}`, style: `width:${s[0]}px;height:${s[1]}px`});
+              const logoPath = cfg['img-logo'];
+              fetch(logoPath).then(r => r.text()).then(b64 => {
+                  const s = logoPath.replace(/[^\d_]/g, '').split('_');
+                  const img = newEl('img', { class: 'logo', src: `data:image/png;base64,${b64}`, style: `width:${s[0] || 64}px;height:${s[1] || 64}px`});
                   $('img-logo').innerHTML = ''; $('img-logo').appendChild(img);
               });
               delete cfg['img-logo'];
