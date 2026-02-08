@@ -1,6 +1,23 @@
 #include "WiFiService.h"
 #include "Json.h"
 
+// Helper: log the actual station network configuration as seen by the core
+// (independent from WiFiConnectParams / CredentialManager values).
+static void logCurrentStaNetworkConfig() {
+#if defined(ESP8266) || defined(ESP32)
+    auto mode = WiFi.getMode();
+    if (mode != WIFI_STA && mode != WIFI_AP_STA) {
+        return;
+    }
+    log_info("[WiFi] Core STA config: IP=%s GW=%s SN=%s DNS1=%s DNS2=%s",
+             WiFi.localIP().toString().c_str(),
+             WiFi.gatewayIP().toString().c_str(),
+             WiFi.subnetMask().toString().c_str(),
+             WiFi.dnsIP(0).toString().c_str(),
+             WiFi.dnsIP(1).toString().c_str());
+#endif
+}
+
 #if defined(ESP32)
 static inline void resetTaskWdtIfSubscribed() {
     if (esp_task_wdt_status(NULL) == ESP_OK) {
@@ -27,14 +44,6 @@ void WiFiService::setTaskWdt(uint32_t timeout) {
     ESP.wdtDisable();
     ESP.wdtEnable(timeout);
 #endif
-}
-
-void WiFiService::applyPersistentConfig(bool persistentEnabled, const String& ssid, const String& pass) {
-    if (!persistentEnabled) {
-        WiFi.persistent(false);
-        return;
-    }
-    WiFi.persistent(true);
 }
 
 WiFiScanResult WiFiService::scanNetworks() {
@@ -94,40 +103,32 @@ WiFiScanResult WiFiService::scanNetworks() {
 
 WiFiConnectResult WiFiService::connectWithParams(const WiFiConnectParams& params) {
     WiFiConnectResult result;
-    if (WiFi.status() == WL_CONNECTED && !params.changeSSID && WiFi.getMode() != WIFI_AP) {
-        String resp;
-        resp.reserve(512);
-        resp  = "ESP is already connected to <b>";
-        resp += WiFi.SSID();
-        resp += "</b> WiFi!<br>Do you want close this connection and attempt to connect to <b>";
-        resp += params.ssid;
-        resp += "</b>?<br><br><i>Note:<br>Flash stored WiFi credentials will be updated.<br>The ESP will no longer be reachable from this web page due to the change of WiFi network.<br>To find out the new IP address, check the serial monitor or your router.<br></i>";
-        result.status = 200;
-        result.body = resp;
-        return result;
-    }
 
-    if (params.ssid.length()) {
+    if (strlen(params.config.ssid)) {
         setTaskWdt(params.wdtLongTimeout);
         WiFi.mode(WIFI_AP_STA);
 
-        if (params.noDHCP) {
-            log_info("Manual config WiFi connection with IP: %s", params.local_ip.toString().c_str());
-            if (!WiFi.config(params.local_ip, params.gateway, params.subnet)) {
+        if (!params.dhcp) {
+            log_info("Manual config WiFi connection with IP: %s", params.config.local_ip.toString().c_str());
+            bool hasDns1 = params.config.dns1 != IPAddress(0, 0, 0, 0);
+            bool hasDns2 = params.config.dns2 != IPAddress(0, 0, 0, 0);
+            bool ok = false;
+            if (hasDns1 && hasDns2) {
+                ok = WiFi.config(params.config.local_ip, params.config.gateway, params.config.subnet, params.config.dns1, params.config.dns2);
+            } else if (hasDns1) {
+                ok = WiFi.config(params.config.local_ip, params.config.gateway, params.config.subnet, params.config.dns1);
+            } else {
+                ok = WiFi.config(params.config.local_ip, params.config.gateway, params.config.subnet);
+            }
+
+            if (!ok) {
                 log_error("STA Failed to configure");
             }
-        }
-        
+        }        
 
         DBG_OUTPUT_PORT.print("\n\n\nConnecting to ");
-        DBG_OUTPUT_PORT.println(params.ssid);
-        WiFi.begin(params.ssid.c_str(), params.password.c_str());
-
-        if (WiFi.status() == WL_CONNECTED && params.changeSSID) {
-            log_info("Disconnect from current WiFi network");
-            WiFi.disconnect();
-            delay(10);
-        }
+        DBG_OUTPUT_PORT.println(params.config.ssid);
+        WiFi.begin(params.config.ssid, params.password.c_str());
 
         uint32_t beginTime = millis();
         while (WiFi.status() != WL_CONNECTED) {
@@ -149,8 +150,12 @@ WiFiConnectResult WiFiService::connectWithParams(const WiFiConnectParams& params
         if (WiFi.status() == WL_CONNECTED) {
             result.ip = WiFi.localIP();
             result.connected = true;
+
+            // Debug: print the actual STA configuration as seen by the core
+            logCurrentStaNetworkConfig();
+
             DBG_OUTPUT_PORT.print("\nConnected to ");
-            DBG_OUTPUT_PORT.print(params.ssid);
+            DBG_OUTPUT_PORT.print(params.config.ssid);
             DBG_OUTPUT_PORT.print(". IP address: ");
             DBG_OUTPUT_PORT.println(result.ip);
             String serverLoc = F("http://");
@@ -161,7 +166,7 @@ WiFiConnectResult WiFiService::connectWithParams(const WiFiConnectParams& params
             serverLoc += "/setup";
             String resp;
             resp  = "ESP successfully connected to ";
-            resp += params.ssid;
+            resp += params.config.ssid;
             resp += " WiFi network.";
 
             if (params.fromApClient) {
@@ -175,7 +180,7 @@ WiFiConnectResult WiFiService::connectWithParams(const WiFiConnectParams& params
                 resp += params.host;
                 resp += ".local/setup'>http://";
                 resp += params.host;
-                resp += ".local/setup</a></i><br><p style='text-align: center'>Do you want to proceed with a ESP restart right now?</p>";
+                resp += ".local/setup</a></i><br><p style='text-align: center'>Do you want to proceed with a ESP restart right now?</p><div id='action-restart-required'></div>";
             } else {
                 // Case 2: request came from a client already on the same WiFi as the ESP (pure SSID switch). 
                 // After the switch this page will no longer reach the device until the client changes WiFi as well.
@@ -185,7 +190,7 @@ WiFiConnectResult WiFiService::connectWithParams(const WiFiConnectParams& params
                 resp += params.host;
                 resp += ".local</a> (or the new IP: ";
                 resp += result.ip.toString();
-                resp += ") to reach the ESP again.</i><br><p style='text-align: center'>Do you want to proceed with a ESP restart right now?</p>";
+                resp += ") to reach the ESP again.</i><br><p style='text-align: center'>Do you want to proceed with a ESP restart right now?</p><div id='action-restart-required'></div>";
             }
             result.status = 200;
             result.body = resp;
@@ -203,23 +208,20 @@ WiFiConnectResult WiFiService::connectWithParams(const WiFiConnectParams& params
 WiFiStartResult WiFiService::startWiFi(CredentialManager* credentialManager, fs::FS* filesystem, const char* configFile, uint32_t timeout) {
     WiFiStartResult result;
     WiFi.mode(WIFI_STA);
-    String _ssid = "";
-    String _pass = "";
+    WiFiCredential* bestCred = nullptr;
 
     if (credentialManager) {
 #ifdef ESP32
         credentialManager->loadFromNVS();
 #else
         credentialManager->loadFromFS();
-#endif
-
+#endif        
         std::vector<WiFiCredential>* creds = credentialManager->getCredentials();
         if (creds && creds->size() > 0) {
             int networksFound = WiFi.scanNetworks();
             if (networksFound > 0) {
                 int32_t bestRSSI = -200;
-                WiFiCredential* bestCred = nullptr;
-
+                
                 for (int i = 0; i < networksFound; i++) {
                     String scannedSSID = WiFi.SSID(i);
                     int32_t scannedRSSI = WiFi.RSSI(i);
@@ -228,14 +230,11 @@ WiFiStartResult WiFiService::startWiFi(CredentialManager* credentialManager, fs:
                             if (scannedRSSI > bestRSSI) {
                                 bestRSSI = scannedRSSI;
                                 bestCred = &(*creds)[j];
-                                _ssid = bestCred->ssid;
-                                _pass = credentialManager->getPassword(bestCred->ssid);
                             }
                             break;
                         }
                     }
                 }
-
                 WiFi.scanDelete();
 
                 if (bestCred != nullptr) {
@@ -244,15 +243,28 @@ WiFiStartResult WiFiService::startWiFi(CredentialManager* credentialManager, fs:
                                  bestCred->local_ip.toString().c_str(),
                                  bestCred->gateway.toString().c_str(),
                                  bestCred->subnet.toString().c_str());
-                        if (!WiFi.config(bestCred->local_ip, bestCred->gateway, bestCred->subnet)) {
+
+                        IPAddress dns1 = bestCred->dns1;
+                        IPAddress dns2 = bestCred->dns2;
+                        bool hasDns1 = dns1 != IPAddress(0, 0, 0, 0);
+                        bool hasDns2 = dns2 != IPAddress(0, 0, 0, 0);
+                        bool ok = false;
+                        if (hasDns1 && hasDns2) {
+                            ok = WiFi.config(bestCred->local_ip, bestCred->gateway, bestCred->subnet, dns1, dns2);
+                        } else if (hasDns1) {
+                            ok = WiFi.config(bestCred->local_ip, bestCred->gateway, bestCred->subnet, dns1);
+                        } else {
+                            ok = WiFi.config(bestCred->local_ip, bestCred->gateway, bestCred->subnet);
+                        }
+
+                        if (!ok) {
                             log_error("Failed to configure static IP");
                         }
                     }
-
-                    String plainPassword = credentialManager->getPassword(bestCred->ssid);
-                    if (plainPassword.length() > 0) {
+                    
+                    if (credentialManager->getPassword(bestCred->ssid).length() > 0) {
                         log_info("Connecting to %s (RSSI: %d dBm)...", bestCred->ssid, bestRSSI);
-                        WiFi.begin(bestCred->ssid, plainPassword.c_str());
+                        WiFi.begin(bestCred->ssid, credentialManager->getPassword(bestCred->ssid).c_str());
 
                         int tryDelay = timeout / 10;
                         int numberOfTries = 10;
@@ -268,6 +280,8 @@ WiFiStartResult WiFiService::startWiFi(CredentialManager* credentialManager, fs:
                                 return result;
                             case WL_CONNECTED:
                                 log_debug("[WiFi] WiFi is connected!  IP address: %s", WiFi.localIP().toString().c_str());
+                                // Debug: print the actual STA configuration as seen by the core
+                                logCurrentStaNetworkConfig();
                                 result.ip = WiFi.localIP();
                                 result.action = WiFiStartAction::Connected;
                                 return result;
@@ -291,15 +305,15 @@ WiFiStartResult WiFiService::startWiFi(CredentialManager* credentialManager, fs:
                     }
                 }
             }
-
             result.action = WiFiStartAction::StartAp;
             return result;
         }
     }
 
-    if (_ssid.length() > 0) {
-        WiFi.begin(_ssid.c_str(), _pass.c_str());
-        log_debug("Connecting to %s, %s", _ssid.c_str(), _pass.c_str());
+    if (bestCred && strlen(bestCred->ssid)) {
+        WiFi.setHostname(credentialManager->getHostname().c_str());
+        WiFi.begin(bestCred->ssid, credentialManager->getPassword(bestCred->ssid).c_str());
+        log_debug("Connecting to %s", bestCred->ssid);
 
         int tryDelay = timeout / 10;
         int numberOfTries = 10;
@@ -316,6 +330,8 @@ WiFiStartResult WiFiService::startWiFi(CredentialManager* credentialManager, fs:
                 return result;
             case WL_CONNECTED:
                 log_debug("[WiFi] WiFi is connected!  IP address: %s", WiFi.localIP().toString().c_str());
+                // Debug: print the actual STA configuration as seen by the core
+                logCurrentStaNetworkConfig();
                 result.ip = WiFi.localIP();
                 result.action = WiFiStartAction::Connected;
                 return result;
@@ -350,26 +366,14 @@ bool WiFiService::startAccessPoint(WiFiConnectParams& params, IPAddress& outIp) 
     delay(100);
     WiFi.mode(WIFI_AP);
 
-    IPAddress apIP(192, 168, 4, 1);
-    IPAddress gateway(192, 168, 4, 1);
-    IPAddress netmask(255, 255, 255, 0);
-
-    if (params.local_ip != IPAddress(0,0,0,0)) {
-        apIP = params.local_ip;        
-    }
-
-    if (params.gateway != IPAddress(0,0,0,0)) {     
-        gateway = params.gateway;
-    }
-
-    if (params.subnet != IPAddress(0,0,0,0)) {
-        netmask = params.subnet;
-    }
+    IPAddress apIP = params.config.local_ip != IPAddress(0,0,0,0) ? params.config.local_ip : IPAddress(192, 168, 4, 1);
+    IPAddress gateway = params.config.gateway != IPAddress(0,0,0,0) ? params.config.gateway : IPAddress(192, 168, 4, 1);
+    IPAddress netmask = params.config.subnet != IPAddress(0,0,0,0) ? params.config.subnet : IPAddress(255, 255, 255, 0);
 
     // Configure AP IP parameters
     WiFi.softAPConfig(apIP, gateway, netmask);
 
-    if (!WiFi.softAP(params.ssid.c_str(), params.password.c_str())) {
+    if (!WiFi.softAP(params.config.ssid, params.password.c_str())) {
         log_error("Captive portal failed to start: WiFi.softAP() failed!");
         return false;
     }

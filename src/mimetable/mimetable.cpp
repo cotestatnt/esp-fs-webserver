@@ -20,6 +20,7 @@ static const struct {
   {".jpg", "image/jpeg"},
   {".ico", "image/x-icon"},
   {".svg", "image/svg+xml"},
+  {".svg.gz", "image/svg+xml"},
   {".ttf", "application/x-font-ttf"},
   {".otf", "application/x-font-opentype"},
   {".woff", "application/font-woff"},

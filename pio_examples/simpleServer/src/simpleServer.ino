@@ -69,11 +69,10 @@ void setup() {
   if (!server.startWiFi(10000)) {
     Serial.println("\nWiFi not connected! Starting AP mode...");
     WiFiConnectParams params;
-    params.ssid = "ESP_AP";
-    params.password = "123456789";
-    params.local_ip = IPAddress(192, 168, 1, 1);
-    params.gateway = IPAddress(192, 168, 1, 1);
-    params.subnet = IPAddress(255, 255, 255, 0);    
+    params.config.local_ip = IPAddress(192, 168, 1, 1);
+    params.config.gateway = IPAddress(192, 168, 1, 1);
+    params.config.subnet = IPAddress(255, 255, 255, 0);  
+    server.setAP("ESP_AP", "123456789");  
     server.startCaptivePortal(params, "/setup.htm");
   }
 

@@ -1,0 +1,13 @@
+{
+  "name": "build-edit-page",
+  "version": "1.0.0",
+  "description": "Build script for edit page minification and compression",
+  "main": "minify.js",
+  "scripts": {
+    "build": "node minify.js"
+  },
+  "dependencies": {
+    "@node-minify/core": "^8.0.5",
+    "@node-minify/html-minifier": "^8.0.5"
+  }
+}

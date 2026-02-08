@@ -39,10 +39,10 @@ String stringVar = "Test option String";
 // Add a dropdown list box in /setup page
 const char* days[] = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"};
 uint8_t daySelected = 2;// Default to "Wednesday"
-FSWebServer::DropdownList dayOfWeek{ DROPDOWN_LABEL, days, 7, daySelected}; 
+SetupConfig::DropdownList dayOfWeek{ DROPDOWN_LABEL, days, 7, daySelected}; 
 
 // Add a slider in /setup page
-FSWebServer::Slider brightness{ BRIGHTNESS_LABEL, 0.0, 100.0, 1.0, 50.0 };
+SetupConfig::Slider brightness{ BRIGHTNESS_LABEL, 0.0, 100.0, 1.0, 50.0 };
 
 static const char reload_btn_htm[] PROGMEM = R"EOF(
 <div class="btn-bar">

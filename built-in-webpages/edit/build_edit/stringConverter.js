@@ -1,0 +1,41 @@
+var stringConverter = {
+  convertByte: function (oneByte, bytesPerPixel) {
+    var stringByte = '0x' + oneByte.toString(16).padStart(bytesPerPixel * 2, '0');
+    return stringByte;
+  },
+  convert: function (dataLength, bytesPerPixel, multiLine, colNumber, data) {
+    var resultString = '';
+    for (var i = 0; i < dataLength; i++) {
+      var stringByte = '';
+      // need to use bigint, so we can use 32bit integers (4byte per pixel)
+      let combinedByte = BigInt("0b00000000000000000000000000000000");
+      for (let j = 0; j < bytesPerPixel; j++) {
+        let pixelByte = BigInt(data[(i * bytesPerPixel) + j]);
+        if (j != 0) {
+          combinedByte = combinedByte << BigInt(8);
+        }
+        combinedByte = combinedByte | pixelByte;
+      }
+      stringByte = this.convertByte(combinedByte, bytesPerPixel) + ', ';
+      if (multiLine && ((i + 1) % colNumber == 0)) {
+        stringByte += '\n  ';
+      }
+      resultString += stringByte;
+    }
+    resultString = resultString.substr(0, resultString.lastIndexOf(',')).trim();
+    // add the array definition
+    return resultString;
+  },
+  toString: function (buffer, colNumber, varName) {
+    // Get the data length (in bytes)
+    const dataLength = buffer.length;
+    const bytesPerPixel = 1; // 1 byte per element
+
+    var header = '// Auto Generated file (minify build script)\n#pragma once\n#include <pgmspace.h>\n\nconst uint8_t ';
+    header += varName + '[' + dataLength.toString() + '] PROGMEM = {\n  ';
+
+    return header + this.convert(dataLength, bytesPerPixel, true, colNumber, buffer) + '\n};';
+  }
+};
+
+module.exports = stringConverter;

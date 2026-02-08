@@ -10,7 +10,7 @@
 #define MAX_F 3.4028235E+38
 
 // Public dropdown definition type, available only when /setup is enabled
-namespace ServerConfig {
+namespace SetupConfig {
     struct DropdownList {
         const char* label;                 // JSON key / UI label id
         const char* const* values;         // Static array of values (null-terminated strings)
@@ -26,7 +26,6 @@ namespace ServerConfig {
         double value;                      // Current value
     };
 }
-
 
 class SetupConfigurator
 {
@@ -63,9 +62,6 @@ class SetupConfigurator
                 }
                 
                 // Create empty m_doc - will be populated in addOption() in the setup order
-                // WiFi configuration (SSID, password, DHCP/static IP) is now fully
-                // managed by CredentialManager and must NOT be persisted in
-                // config.json. Start from an empty JSON document here.
                 m_doc = new CJSON::Json();
                 
                 m_opened = true;
@@ -91,9 +87,6 @@ class SetupConfigurator
                     log_error("Error. File %s not created", ESP_FS_WS_CONFIG_FILE);
                     return false;
                 }
-                // Start with an empty JSON object. WiFi-related keys (ssid, password,
-                // dhcp, ip_address, gateway, subnet, etc.) are now handled by
-                // CredentialManager and MUST NOT be stored inside config.json.
                 file.println("{}");
                 file.close();
             }
@@ -168,19 +161,36 @@ class SetupConfigurator
             return true;
         }
 
-        void setLogoBase64(const char* logo, const char* width, const char* height, bool overwrite) {
-            String filename = ESP_FS_WS_CONFIG_FOLDER;
-            filename += "/img-logo-";
-            filename += width;
-            filename += "_";
-            filename += height;
-            filename += ".txt";
-            if (filename.length() >= 120) {
-                log_error("Logo filename too long");
-                return;
+        // Save logo image from binary data (uint8_t array)
+        // Supports: PNG, JPEG, GIF, SVG (plain or gzipped)
+        // Automatically detects gzip compression (magic bytes 0x1f 0x8b)
+        void setSetupPageLogo(const uint8_t* imageData, size_t imageSize, const char* mimeType = "image/png", bool overwrite = false) {
+            // Determine file extension from MIME type
+            String extension = ".png";
+            if (strcmp(mimeType, "image/jpeg") == 0 || strcmp(mimeType, "image/jpg") == 0) {
+                extension = ".jpg";
+            } else if (strcmp(mimeType, "image/gif") == 0) {
+                extension = ".gif";
+            } else if (strcmp(mimeType, "image/svg+xml") == 0) {
+                extension = ".svg";
             }
-            optionToFile(filename.c_str(), logo, overwrite);
+            
+            String filename = ESP_FS_WS_CONFIG_FOLDER;
+            filename += "/logo";
+            filename += extension;
+            
+            // Auto-detect gzip compression by checking magic bytes
+            if (imageSize >= 2 && imageData[0] == 0x1f && imageData[1] == 0x8b) {
+                filename += ".gz";
+            }
+            
+            optionToFileBinary(filename.c_str(), imageData, imageSize, overwrite);
             addOption("img-logo", filename.c_str());
+        }
+
+        // Overload for string literals (e.g., SVG text)
+        void setSetupPageLogo(const char* svgText, bool overwrite = false) {
+            setSetupPageLogo((const uint8_t*)svgText, strlen(svgText), "image/svg+xml", overwrite);
         }
 
         bool optionToFile(const char* filename, const char* str, bool overWrite) {
@@ -206,6 +216,38 @@ class SetupConfigurator
                     log_debug("Error writing file %s", filename);
                 }
             }
+            return false;
+        }
+
+        // Save binary data to file (e.g., pre-compressed gzip data)
+        bool optionToFileBinary(const char* filename, const uint8_t* data, size_t len, bool overWrite) {
+            if (m_filesystem->exists(filename) && !overWrite) {
+                return true;
+            }
+            File file = m_filesystem->open(filename, "w");
+            if (file) {
+                size_t written = file.write(data, len);
+                file.close();
+                log_debug("Binary file %s saved (%d bytes)", filename, written);
+                return written == len;
+            }
+            log_debug("Error writing binary file %s", filename);
+            return false;
+        }
+
+        // Save binary data to file (for pre-compressed gzip data)
+        bool optionToFileGzip(const char* filename, const uint8_t* data, size_t len, bool overWrite) {
+            if (m_filesystem->exists(filename) && !overWrite) {
+                return true;
+            }
+            File file = m_filesystem->open(filename, "w");
+            if (file) {
+                size_t written = file.write(data, len);
+                file.close();
+                log_debug("Binary file %s saved (%d bytes)", filename, written);
+                return written == len;
+            }
+            log_debug("Error writing binary file %s", filename);
             return false;
         }
 
@@ -291,7 +333,7 @@ class SetupConfigurator
         /*
             Add a new dropdown using a static definition that tracks current index
         */
-        void addDropdownList(ServerConfig::DropdownList &def) {
+        void addDropdownList(SetupConfig::DropdownList &def) {
             if (m_doc == nullptr) {
                 if (!openConfiguration()) {
                     log_error("Error! /setup configuration not possible");
@@ -343,7 +385,7 @@ class SetupConfigurator
             Update a dropdown definition's selectedIndex from persisted config
             Returns true if a matching value was found
         */
-        bool getDropdownSelection(ServerConfig::DropdownList &def) {
+        bool getDropdownSelection(SetupConfig::DropdownList &def) {
             // Ensure we have a doc to read from
             if (m_doc == nullptr && !openConfiguration()) {
                 log_error("Error! /setup configuration not possible");
@@ -377,7 +419,7 @@ class SetupConfigurator
         /*
             Add a new slider using a static definition that tracks current value
         */
-        void addSlider(ServerConfig::Slider &def) {
+        void addSlider(SetupConfig::Slider &def) {
             if (m_doc == nullptr) {
                 if (!openConfiguration()) {
                     log_error("Error! /setup configuration not possible");
@@ -409,7 +451,7 @@ class SetupConfigurator
             Read slider value into the provided struct from persisted config
             Returns true if a value was found
         */
-        bool getSliderValue(ServerConfig::Slider &def) {
+        bool getSliderValue(SetupConfig::Slider &def) {
             if (m_doc == nullptr && !openConfiguration()) {
                 log_error("Error! /setup configuration not possible");
                 return false;

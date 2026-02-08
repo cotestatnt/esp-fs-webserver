@@ -1,186 +1,191 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
-    <title>ESP FS Web Server</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>:root{--c-prim:#06b6d4;--c-prim-dk:#0891b2;--c-bg:#f0f9ff;--c-bg-dk:#e0f2fe;--c-txt:#1e3a5f;--c-txt-lt:#64748b;--c-grad-a:#0f172a;--c-grad-b:#1e3a5f;--c-grad-r:#942a07}html{font-family:sans-serif}body{background:linear-gradient(135deg,var(--c-grad-a) 0,var(--c-grad-b) 100%);min-height:100vh;padding:0 20px 20px}a{background-color:transparent;cursor:pointer}a:active,a:hover{outline:0}b{font-weight:700}h1{font-size:36px;margin:10px 0 5px}h1,h2{color:var(--c-txt)}h2{font-size:24px;font-weight:600;margin:4px auto}input[type=checkbox]{box-sizing:border-box;padding:0}input[type=number],input[type=password],input[type=text],select{background-color:var(--c-bg);border:2px solid var(--c-bg-dk);border-radius:8px;color:#0f172a;font-size:16px;height:40px;padding:0 0 0 20px;transition:.3s;width:90%}input[type=file]{display:none}input::placeholder{color:var(--c-txt-lt)}input:hover{border-color:var(--c-prim);box-shadow:0 0 12px rgba(6,182,212,.2)}input:focus,select:focus{border-color:var(--c-prim-dk);box-shadow:0 0 16px rgba(6,182,212,.3);outline:0}footer{color:#cbd5e1;font-size:12px;margin:40px;text-align:center}.btn,button{background:linear-gradient(135deg,var(--c-prim) 0,var(--c-prim-dk) 100%);border:0;border-radius:8px;box-shadow:0 4px 12px rgba(6,182,212,.3);color:#fff;cursor:pointer;display:inline-flex;font-weight:600;justify-content:center;min-width:40%;padding:10px;transition:.3s}.btn:hover,button:hover{box-shadow:0 6px 16px rgba(6,182,212,.4);filter:brightness(1.2)}#update-btn{background:var(--c-grad-r);min-width:0;padding:6px}#update-btn[aria-disabled=true]{box-shadow:none;cursor:default;opacity:.4;pointer-events:none}ul{color:#e2e8f0;display:table;margin:0 auto 10px;text-align:left}hr{border:1px solid rgba(6,182,212,.3);order:997;width:100%}select{width:92.5%}.input-label,select{background-color:var(--c-bg)}.input-label{align-self:self-start;border:2px solid var(--c-bg-dk);border-radius:6px;bottom:-5px;color:var(--c-prim-dk);font-size:13.5px;font-weight:600;left:5%;padding:2px 10px 0;position:relative;transition:.3s}.input-label:hover{background-color:#cffafe;border-color:var(--c-prim)}.firmware{align-items:center;display:flex;flex-direction:row;flex-wrap:wrap;gap:20px;justify-content:center;width:100%}.firmware .fw-upload{margin-bottom:0}.form{align-items:center;display:flex;flex-direction:column;width:100%}.row-wrapper{align-items:baseline;display:flex;flex-wrap:nowrap;gap:20px;margin-bottom:14px}.tf-wrapper{align-items:center;display:flex;flex-direction:column;margin-bottom:10px}.loading{color:var(--c-prim);font-weight:600;text-align:center}.loader{height:auto;overflow:hidden;position:relative}.spinH{background:var(--c-prim);border-radius:100%;box-shadow:0 0 8px var(--c-prim);height:8px;position:absolute;top:50%;width:8px}.spin-1H{animation:spinnerH 3s linear infinite}.spin-2H{animation:spinnerH 3s linear .1s infinite}.spin-3H{animation:spinnerH 3s linear .2s infinite}.spin-4H{animation:spinnerH 3s linear .3s infinite}@keyframes spinnerH{0%{transform:translateX(0)}20%{transform:translate(200px)}70%{transform:translateX(505px)}to{transform:translateX(800px)}}.progress-wrap{background:rgba(6,182,212,.1);border:2px solid var(--c-prim);border-radius:8px;font-size:20px;height:25px;margin:20px auto;position:relative;text-align:center;transition:.4s;width:80%}.progress-wrap:not(.active){background:rgba(6,182,212,.05);cursor:pointer}.progress-wrap .progress{background:linear-gradient(90deg,var(--c-prim) 0,var(--c-prim-dk) 100%);inset:0;opacity:0;position:absolute;transition:.3s;width:0;z-index:5}.progress-wrap.active .progress{animation:progress-anim 10s ease 0s;opacity:1}.d-modal{background:linear-gradient(135deg,var(--c-bg) 0,var(--c-bg-dk) 100%);border:2px solid var(--c-prim);border-radius:12px;box-shadow:0 8px 32px rgba(6,182,212,.3);flex-direction:column;min-width:400px;position:relative}#modal-message{align-items:center;display:none;inset:0;justify-content:center;position:fixed;z-index:1000}#modal-message[open]{display:flex}#modal-message:before{backdrop-filter:blur(1px);background:rgba(0,0,0,.35);content:"";inset:0;position:fixed;z-index:-1}.d-modal-title{color:#0f172a;font-weight:600;padding:1.5em;width:calc(100% - 4.5em)}.d-modal-content{border-top:2px solid var(--c-prim);color:#0f172a;overflow:auto;padding:1.5em}.topnav{align-self:flex-end;background:linear-gradient(135deg,var(--c-grad-a) 0,var(--c-grad-b) 100%);border:2px solid var(--c-prim);border-radius:8px;margin-top:12px}.topnav a{color:#e2e8f0;float:left;font-size:16px;padding:6px 12px}.topnav a:hover{color:var(--c-prim)}.topnav a.active{background:linear-gradient(180deg,var(--c-prim) 0,#026881 100%);color:#fff;font-weight:600}.topnav .icon{display:none}.ctn{background:linear-gradient(135deg,rgba(224,242,254,.65),rgba(240,249,255,.95));border:1px solid var(--c-prim);border-radius:12px;box-shadow:0 8px 24px rgba(6,182,212,.2);display:flex;flex-direction:column;margin:0 auto 6px;max-width:840px;padding:8px 40px;position:relative}.ctn:after{clear:both;content:" ";display:table}.slider-wrapper{align-items:center;background-color:var(--c-bg);border-radius:8px;display:flex;gap:14px;width:92.5%}.slider-wrapper .slider{appearance:none;background:#e2e8f0;border-radius:999px;box-shadow:inset 0 1px 2px rgba(15,23,42,.12);height:10px;margin-left:20px;outline:none;transition:.2s;width:100%}.slider-wrapper .slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;background:linear-gradient(135deg,var(--c-prim) 0,var(--c-prim-dk) 100%);border:2px solid var(--c-bg-dk);border-radius:50%;box-shadow:0 2px 6px rgba(6,182,212,.4);cursor:pointer;height:20px;width:20px}.slider-wrapper .slider-readout{border:none;height:40px;text-align:center;width:60px}.toggle{cursor:pointer;display:block;margin-left:-12px;padding:4px}.toggle-label{color:#0f172a;font-weight:500;margin:0 10px;position:relative;top:2px}.toggle-switch{background:#cbd5e1;border-radius:16px;display:inline-block;height:32px;position:relative;transition:background .25s;vertical-align:middle;width:58px}.toggle-switch:before{background:linear-gradient(to bottom,#fff 0,var(--c-bg) 100%);border-radius:50%;box-shadow:0 0 0 1px rgba(6,182,212,.3);content:"";display:block;height:24px;left:4px;position:absolute;top:4px;transition:left .25s;width:24px}.t-check:checked+.toggle-switch{background:linear-gradient(135deg,var(--c-prim) 0,var(--c-prim-dk) 100%);box-shadow:0 0 12px rgba(6,182,212,.4)}.t-check:checked+.toggle-switch:before{background:linear-gradient(to bottom,var(--c-bg) 0,var(--c-bg-dk) 100%);left:30px}.t-check{position:absolute;visibility:hidden}.lbl-wifi{margin-left:0}.title{display:flex;margin:-10px 0 -14px}.heading{color:var(--c-prim-dk);text-align:right;width:100%}.pswd{align-items:center;display:flex;flex-direction:row;justify-content:center;width:100%}.show-hide-wrap{color:var(--c-prim);cursor:pointer;position:absolute;right:10%}.btn-bar{display:flex;flex-wrap:wrap;gap:20px 30px;justify-content:center;order:998;padding:10px}.fw-upload{background:linear-gradient(135deg,var(--c-prim) 0,var(--c-prim-dk) 100%);border-radius:8px;box-shadow:0 4px 12px rgba(6,182,212,.3);color:#fff;cursor:pointer;display:inline-block;font-weight:600;margin-bottom:20px;padding:12px 20px;transition:.3s}.fw-upload[aria-disabled=true]{box-shadow:none;cursor:default;opacity:.4;pointer-events:none}.hide{display:none}.svg{display:flex;margin-right:10px;width:20px}.table{border-collapse:collapse;margin:auto;width:90%}@media screen and (max-width:608px){h1{font-size:24px}.btn-bar{margin-top:20px}.topnav{align-self:flex-start;margin:4px;min-width:200px;width:auto}.topnav a{padding:5px 12px}.topnav a.active{background:none}.topnav a:not(.active){display:none}.topnav a.icon{display:block}.topnav.responsive{flex-direction:column;width:auto}.topnav.responsive .icon{display:none}.topnav.responsive a{display:block;float:none;text-align:left;width:100%}.hide-tiny{display:none}}@media screen and (max-width:479px){body{padding:2px}select{width:95.5%}.ctn{padding:0 10px}}.cred-tabs{align-items:flex-end;display:flex;margin:10px 0 0}.cred-tab{align-items:center;background:var(--c-grad-b);border-radius:8px 8px 0 0;color:#8f9195;display:inline-flex;font-size:14px;justify-content:center;margin-right:4px;max-width:150px;min-width:auto;overflow:hidden;padding:8px 12px;text-overflow:ellipsis}.cred-tab.active{background:var(--c-bg-dk);border-bottom:2px solid var(--c-prim);border:2px solid var(--c-prim);border-bottom-color:var(--c-bg-dk);box-shadow:none;color:var(--c-prim-dk);position:relative;top:2px;z-index:2}#wifi,#wifi-table{background:var(--c-bg-dk);border:2px solid var(--c-prim);margin-bottom:10px;padding:20px}.tf-wrapper.inline-creds{flex-direction:row-reverse;justify-content:end;width:100%}.btn-bar.compact{align-items:center;display:inline-flex;gap:10px;justify-content:flex-start;padding:0}.btn.small{background:linear-gradient(135deg,#ef4444,#b91c1c);border-radius:6px;box-shadow:0 2px 6px rgba(239,68,68,.3);font-size:14px;min-width:fit-content;padding:8px 16px;width:auto}</style>
-    <script>const ICONS={lock:"🔒",unlock:"🔓",scan:"📡",connect:"📶",save:"💾",restart:"↻",eye:"🐵",noEye:"🙈",menu:"☰",del:"🗑️",clear:"✖",upload:"➜"};let closeCb=()=>{};const port=location.port||("https:"===location.protocol?"443":"80"),esp=`${location.protocol}//${location.hostname}:${port}/`;let configFile,lastBox,options={},wifiCredentials=[],selectedCredentialIndex=-1;const $=e=>document.getElementById(e),hide=e=>$(e)?.classList.add("hide"),show=e=>$(e)?.classList.remove("hide"),newEl=(e,t={})=>{const n=document.createElement(e);for(const[e,s]of Object.entries(t))n.setAttribute(e,s);return n},handleInputChange=e=>{const t=e.target;if(!t.classList.contains("opt-input"))return;const n=t.id;if("range"===t.type){const e=$(`${n}-readout`);e&&(e.value=t.value),updateSliderOption(n,t.value)}else if(t.id.endsWith("-readout")){const e=n.replace("-readout",""),s=$(e);s&&(s.value=t.value,updateSliderOption(e,t.value))}else if("checkbox"===t.type)options[n]=t.checked;else if("number"===t.type){const e=t.step?Number(t.step):0;options[n]=e?parseFloat(t.value):parseInt(t.value,10)}else options[n]=t.value},updateSliderOption=(e,t)=>{const n=options[e]&&"object"==typeof options[e]?options[e]:{},s=Number(t),a=n.step||1;options[e]={...n,value:Math.round(s*(1/a))/(1/a),type:n.type||"slider"}};window.addEventListener("load",(()=>{getParameters();const e=$("logo-tpl");e&&$("img-logo").appendChild(e.content.cloneNode(!0)),$("main-box").addEventListener("change",handleInputChange),$("main-box").addEventListener("input",(e=>{if("range"===e.target.type&&e.target.classList.contains("opt-input")){const t=$(`${e.target.id}-readout`);t&&(t.value=e.target.value)}})),$("hum-btn").onclick=()=>$("top-nav").classList.toggle("responsive"),$("scan-wifi").onclick=getWiFiList,$("connect-wifi").onclick=e=>doConnection(e,!1),$("save-params").onclick=saveParameters,$("delete-cred").onclick=()=>window.deleteSelectedCredential?.(),$("clear-creds").onclick=()=>window.clearAllCredentials?.(),$("set-wifi").onclick=switchPage,$("set-update").onclick=switchPage,$("restart").onclick=confirmRestart,$("update-btn").onclick=handleUpdate,$("ok-modal").onclick=()=>closeModal(!0),$("close-modal").onclick=()=>closeModal(!1),$("show-networks").onclick=()=>{$("wifi-table").classList.toggle("hide"),$("show-networks").classList.toggle("hide")},$("show-hide-password").onclick=()=>{const e=$("password"),t="password"===e.type;e.type=t?"text":"password",t?(show("show-pass"),hide("hide-pass")):(hide("show-pass"),show("hide-pass"))},$("ssid")&&$("ssid-name")&&$("ssid").addEventListener("input",(()=>{const e=$("ssid").value.trim();$("ssid-name").textContent=e||"SSID"})),$("dhcp").onchange=function(){const e=this.checked?"add":"remove";["conf-wifi"].forEach((t=>$(t)?.classList[e]("hide")))},$("picker").onchange=uploadFolder;const t=$("fw-label");t&&!t.dataset.defaultText&&(t.dataset.defaultText=t.textContent);const n=$("pick-label");n&&!n.dataset.defaultText&&(n.dataset.defaultText=n.textContent),$("update-btn")&&$("update-btn").setAttribute("aria-disabled","true"),$("file-input").onchange=function(){const e=$("fw-label");if(!this.files||!this.files.length||!e)return;const t=this.files[0],n=`${t.size} bytes`;e.textContent=`${t.name} (${n})`,e.title=t.name,e.style.background="brown",$("update-btn")&&$("update-btn").setAttribute("aria-disabled","false")};const s={"svg-menu":ICONS.menu,"svg-eye":ICONS.eye,"svg-no-eye":ICONS.noEye,"svg-scan":ICONS.scan,"svg-connect":ICONS.connect,"svg-save":ICONS.save,"svg-save2":ICONS.save,"svg-restart":ICONS.restart,"svg-delete":ICONS.del,"svg-clear":ICONS.clear,"svg-update":ICONS.upload};for(const[e,t]of Object.entries(s))$(e)&&($(e).textContent=t)}));const getParameters=()=>{show("loader"),fetch(`${esp}getStatus`).then((e=>e.json())).then((e=>{$("esp-mode").innerHTML=e.mode,$("esp-ip").innerHTML=`<a href="http://${e.hostname}.local/">http://${e.hostname}.local</a><a href="${esp}"> (${e.ip})</a>`,$("firmware").innerHTML=e.firmware,$("about").href=e.liburl,$("about").innerHTML="Created with "+e.liburl,configFile=e.path,fetch(`${esp}${configFile}`).then((e=>e.json())).then((e=>{if(e["img-logo"]){const t=e["img-logo"];fetch(t).then((e=>e.text())).then((e=>{const n=t.replace(/[^\d_]/g,"").split("_"),s=newEl("img",{class:"logo",src:`data:image/png;base64,${e}`,style:`width:${n[0]||64}px;height:${n[1]||64}px`});$("img-logo").innerHTML="",$("img-logo").appendChild(s)})),delete e["img-logo"]}if(e["name-logo"]){const t=e["name-logo"].replace(/(<([^>]+)>)/gi,"");$("name-logo").innerHTML=t,document.title=t,delete e["name-logo"]}options=e,createOptionsBox(options),hide("loader"),loadCredentials()}))}))},addOptionsElement=e=>{const t=document.createDocumentFragment(),n=Object.entries(e).filter((([e,t])=>"boolean"==typeof t));if(n.length>0){const e=newEl("div",{class:"row-wrapper"});n.forEach((([t,n])=>{const s=newEl("label",{class:"input-label toggle"}),a=newEl("input",{class:"t-check opt-input",type:"checkbox",id:t});a.checked=n,s.append(a,newEl("div",{class:"toggle-switch"}),newEl("span",{class:"toggle-label"})),s.lastChild.textContent=t,e.appendChild(s)})),t.appendChild(e)}Object.entries(e).forEach((([e,n])=>{if("boolean"==typeof n)return;const s=newEl("div",{class:"tf-wrapper"}),a=newEl("label",{class:"input-label"});let o;if(a.textContent=e,"object"==typeof n&&n.values)o=newEl("select",{id:e,class:"opt-input"}),n.values.forEach((e=>{const t=newEl("option",{value:e});t.textContent=e,e===n.selected&&(t.selected=!0),o.appendChild(t)}));else if("object"==typeof n&&"slider"===n.type){const t=newEl("div",{class:"slider-wrapper"}),s=newEl("input",{class:"opt-input slider",type:"range",id:e,min:n.min,max:n.max,step:n.step});s.value=n.value;const a=newEl("input",{class:"opt-input slider-readout",type:"number",id:`${e}-readout`,min:n.min,max:n.max,step:n.step});a.value=n.value,t.append(s,a),o=t}else"object"==typeof n&&"number"===n.type?(o=newEl("input",{class:"opt-input",type:"number",id:e,min:n.min,max:n.max,step:n.step}),o.value=n.value):(o=newEl("input",{class:"opt-input",type:"number"==typeof n?"number":"text",id:e}),o.value=n);s.append(a,o),e.endsWith("-hidden")&&s.classList.add("hide"),t.appendChild(s)})),lastBox.appendChild(t)},createNewBox=(e,t)=>{const n=newEl("div",{class:"ctn opt-box hide",id:`option-box${e}`}),s=newEl("h2",{class:"heading-2"});s.textContent=t,n.appendChild(s),$("main-box").appendChild(n);const a=newEl("a",{class:"a-link",id:`set-opt${e}`,"data-box":`option-box${e}`});return a.textContent=t,a.onclick=switchPage,$("nav-link").appendChild(a),n},createOptionsBox=e=>{const t=!e.hasOwnProperty("dhcp")||e.dhcp;$("dhcp").checked=t,["ip","gateway","subnet"].forEach((t=>$(t).value=e["ip"===t?"ip_address":t]||""));const n=t?"add":"remove";["conf-wifi"].forEach((e=>$(e)?.classList[n]("hide")));let s={},a="wifi-box";lastBox=$(a),Object.entries(e).forEach((([e,t],n)=>{if(e.startsWith("param-box"))Object.keys(s).length&&addOptionsElement(s),lastBox=createNewBox(n,t),s={},a=t;else if("wifi-box"!==a)if(e.startsWith("raw-")){const n=e.split("-")[1];if("html"===n){const e=newEl("div",{class:"tf-wrapper raw-html",id:t,"data-box":lastBox.id});lastBox.appendChild(e),fetch(t).then((e=>e.text())).then((e=>$(t).innerHTML=e))}else"css"===n?document.head.appendChild(newEl("link",{rel:"stylesheet",href:t})):"javascript"===n&&document.body.appendChild(newEl("script",{src:t}))}else e.startsWith("img-")||e.startsWith("name-")||(s[e]=t)})),Object.keys(s).length&&addOptionsElement(s)},loadCredentials=async()=>{try{const e=await fetch(`${esp}wifi/credentials?_=${Date.now()}`);if(!e.ok)return;if(wifiCredentials=await e.json(),selectedCredentialIndex=wifiCredentials.length?0:-1,wifiCredentials.length>1)if("undefined"==typeof renderCredentialTabs){const e=document.createElement("script");e.src="creds.js",e.onload=()=>renderCredentialTabs(),document.body.appendChild(e)}else renderCredentialTabs();else $("wifi-cred-tabs")&&($("wifi-cred-tabs").innerHTML=""),["delete-cred","clear-creds","cred-actions-inline"].forEach(hide);selectedCredentialIndex>=0&&window.applyCredential(wifiCredentials[0])}catch(e){console.error(e)}};window.applyCredential=e=>{$("ssid").value=e.ssid||"",$("ssid-name").textContent=e.ssid||"SSID";const t=e.ip&&"0.0.0.0"!==e.ip,n=!t;$("dhcp").checked=n,t?(show("conf-wifi"),$("ip").value=e.ip,$("gateway").value=e.gateway,$("subnet").value=e.subnet):hide("conf-wifi"),$("password").value=""};const hasStoredCredentialFor=e=>wifiCredentials.some((t=>t.ssid===e));function saveParameters(){($("wifi-box").classList.contains("active")||!$("wifi-box").classList.contains("hide"))&&(delete options.dhcp,delete options.ip_address,delete options.gateway,delete options.subnet);const e=new Blob([JSON.stringify(options,null,2)],{type:"application/json"}),t=new FormData;t.append("data",e,"/"+configFile),fetch("/edit",{method:"POST",body:t}).then((()=>openModal("Save",`<br>Saved config to <b>/${configFile}</b>`))).catch((e=>openModal("Error",`Save failed: ${e}`)))}function getWiFiList(){show("loader"),fetch(`${esp}scan`).then((e=>e.json())).then((e=>{e.reload&&setTimeout(getWiFiList,2e3),e.sort(((e,t)=>t.strength-e.strength));const t=$("wifi-list");t.innerHTML="";const n=document.createDocumentFragment();e.forEach(((e,t)=>{const s=newEl("tr",{id:`wifi-${t}`});s.innerHTML=`<td><input type="radio" name="select" id="select-wifi-${t}"></td><td>${e.ssid}</td><td class="hide-tiny">${e.strength} dBm</td><td>${e.security?ICONS.lock:ICONS.unlock}</td>`,s.onclick=()=>{$("ssid").value=e.ssid,$("ssid-name").textContent=e.ssid,$("password").focus();try{$(`select-wifi-${t}`).checked=!0}catch(e){}$("wifi-table").classList.add("hide"),show("show-networks")},n.appendChild(s)})),t.appendChild(n),show("wifi-table"),hide("loader")})).catch((()=>hide("loader")))}function doConnection(e,t){const n=$("ssid").value,s=$("password").value;if(!n||!s&&!hasStoredCredentialFor(n))return openModal("WiFi","Insert SSID & Password");const a=new FormData;a.append("ssid",n),a.append("password",s),a.append("persistent",$("persistent").checked),$("dhcp").checked||(a.append("ip_address",$("ip").value),a.append("gateway",$("gateway").value),a.append("subnet",$("subnet").value)),t&&a.append("newSSID",!0),show("loader"),fetch("/connect",{method:"POST",body:a}).then((t=>t.text().then((n=>{hide("loader"),200!==t.status?openModal("Error",n):n.includes("already")?openModal("WiFi",n,(()=>doConnection(e,!0))):(openModal("WiFi",n,restartESP),loadCredentials())})))).catch((()=>{hide("loader"),openModal("WiFi","Connection failed")}))}function handleUpdate(){const e=$("file-input").files[0];if(!e)return;show("loader"),show("progress-wrap"),$("progress-wrap").classList.add("active"),$("update-log").textContent="Updating...";const t=new FormData;t.append("update",e);const n=new XMLHttpRequest;n.open("POST",`/update?size=${e.size}`),n.onload=()=>{hide("loader"),$("progress-wrap").classList.remove("active"),$("update-log").textContent=200===n.status?n.responseText:"Error";const e=$("file-input"),t=$("fw-label");e&&(e.value=""),t&&(t.textContent=t.dataset.defaultText||"Select firmware binary file",t.removeAttribute("title"),t.style.background=""),$("update-btn")&&$("update-btn").setAttribute("aria-disabled","true"),$("progress-anim")&&($("progress-anim").style.width="0%"),hide("progress-wrap")},n.upload.onprogress=e=>{e.lengthComputable&&($("progress-anim").style.width=`${Math.round(e.loaded/e.total*100)}%`)},n.send(t)}async function uploadFolder(e){const t=Array.from(e.target.files||[]);if(!t.length)return;const n=$("listing"),s=$("pick-label");if(n&&(n.innerHTML=""),s){s.setAttribute("aria-disabled","true"),s.style.background="brown";const e=s.dataset.defaultText||s.textContent;s.textContent=`${e} (${t.length} file${t.length>1?"s":""} selected)`}let a=0,o=0;for(const e of t){const t=e.webkitRelativePath.replace(/^data\//,""),s=newEl("li");s.textContent=t,n&&n.appendChild(s);const i=new FormData;i.append("data",e,"/"+t);try{(await fetch("/edit",{method:"POST",body:i})).ok?a++:(o++,s.style.color="red")}catch(e){o++,s.style.color="red"}}e.target&&(e.target.value=""),s&&(s.textContent=s.dataset.defaultText||"Select the folder containing your files",s.style.background="",s.removeAttribute("aria-disabled"));let i=`<br>Uploaded <b>${a}</b> file${1!==a?"s":""}`;i+=o?`, <b>${o}</b> failed.`:" successfully.",openModal("FS Upload",i)}function switchPage(e){const t=e.target,n=t.getAttribute("data-box");if($("top-nav").classList.remove("responsive"),document.querySelectorAll("a").forEach((e=>e.classList.remove("active"))),t.classList.add("active"),document.querySelectorAll(".opt-box").forEach((e=>e.classList.add("hide"))),show(n),"set-wifi"!==t.id){const e=$(n);e.appendChild($("btn-hr")),e.appendChild($("btn-box")),document.querySelectorAll(".raw-html").forEach((t=>{t.dataset.box===n&&e.insertBefore(t,$("btn-hr"))})),show("btn-box"),show("btn-hr")}else hide("btn-box"),hide("btn-hr")}window.openModal=(e,t,n)=>{$("message-title").innerHTML=e,$("message-body").innerHTML=t,$("modal-message").open=!0,$("main-box").style.filter="blur(3px)",closeCb=n,(n?show:hide)("ok-modal")},window.closeModal=e=>{$("modal-message").open=!1,$("main-box").style.filter="",e&&closeCb&&closeCb()};const confirmRestart=()=>window.openModal("Restart","Restart now?",restartESP),restartESP=()=>fetch(`${esp}reset`).then((()=>{window.closeModal(),window.openModal("Restarted","ESP Restarted")}));</script>
+  <meta charset="utf-8">
+  <title>ESP FS Web Server</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>:root{--c-prim:#06b6d4;--c-prim-dk:#0891b2;--c-bg:#f0f9ff;--c-bg-dk:#e0f2fe;--c-txt:#1e3a5f;--c-txt-lt:#64748b7d;--c-grad-a:#0f172a;--c-grad-b:#1e3a5f;--c-grad-r:#942a07}html{font-family:sans-serif}body{background:linear-gradient(135deg,var(--c-grad-a) 0,var(--c-grad-b) 100%);min-height:100vh;padding:0 20px 20px}.foot{align-items:center;display:flex;flex-direction:column-reverse;justify-content:center}a:active,a:hover{outline:0}h1{font-size:36px;margin:10px 0 5px}h1,h2{color:var(--c-txt)}h2{font-size:24px;font-weight:600;margin:4px auto}input[type=checkbox]{box-sizing:border-box;padding:0}input[type=number],input[type=password],input[type=text],select{background-color:var(--c-bg);border:1px solid var(--c-txt-lt);border-radius:8px;color:#0f172a;font-size:16px;height:40px;padding:0 0 0 20px;transition:.3s;width:90%}input[type=file]{display:none}input::placeholder{color:var(--c-txt-lt)}input:hover{border-color:var(--c-prim-dk);box-shadow:0 0 12px rgba(6,182,212,.2)}input:focus,select:focus{border-color:var(--c-prim-dk);box-shadow:0 0 16px rgba(6,182,212,.3);outline:0}.btn,button{background:linear-gradient(135deg,var(--c-prim) 0,var(--c-prim-dk) 100%);border:0;border-radius:5px;box-shadow:0 4px 12px rgba(6,182,212,.3);color:#fff;cursor:pointer;display:inline-flex;font-weight:600;justify-content:center;min-width:40%;padding:10px;transition:.3s}.btn.is-loading{box-shadow:none;cursor:default;opacity:.3;pointer-events:none}.firmware{align-items:flex-start;display:flex;gap:10px}#update-btn{background:var(--c-grad-r);min-width:0}ul{color:#e2e8f0;display:table;margin:0 auto 10px;text-align:left}hr{border:1px solid rgba(6,182,212,.3);order:997;width:100%}select{background-color:var(--c-bg);width:92.5%}.logo{margin:10px;width:128px}.input-label{align-self:self-start;background-color:var(--c-bg-dk);border:1px solid var(--c-txt-lt);border-radius:6px;bottom:-5px;color:var(--c-prim-dk);font-size:13.5px;font-weight:600;left:5%;padding:2px 10px 0;position:relative;transition:.3s}.input-label:hover{background-color:#cffafe;border-color:var(--c-prim)}.form{align-items:center;display:flex;flex-direction:column;width:100%}.row-wrapper{align-items:baseline;display:flex;flex-wrap:nowrap;gap:20px;margin-bottom:14px}.tf-wrapper{align-items:center;display:flex;flex-direction:column;margin-bottom:10px}.loading{color:var(--c-prim);font-weight:600;text-align:center}.loader{background:linear-gradient(180deg,rgba(15,23,42,.95),rgba(15,23,42,.8) 50%,rgba(15,23,42,.95));display:flex;flex-direction:column;inset:0;justify-content:center;position:fixed}.spinH{background:var(--c-prim);border-radius:100%;box-shadow:0 0 10px var(--c-prim);height:10px;position:absolute;top:52%;width:10px}.spin-1H{animation:spinnerH 3s ease-out infinite}.spin-2H{animation:spinnerH 3s linear .1s infinite}.spin-3H{animation:spinnerH 3s linear .2s infinite}.spin-4H{animation:spinnerH 3s linear .3s infinite}.spin-5H{animation:spinnerH 3s cubic-bezier(.4,0,1,1) .4s infinite}@keyframes spinnerH{0%{transform:translateX(0)}20%{transform:translate(200px)}70%{transform:translateX(505px)}to{transform:translateX(800px)}}.progress-wrap{background:rgba(6,182,212,.1);border:2px solid var(--c-prim);border-radius:8px;font-size:20px;height:25px;margin:20px auto;position:relative;text-align:center;transition:.4s;width:80%}.progress-wrap:not(.active){background:rgba(6,182,212,.05);cursor:pointer}.progress-wrap .progress{background:linear-gradient(90deg,var(--c-prim) 0,var(--c-prim-dk) 100%);inset:0;opacity:0;position:absolute;transition:.3s;width:0;z-index:5}.progress-wrap.active .progress{opacity:1}.d-modal{background:linear-gradient(135deg,var(--c-bg) 0,var(--c-bg-dk) 100%);border:2px solid var(--c-prim);border-radius:12px;box-shadow:0 8px 32px rgba(6,182,212,.3);flex-direction:column;min-width:400px;position:relative}#modal-message{align-items:center;display:none;inset:0;justify-content:center;position:fixed;z-index:1000}#modal-message[open]{display:flex}#modal-message:before{backdrop-filter:blur(1px);background:rgba(0,0,0,.35);content:"";inset:0;position:fixed;z-index:-1}.d-modal-title{color:#0f172a;font-weight:600;padding:1.5em;width:calc(100% - 4.5em)}.d-modal-content{border-top:2px solid var(--c-prim);color:#0f172a;overflow:auto;padding:1.5em}.topnav{align-self:flex-end;background:linear-gradient(135deg,var(--c-grad-a) 0,var(--c-grad-b) 100%);border:2px solid var(--c-prim);margin-top:12px}.topnav a{color:#e2e8f0;float:left;font-size:16px;padding:6px 12px}.topnav a:hover{color:var(--c-prim)}.topnav a.active{background:linear-gradient(180deg,var(--c-prim) 0,#026881 100%);color:#fff;font-weight:600}.topnav .icon{display:none}.topnav.inline-header{align-items:center;display:inline-flex}.ctn{background:linear-gradient(135deg,rgba(224,242,254,.65),rgba(240,249,255,.95));border:1px solid var(--c-prim);border-radius:12px;box-shadow:0 8px 24px rgba(6,182,212,.2);display:flex;flex-direction:column;margin:0 auto 6px;max-width:840px;padding:8px 40px;position:relative}.header-main{min-height:130px}.slider-wrapper{align-items:center;background-color:var(--c-bg);border:1px solid var(--c-txt-lt);border-radius:8px;display:flex;gap:14px;width:92.5%}.slider-wrapper .slider{appearance:none;background:#e2e8f0;border-radius:999px;box-shadow:inset 0 1px 2px rgba(15,23,42,.12);height:10px;margin-left:20px;outline:none;transition:.2s;width:100%}.slider-wrapper .slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;background:linear-gradient(135deg,var(--c-prim) 0,var(--c-prim-dk) 100%);border:2px solid var(--c-bg-dk);border-radius:50%;box-shadow:0 2px 6px rgba(6,182,212,.4);cursor:pointer;height:20px;width:20px}.slider-wrapper .slider-readout{border:none;height:40px;text-align:center;width:60px}.toggle{cursor:pointer;display:block;margin-left:-12px;padding:4px}.toggle-label{color:#0f172a;font-weight:500;margin:0 10px;position:relative;top:2px}.toggle-switch{background:#cbd5e1;border-radius:10px;display:inline-block;height:32px;position:relative;transition:background .25s;vertical-align:middle;width:58px}.toggle-switch:before{background:linear-gradient(to bottom,#fff 0,var(--c-bg) 100%);border-radius:50%;box-shadow:0 0 0 1px rgba(6,182,212,.3);content:"";display:block;height:24px;left:4px;position:absolute;top:4px;transition:left .25s;width:24px}.t-check:checked+.toggle-switch{background:linear-gradient(135deg,var(--c-prim) 0,var(--c-prim-dk) 100%)}.t-check:checked+.toggle-switch:before{background:linear-gradient(to bottom,var(--c-bg) 0,var(--c-bg-dk) 100%);left:30px}.t-check{position:absolute;visibility:hidden}.lbl-wifi{margin-left:0}.title{display:flex;margin:-10px 0 -14px}.heading{align-items:stretch;color:var(--c-prim-dk);flex-direction:column;text-align:right}.heading,.pswd{display:flex;width:100%}.pswd{align-items:center;flex-direction:row;justify-content:center}#show-networks{margin-right:10px}.show-hide-wrap{color:var(--c-prim);cursor:pointer;position:absolute;right:10%}.btn-bar{display:flex;flex-wrap:wrap;gap:20px 30px;justify-content:center;order:998;padding:10px}.fw-upload{background:linear-gradient(135deg,var(--c-prim) 0,var(--c-prim-dk) 100%);border-radius:5px;box-shadow:0 4px 12px rgba(6,182,212,.3);color:#fff;cursor:pointer;display:inline-block;font-weight:600;margin-bottom:20px;padding:12px 20px;transition:.3s}.fw-upload[aria-disabled=true]{box-shadow:none;cursor:default;opacity:.4;pointer-events:none}.hide{display:none}.svg{display:flex;margin-right:10px;width:20px}.table{border-collapse:collapse;margin:auto;width:90%}body.boot-loading{overflow:hidden}@media screen and (max-width:608px){h1{font-size:24px}.btn-bar{margin-top:20px}.topnav{align-self:flex-start;margin:4px;min-width:200px;width:auto}.topnav a{padding:5px 12px}.topnav a.active{background:none}.topnav a:not(.active){display:none}.topnav a.icon{display:block}.topnav.responsive{flex-direction:column;width:auto}.topnav.responsive .icon{display:none}.topnav.responsive a{display:block;float:none;text-align:left;width:100%}.hide-tiny{display:none}}@media screen and (max-width:479px){body{padding:2px}select{width:95.5%}.ctn{padding:0 10px}}.cred-tabs{align-items:flex-end;display:flex;margin:10px 0 0}.cred-tab{align-items:center;background:var(--c-grad-b);border-radius:8px 8px 0 0;color:#8f9195;display:inline-flex;font-size:14px;justify-content:center;margin-right:4px;max-width:150px;min-width:auto;overflow:hidden;padding:8px 12px;text-overflow:ellipsis}.cred-tab.active{background:var(--c-bg-dk);border-bottom:2px solid var(--c-prim);border:2px solid var(--c-prim);border-bottom-color:var(--c-bg-dk);box-shadow:none;color:var(--c-prim-dk);position:relative;top:2px;z-index:2}#wifi,#wifi-table{background:var(--c-bg-dk);border:2px solid var(--c-prim);margin-bottom:10px;padding:20px}#wifi-table{margin-bottom:-2px}.tf-wrapper.inline-creds{flex-direction:row-reverse;justify-content:end;width:100%}.btn.small{background:linear-gradient(135deg,#ef4444,#b91c1c);border-radius:5px;box-shadow:0 2px 6px rgba(239,68,68,.3);font-size:14px;min-width:fit-content;padding:8px 16px;width:auto}</style>
+  <script>const ICONS={lock:"🔒",unlock:"🔓",scan:"📡",connect:"📶",save:"💾",restart:"↻",eye:"🐵",noEye:"🙈",menu:"☰",del:"🗑️",clear:"✖",upload:"✅"};let closeCb=()=>{};const port=location.port||("https:"===location.protocol?"443":"80"),esp=`${location.protocol}//${location.hostname}:${port}/`;let configFile,lastBox,options={},wifiCredentials=[],selectedCredentialIndex=-1;const $=e=>document.getElementById(e),hide=e=>$(e)?.classList.add("hide"),show=e=>$(e)?.classList.remove("hide"),newEl=(e,t={})=>{const n=document.createElement(e);for(const[e,s]of Object.entries(t))n.setAttribute(e,s);return n},handleInputChange=e=>{const t=e.target;if(!t.classList.contains("opt-input"))return;const n=t.id;if("range"===t.type){const e=$(`${n}-readout`);e&&(e.value=t.value),updateSliderOption(n,t.value)}else if(t.id.endsWith("-readout")){const e=n.replace("-readout",""),s=$(e);s&&(s.value=t.value,updateSliderOption(e,t.value))}else if("checkbox"===t.type)options[n]=t.checked;else if("number"===t.type){const e=t.step?Number(t.step):0;options[n]=e?parseFloat(t.value):parseInt(t.value,10)}else options[n]=t.value},updateSliderOption=(e,t)=>{const n=options[e]&&"object"==typeof options[e]?options[e]:{},s=Number(t),a=n.step||1;options[e]={...n,value:Math.round(s*(1/a))/(1/a),type:n.type||"slider"}};window.addEventListener("load",()=>{getParameters(),$("main-box").addEventListener("change",handleInputChange),$("main-box").addEventListener("input",e=>{if("range"===e.target.type&&e.target.classList.contains("opt-input")){const t=$(`${e.target.id}-readout`);t&&(t.value=e.target.value)}}),$("hum-btn").onclick=()=>$("top-nav").classList.toggle("responsive"),$("scan-wifi").onclick=getWiFiList,$("connect-wifi").onclick=e=>doConnection(e,!1),$("save-params").onclick=saveParameters,$("delete-cred").onclick=()=>window.deleteSelectedCredential?.(),$("clear-creds").onclick=()=>window.clearAllCredentials?.(),$("set-wifi").onclick=switchPage,$("set-update").onclick=switchPage,$("restart").onclick=confirmRestart,$("update-btn").onclick=handleUpdate,$("ok-modal").onclick=()=>closeModal(!0),$("close-modal").onclick=()=>closeModal(!1),$("show-networks").onclick=()=>{$("wifi-table").classList.toggle("hide"),$("show-networks").classList.toggle("hide")},$("show-hide-password").onclick=()=>{const e=$("password"),t="password"===e.type;e.type=t?"text":"password",t?(show("show-pass"),hide("hide-pass")):(hide("show-pass"),show("hide-pass"))},$("ssid")&&$("ssid-name")&&$("ssid").addEventListener("input",()=>{const e=$("ssid").value.trim();$("ssid-name").textContent=e||"SSID"}),$("dhcp").onchange=function(){const e=this.checked?"add":"remove";["conf-wifi"].forEach(t=>$(t)?.classList[e]("hide"))},$("picker").onchange=uploadFolder;const e=$("fw-label");e&&!e.dataset.defaultText&&(e.dataset.defaultText=e.textContent);const t=$("pick-label");t&&!t.dataset.defaultText&&(t.dataset.defaultText=t.textContent),$("update-btn")&&$("update-btn").classList.add("is-loading"),$("file-input").onchange=function(){const e=$("fw-label");if(!this.files||!this.files.length||!e)return;const t=this.files[0],n=`${t.size} bytes`;e.textContent=`${t.name} (${n})`,e.title=t.name,e.style.background="brown",$("update-btn")&&$("update-btn").classList.remove("is-loading")};const n={"svg-menu":ICONS.menu,"svg-eye":ICONS.eye,"svg-no-eye":ICONS.noEye,"svg-scan":ICONS.scan,"svg-connect":ICONS.connect,"svg-save":ICONS.save,"svg-save2":ICONS.save,"svg-restart":ICONS.restart,"svg-delete":ICONS.del,"svg-clear":ICONS.clear,"svg-update":ICONS.upload};for(const[e,t]of Object.entries(n))$(e)&&($(e).textContent=t);let s=null,a=null;const o=()=>{const e=document.querySelector("header.ctn"),t=e?e.querySelector(".title"):null,n=t?t.querySelector(".heading"):null,o=$("top-nav");if(!e||!n||!o)return;window.matchMedia("(max-width: 608px)").matches?(s||(s=e,a=t?t.nextSibling:null),o.parentElement!==s&&(a?s.insertBefore(o,a):s.appendChild(o)),o.classList.remove("inline-header")):(s||(s=o.parentElement,a=o.nextSibling),o.parentElement!==n&&n.appendChild(o),o.classList.add("inline-header"))};o(),window.addEventListener("resize",o)});const getParameters=()=>{show("loader"),fetch(`${esp}getStatus`).then(e=>e.json()).then(e=>{$("esp-mode").innerHTML=e.mode,$("esp-ip").innerHTML=`<a href="http://${e.hostname}.local/">http://${e.hostname}.local</a><a href="${esp}"> (${e.ip})</a>`,$("firmware").innerHTML=e.firmware,$("about").href=e.liburl,$("about").innerHTML="Created with "+e.liburl,configFile=e.path,window.espHostname=e.hostname||"",$("hostname")&&($("hostname").value=e.hostname||"");const t=$("img-logo")?.querySelector("img");if(e["img-logo"]&&t&&(t.src=e["img-logo"],$("img-logo")?.classList.remove("loading")),e["page-title"]){const t=e["page-title"].replace(/(<([^>]+)>)/gi,"");$("page-title").innerHTML=t,document.title=t}fetch(`${esp}${configFile}`).then(e=>e.json()).then(n=>{if(!e["img-logo"]&&t&&(t.src=n["img-logo"]||"config/logo.svg",$("img-logo")?.classList.remove("loading")),n["img-logo"]&&delete n["img-logo"],!e["page-title"]&&n["page-title"]){const e=n["page-title"].replace(/(<([^>]+)>)/gi,"");$("page-title").innerHTML=e,document.title=e}n["page-title"]&&delete n["page-title"],options=n,createOptionsBox(options),hide("loader"),document.body.classList.remove("boot-loading"),loadCredentials(),window.dispatchEvent(new Event("setupPageReady"))}).catch(()=>{hide("loader"),document.body.classList.remove("boot-loading")})}).catch(()=>{hide("loader"),document.body.classList.remove("boot-loading")})},addOptionsElement=e=>{const t=document.createDocumentFragment(),n=Object.entries(e).filter(([e,t])=>"boolean"==typeof t);if(n.length>0){const e=newEl("div",{class:"row-wrapper"});n.forEach(([t,n])=>{const s=newEl("label",{class:"input-label toggle"}),a=newEl("input",{class:"t-check opt-input",type:"checkbox",id:t});a.checked=n,s.append(a,newEl("div",{class:"toggle-switch"}),newEl("span",{class:"toggle-label"})),s.lastChild.textContent=t,e.appendChild(s)}),t.appendChild(e)}Object.entries(e).forEach(([e,n])=>{if("boolean"==typeof n)return;const s=newEl("div",{class:"tf-wrapper"}),a=newEl("label",{class:"input-label"});let o;if(a.textContent=e,"object"==typeof n&&n.values)o=newEl("select",{id:e,class:"opt-input"}),n.values.forEach(e=>{const t=newEl("option",{value:e});t.textContent=e,e===n.selected&&(t.selected=!0),o.appendChild(t)});else if("object"==typeof n&&"slider"===n.type){const t=newEl("div",{class:"slider-wrapper"}),s=newEl("input",{class:"opt-input slider",type:"range",id:e,min:n.min,max:n.max,step:n.step});s.value=n.value;const a=newEl("input",{class:"opt-input slider-readout",type:"number",id:`${e}-readout`,min:n.min,max:n.max,step:n.step});a.value=n.value,t.append(s,a),o=t}else"object"==typeof n&&"number"===n.type?(o=newEl("input",{class:"opt-input",type:"number",id:e,min:n.min,max:n.max,step:n.step}),o.value=n.value):(o=newEl("input",{class:"opt-input",type:"number"==typeof n?"number":"text",id:e}),o.value=n);s.append(a,o),e.endsWith("-hidden")&&s.classList.add("hide"),t.appendChild(s)}),lastBox.appendChild(t)},createNewBox=(e,t)=>{const n=newEl("div",{class:"ctn opt-box hide",id:`option-box${e}`}),s=newEl("h2",{class:"heading-2"});s.textContent=t,n.appendChild(s),$("main-box").appendChild(n);const a=newEl("a",{class:"a-link",id:`set-opt${e}`,"data-box":`option-box${e}`});return a.textContent=t,a.onclick=switchPage,$("nav-link").appendChild(a),n},createOptionsBox=e=>{delete e.dhcp,delete e.ip_address,delete e.gateway,delete e.subnet,delete e.dns1,delete e.dns2;let t={},n="wifi-box";lastBox=$(n),Object.entries(e).forEach(([e,s],a)=>{if(e.startsWith("param-box"))Object.keys(t).length&&addOptionsElement(t),lastBox=createNewBox(a,s),t={},n=s;else if("wifi-box"!==n)if(e.startsWith("raw-")){const t=e.split("-")[1];if("html"===t){const e=newEl("div",{class:"tf-wrapper raw-html",id:s,"data-box":lastBox.id});lastBox.appendChild(e),fetch(s).then(e=>e.text()).then(e=>$(s).innerHTML=e)}else"css"===t?document.head.appendChild(newEl("link",{rel:"stylesheet",href:s})):"javascript"===t&&document.body.appendChild(newEl("script",{src:s}))}else e.startsWith("img-")||e.startsWith("name-")||(t[e]=s)}),Object.keys(t).length&&addOptionsElement(t)},loadCredentials=async()=>{try{const e=await fetch(`${esp}wifi/credentials?_=${Date.now()}`);if(!e.ok)return;if(wifiCredentials=await e.json(),selectedCredentialIndex=wifiCredentials.length?0:-1,wifiCredentials.length>1)if("undefined"==typeof renderCredentialTabs){const e=document.createElement("script");e.src="creds.js",e.onload=()=>renderCredentialTabs(),document.body.appendChild(e)}else renderCredentialTabs();else $("wifi-cred-tabs")&&($("wifi-cred-tabs").innerHTML=""),["delete-cred","clear-creds","cred-actions-inline"].forEach(hide);selectedCredentialIndex>=0&&window.applyCredential(wifiCredentials[0])}catch(e){console.error(e)}};window.applyCredential=e=>{$("ssid").value=e.ssid||"",$("ssid-name").textContent=e.ssid||"SSID";const t=e.ip&&"0.0.0.0"!==e.ip,n=!t;$("dhcp").checked=n,t?(show("conf-wifi"),$("ip").value=e.ip,$("gateway").value=e.gateway,$("subnet").value=e.subnet,$("dns1").value=e.dns1||"",$("dns2").value=e.dns2||""):(hide("conf-wifi"),$("ip").value="",$("gateway").value="",$("subnet").value="",$("dns1").value="",$("dns2").value=""),$("password").value=""};const hasStoredCredentialFor=e=>wifiCredentials.some(t=>t.ssid===e);function saveParameters(){($("wifi-box").classList.contains("active")||!$("wifi-box").classList.contains("hide"))&&(delete options.dhcp,delete options.ip_address,delete options.gateway,delete options.subnet,delete options.dns1,delete options.dns2);const e=new Blob([JSON.stringify(options,null,2)],{type:"application/json"}),t=new FormData;t.append("data",e,"/"+configFile),fetch("/edit",{method:"POST",body:t}).then(()=>openModal("Save",`<br>Saved config to <b>/${configFile}</b>`)).catch(e=>openModal("Error",`Save failed: ${e}`))}function getWiFiList(){const e=$("scan-wifi");e.classList.add("is-loading"),fetch(`${esp}scan`).then(e=>e.json()).then(t=>{t.reload&&setTimeout(getWiFiList,2e3),t.sort((e,t)=>t.strength-e.strength);const n=$("wifi-list");n.innerHTML="";const s=document.createDocumentFragment();t.forEach((e,t)=>{const n=newEl("tr",{id:`wifi-${t}`});n.innerHTML=`<td><input type="radio" name="select" id="select-wifi-${t}"></td><td>${e.ssid}</td><td class="hide-tiny">${e.strength} dBm</td><td>${e.security?ICONS.lock:ICONS.unlock}</td>`,n.onclick=()=>{$("ssid").value=e.ssid,$("ssid-name").textContent=e.ssid,$("password").focus();try{$(`select-wifi-${t}`).checked=!0}catch(e){}$("wifi-table").classList.add("hide"),show("show-networks")},s.appendChild(n)}),n.appendChild(s),show("wifi-table"),e.classList.remove("is-loading")}).catch(()=>hide("loader"))}function doConnection(e,t){const n=$("ssid").value,s=$("password").value;if(!n||!s&&!hasStoredCredentialFor(n))return openModal("WiFi","Insert SSID & Password");const a=new FormData;a.append("ssid",n),a.append("password",s),a.append("persistent",$("persistent").checked);const o=$("hostname")?$("hostname").value.trim():"";if(o&&a.append("hostname",o),!$("dhcp").checked){a.append("ip_address",$("ip").value),a.append("gateway",$("gateway").value),a.append("subnet",$("subnet").value);const e=$("dns1").value.trim(),t=$("dns2").value.trim();e&&a.append("dns1",e),t&&a.append("dns2",t)}t&&a.append("confirmed","true"),show("loader"),fetch("/connect",{method:"POST",body:a}).then(t=>t.text().then(n=>{hide("loader"),200!==t.status?openModal("Error",n):n.includes("action-confirm-sta-change")?openModal("WiFi",n,()=>doConnection(e,!0)):n.includes("action-restart-required")?openModal("WiFi",n,restartESP):n.includes("action-async-applying")&&openModal("WiFi",n)}))}function handleUpdate(){const e=$("file-input").files[0];if(!e)return;show("loader"),show("progress-wrap"),$("progress-wrap").classList.add("active"),$("update-log").textContent="Updating...";const t=new FormData;t.append("update",e);const n=new XMLHttpRequest;n.open("POST",`/update?size=${e.size}`),n.onload=()=>{hide("loader"),$("progress-wrap").classList.remove("active"),$("update-log").textContent=200===n.status?n.responseText:"Error";const e=$("file-input"),t=$("fw-label");e&&(e.value=""),t&&(t.textContent=t.dataset.defaultText||"Select firmware binary file",t.removeAttribute("title"),t.style.background=""),$("update-btn")&&$("update-btn").setAttribute("aria-disabled","true"),$("progress-anim")&&($("progress-anim").style.width="0%"),hide("progress-wrap")},n.upload.onprogress=e=>{e.lengthComputable&&($("progress-anim").style.width=`${Math.round(e.loaded/e.total*100)}%`)},n.send(t)}async function uploadFolder(e){const t=Array.from(e.target.files||[]);if(!t.length)return;const n=$("listing"),s=$("pick-label");if(n&&(n.innerHTML=""),s){s.setAttribute("aria-disabled","true"),s.style.background="brown";const e=s.dataset.defaultText||s.textContent;s.textContent=`${e} (${t.length} file${t.length>1?"s":""} selected)`}let a=0,o=0;for(const e of t){const t=e.webkitRelativePath.replace(/^data\//,""),s=newEl("li");s.textContent=t,n&&n.appendChild(s);const i=new FormData;i.append("data",e,"/"+t);try{(await fetch("/edit",{method:"POST",body:i})).ok?a++:(o++,s.style.color="red")}catch(e){o++,s.style.color="red"}}e.target&&(e.target.value=""),s&&(s.textContent=s.dataset.defaultText||"Select the folder containing your files",s.style.background="",s.removeAttribute("aria-disabled"));let i=`<br>Uploaded <b>${a}</b> file${1!==a?"s":""}`;i+=o?`, <b>${o}</b> failed.`:" successfully.",openModal("FS Upload",i)}function switchPage(e){const t=e.target,n=t.getAttribute("data-box");if($("top-nav").classList.remove("responsive"),document.querySelectorAll("a").forEach(e=>e.classList.remove("active")),t.classList.add("active"),document.querySelectorAll(".opt-box").forEach(e=>e.classList.add("hide")),show(n),"set-wifi"!==t.id){const e=$(n);e.appendChild($("btn-hr")),e.appendChild($("btn-box")),document.querySelectorAll(".raw-html").forEach(t=>{t.dataset.box===n&&e.insertBefore(t,$("btn-hr"))}),show("btn-box"),show("btn-hr")}else hide("btn-box"),hide("btn-hr")}window.openModal=(e,t,n)=>{$("message-title").innerHTML=e,$("message-body").innerHTML=t,$("modal-message").open=!0,$("main-box").style.filter="blur(3px)",closeCb=n,(n?show:hide)("ok-modal")},window.closeModal=e=>{$("modal-message").open=!1,$("main-box").style.filter="",e&&closeCb&&closeCb()};const confirmRestart=()=>window.openModal("Restart","Restart now?",restartESP),restartESP=()=>fetch(`${esp}reset`).then(()=>{window.closeModal(),window.openModal("Restarted","ESP Restarted")});</script>
 </head>
-<body>
-  <template id="logo-tpl">
-      <svg fill="brown" height="120" viewBox="0 0 24 24">
-          <path d="M5 3C3.9 3 3 3.9 3 5S2.1 7 1 7v2c1.1 0 2 .9 2 2s.9 2 2 2h2v-2H5v-1c0-1.1-.9-2-2-2 1.1 0 2-.9 2-2V5h2V3M11 3c1.1 0 2 .9 2 2s.9 2 2 2v2c-1.1 0-2 .9-2 2s-.9 2-2 2H9v-2h2v-1c0-1.1.9-2 2-2-1.1 0-2-.9-2-2V5H9V3h2m11 3v12c0 1.11-.89 2-2 2H4a2 2 0 01-2-2v-3h2v3h16V6h-2.97V4H20c1.11 0 2 .89 2 2z"/>
-      </svg>
-  </template>
-
+<body class="boot-loading">
   <main id="main-box">
-    <header class="ctn">
-      <div class="title">
-        <div id="img-logo" title="Click to upload your logo file"></div>
-        <div class="heading">
-          <h1 id="name-logo">ESP FS Web Server</h1>
-          <span id="esp-ip"></span><br>
-          <span id="esp-mode"></span> - v<span id="firmware"></span>
-        </div>
+  <header class="ctn header-main">
+    <div class="title">
+      <div id="img-logo" class="loading"><img class="logo" alt="Logo"></div>
+      <div class="heading">
+        <h1 id="page-title">ESP FS Web Server</h1>
+        <div id="esp-ip"></div>
+        <div><span id="esp-mode"></span> - v<span id="firmware"></span></div>
       </div>
-      <div class="topnav" id="top-nav">
-        <a class="a-link icon" id="hum-btn">
-          <div class="svg svg-menu-icon"><span id="svg-menu"></span></div>
-        </a>
-        <span id="nav-link"><a id="set-wifi" class="a-link active" data-box="wifi-box">WiFi Setup</a></span>
-        <span id="upd-link"><a id="set-update" class="a-link" data-box="update-box">Update & FS</a></span>
-      </div>
-    </header>
+    </div>
+    <div class="topnav" id="top-nav">
+      <a class="a-link icon" id="hum-btn"><div class="svg svg-menu-icon"><span id="svg-menu"></span></div></a>
+      <div id="nav-link"><a id="set-wifi" class="a-link active" data-box="wifi-box">WiFi Setup</a></div>
+      <div id="upd-link"><a id="set-update" class="a-link" data-box="update-box">Update & FS</a></div>
+    </div>
+  </header>
 
-    <div id="wifi-box" class="ctn opt-box">
-      <h2 class="heading-2">WiFi Credential Manager</h2>
-      <div id="wifi-cred-tabs" class="cred-tabs"></div>
-        <div id="wifi-table" class="hide">
-          <table class="table">
-            <tbody id="wifi-list"></tbody>
-          </table>
-          <br>
+  <div id="wifi-box" class="ctn opt-box">
+    <h2 class="heading-2">WiFi Credential Manager</h2>
+    <div id="wifi-cred-tabs" class="cred-tabs"></div>
+      <div id="wifi-table" class="hide">
+        <table class="table">
+          <tbody id="wifi-list"></tbody>
+        </table>
+        <br>
+      </div>
+      <div id="wifi">
+        <div class="tf-wrapper">
+          <label for="hostname" class="input-label">Hostname</label>
+          <input type="text" placeholder="Hostname for http://hostname.local" id="hostname" class="opt-input">
         </div>
-        <div id="wifi">
-          <div class="tf-wrapper">
-            <label for="ssid" class="input-label">SSID</label>
-            <div class="pswd">
-                <input type="text" placeholder="Enter your WiFI SSID name" id="ssid" class="opt-input">
+        <div class="tf-wrapper">
+          <label for="ssid" class="input-label">SSID</label>
+          <div class="pswd">
+              <input type="text" placeholder="Enter your WiFI SSID name" id="ssid" class="opt-input">
                 <span class="show-hide-wrap" id="show-hide-networks">
-                    <a class="show-hide hide chevron-networks" id="show-networks">▼</a>
+                  <a class="show-hide hide chevron-networks" id="show-networks">▼</a>
                 </span>
-            </div>
+          </div>
+        </div>
+        <div class="tf-wrapper">
+          <label for="password" class="input-label">Password</label>
+          <div class="pswd">
+            <input type="password" placeholder="Enter your WiFi password" id="password" autocomplete="current-password" class="opt-input">
+            <span class="show-hide-wrap" id="show-hide-password">
+              <a class="show-hide hide" id="show-pass"><div class="svg"><span class="svg-e" id="svg-eye"></span></div></a>
+              <a class="show-hide" id="hide-pass"><div class="svg"><span class="svg-e" id="svg-no-eye"></span></div></a>
+            </span>  
+          </div>
+        </div>
+        
+        <div class="tf-wrapper">
+          <label class="input-label toggle">
+            <input id="dhcp" type="checkbox" class="t-check opt-input" checked>
+            <div class="toggle-switch"></div>
+            <span class="toggle-label">DHCP enabled</span>
+          </label>
+        </div>
+        
+        <div class="hide" id="conf-wifi"> 
+          <div class="tf-wrapper">
+              <label for="ip" class="input-label">IP Address</label>
+              <input type="text" placeholder="IP Address" id="ip" value="192.168.0.10" class="opt-input">
           </div>
           <div class="tf-wrapper">
-            <label for="password" class="input-label">Password</label>
-            <div class="pswd">
-              <input type="password" placeholder="Enter your WiFi password" id="password" autocomplete="current-password" class="opt-input">
-              <span class="show-hide-wrap" id="show-hide-password">
-                <a class="show-hide hide" id="show-pass"><div class="svg"><span class="svg-e" id="svg-eye"></span></div></a>
-                <a class="show-hide" id="hide-pass"><div class="svg"><span class="svg-e" id="svg-no-eye"></span></div></a>
-              </span>  
-            </div>
+              <label for="gateway" class="input-label">Gateway</label>
+              <input type="text" placeholder="Gateway address" id="gateway" value="192.168.0.1" class="opt-input">
           </div>
-          
           <div class="tf-wrapper">
-            <label class="input-label toggle">
-              <input id="dhcp" type="checkbox" class="t-check opt-input" checked>
+              <label for="subnet" class="input-label">Subnet</label>
+              <input type="text" placeholder="Subnet mask" id="subnet" value="255.255.255.0" class="opt-input">
+          </div>
+          <div class="tf-wrapper">
+            <label for="dns1" class="input-label">DNS 1 (optional)</label>
+            <input type="text" placeholder="Primary DNS server" id="dns1" class="opt-input">
+          </div>
+          <div class="tf-wrapper">
+            <label for="dns2" class="input-label">DNS 2 (optional)</label>
+            <input type="text" placeholder="Secondary DNS server" id="dns2" class="opt-input">
+          </div>
+        </div>
+            
+        <div class="tf-wrapper inline-creds">
+          <div id="cred-actions-inline" class="btn-bar compact hide">
+            <a id="delete-cred" class="btn small hide">
+              <div class="svg"><span id="svg-delete"></span></div>
+              <span>Delete SSID</span>
+            </a>
+            <a id="clear-creds" class="btn small hide">
+              <div class="svg"><span id="svg-clear"></span></div>
+              <span>Delete All</span>
+            </a>
+            <label class="lbl-wifi toggle">
+              <input id="persistent" type="checkbox" class="t-check opt-input" checked>
               <div class="toggle-switch"></div>
-              <span class="toggle-label">DHCP enabled</span>
+              <span class="toggle-label">Save WiFi</span>
             </label>
           </div>
-          
-          <div class="hide" id="conf-wifi"> 
-            <div class="tf-wrapper">
-                <label for="ip" class="input-label">IP Address</label>
-                <input type="text" placeholder="IP Address" id="ip" value="192.168.0.10" class="opt-input">
-            </div>
-            <div class="tf-wrapper">
-                <label for="gateway" class="input-label">Gateway</label>
-                <input type="text" placeholder="Gateway address" id="gateway" value="192.168.0.1" class="opt-input">
-            </div>
-            <div class="tf-wrapper">
-                <label for="subnet" class="input-label">Subnet</label>
-                <input type="text" placeholder="Subnet mask" id="subnet" value="255.255.255.0" class="opt-input">
-            </div>
-          </div>
-              
-          <div class="tf-wrapper inline-creds">
-            <div id="cred-actions-inline" class="btn-bar compact hide">
-              <a id="delete-cred" class="btn small hide">
-                <div class="svg"><span id="svg-delete"></span></div>
-                <span>Delete SSID</span>
-              </a>
-              <a id="clear-creds" class="btn small hide">
-                <div class="svg"><span id="svg-clear"></span></div>
-                <span>Delete All</span>
-              </a>
-              <label class="lbl-wifi toggle">
-                <input id="persistent" type="checkbox" class="t-check opt-input" checked>
-                <div class="toggle-switch"></div>
-                <span class="toggle-label">Save WiFi</span>
-              </label>
-            </div>
-          </div>
         </div>
-        <hr>
-        <div class="btn-bar">
-            <a id="scan-wifi" class="btn">
-              <div class="svg"><span id="svg-scan"></span></div>
-                <span>Scan WiFi networks</span>
-            </a>
-            <a id="connect-wifi" class="btn">
-              <div class="svg"><span id="svg-connect"></span></div>
-                <span>Connect to <span id="ssid-name">SSID</span></span>
-            </a>
-        </div>
-    </div>
+      </div>
+      <hr>
+      <div class="btn-bar">
+          <a id="scan-wifi" class="btn">
+            <div class="svg"><span id="svg-scan"></span></div>
+              <span>Scan WiFi networks</span>
+          </a>
+          <a id="connect-wifi" class="btn">
+            <div class="svg"><span id="svg-connect"></span></div>
+              <span>Connect to <span id="ssid-name">SSID</span></span>
+          </a>
+      </div>
+  </div>
 
-    <div id="update-box" class="ctn opt-box hide">
-      <h2 class="heading-2">Update ESP Firmware</h2>
-      <div class="tf-wrapper">
-        <form id="update-form" class="form" action="/update" method="post" enctype="multipart/form-data">
-          <div class="firmware">
-            <label for="file-input" id="fw-label" class="fw-upload">Select firmware binary file</label>
-            <input id="file-input" type="file">
-            <a id="update-btn" class="btn submit icon-btn" title="Upload firmware">
-              <div class="svg"><span id="svg-update"></span></div>
-            </a>
-          </div>
-        	<div class="progress-wrap hide" id="progress-wrap" data-progress-style="fill-back">
-        	  <div id="update-log"></div>
-        	  <div class="progress" id="progress-anim"></div>
-        	</div>
-        </form>
-      </div>
-      
-      <h2 class="heading-2">Load file to ESP FileSystem</h2>
-      <div class="tf-wrapper">
-        <form class="form" action="/edit" method="post" enctype="multipart/form-data">
-          <ul id="listing"></ul>
-          <label for="picker" id="pick-label" class="fw-upload">Select the folder containing your files</label>
-          <input type="file" id="picker" name="fileList" webkitdirectory multiple>
-          <p class="upload-note">N.B.: if folder name is <b>"/data"</b>, the files will be uploaded at root "/" level</p>
-        </form>
-      </div>
+  <div id="update-box" class="ctn opt-box hide">
+    <h2 class="heading-2">Update ESP Firmware</h2>
+    <div class="tf-wrapper">
+      <form id="update-form" class="form" action="/update" method="post" enctype="multipart/form-data">
+        <div class="firmware">
+          <label for="file-input" id="fw-label" class="fw-upload">Select firmware binary file</label>
+          <input id="file-input" type="file">
+          <a id="update-btn" class="btn is-loading submit icon-btn" title="Upload firmware">
+            <span id="svg-update"></span>
+          </a>
+        </div>
+      	<div class="progress-wrap hide" id="progress-wrap" data-progress-style="fill-back">
+      	  <div id="update-log"></div>
+      	  <div class="progress" id="progress-anim"></div>
+      	</div>
+      </form>
     </div>
     
-    <hr id="btn-hr" class="hide">
-    <div id="btn-box" class="btn-bar hide">
-      <a id="restart" class="btn">
-        <div class="svg"><span id="svg-restart"></span></div>
-          <span>Restart ESP</span>
-      </a>
-      <a id="save-params" class="btn">
-        <div class="svg"><span id="svg-save"></span></div>
-          <span>Save configuration</span>
-      </a>
+    <h2 class="heading-2">Load file to ESP FileSystem</h2>
+    <div class="tf-wrapper">
+      <form class="form" action="/edit" method="post" enctype="multipart/form-data">
+        <ul id="listing"></ul>
+        <label for="picker" id="pick-label" class="fw-upload">Select the folder containing your files</label>
+        <input type="file" id="picker" name="fileList" webkitdirectory multiple>
+        <p class="upload-note">N.B.: if folder name is <b>"/data"</b>, the files will be uploaded at root "/" level</p>
+      </form>
     </div>
+  </div>
+  
+  <hr id="btn-hr" class="hide">
+  <div id="btn-box" class="btn-bar hide">
+    <a id="restart" class="btn">
+      <div class="svg"><span id="svg-restart"></span></div>
+        <span>Restart ESP</span>
+    </a>
+    <a id="save-params" class="btn">
+      <div class="svg"><span id="svg-save"></span></div>
+        <span>Save configuration</span>
+    </a>
+  </div>
   </main>
   
-  <div class="loader hide" id="loader">
-    <div class="loading">Loading...</div>
-    <div class="spinH spin-1H"></div>
-    <div class="spinH spin-2H"></div>
-    <div class="spinH spin-3H"></div>
-    <div class="spinH spin-4H"></div>
+  <div class="loader" id="loader">
+  <div class="loading">Loading...</div>
+  <div class="spinH spin-1H"></div>
+  <div class="spinH spin-2H"></div>
+  <div class="spinH spin-3H"></div>
+  <div class="spinH spin-4H"></div>
+  <div class="spinH spin-5H"></div>
   </div>
   
   <details id="modal-message">
-      <summary></summary>
-      <div class="d-modal">
-          <div class="d-modal-title"><h2 id="message-title">t</h2></div>
-          <div class="d-modal-content"><p id="message-body"></p></div>
-          <div class="btn-bar">
-              <a id="ok-modal" class="btn hide"><span>OK</span></a>
-              <a id="close-modal" class="btn"><span>Close</span></a>
-          </div>
-      </div>
+    <summary></summary>
+    <div class="d-modal">
+        <div class="d-modal-title"><h2 id="message-title">t</h2></div>
+        <div class="d-modal-content"><p id="message-body"></p></div>
+        <div class="btn-bar">
+            <a id="ok-modal" class="btn hide"><span>OK</span></a>
+            <a id="close-modal" class="btn"><span>Close</span></a>
+        </div>
+    </div>
   </details>
   <footer class="foot">
-      <hr>
-      <a id="about" target="_blank" rel="noopener"></a>
+    <hr>
+    <a id="about" target="_blank" rel="noopener"></a>
   </footer>
 </body>
 </html>

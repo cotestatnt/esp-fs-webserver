@@ -1,23 +1,24 @@
 // Finalize Nodejs Script
 // 1 - Append JS in HTML Document
 // 2 - Gzip HTML
-// 3 - Covert to Raw Bytes
+// 3 - Convert to Raw Bytes
 // 4 - ( Save to File: webpage.h ) in dist Folder
 
 const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
-const minify = require('@node-minify/core');
-const terser = require('@node-minify/terser');
-const cssnano = require('@node-minify/cssnano');
-const htmlMinifier = require('@node-minify/html-minifier');
+// node-minify v10+: CommonJS usage requires named exports
+const { minify } = require('@node-minify/core');
+const { terser } = require('@node-minify/terser');
+const { cssnano } = require('@node-minify/cssnano');
+const { htmlMinifier } = require('@node-minify/html-minifier');
 const converter = require('./stringConverter');
 const { createGzip, constants } = require('zlib');
 const { pipeline } = require('stream');
 const { createReadStream, createWriteStream } = require('fs');
 
-// Directory di output per i file .h generati
-// Percorso: repo-root/src/assets (relativo alla posizione di questo script)
+// Output folder for the generated .h files
+// Path: repo-root/src/assets (relative to the location of this script)
 const outputDir = path.resolve(__dirname, '../../../src/assets');
 
 function askOverwrite(filePath) {
@@ -65,8 +66,6 @@ async function build() {
     console.log('App JS minified');
 
     // 2. Minify JS (Creds)
-    // IMPORTANTE: non applichiamo applyMangle qui, per non rompere
-    // le funzioni globali e la logica condivisa con app.js.
     await minify({
       compressor: terser,
       input: '../creds.js',
@@ -155,6 +154,24 @@ async function build() {
                 const c_array = converter.toString(fs.readFileSync('./min/creds.js.gz'), 16, '_accreds_js');
           const targetPath = path.join(outputDir, 'creds_js.h');
           await writeWithConfirm(targetPath, c_array);
+                resolve();
+            } catch(e) { reject(e); }
+        })
+    });
+
+    // 7. Gzip Logo -> logo_svg.h
+    await new Promise((resolve, reject) => {
+        const gzip = createGzip({ level: constants.Z_BEST_COMPRESSION });
+        const source = createReadStream('../logo.svg');
+        const destination = createWriteStream('./min/logo.svg.gz');
+
+      pipeline(source, gzip, destination, async (err) => {
+            if (err) return reject(err);
+            try {
+                const c_array = converter.toString(fs.readFileSync('./min/logo.svg.gz'), 16, '_aclogo_svg');
+          const targetPath = path.join(outputDir, 'logo_svg.h');
+          await writeWithConfirm(targetPath, c_array);
+                console.log('Logo SVG processed');
                 resolve();
             } catch(e) { reject(e); }
         })

@@ -48,11 +48,13 @@
 
 struct WiFiCredential {
     char ssid[33];                  // Max 32 char SSID + null
-    uint8_t password_encrypted[64]; // Encrypted password
-    uint16_t password_len;          // Length of encrypted data
+    uint8_t pwd_encrypted[64];      // Encrypted password
+    uint16_t pwd_len;               // Length of encrypted data
     IPAddress gateway;              // Optional static IP config
     IPAddress subnet;               // Optional static IP config    
     IPAddress local_ip;             // Optional static IP config
+    IPAddress dns1;                 // Optional primary DNS (per SSID)
+    IPAddress dns2;                 // Optional secondary DNS (per SSID)
 };
 
 class CredentialManager {
@@ -234,10 +236,29 @@ public:
         return false;
     }
 
+    /**
+     * @brief Set HTTP webserver hostname (shared across libraries)
+     */
+    void setHostname(const char* hostname);
+
+    /**
+     * @brief Get HTTP webserver hostname (shared across libraries)
+     */
+    String getHostname() const;
+
+    /**
+     * @brief Set HTTP webserver port (shared across libraries)
+     */
+    // Port is fixed at construction time in AsyncFsWebServer, so it is not
+    // exposed as a configurable shared option here.
+
 protected:
     std::vector<WiFiCredential> m_credentials;
     uint8_t m_encryption_key[ENCRYPTION_KEY_SIZE];
     bool m_efuse_initialized;
+
+    // Global options shared across libraries (hostname only)
+    char m_hostname[33];            // HTTP server hostname (max 32 chars + null)
 
     #if defined(ESP8266)
     fs::FS* m_filesystem;

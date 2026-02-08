@@ -4,6 +4,10 @@
 
 CredentialManager::CredentialManager() : m_efuse_initialized(false) {
   memset(m_encryption_key, 0, ENCRYPTION_KEY_SIZE);
+
+  // Default global options (hostname only)
+  memset(m_hostname, 0, sizeof(m_hostname));
+
 #if defined(ESP8266)
   m_filesystem = nullptr;
 #endif
@@ -64,6 +68,21 @@ String CredentialManager::getStatus() const {
   }
 }
 
+void CredentialManager::setHostname(const char* hostname) {
+  if (!hostname) {
+    memset(m_hostname, 0, sizeof(m_hostname));
+    return;
+  }
+  strlcpy(m_hostname, hostname, sizeof(m_hostname));
+}
+
+String CredentialManager::getHostname() const {
+  return String(m_hostname);
+}
+
+// Web server port is fixed at construction time in AsyncFsWebServer
+// and is not stored as a shared, mutable option in CredentialManager.
+
 bool CredentialManager::addCredential(const WiFiCredential& credential, const char* plaintext_password) {
   if (strlen(credential.ssid) == 0) {
     log_error("Invalid SSID");
@@ -89,12 +108,12 @@ bool CredentialManager::addCredential(const WiFiCredential& credential, const ch
 
   // Encrypt password
   uint16_t encrypted_len = 0;
-  if (!encryptPassword(plaintext_password, cred.password_encrypted, encrypted_len)) {
+  if (!encryptPassword(plaintext_password, cred.pwd_encrypted, encrypted_len)) {
     log_error("Failed to encrypt password");
     return false;
   }
 
-  cred.password_len = encrypted_len;
+  cred.pwd_len = encrypted_len;
 
   m_credentials.push_back(cred);
   log_debug("Credential added: %s.", cred.ssid);
@@ -109,7 +128,7 @@ bool CredentialManager::removeCredential(uint8_t index) {
   }
 
   log_debug("Removing credential: %s", m_credentials[index].ssid);
-  memset(m_credentials[index].password_encrypted, 0, sizeof(m_credentials[index].password_encrypted));
+  memset(m_credentials[index].pwd_encrypted, 0, sizeof(m_credentials[index].pwd_encrypted));
   memset(m_credentials[index].ssid, 0, sizeof(m_credentials[index].ssid));
   m_credentials.erase(m_credentials.begin() + index);
   return true;
@@ -158,17 +177,19 @@ bool CredentialManager::updateCredential(const WiFiCredential& credential, const
 
   // Encrypt new password
   uint16_t encrypted_len = 0;
-  if (!encryptPassword(plaintext_password, cred.password_encrypted, encrypted_len)) {
+  if (!encryptPassword(plaintext_password, cred.pwd_encrypted, encrypted_len)) {
     log_error("Failed to encrypt password");
     return false;
   }
 
-  cred.password_len = encrypted_len;
+  cred.pwd_len = encrypted_len;
 
   // Update IP configuration from credential parameter
   cred.gateway = credential.gateway;
   cred.subnet = credential.subnet;
   cred.local_ip = credential.local_ip;
+  cred.dns1 = credential.dns1;
+  cred.dns2 = credential.dns2;
   
   log_debug("Credential updated: %s.", credential.ssid);
   return true;
@@ -189,7 +210,7 @@ String CredentialManager::getPassword(uint8_t index) {
   const WiFiCredential &cred = m_credentials[index];
   char plaintext[65] = {0};
 
-  if (decryptPassword(cred.password_encrypted, cred.password_len, plaintext,
+  if (decryptPassword(cred.pwd_encrypted, cred.pwd_len, plaintext,
                       64)) {
     String result = plaintext;
     // Clean password from memory
@@ -231,7 +252,7 @@ bool CredentialManager::getIPConfiguration(uint8_t index, IPAddress& ip, IPAddre
 void CredentialManager::clearAll() {
   // Clean each credential
   for (auto &cred : m_credentials) {
-    memset(cred.password_encrypted, 0, sizeof(cred.password_encrypted));
+    memset(cred.pwd_encrypted, 0, sizeof(cred.pwd_encrypted));
     memset(cred.ssid, 0, sizeof(cred.ssid));
   }
   m_credentials.clear();
@@ -387,10 +408,17 @@ uint16_t CredentialManager::removePKCS7Padding(uint8_t *data, uint16_t data_len)
 }
 
 #if defined(ESP8266)
+// Attach a filesystem instance used for persisting credentials on ESP8266.
+// This must be called before saveToFS()/loadFromFS().
 void CredentialManager::setFilesystem(fs::FS* fs) {
   m_filesystem = fs;
 }
 
+// Save credentials to FS in a simple binary format:
+// [uint8_t count][char hostname[33]] then for each credential:
+// [char ssid[33]][uint16_t pwd_len][uint8_t pwd_encrypted[64]]
+// [uint32_t gateway][uint32_t subnet][uint32_t local_ip]
+// [uint32_t dns1][uint32_t dns2]
 bool CredentialManager::saveToFS(const char* filepath) {
   if (!m_filesystem) {
     log_error("Filesystem not set");
@@ -408,21 +436,28 @@ bool CredentialManager::saveToFS(const char* filepath) {
     count = MAX_CREDENTIALS;
   }
 
+  // New simple format (breaking change is acceptable):
+  // [count][hostname][credentials...]
   file.write(&count, 1);
+  file.write((const uint8_t*)m_hostname, sizeof(m_hostname));
 
   for (uint8_t i = 0; i < count; i++) {
     const WiFiCredential &cred = m_credentials[i];
 
     file.write((const uint8_t*)cred.ssid, sizeof(cred.ssid));
-    file.write((const uint8_t*)&cred.password_len, sizeof(cred.password_len));
-    file.write((const uint8_t*)cred.password_encrypted, sizeof(cred.password_encrypted));
+    file.write((const uint8_t*)&cred.pwd_len, sizeof(cred.pwd_len));
+    file.write((const uint8_t*)cred.pwd_encrypted, sizeof(cred.pwd_encrypted));
 
     uint32_t gw_addr = cred.gateway;
     uint32_t sn_addr = cred.subnet;
     uint32_t ip_addr = cred.local_ip;
+    uint32_t dns1_addr_cred = cred.dns1;
+    uint32_t dns2_addr_cred = cred.dns2;
     file.write((const uint8_t*)&gw_addr, sizeof(gw_addr));
     file.write((const uint8_t*)&sn_addr, sizeof(sn_addr));
     file.write((const uint8_t*)&ip_addr, sizeof(ip_addr));
+    file.write((const uint8_t*)&dns1_addr_cred, sizeof(dns1_addr_cred));
+    file.write((const uint8_t*)&dns2_addr_cred, sizeof(dns2_addr_cred));
   }
 
   file.close();
@@ -430,6 +465,8 @@ bool CredentialManager::saveToFS(const char* filepath) {
   return true;
 }
 
+// Load credentials from FS written by saveToFS().
+// Uses the same binary layout as described above.
 bool CredentialManager::loadFromFS(const char* filepath) {
   if (!m_filesystem) {
     log_error("Filesystem not set");
@@ -460,13 +497,18 @@ bool CredentialManager::loadFromFS(const char* filepath) {
     count = MAX_CREDENTIALS;
   }
 
+  // Simple new format: hostname directly after count
+  if (file.read((uint8_t*)m_hostname, sizeof(m_hostname)) != sizeof(m_hostname)) {
+    memset(m_hostname, 0, sizeof(m_hostname));
+  }
+
   for (uint8_t i = 0; i < count; i++) {
     WiFiCredential cred{};
 
     if (file.read((uint8_t*)cred.ssid, sizeof(cred.ssid)) != sizeof(cred.ssid)) break;
-    if (file.read((uint8_t*)&cred.password_len, sizeof(cred.password_len)) != sizeof(cred.password_len)) break;
-    if (cred.password_len == 0 || cred.password_len > sizeof(cred.password_encrypted)) break;
-    if (file.read((uint8_t*)cred.password_encrypted, sizeof(cred.password_encrypted)) != sizeof(cred.password_encrypted)) break;
+    if (file.read((uint8_t*)&cred.pwd_len, sizeof(cred.pwd_len)) != sizeof(cred.pwd_len)) break;
+    if (cred.pwd_len == 0 || cred.pwd_len > sizeof(cred.pwd_encrypted)) break;
+    if (file.read((uint8_t*)cred.pwd_encrypted, sizeof(cred.pwd_encrypted)) != sizeof(cred.pwd_encrypted)) break;
 
     uint32_t gw_addr = 0;
     uint32_t sn_addr = 0;
@@ -478,6 +520,20 @@ bool CredentialManager::loadFromFS(const char* filepath) {
     cred.gateway = IPAddress(gw_addr);
     cred.subnet = IPAddress(sn_addr);
     cred.local_ip = IPAddress(ip_addr);
+
+    // Optional per-credential DNS (backward compatible)
+    uint32_t dns1_addr_cred = 0;
+    uint32_t dns2_addr_cred = 0;
+    if ((unsigned int)file.available() >= sizeof(dns1_addr_cred) + sizeof(dns2_addr_cred)) {
+      if (file.read((uint8_t*)&dns1_addr_cred, sizeof(dns1_addr_cred)) == sizeof(dns1_addr_cred) &&
+          file.read((uint8_t*)&dns2_addr_cred, sizeof(dns2_addr_cred)) == sizeof(dns2_addr_cred)) {
+        cred.dns1 = IPAddress(dns1_addr_cred);
+        cred.dns2 = IPAddress(dns2_addr_cred);
+      }
+    } else {
+      cred.dns1 = IPAddress(0, 0, 0, 0);
+      cred.dns2 = IPAddress(0, 0, 0, 0);
+    }
 
     m_credentials.push_back(cred);
   }
@@ -495,6 +551,19 @@ bool CredentialManager::loadFromFS(const char* filepath) {
 
 
 #if defined(ESP32)
+// Save credentials to ESP32 NVS in a key/value layout.
+// Global:
+//   host  -> hostname (null-terminated string)
+//   count -> number of stored credentials (uint8_t)
+// Per credential i (0..count-1):
+//   ssid{i}   -> SSID string
+//   pass{i}   -> encrypted password blob (length len{i})
+//   len{i}    -> encrypted password length (uint16_t)
+//   gw{i}     -> gateway IPv4 as uint32_t
+//   sn{i}     -> subnet mask IPv4 as uint32_t
+//   ip{i}     -> local IP IPv4 as uint32_t
+//   dns1_{i}  -> primary DNS IPv4 as uint32_t
+//   dns2_{i}  -> secondary DNS IPv4 as uint32_t
 bool CredentialManager::saveToNVS(const char *nvs_namespace) {
 
   nvs_handle_t nvs_handle;
@@ -502,6 +571,14 @@ bool CredentialManager::saveToNVS(const char *nvs_namespace) {
 
   if (err != ESP_OK) {
     log_error("Failed to open NVS: %s", esp_err_to_name(err));
+    return false;
+  }
+
+  // Save global hostname (no DNS/port globals anymore)
+  err = nvs_set_str(nvs_handle, "host", m_hostname);
+  if (err != ESP_OK) {
+    log_error("Failed to save hostname");
+    nvs_close(nvs_handle);
     return false;
   }
 
@@ -528,8 +605,7 @@ bool CredentialManager::saveToNVS(const char *nvs_namespace) {
 
     // Encrypted password key (as blob)
     String key_pass = "pass" + String(i);
-    err = nvs_set_blob(nvs_handle, key_pass.c_str(), cred.password_encrypted,
-                       cred.password_len);
+    err = nvs_set_blob(nvs_handle, key_pass.c_str(), cred.pwd_encrypted, cred.pwd_len);
     if (err != ESP_OK) {
       log_error("Failed to save password %d", i);
       nvs_close(nvs_handle);
@@ -538,7 +614,7 @@ bool CredentialManager::saveToNVS(const char *nvs_namespace) {
 
     // Password length
     String key_len = "len" + String(i);
-    err = nvs_set_u16(nvs_handle, key_len.c_str(), cred.password_len);
+    err = nvs_set_u16(nvs_handle, key_len.c_str(), cred.pwd_len);
     if (err != ESP_OK) {
       log_error("Failed to save password length %d", i);
       nvs_close(nvs_handle);
@@ -574,6 +650,25 @@ bool CredentialManager::saveToNVS(const char *nvs_namespace) {
       nvs_close(nvs_handle);
       return false;
     }
+
+    // Static DNS configuration (per credential, optional)
+    String key_dns1 = "dns1_" + String(i);
+    uint32_t dns1_addr_cred = cred.dns1;
+    err = nvs_set_u32(nvs_handle, key_dns1.c_str(), dns1_addr_cred);
+    if (err != ESP_OK) {
+      log_error("Failed to save DNS1 %d", i);
+      nvs_close(nvs_handle);
+      return false;
+    }
+
+    String key_dns2 = "dns2_" + String(i);
+    uint32_t dns2_addr_cred = cred.dns2;
+    err = nvs_set_u32(nvs_handle, key_dns2.c_str(), dns2_addr_cred);
+    if (err != ESP_OK) {
+      log_error("Failed to save DNS2 %d", i);
+      nvs_close(nvs_handle);
+      return false;
+    }
   }
 
   err = nvs_commit(nvs_handle);
@@ -588,6 +683,9 @@ bool CredentialManager::saveToNVS(const char *nvs_namespace) {
   }
 }
 
+// Load credentials from ESP32 NVS using the layout documented
+// in saveToNVS(). If any entry is missing, sensible defaults
+// (e.g. 0.0.0.0 for IP/DNS) are applied.
 bool CredentialManager::loadFromNVS(const char *nvs_namespace) {
   m_credentials.clear();
   nvs_handle_t nvs_handle;
@@ -596,6 +694,11 @@ bool CredentialManager::loadFromNVS(const char *nvs_namespace) {
   if (err != ESP_OK) {
     log_info("No NVS data found for namespace: %s", nvs_namespace);
     return false;
+  }
+
+  size_t host_len = sizeof(m_hostname);
+  if (nvs_get_str(nvs_handle, "host", m_hostname, &host_len) != ESP_OK) {
+    memset(m_hostname, 0, sizeof(m_hostname));
   }
 
   // Read number of credentials
@@ -637,14 +740,13 @@ bool CredentialManager::loadFromNVS(const char *nvs_namespace) {
     // Read encrypted password
     String key_pass = "pass" + String(i);
     size_t blob_len = pass_len;
-    err = nvs_get_blob(nvs_handle, key_pass.c_str(), cred.password_encrypted,
-                       &blob_len);
+    err = nvs_get_blob(nvs_handle, key_pass.c_str(), cred.pwd_encrypted, &blob_len);
     if (err != ESP_OK) {
       log_error("Failed to load password %d", i);
       continue;
     }
 
-    cred.password_len = pass_len;
+    cred.pwd_len = pass_len;
 
     // Read Static IP Configuration - Gateway
     String key_gw = "gw" + String(i);
@@ -674,6 +776,23 @@ bool CredentialManager::loadFromNVS(const char *nvs_namespace) {
       cred.local_ip = IPAddress(ip_addr);
     } else {
       cred.local_ip = IPAddress(0, 0, 0, 0);
+    }
+
+    // Read Static DNS configuration (per credential, optional)
+    String key_dns1 = "dns1_" + String(i);
+    uint32_t dns1_addr_cred = 0;
+    if (nvs_get_u32(nvs_handle, key_dns1.c_str(), &dns1_addr_cred) == ESP_OK) {
+      cred.dns1 = IPAddress(dns1_addr_cred);
+    } else {
+      cred.dns1 = IPAddress(0, 0, 0, 0);
+    }
+
+    String key_dns2 = "dns2_" + String(i);
+    uint32_t dns2_addr_cred = 0;
+    if (nvs_get_u32(nvs_handle, key_dns2.c_str(), &dns2_addr_cred) == ESP_OK) {
+      cred.dns2 = IPAddress(dns2_addr_cred);
+    } else {
+      cred.dns2 = IPAddress(0, 0, 0, 0);
     }
 
     m_credentials.push_back(cred);
@@ -741,7 +860,7 @@ String CredentialManager::getDebugInfo() const {
       info += " | IP: DHCP";
     }
     
-    info += " | Encrypted len: " + String(m_credentials[i].password_len) + "\n";
+    info += " | Encrypted len: " + String(m_credentials[i].pwd_len) + "\n";
   }
 
   info += "=====================================\n";

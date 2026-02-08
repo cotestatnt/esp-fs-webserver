@@ -35,33 +35,26 @@ struct WiFiStartResult {
 };
 
 struct WiFiConnectParams {
-    String ssid;
-    String password;
-    bool changeSSID = false;
-    bool noDHCP = false;
-    // True if the /connect request was initiated by a client
-    // connected to the ESP's own AP (captive portal).
-    bool fromApClient = false;
-    IPAddress local_ip;
-    IPAddress gateway;
-    IPAddress subnet;
-    String host;
-    uint32_t timeout = 0;
-    uint32_t wdtLongTimeout = 0;
-    uint32_t wdtTimeout = 0;
+    WiFiCredential config;                       // WiFi credentials (ssid, encrypted password, IP config, DNS)
+    bool fromApClient = false;                  // True if the /connect request was initiated by a client
+    bool dhcp = true;                           // True to use DHCP, false for static IP
+    String password;                            // Plaintext password (temporary, not stored in credential)
+    String host;                                // Hostname for mDNS
+    uint32_t timeout = 0;                       // Connection timeout in milliseconds
+    uint32_t wdtLongTimeout = 0;                // Long WDT timeout in milliseconds 
+    uint32_t wdtTimeout = 0;                    // Regular WDT timeout in milliseconds
 };
 
 struct WiFiConnectResult {
-    int status = 500;
-    String body;
     bool connected = false;
+    int status = 500;    
     IPAddress ip = IPAddress(0, 0, 0, 0);
+    String body;
 };
 
 class WiFiService {
 public:
     static void setTaskWdt(uint32_t timeout);
-    static void applyPersistentConfig(bool persistentEnabled, const String& ssid, const String& pass);
     static WiFiScanResult scanNetworks();
     static WiFiConnectResult connectWithParams(const WiFiConnectParams& params);
     static WiFiStartResult startWiFi(CredentialManager* credentialManager, fs::FS* filesystem, const char* configFile, uint32_t timeout);    

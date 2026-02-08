@@ -78,6 +78,7 @@ class Print;
 #include "SetupConfig.hpp"
 #include "assets/setup_htm.h"
 #include "assets/creds_js.h"
+#include "assets/logo_svg.h"
 #endif
 
 #ifndef ESP_FS_WS_MDNS
@@ -181,6 +182,14 @@ private:
 #if ESP_FS_WS_SETUP
   SetupConfigurator *setup = nullptr;
 
+  // Deferred STA reconnect handling (used when applying new WiFi settings
+  // while already connected in STA mode, to avoid HTTP timeouts).
+  bool m_pendingWifiConnect = false;
+  WiFiConnectParams m_pendingParams;
+  bool m_pendingWasStaConnected = false;
+
+  void processPendingWifiConnection();
+
   // Lazy initialization: create setup object only when first needed
   SetupConfigurator *getSetupConfigurator() {
     if (!setup) {
@@ -280,6 +289,14 @@ public:
     #if !defined(ESP32)
     MDNS.update();
     #endif
+#endif
+
+#if ESP_FS_WS_SETUP
+    // If a STA reconnection has been scheduled (from /connect), process it
+    // after the HTTP response has been handled.
+    if (m_pendingWifiConnect) {
+      processPendingWifiConnection();
+    }
 #endif
 }
 
@@ -441,9 +458,9 @@ public:
 
   // Public alias to dropdown definition type (available only when /setup is
   // enabled)
-  using DropdownList = ServerConfig::DropdownList;
+  using DropdownList = SetupConfig::DropdownList;
   // Public alias to slider definition type
-  using Slider = ServerConfig::Slider;
+  using Slider = SetupConfig::Slider;
 
   /*
    * Set callback function to be called when configuration file is saved via
@@ -507,8 +524,11 @@ public:
   void addOptionBox(const char *title) {
     getSetupConfigurator()->addOption("param-box", title);
   }
-  void setLogoBase64(const char *logo, const char *w = "128", const char *h = "128", bool ow = false) {
-    getSetupConfigurator()->setLogoBase64(logo, w, h, ow);
+  void setSetupPageLogo(const uint8_t* imageData, size_t imageSize, const char* mimeType = "image/png", bool ow = false) {
+    getSetupConfigurator()->setSetupPageLogo(imageData, imageSize, mimeType, ow);
+  }
+  void setSetupPageLogo(const char* svgText, bool ow = false) {
+    getSetupConfigurator()->setSetupPageLogo(svgText, ow);
   }
   template <typename T>
   void addOption(const char *lbl, T val, double min, double max, double st) {

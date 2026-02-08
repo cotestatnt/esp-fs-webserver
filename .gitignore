@@ -41,3 +41,4 @@
 /examples/customHTML/build
 /pio_examples/temp
 /pio_examples/simpleServer/setup/build_setup/node_modules
+/built-in-webpages/edit/build_edit/node_modules
