@@ -101,7 +101,7 @@ button,
   cursor: pointer;
 }
 
-.btn.is-loading {
+.btn.load {
   opacity: 0.3;
   cursor: default;
   pointer-events: none;
@@ -142,7 +142,7 @@ select {
   margin: 10px
 }
 
-.input-label {
+.input-lbl {
   align-self: self-start;
   position: relative;
   left: 5%;
@@ -157,7 +157,7 @@ select {
   transition: 0.3s;
 }
 
-.input-label:hover {
+.input-lbl:hover {
   border-color: var(--c-prim);
   background-color: #cffafe;
 }
@@ -169,7 +169,7 @@ select {
   width: 100%;
 }
 
-.row-wrapper {
+.row-w {
   display: flex;
   flex-wrap: nowrap;
   align-items: baseline;
@@ -177,7 +177,7 @@ select {
   margin-bottom: 14px;
 }
 
-.tf-wrapper {
+.tf-w {
   display: flex;
   margin-bottom: 10px;
   flex-direction: column;
@@ -249,7 +249,7 @@ select {
 }
 
 /* Progress */
-.progress-wrap {
+.pgr-wrap {
   position: relative;
   width: 80%;
   height: 25px;
@@ -262,12 +262,12 @@ select {
   transition: 0.4s;
 }
 
-.progress-wrap:not(.active) {
+.pgr-wrap:not(.active) {
   cursor: pointer;
   background: rgba(6, 182, 212, 0.05);
 }
 
-.progress-wrap .progress {
+.pgr-wrap .pgr {
   position: absolute;
   inset: 0;
   z-index: 5;
@@ -277,7 +277,7 @@ select {
   transition: 0.3s;
 }
 
-.progress-wrap.active .progress {
+.pgr-wrap.active .pgr {
   opacity: 1;
 }
 
@@ -292,7 +292,7 @@ select {
   box-shadow: 0 8px 32px rgba(6, 182, 212, 0.3);
 }
 
-#modal-message {
+#modal-msg {
   position: fixed;
   inset: 0;
   display: none;
@@ -301,11 +301,11 @@ select {
   z-index: 1000;
 }
 
-#modal-message[open] {
+#modal-msg[open] {
   display: flex;
 }
 
-#modal-message::before {
+#modal-msg::before {
   content: "";
   position: fixed;
   inset: 0;
@@ -332,7 +332,7 @@ select {
 .topnav {
   align-self: flex-end;
   margin-top: 12px;
-  border: 2px solid var(--c-prim);
+  border: 1px solid var(--c-prim);
   background: linear-gradient(135deg, var(--c-grad-a) 0%, var(--c-grad-b) 100%);
 }
 
@@ -382,7 +382,7 @@ select {
 }
 
 /* Sliders */
-.slider-wrapper {
+.slider-w {
   display: flex;
   align-items: center;
   gap: 14px;
@@ -392,7 +392,7 @@ select {
   border: 1px solid var(--c-txt-lt);
 }
 
-.slider-wrapper .slider {
+.slider-w .slider {
   appearance: none;
   width: 100%;
   height: 10px;
@@ -404,7 +404,7 @@ select {
   box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.12);
 }
 
-.slider-wrapper .slider::-webkit-slider-thumb {
+.slider-w .slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
   width: 20px;
@@ -416,7 +416,7 @@ select {
   cursor: pointer;
 }
 
-.slider-wrapper .slider-readout {
+.slider-w .slider-readout {
   width: 60px;
   height: 40px;
   text-align: center;
@@ -431,7 +431,7 @@ select {
   margin-left: -12px;
 }
 
-.toggle-label {
+.toggle-lbl {
   position: relative;
   top: 2px;
   margin: 0 10px;
@@ -439,7 +439,7 @@ select {
   font-weight: 500;
 }
 
-.toggle-switch {
+.toggle-sw {
   display: inline-block;
   width: 58px;
   height: 32px;
@@ -450,7 +450,7 @@ select {
   transition: background .25s;
 }
 
-.toggle-switch:before {
+.toggle-sw:before {
   content: "";
   display: block;
   position: absolute;
@@ -464,11 +464,11 @@ select {
   transition: left .25s;
 }
 
-.t-check:checked+.toggle-switch {
+.t-check:checked+.toggle-sw {
   background: linear-gradient(135deg, var(--c-prim) 0%, var(--c-prim-dk) 100%);
 }
 
-.t-check:checked+.toggle-switch:before {
+.t-check:checked+.toggle-sw:before {
   left: 30px;
   background: linear-gradient(to bottom, var(--c-bg) 0%, var(--c-bg-dk) 100%);
 }
@@ -505,9 +505,6 @@ select {
   justify-content: center;
 }
 
-#show-networks {
-  margin-right: 10px;
-}
 
 .show-hide-wrap {
   position: absolute;
@@ -561,77 +558,15 @@ select {
   border-collapse: collapse;
 }
 
-/* Prevent background scroll while boot loader is visible */
-body.boot-loading {
-  overflow: hidden;
+.host-w {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  width: 93%;
 }
 
-/* Responsive */
-@media screen and (max-width: 608px) {
-  h1 {
-    font-size: 24px;
-  }
-
-  .btn-bar {
-    margin-top: 20px;
-  }
-
-  .topnav {
-    margin: 4px;
-    width: auto;
-    min-width: 200px;
-    align-self: flex-start;
-  }
-
-  .topnav a {
-    padding: 5px 12px;
-  }
-
-  .topnav a.active {
-    background: none;
-  }
-
-  .topnav a:not(.active) {
-    display: none;
-  }
-
-  .topnav a.icon {
-    display: block;
-  }
-
-  .topnav.responsive {
-    flex-direction: column;
-    width: auto;
-  }
-
-  .topnav.responsive .icon {
-    display: none;
-  }
-
-  .topnav.responsive a {
-    float: none;
-    display: block;
-    text-align: left;
-    width: 100%;
-  }
-
-  .hide-tiny {
-    display: none;
-  }
-}
-
-@media screen and (max-width: 479px) {
-  body {
-    padding: 2px;
-  }
-
-  select {
-    width: 95.5%
-  }
-
-  .ctn {
-    padding: 0 10px;
-  }
+.port {
+  width: 15%;
 }
 
 /* Creds & Inline */
@@ -668,6 +603,23 @@ body.boot-loading {
   box-shadow: none;
 }
 
+
+.tf-w.inline-creds {
+  flex-direction: row-reverse;
+  justify-content: end;
+  width: 100%;
+}
+
+.btn.small {
+  padding: 8px 16px;
+  min-width: fit-content;
+  width: auto;
+  border-radius: 5px;
+  font-size: 14px;
+  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3);
+}
+
 #wifi,
 #wifi-table {
   border: 2px solid var(--c-prim);
@@ -680,19 +632,37 @@ body.boot-loading {
   margin-bottom: -2px;
 }
 
-.tf-wrapper.inline-creds {
-  flex-direction: row-reverse;
-  justify-content: end;
-  width: 100%;
+#show-networks {
+  margin-right: 10px;
 }
 
+#about {
+  font-size: 10pt;
+  color: var(--c-txt-lt);
+}
+#about:hover {
+  color: var(--c-bg);
+}
 
-.btn.small {
-  padding: 8px 16px;
-  min-width: fit-content;
-  width: auto;
-  border-radius: 5px;
-  font-size: 14px;
-  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
-  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3);
+/* Responsive */
+@media screen and (max-width: 608px) {
+  h1 {font-size: 24px;}
+  .btn-bar {margin-top: 20px;}
+  .topnav {margin: 4px; width: auto;min-width: 200px; align-self: flex-start;}
+  .topnav a {padding: 5px 12px;}
+  .topnav a.active {background: none;}
+  .topnav a:not(.active) {display: none;}
+  .topnav a.icon {display: block; }
+  .topnav.responsive {flex-direction: column; width: auto;}
+  .topnav.responsive .icon {display: none;}
+  .topnav.responsive a {float: none;display: block;text-align: left;width: 100%;}
+  .hide-tiny {display: none;}
+  .host-w{width:96%;}
+  .port{margin-right:12px;}
+}
+
+@media screen and (max-width: 479px) {
+  body {padding: 2px;}
+  select {width: 95.5%}
+  .ctn {padding: 0 10px;}
 }

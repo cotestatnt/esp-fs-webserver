@@ -14,10 +14,26 @@ void FSWebServer::begin(WebSocketsServer::WebSocketServerEvent wsEventHandler) {
 //////////////////////    BUILT-IN HANDLERS    ///////////////////////////
 #if ESP_FS_WS_SETUP
     m_filesystem_ok = getSetupConfigurator()->checkConfigFile();
+    if (!m_filesystem_ok) {
+        log_error("Filesystem not available. Setup page will not work.");
+    }
+
+    // Close config file if it was opened during setup (will be reopened on demand when accessing config options)
     if (getSetupConfigurator()->isOpened()) {
         log_debug("Config file %s closed", ESP_FS_WS_CONFIG_FILE);
         getSetupConfigurator()->closeConfiguration();
-    }
+    }   
+         
+    // Apply port override from config.json if present   
+    uint16_t port = 0;
+    if (getSetupConfigurator()->getOptionValue("port", port)) {
+        log_debug("Port value %u read from config file", port);
+        if (port != m_port && port != 0) {
+            log_debug("Overriding server port to %u from config file", port);
+            m_port = port;
+            getSetupConfigurator()->closeConfiguration();
+        }
+    }     
 
     // Setup page handlers
     on("*", HTTP_HEAD, [this]() { this->handleFileName(); });
@@ -157,8 +173,14 @@ void FSWebServer::begin(WebSocketsServer::WebSocketServerEvent wsEventHandler) {
 #ifdef ESP32
     this->enableCrossOrigin(true);    
 #endif
-    WebServerClass::begin();
+    WebServerClass::begin(m_port);
+    
+#if ESP_FS_WS_SETUP
+    // Free SetupConfigurator memory after initialization (will be recreated lazily if needed)
+    freeSetupConfigurator();
+#endif
 }
+
 
 void FSWebServer::handleIndex(){
     log_debug("handleIndex");
@@ -382,6 +404,7 @@ void FSWebServer::getStatus() {
     String ip = (WiFi.status() == WL_CONNECTED) ? WiFi.localIP().toString() : WiFi.softAPIP().toString();
     doc.setString("ip", ip);
     doc.setString("hostname", m_host);
+    doc.setNumber("port", static_cast<double>(m_port));
     doc.setString("path", String(ESP_FS_WS_CONFIG_FILE).substring(1));   // remove first '/'
     doc.setString("liburl", LIB_URL);
 
@@ -421,7 +444,6 @@ void FSWebServer::getStatus() {
         doc.setString("img-logo", logoPath);
     }
   #endif
-
     this->send(200, "application/json", doc.serialize());
 }
 

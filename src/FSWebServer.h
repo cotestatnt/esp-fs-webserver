@@ -133,7 +133,7 @@ protected:
   File m_uploadFile;
   uint8_t otaDone = 0;
   void handleSetup();
-  void getStatus();
+  void getStatus();  
   void clearConfig();
   void doWifiConnection();
   void handleScanNetworks();
@@ -193,9 +193,18 @@ private:
   // Lazy initialization: create setup object only when first needed
   SetupConfigurator *getSetupConfigurator() {
     if (!setup) {
-      setup = new SetupConfigurator(m_filesystem);
+      setup = new SetupConfigurator(m_filesystem, m_port, m_host);
     }
     return setup;
+  }
+  
+  // Free setup configurator memory (will be recreated lazily if needed)
+  void freeSetupConfigurator() {
+    if (setup) {
+      delete setup;
+      setup = nullptr;
+      log_debug("SetupConfigurator freed from memory");
+    }
   }
 #endif
 
@@ -503,7 +512,7 @@ public:
   inline const char *getConfiFileName() { return ESP_FS_WS_CONFIG_FILE; }
 
   void setSetupPageTitle(const char *title) {
-    getSetupConfigurator()->addOption("name-logo", title);
+    getSetupConfigurator()->addOption("page-title", title);
   }
   void addHTML(const char *html, const char *id, bool ow = false) {
     getSetupConfigurator()->addHTML(html, id, ow);

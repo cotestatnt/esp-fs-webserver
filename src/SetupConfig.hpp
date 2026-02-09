@@ -35,6 +35,8 @@ class SetupConfigurator
         CJSON::Json* m_doc = nullptr;
         CJSON::Json* m_savedDoc = nullptr;  // Temporary storage for saved file values
 
+        uint16_t& m_port;         
+        String& m_host;
         bool m_opened = false;
 
         bool isOpened() {
@@ -63,6 +65,7 @@ class SetupConfigurator
                 
                 // Create empty m_doc - will be populated in addOption() in the setup order
                 m_doc = new CJSON::Json();
+                m_doc->createObject();
                 
                 m_opened = true;
                 return true;
@@ -70,6 +73,10 @@ class SetupConfigurator
             return false;
         }
 
+        // If config file or folder doesn't exist, create them. If config file exists, do nothing.
+        // Returns true if config file is ready for use (exists or created successfully), false on failure.
+        // Some keys might be necessary for the setup page to work properly, so this function ensures that 
+        // the config file exists and is initialized with a valid JSON object if it was missing.
         bool checkConfigFile() {
             File file = m_filesystem->open(ESP_FS_WS_CONFIG_FOLDER, "r");
             if (!file) {
@@ -87,8 +94,14 @@ class SetupConfigurator
                     log_error("Error. File %s not created", ESP_FS_WS_CONFIG_FILE);
                     return false;
                 }
-                file.println("{}");
-                file.close();
+                // Create config with port key using CJSON
+                CJSON::Json initDoc;
+                initDoc.createObject();
+                initDoc.setString("host", m_host);
+                initDoc.setNumber("port", static_cast<double>(m_port));
+                String json = initDoc.serialize(true);
+                file.print(json);
+                file.close();                
             }
             log_debug("Config file %s OK", ESP_FS_WS_CONFIG_FILE);
             return true;
@@ -96,10 +109,10 @@ class SetupConfigurator
 
     public:
         friend class FSWebServer;
-        SetupConfigurator(fs::FS *fs) : m_filesystem(fs) { ; }
+        SetupConfigurator(fs::FS *fs, uint16_t& port, String& host) 
+            : m_filesystem(fs), m_port(port), m_host(host) { ; }
 
-        bool closeConfiguration() {
-            
+        bool closeConfiguration() {            
 
             // If no options were added in this session, skip writing to avoid overwriting
             if (numOptions == 0) {
@@ -109,7 +122,16 @@ class SetupConfigurator
                 return true;
             }
          
-
+            // Copy special keys from saved config that weren't explicitly added (like "port")
+            if (m_savedDoc && m_doc) {
+                double portValue = 0;
+                if (m_savedDoc->getNumber("port", portValue) && !m_doc->hasKey("port")) {
+                    m_doc->setNumber("port", portValue);
+                }
+                if (m_savedDoc->getString("host", m_host) && !m_doc->hasKey("host")) {
+                    m_doc->setString("host", m_host);
+                }
+            }
 
             // Write configuration to file only if content has changed
             // Serialize the new content

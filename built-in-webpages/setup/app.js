@@ -114,22 +114,22 @@ window.addEventListener('load', () => {
     $('picker').onchange = uploadFolder;
 
     // Store default label texts for reset after actions
-    const fwLabel = $('fw-label');
+    const fwLabel = $('fw-lbl');
     if (fwLabel && !fwLabel.dataset.defaultText) {
         fwLabel.dataset.defaultText = fwLabel.textContent;
     }
-    const pickLabel = $('pick-label');
+    const pickLabel = $('pick-lbl');
     if (pickLabel && !pickLabel.dataset.defaultText) {
         pickLabel.dataset.defaultText = pickLabel.textContent;
     }
 
     // Disable submit button until a firmware file is selected
     if ($('update-btn')) {
-        $('update-btn').classList.add('is-loading');
+        $('update-btn').classList.add('load');
     }
 
     $('file-input').onchange = function () {
-        const lbl = $('fw-label');
+        const lbl = $('fw-lbl');
         if (!this.files || !this.files.length || !lbl) return;
         const f = this.files[0];
         const prettySize = `${f.size} bytes`;
@@ -139,7 +139,7 @@ window.addEventListener('load', () => {
 
         // Enable submit button now that a file is selected
         if ($('update-btn')) {
-           $('update-btn').classList.remove('is-loading');
+           $('update-btn').classList.remove('load');
         }
     };
 
@@ -208,6 +208,11 @@ const getParameters = () => {
             $('about').innerHTML = 'Created with ' + data.liburl;
             configFile = data.path;
 
+            // Populate port field with the actual server port (if the element exists)
+            if ($('port') && typeof data.port !== 'undefined') {
+                $('port').value = data.port;
+            }
+
             // Cache current hostname for later hints (e.g. reconnect URL)
             window.espHostname = data.hostname || '';
 
@@ -228,7 +233,7 @@ const getParameters = () => {
                 document.title = safeName;
             }
 
-            // Custom logo and page title support from config.json (fallback if not in getStatus)
+            // Custom logo, page title and optional port support from config.json (fallback if not in getStatus)
             fetch(`${esp}${configFile}`).then(r => r.json()).then(cfg => {
                 // Only apply logo if not already set from getStatus
                 if (!data['img-logo'] && logoImg) {
@@ -245,6 +250,17 @@ const getParameters = () => {
                 }
                 if (cfg['page-title']) delete cfg['page-title'];
                 
+                // If a "port" key is present in config.json, show and sync the input field;
+                // otherwise hide the field entirely (advanced/optional feature).
+                if ($('port')) {
+                    if (Object.prototype.hasOwnProperty.call(cfg, 'port')) {
+                        $('port-w').classList.remove('hide');
+                        $('port').value = cfg['port'];
+                    } else {
+                        $('port-w').classList.add('hide');
+                    }
+                }
+
                 options = cfg;
                 createOptionsBox(options);
                 hide('loader');
@@ -271,12 +287,12 @@ const addOptionsElement = (opt) => {
     const fragment = document.createDocumentFragment();
     const bools = Object.entries(opt).filter(([_, v]) => typeof v === "boolean");
     if (bools.length > 0) {
-        const d = newEl('div', { class: 'row-wrapper' });
+        const d = newEl('div', { class: 'row-w' });
         bools.forEach(([key, val]) => {
-            const lbl = newEl('label', { class: 'input-label toggle' });
+            const lbl = newEl('label', { class: 'input-lbl toggle' });
             const inp = newEl('input', { class: 't-check opt-input', type: 'checkbox', id: key });
             inp.checked = val;
-            lbl.append(inp, newEl('div', { class: 'toggle-switch' }), newEl('span', { class: 'toggle-label' }));
+            lbl.append(inp, newEl('div', { class: 'toggle-sw' }), newEl('span', { class: 'toggle-lbl' }));
             lbl.lastChild.textContent = key;
             d.appendChild(lbl);
         });
@@ -285,8 +301,8 @@ const addOptionsElement = (opt) => {
 
     Object.entries(opt).forEach(([key, val]) => {
         if (typeof val === "boolean") return;
-        const wrapper = newEl('div', { class: 'tf-wrapper' });
-        const lbl = newEl('label', { class: 'input-label' });
+        const wrapper = newEl('div', { class: 'tf-w' });
+        const lbl = newEl('label', { class: 'input-lbl' });
         lbl.textContent = key;
         let inputEl;
 
@@ -299,7 +315,7 @@ const addOptionsElement = (opt) => {
                 inputEl.appendChild(opt);
             });
         } else if (typeof val === 'object' && val.type === 'slider') {
-            const container = newEl('div', { class: 'slider-wrapper' });
+            const container = newEl('div', { class: 'slider-w' });
             const slider = newEl('input', { class: 'opt-input slider', type: 'range', id: key, min: val.min, max: val.max, step: val.step });
             slider.value = val.value;
             const readout = newEl('input', { class: 'opt-input slider-readout', type: 'number', id: `${key}-readout`, min: val.min, max: val.max, step: val.step });
@@ -358,7 +374,7 @@ const createOptionsBox = (raw) => {
             if (key.startsWith('raw-')) {
                 const type = key.split('-')[1];
                 if (type === 'html') {
-                    const d = newEl('div', { class: 'tf-wrapper raw-html', id: value, 'data-box': lastBox.id });
+                    const d = newEl('div', { class: 'tf-w raw-html', id: value, 'data-box': lastBox.id });
                     lastBox.appendChild(d);
                     fetch(value).then(r => r.text()).then(h => $(value).innerHTML = h);
                 } else if (type === 'css') document.head.appendChild(newEl('link', { rel: 'stylesheet', href: value }));
@@ -449,7 +465,7 @@ function saveParameters() {
 }
 function getWiFiList() {
     const btn = $('scan-wifi');
-    btn.classList.add('is-loading');
+    btn.classList.add('load');
 
     fetch(`${esp}scan`).then(r => r.json()).then(data => {
         if (data.reload) setTimeout(getWiFiList, 2000);
@@ -474,7 +490,7 @@ function getWiFiList() {
         });
         list.appendChild(frag);
         show('wifi-table');
-        btn.classList.remove('is-loading');
+        btn.classList.remove('load');
     }).catch(() => hide('loader'));
 }
 
@@ -528,8 +544,8 @@ function handleUpdate() {
     const file = $('file-input').files[0];
     if (!file) return; // Guard: ignore clicks when disabled / no file
 
-    show('loader'); show('progress-wrap');
-    $('progress-wrap').classList.add('active');
+    show('loader'); show('pgr-wrap');
+    $('pgr-wrap').classList.add('active');
     $('update-log').textContent = 'Updating...';
 
     const f = new FormData(); f.append('update', file);
@@ -537,12 +553,12 @@ function handleUpdate() {
     xhr.open('POST', `/update?size=${file.size}`);
     xhr.onload = () => {
         hide('loader');
-        $('progress-wrap').classList.remove('active');
+        $('pgr-wrap').classList.remove('active');
         $('update-log').textContent = xhr.status === 200 ? xhr.responseText : 'Error';
 
         // Reset UI to initial state after upload
         const input = $('file-input');
-        const lbl = $('fw-label');
+        const lbl = $('fw-lbl');
         if (input) input.value = '';
         if (lbl) {
             lbl.textContent = lbl.dataset.defaultText || 'Select firmware binary file';
@@ -552,13 +568,13 @@ function handleUpdate() {
         if ($('update-btn')) {
             $('update-btn').setAttribute('aria-disabled', 'true');
         }
-        if ($('progress-anim')) {
-            $('progress-anim').style.width = '0%';
+        if ($('pgr-anim')) {
+            $('pgr-anim').style.width = '0%';
         }
-        hide('progress-wrap');
+        hide('pgr-wrap');
     };
     xhr.upload.onprogress = (p) => {
-        if (p.lengthComputable) $('progress-anim').style.width = `${Math.round((p.loaded / p.total) * 100)}%`;
+        if (p.lengthComputable) $('pgr-anim').style.width = `${Math.round((p.loaded / p.total) * 100)}%`;
     };
     xhr.send(f);
 }
@@ -568,7 +584,7 @@ async function uploadFolder(e) {
     if (!files.length) return;
 
     const list = $('listing');
-    const label = $('pick-label');
+    const label = $('pick-lbl');
 
     // Reset listing for a fresh upload session
     if (list) list.innerHTML = '';
@@ -654,13 +670,13 @@ function switchPage(e) {
 // Global Modal helpers for creds.js
 window.openModal = (t, m, fn) => {
     $('message-title').innerHTML = t; $('message-body').innerHTML = m;
-    $('modal-message').open = true; $('main-box').style.filter = "blur(3px)";
+    $('modal-msg').open = true; $('main-box').style.filter = "blur(3px)";
     closeCb = fn;
     (fn ? show : hide)('ok-modal');
 };
 
 window.closeModal = (exec) => {
-    $('modal-message').open = false; $('main-box').style.filter = "";
+    $('modal-msg').open = false; $('main-box').style.filter = "";
     if (exec && closeCb) closeCb();
 };
 
