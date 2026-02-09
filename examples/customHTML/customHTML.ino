@@ -78,19 +78,6 @@ bool startFilesystem() {
   return false;
 }
 
-/*
-* Getting FS info (total and free bytes) is strictly related to
-* filesystem library used (LittleFS, FFat, SPIFFS etc etc) and ESP framework
-*/
-#ifdef ESP32
-void getFsInfo(fsInfo_t* fsInfo) {
-	fsInfo->fsName = "LittleFS";
-	fsInfo->totalBytes = LittleFS.totalBytes();
-	fsInfo->usedBytes = LittleFS.usedBytes();
-}
-#endif
-
-
 ////////////////////  Load application options from filesystem  ////////////////////
 bool loadOptions() {
   if (FILESYSTEM.exists(server.getConfiFileName())) {
@@ -144,7 +131,7 @@ void setup() {
   // Try to connect to WiFi (will start AP if not connected after timeout)
   if (!server.startWiFi(10000)) {
     Serial.println("\nWiFi not connected! Starting AP mode...");
-    server.startCaptivePortal("ESP_AP", "123456789", "/setup");
+    server.startCaptivePortal("ESP_AP", "123456789");
   }
 
   // Add custom HTTP request handlers to webserver
@@ -193,14 +180,10 @@ void setup() {
   // Add custom page title to /setup
   server.setSetupPageTitle("Custom HTML Web Server");
   // Add custom logo to /setup page with custom size
-  server.setLogoBase64(base64_logo, "128", "128", /*overwrite file*/ false);
+  //server.setLogoBase64(base64_logo, "128", "128", /*overwrite file*/ false);
 
   // Enable ACE FS file web editor and add FS info callback function    
-#ifdef ESP32
-  server.enableFsCodeEditor(getFsInfo);
-#else
   server.enableFsCodeEditor();
-#endif
 
   // Inform user when config.json is saved via /edit or /upload
   server.setConfigSavedCallback(onConfigSaved);

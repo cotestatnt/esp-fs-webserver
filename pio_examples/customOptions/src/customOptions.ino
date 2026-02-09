@@ -46,7 +46,7 @@ SetupConfig::DropdownList dayOfWeek{ DROPDOWN_LABEL, days, 7, daySelected};
 SetupConfig::Slider brightness{ BRIGHTNESS_LABEL, 0.0, 100.0, 1.0, 50.0 };
 
 static const char reload_btn_htm[] PROGMEM = R"EOF(
-<div class="btn-bar">
+<div class="bar">
   <a class="btn" id="reload-btn">Reload options</a>
 </div>
 )EOF";
@@ -313,7 +313,7 @@ void setup() {
   server.addDropdownList(dayOfWeek);
   server.addSlider(brightness);  
   server.addHTML(reload_btn_htm, "buttons", /*overwrite*/ false);
-  server.addJavascript(reload_btn_script, "js", /*overwrite*/ false);
+  server.addJavascript(reload_btn_script, "script", /*overwrite*/ false);
 
   // Enable ACE FS file web editor and add FS info callback function
   server.enableFsCodeEditor();

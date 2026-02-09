@@ -512,7 +512,7 @@ public:
   inline const char *getConfiFileName() { return ESP_FS_WS_CONFIG_FILE; }
 
   void setSetupPageTitle(const char *title) {
-    getSetupConfigurator()->addOption("page-title", title);
+    getSetupConfigurator()->setSetupPageTitle(title);
   }
   void addHTML(const char *html, const char *id, bool ow = false) {
     getSetupConfigurator()->addHTML(html, id, ow);
@@ -531,7 +531,7 @@ public:
   }
   void addSlider(Slider &def) { getSetupConfigurator()->addSlider(def); }
   void addOptionBox(const char *title) {
-    getSetupConfigurator()->addOption("param-box", title);
+    getSetupConfigurator()->addOptionBox(title);
   }
   void setSetupPageLogo(const uint8_t* imageData, size_t imageSize, const char* mimeType = "image/png", bool ow = false) {
     getSetupConfigurator()->setSetupPageLogo(imageData, imageSize, mimeType, ow);

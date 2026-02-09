@@ -47,6 +47,12 @@ public:
     bool getBool(const String& obj, const String& key, bool& out) const;
     bool getNumber(const String& obj, const String& key, double& out) const;
 
+    // Low-level accessor: expose underlying cJSON root for advanced operations
+    // (e.g. iterating arrays/objects in higher-level helpers).
+    // Caller must NOT free or modify the returned pointer directly.
+    cJSON* getRoot() { return root; }
+    const cJSON* getRoot() const { return root; }
+
 private:
     cJSON* root;
 };

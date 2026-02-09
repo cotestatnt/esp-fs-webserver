@@ -422,7 +422,12 @@ void FSWebServer::getStatus() {
             CJSON::Json cfgDoc;
             if (cfgDoc.parse(content)) {
                 String tmp;
-                if (cfgDoc.getString("img-logo", tmp)) {
+                // Prefer v2 metadata location
+                if (cfgDoc.getString("_meta", "logo", tmp)) {
+                    logoPath = tmp;
+                }
+                // Backwards compatibility: fall back to flat "img-logo" if present
+                else if (cfgDoc.getString("img-logo", tmp)) {
                     logoPath = tmp;
                 }
             }

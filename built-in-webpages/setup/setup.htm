@@ -8,153 +8,153 @@
   <script src="app.js" defer></script>
 </head>
 <body class="boot-loading">
-  <main id="main-box">
+  <main id="main">
   <header class="ctn header-main">
     <div class="title">
-      <div id="img-logo" class="loading"><img class="logo" alt="Logo"></div>
-      <div class="heading">
+      <div id="img-logo" class="ldg"><img class="logo" alt="Logo"></div>
+      <div class="hd">
         <h1 id="page-title">ESP FS Web Server</h1>
         <div id="esp-ip"></div>
         <div><span id="esp-mode"></span> - v<span id="firmware"></span></div>
       </div>
     </div>
-    <div class="topnav" id="top-nav">
-      <a class="a-link icon" id="hum-btn"><div class="svg svg-menu-icon"><span id="svg-menu"></span></div></a>
+    <div class="nav" id="top-nav">
+      <a class="a-link icon" id="hum-btn"><div class="ic im"><span id="svg-menu"></span></div></a>
       <div id="nav-link"><a id="set-wifi" class="a-link active" data-box="wifi-box">WiFi Setup</a></div>
       <div id="upd-link"><a id="set-update" class="a-link" data-box="update-box">Update & FS</a></div>
     </div>
   </header>
 
-  <div id="wifi-box" class="ctn opt-box">
-    <h2 class="heading-2">WiFi Credential Manager</h2>
-    <div id="wifi-cred-tabs" class="cred-tabs"></div>
-      <div id="wifi-table" class="hide">
+  <div id="wifi-box" class="ctn box">
+    <h2 class="h2">WiFi Credential Manager</h2>
+    <div id="wifi-cred-tabs" class="tabs"></div>
+      <div id="w-tbl" class="hide">
         <table class="table">
-          <tbody id="wifi-list"></tbody>
+          <tbody id="w-lst"></tbody>
         </table>
         <br>
       </div>
       <div id="wifi">
         
-        <div class="tf-w">
-          <div class="host-w">
+        <div class="tw">
+          <div class="hsw">
             <div class="host">
-              <label for="hostname" class="input-lbl">Hostname</label>
-              <input type="text" placeholder="Hostname for http://hostname.local" id="hostname" class="opt-input">
+              <label for="hostname" class="lbl">Hostname</label>
+              <input type="text" placeholder="Hostname for http://hostname.local" id="hostname" class="in">
             </div>
             <div class="port" id="port-w">
-              <label class="input-lbl">Port</label>
-              <input class="opt-input" type="number" id="port">
+              <label class="lbl">Port</label>
+              <input class="in" type="number" id="port">
             </div>
           </div>
         </div>
         
         
-        <div class="tf-w">
-          <label for="ssid" class="input-lbl">SSID</label>
+        <div class="tw">
+          <label for="ssid" class="lbl">SSID</label>
           <div class="pswd">
-              <input type="text" placeholder="Enter your WiFI SSID name" id="ssid" class="opt-input">
-                <span class="show-hide-wrap" id="show-hide-networks">
-                  <a class="show-hide hide chevron-networks" id="show-networks">▼</a>
+              <input type="text" placeholder="Enter your WiFI SSID name" id="ssid" class="in">
+                <span class="shw" id="show-hide-networks">
+                  <a class="sh hide chevron-networks" id="show-networks">▼</a>
                 </span>
           </div>
         </div>
-        <div class="tf-w">
-          <label for="password" class="input-lbl">Password</label>
+        <div class="tw">
+          <label for="password" class="lbl">Password</label>
           <div class="pswd">
-            <input type="password" placeholder="Enter your WiFi password" id="password" autocomplete="current-password" class="opt-input">
-            <span class="show-hide-wrap" id="show-hide-password">
-              <a class="show-hide hide" id="show-pass"><div class="svg"><span class="svg-e" id="svg-eye"></span></div></a>
-              <a class="show-hide" id="hide-pass"><div class="svg"><span class="svg-e" id="svg-no-eye"></span></div></a>
+            <input type="password" placeholder="Enter your WiFi password" id="password" autocomplete="current-password" class="in">
+            <span class="shw" id="show-hide-password">
+              <a class="sh hide" id="show-pass"><div class="ic"><span class="svg-e" id="svg-eye"></span></div></a>
+              <a class="sh" id="hide-pass"><div class="ic"><span class="svg-e" id="svg-no-eye"></span></div></a>
             </span>  
           </div>
         </div>
         
-        <div class="tf-w">
-          <label class="input-lbl toggle">
-            <input id="dhcp" type="checkbox" class="t-check opt-input" checked>
-            <div class="toggle-sw"></div>
-            <span class="toggle-lbl">DHCP enabled</span>
+        <div class="tw">
+          <label class="lbl tgl">
+            <input id="dhcp" type="checkbox" class="tc in" checked>
+            <div class="tsw"></div>
+            <span class="tlbl">DHCP enabled</span>
           </label>
         </div>
         
         <div class="hide" id="conf-wifi"> 
-          <div class="tf-w">
-              <label for="ip" class="input-lbl">IP Address</label>
-              <input type="text" placeholder="IP Address" id="ip" value="192.168.0.10" class="opt-input">
+          <div class="tw">
+              <label for="ip" class="lbl">IP Address</label>
+              <input type="text" placeholder="IP Address" id="ip" value="192.168.0.10" class="in">
           </div>
-          <div class="tf-w">
-              <label for="gateway" class="input-lbl">Gateway</label>
-              <input type="text" placeholder="Gateway address" id="gateway" value="192.168.0.1" class="opt-input">
+          <div class="tw">
+              <label for="gateway" class="lbl">Gateway</label>
+              <input type="text" placeholder="Gateway address" id="gateway" value="192.168.0.1" class="in">
           </div>
-          <div class="tf-w">
-              <label for="subnet" class="input-lbl">Subnet</label>
-              <input type="text" placeholder="Subnet mask" id="subnet" value="255.255.255.0" class="opt-input">
+          <div class="tw">
+              <label for="subnet" class="lbl">Subnet</label>
+              <input type="text" placeholder="Subnet mask" id="subnet" value="255.255.255.0" class="in">
           </div>
-          <div class="tf-w">
-            <label for="dns1" class="input-lbl">DNS 1 (optional)</label>
-            <input type="text" placeholder="Primary DNS server" id="dns1" class="opt-input">
+          <div class="tw">
+            <label for="dns1" class="lbl">DNS 1 (optional)</label>
+            <input type="text" placeholder="Primary DNS server" id="dns1" class="in">
           </div>
-          <div class="tf-w">
-            <label for="dns2" class="input-lbl">DNS 2 (optional)</label>
-            <input type="text" placeholder="Secondary DNS server" id="dns2" class="opt-input">
+          <div class="tw">
+            <label for="dns2" class="lbl">DNS 2 (optional)</label>
+            <input type="text" placeholder="Secondary DNS server" id="dns2" class="in">
           </div>
         </div>
             
-        <div class="tf-w inline-creds">
-          <div id="cred-actions-inline" class="btn-bar compact hide">
+        <div class="tw inline-creds">
+          <div id="cred-actions-inline" class="bar compact hide">
             <a id="delete-cred" class="btn small hide">
-              <div class="svg"><span id="svg-delete"></span></div>
+              <div class="ic"><span id="svg-delete"></span></div>
               <span>Delete SSID</span>
             </a>
             <a id="clear-creds" class="btn small hide">
-              <div class="svg"><span id="svg-clear"></span></div>
+              <div class="ic"><span id="svg-clear"></span></div>
               <span>Delete All</span>
             </a>
-            <label class="lbl-wifi toggle">
-              <input id="persistent" type="checkbox" class="t-check opt-input" checked>
-              <div class="toggle-sw"></div>
-              <span class="toggle-lbl">Save WiFi</span>
+            <label class="lbl-wifi tgl">
+              <input id="persistent" type="checkbox" class="tc in" checked>
+              <div class="tsw"></div>
+              <span class="tlbl">Save WiFi</span>
             </label>
           </div>
         </div>
       </div>
       <hr>
-      <div class="btn-bar">
+      <div class="bar">
           <a id="scan-wifi" class="btn">
-            <div class="svg"><span id="svg-scan"></span></div>
+            <div class="ic"><span id="svg-scan"></span></div>
               <span>Scan WiFi networks</span>
           </a>
           <a id="connect-wifi" class="btn">
-            <div class="svg"><span id="svg-connect"></span></div>
+            <div class="ic"><span id="svg-connect"></span></div>
               <span>Connect to <span id="ssid-name">SSID</span></span>
           </a>
       </div>
   </div>
 
-  <div id="update-box" class="ctn opt-box hide">
-    <h2 class="heading-2">Update ESP Firmware</h2>
-    <div class="tf-w">
+  <div id="update-box" class="ctn box hide">
+    <h2 class="h2">Update ESP Firmware</h2>
+    <div class="tw">
       <form id="update-form" class="form" action="/update" method="post" enctype="multipart/form-data">
-        <div class="firmware">
-          <label for="file-input" id="fw-lbl" class="fw-upload">Select firmware binary file</label>
+        <div class="fw">
+          <label for="file-input" id="fw-lbl" class="fwu">Select firmware binary file</label>
           <input id="file-input" type="file">
           <a id="update-btn" class="btn load submit icon-btn" title="Upload firmware">
             <span id="svg-update"></span>
           </a>
         </div>
-      	<div class="pgr-wrap hide" id="pgr-wrap" data-pgr-style="fill-back">
+      	<div class="pgw hide" id="pgr-wrap" data-pgr-style="fill-back">
       	  <div id="update-log"></div>
-      	  <div class="pgr" id="pgr-anim"></div>
+      	  <div class="pg" id="pgr-anim"></div>
       	</div>
       </form>
     </div>
     
-    <h2 class="heading-2">Load file to ESP FileSystem</h2>
-    <div class="tf-w">
+    <h2 class="h2">Load file to ESP FileSystem</h2>
+    <div class="tw">
       <form class="form" action="/edit" method="post" enctype="multipart/form-data">
         <ul id="listing"></ul>
-        <label for="picker" id="pick-lbl" class="fw-upload">Select the folder containing your files</label>
+        <label for="picker" id="pick-lbl" class="fwu">Select the folder containing your files</label>
         <input type="file" id="picker" name="fileList" webkitdirectory multiple>
         <p class="upload-note">N.B.: if folder name is <b>"/data"</b>, the files will be uploaded at root "/" level</p>
       </form>
@@ -162,33 +162,33 @@
   </div>
   
   <hr id="btn-hr" class="hide">
-  <div id="btn-box" class="btn-bar hide">
+  <div id="btn-box" class="bar hide">
     <a id="restart" class="btn">
-      <div class="svg"><span id="svg-restart"></span></div>
+      <div class="ic"><span id="svg-restart"></span></div>
         <span>Restart ESP</span>
     </a>
     <a id="save-params" class="btn">
-      <div class="svg"><span id="svg-save"></span></div>
+      <div class="ic"><span id="svg-save"></span></div>
         <span>Save configuration</span>
     </a>
   </div>
   </main>
   
-  <div class="loader" id="loader">
-  <div class="loading">Loading...</div>
-  <div class="spinH spin-1H"></div>
-  <div class="spinH spin-2H"></div>
-  <div class="spinH spin-3H"></div>
-  <div class="spinH spin-4H"></div>
-  <div class="spinH spin-5H"></div>
+  <div class="ldr" id="loader">
+  <div class="ldg">Loading...</div>
+  <div class="sH"></div>
+  <div class="sH s2H"></div>
+  <div class="sH s3H"></div>
+  <div class="sH s4H"></div>
+  <div class="sH s5H"></div>
   </div>
   
-  <details id="modal-msg">
+  <details id="modal">
     <summary></summary>
-    <div class="d-modal">
-        <div class="d-modal-title"><h2 id="message-title">t</h2></div>
-        <div class="d-modal-content"><p id="message-body"></p></div>
-        <div class="btn-bar">
+    <div class="mod">
+        <div class="mt"><h2 id="message-title">t</h2></div>
+        <div class="mc"><p id="message-body"></p></div>
+        <div class="bar">
             <a id="ok-modal" class="btn hide"><span>OK</span></a>
             <a id="close-modal" class="btn"><span>Close</span></a>
         </div>

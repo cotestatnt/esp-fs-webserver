@@ -5,6 +5,7 @@
 
 #include "Json.h"
 #include "SerialLog.h"
+#include "ConfigUpgrader.hpp"
 
 #define MIN_F -3.4028235E+38
 #define MAX_F 3.4028235E+38
@@ -35,9 +36,52 @@ class SetupConfigurator
         CJSON::Json* m_doc = nullptr;
         CJSON::Json* m_savedDoc = nullptr;  // Temporary storage for saved file values
 
+        // Builders for v2 hierarchical schema (sections / elements)
+        CJSON::Json m_sectionsArray;        // Root array of sections for current session
+        CJSON::Json m_currentSection;       // Currently open section
+        CJSON::Json m_currentElements;      // Elements array for current section
+        bool m_hasCurrentSection = false;   // True if a section is open
+
         uint16_t& m_port;         
         String& m_host;
         bool m_opened = false;
+
+        // --------- Helpers for v2 hierarchical schema ---------
+
+        // Ensure there is an open section to which options can be added
+        void ensureActiveSection() {
+            if (m_hasCurrentSection) return;
+            // Default section when user doesn't call addOptionBox explicitly
+            m_currentSection.createObject();
+            m_currentSection.setString("title", "General Options");
+            m_currentElements.createArray();
+            m_hasCurrentSection = true;
+        }
+
+        // Start a new named section (used by addOptionBox)
+        void startNewSection(const char* title) {
+            // Finalize previous section first
+            if (m_hasCurrentSection) {
+                m_currentSection.set("elements", m_currentElements);
+                m_sectionsArray.add(m_currentSection);
+                m_currentSection.createObject();
+                m_currentElements.createArray();
+            }
+            String t = String(title);
+            m_currentSection.setString("title", t);
+            m_hasCurrentSection = true;
+        }
+
+        // Finalize any open section and attach sections array to root document
+        void finalizeSectionsToRoot() {
+            if (m_doc == nullptr) return;
+            if (m_hasCurrentSection) {
+                m_currentSection.set("elements", m_currentElements);
+                m_sectionsArray.add(m_currentSection);
+                m_hasCurrentSection = false;
+            }
+            m_doc->set("sections", m_sectionsArray);
+        }
 
         bool isOpened() {
             return m_opened;
@@ -45,6 +89,9 @@ class SetupConfigurator
 
         bool openConfiguration() {
             if (checkConfigFile()) {
+                // Check if config needs upgrade from v1 to v2
+                upgradeConfigIfNeeded();
+                
                 // Read existing file into m_savedDoc (background copy for value lookup)
                 if (m_filesystem->exists(ESP_FS_WS_CONFIG_FILE)) {
                     File file = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "r");
@@ -63,14 +110,86 @@ class SetupConfigurator
                     }
                 }
                 
-                // Create empty m_doc - will be populated in addOption() in the setup order
+                // Create fresh v2 root document for this session
                 m_doc = new CJSON::Json();
                 m_doc->createObject();
+
+                // Version tag
+                m_doc->setString("_version", "2.0");
+
+                // Metadata section
+                m_doc->ensureObject("_meta");
+                String appTitle = "Custom HTML Web Server";
+                String logoPath = String(ESP_FS_WS_CONFIG_FOLDER) + "/logo.svg";
+                if (m_savedDoc) {
+                    String tmp;
+                    if (m_savedDoc->getString("_meta", "app_title", tmp)) appTitle = tmp;
+                    if (m_savedDoc->getString("_meta", "logo", tmp)) logoPath = tmp;
+                }
+                m_doc->setString("_meta", "app_title", appTitle);
+                m_doc->setString("_meta", "logo", logoPath);
+                m_doc->setNumber("_meta", "port", static_cast<double>(m_port));
+                m_doc->setString("_meta", "host", m_host);
+
+                // State section (object; can be extended externally if needed)
+                m_doc->ensureObject("_state");
+
+                // Assets section: carry over existing lists when present
+                m_doc->ensureObject("_assets");
+                std::vector<String> cssList;
+                std::vector<String> jsList;
+                std::vector<String> htmlList;
+                if (m_savedDoc) {
+                    auto copyArray = [](CJSON::Json* src, const char* obj, const char* key, std::vector<String>& out) {
+                        if (!src) return;
+                        const cJSON* root = src->getRoot();
+                        if (!root) return;
+                        const cJSON* scope = cJSON_GetObjectItemCaseSensitive(root, obj);
+                        if (!scope || !cJSON_IsObject(scope)) return;
+                        const cJSON* arr = cJSON_GetObjectItemCaseSensitive(scope, key);
+                        if (!arr || !cJSON_IsArray(arr)) return;
+                        for (const cJSON* it = arr->child; it; it = it->next) {
+                            if (cJSON_IsString(it) && it->valuestring) {
+                                out.emplace_back(String(it->valuestring));
+                            }
+                        }
+                    };
+                    copyArray(m_savedDoc, "_assets", "css", cssList);
+                    // Prefer new key "js" but also accept legacy "javascript" for backward compatibility
+                    copyArray(m_savedDoc, "_assets", "js", jsList);
+                    if (jsList.empty()) {
+                        copyArray(m_savedDoc, "_assets", "javascript", jsList);
+                    }
+                    copyArray(m_savedDoc, "_assets", "html", htmlList);
+                }
+                std::vector<String> empty;
+                m_doc->setArray("_assets", "css", cssList.empty() ? empty : cssList);
+                m_doc->setArray("_assets", "js", jsList.empty() ? empty : jsList);
+                m_doc->setArray("_assets", "html", htmlList.empty() ? empty : htmlList);
+
+                // Initialize sections builder (will be attached to m_doc on close)
+                m_sectionsArray.createArray();
+                m_currentSection.createObject();
+                m_currentElements.createArray();
+                m_hasCurrentSection = false;
                 
                 m_opened = true;
                 return true;
             }
             return false;
+        }
+
+        /**
+         * @brief Check if config needs upgrade and perform it if necessary
+         * Uses ConfigUpgrader to migrate from v1 to v2 format
+         */
+        void upgradeConfigIfNeeded() {
+            if (m_filesystem == nullptr) return;
+            
+            ConfigUpgrader upgrader(m_filesystem, ESP_FS_WS_CONFIG_FILE);
+            if (!upgrader.upgrade()) {
+                log_debug("Config upgrade check completed");
+            }
         }
 
         // If config file or folder doesn't exist, create them. If config file exists, do nothing.
@@ -94,14 +213,40 @@ class SetupConfigurator
                     log_error("Error. File %s not created", ESP_FS_WS_CONFIG_FILE);
                     return false;
                 }
-                // Create config with port key using CJSON
+                // Create pure v2 config (no legacy flat keys)
                 CJSON::Json initDoc;
                 initDoc.createObject();
-                initDoc.setString("host", m_host);
-                initDoc.setNumber("port", static_cast<double>(m_port));
+                initDoc.setString("_version", "2.0");
+
+                // Metadata
+                initDoc.ensureObject("_meta");
+                initDoc.setString("_meta", "app_title", String("Custom HTML Web Server"));
+                initDoc.setString("_meta", "logo", String(ESP_FS_WS_CONFIG_FOLDER) + "/logo.svg");
+                initDoc.setNumber("_meta", "port", static_cast<double>(m_port));
+                initDoc.setString("_meta", "host", m_host);
+
+                // Empty _state object
+                initDoc.ensureObject("_state");
+
+                // _assets with empty lists
+                initDoc.ensureObject("_assets");
+                {
+                    std::vector<String> empty;
+                    initDoc.setArray("_assets", "css", empty);
+                    initDoc.setArray("_assets", "js", empty);
+                    initDoc.setArray("_assets", "html", empty);
+                }
+
+                // Empty sections array (as real array node)
+                {
+                    CJSON::Json sections;
+                    sections.createArray();
+                    initDoc.set("sections", sections);
+                }
+
                 String json = initDoc.serialize(true);
                 file.print(json);
-                file.close();                
+                file.close();
             }
             log_debug("Config file %s OK", ESP_FS_WS_CONFIG_FILE);
             return true;
@@ -122,16 +267,8 @@ class SetupConfigurator
                 return true;
             }
          
-            // Copy special keys from saved config that weren't explicitly added (like "port")
-            if (m_savedDoc && m_doc) {
-                double portValue = 0;
-                if (m_savedDoc->getNumber("port", portValue) && !m_doc->hasKey("port")) {
-                    m_doc->setNumber("port", portValue);
-                }
-                if (m_savedDoc->getString("host", m_host) && !m_doc->hasKey("host")) {
-                    m_doc->setString("host", m_host);
-                }
-            }
+            // Finalize sections into root _v2 schema
+            finalizeSectionsToRoot();
 
             // Write configuration to file only if content has changed
             // Serialize the new content
@@ -187,6 +324,14 @@ class SetupConfigurator
         // Supports: PNG, JPEG, GIF, SVG (plain or gzipped)
         // Automatically detects gzip compression (magic bytes 0x1f 0x8b)
         void setSetupPageLogo(const uint8_t* imageData, size_t imageSize, const char* mimeType = "image/png", bool overwrite = false) {
+            // Ensure configuration document is open so we can update _meta
+            if (m_doc == nullptr) {
+                if (!openConfiguration()) {
+                    log_error("Error! /setup configuration not possible");
+                    return;
+                }
+            }
+
             // Determine file extension from MIME type
             String extension = ".png";
             if (strcmp(mimeType, "image/jpeg") == 0 || strcmp(mimeType, "image/jpg") == 0) {
@@ -206,13 +351,34 @@ class SetupConfigurator
                 filename += ".gz";
             }
             
-            optionToFileBinary(filename.c_str(), imageData, imageSize, overwrite);
-            addOption("img-logo", filename.c_str());
+            // Save binary logo file
+            if (optionToFileBinary(filename.c_str(), imageData, imageSize, overwrite)) {
+                // Store path in _meta.logo instead of creating an "img-logo" element
+                m_doc->ensureObject("_meta");
+                m_doc->setString("_meta", "logo", filename);
+                // Mark configuration as changed so closeConfiguration() will persist it
+                numOptions++;
+            }
         }
 
         // Overload for string literals (e.g., SVG text)
         void setSetupPageLogo(const char* svgText, bool overwrite = false) {
             setSetupPageLogo((const uint8_t*)svgText, strlen(svgText), "image/svg+xml", overwrite);
+        }
+
+        // Set page title as metadata (_meta.app_title) instead of a normal option element
+        void setSetupPageTitle(const char* title) {
+            if (m_doc == nullptr) {
+                if (!openConfiguration()) {
+                    log_error("Error! /setup configuration not possible");
+                    return;
+                }
+            }
+
+            m_doc->ensureObject("_meta");
+            m_doc->setString("_meta", "app_title", String(title));
+            // Mark configuration as changed so closeConfiguration() will persist it
+            numOptions++;
         }
 
         bool optionToFile(const char* filename, const char* str, bool overWrite) {
@@ -273,7 +439,7 @@ class SetupConfigurator
             return false;
         }
 
-        void addSource(const String& source, const String& tag, bool overWrite) {
+        void addSource(const String& source, const String& id, const String& extension, bool overWrite) {
             if (m_doc == nullptr) {
                 if (!openConfiguration()) {
                     log_error("Error! /setup configuration not possible");
@@ -282,17 +448,43 @@ class SetupConfigurator
 
             String path = ESP_FS_WS_CONFIG_FOLDER;
             path += "/";
-            path += tag;
+            path += id;
+            path += extension;
 
-            if (tag.indexOf("html") > -1)
-                path += ".htm";
-            else if (tag.indexOf("css") > -1)
-                path += ".css";
-            else if (tag.indexOf("javascript") > -1)
-                path += ".js";
+            bool isCss = extension.equals(".css");
+            bool isJs = extension.equals(".js");
 
-            if (optionToFile(path.c_str(), source.c_str(), overWrite)){
-                m_doc->setString(tag.c_str(), path.c_str());
+            if (optionToFile(path.c_str(), source.c_str(), overWrite)) {
+                // Register asset path inside _assets.{css,js,html} instead of flat raw-* keys
+                m_doc->ensureObject("_assets");
+                cJSON* root = m_doc->getRoot();
+                if (!root) return;
+                cJSON* assets = cJSON_GetObjectItemCaseSensitive(root, "_assets");
+                if (!assets || !cJSON_IsObject(assets)) return;
+
+                const char* arrayKey = nullptr;
+                if (isCss) arrayKey = "css";
+                else if (isJs) arrayKey = "js";
+
+                if (arrayKey) {
+                    cJSON* arr = cJSON_GetObjectItemCaseSensitive(assets, arrayKey);
+                    if (!arr || !cJSON_IsArray(arr)) {
+                        arr = cJSON_CreateArray();
+                        cJSON_AddItemToObject(assets, arrayKey, arr);
+                    }
+
+                    // Avoid duplicates
+                    bool found = false;
+                    for (cJSON* it = arr->child; it; it = it->next) {
+                        if (cJSON_IsString(it) && it->valuestring && path.equals(String(it->valuestring))) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        cJSON_AddItemToArray(arr, cJSON_CreateString(path.c_str()));
+                    }
+                }
             }
             else {
                 log_error("Source option not saved");
@@ -301,55 +493,83 @@ class SetupConfigurator
         }
 
         void addHTML(const char* html, const char* id, bool overWrite) {
-            String _id = "raw-html-";
-            _id  += id;
-            String source = html;
-            addSource(source, _id, overWrite);
+            String path = String(ESP_FS_WS_CONFIG_FOLDER) + "/" + id + ".htm";
+            optionToFile(path.c_str(), html, overWrite);
+
+            // Add HTML as an element in the current section
+            CJSON::Json elem;
+            elem.createObject();
+            elem.setString("type", "html");
+            elem.setString("label", "");
+            elem.setString("value", path);
+            
+            m_currentElements.add(elem);
+            numOptions++;
         }
 
         void addCSS(const char* css,  const char* id, bool overWrite) {
-            String _id = "raw-css-" ;
-            _id  += id;
             String source = css;
-            addSource(source, _id, overWrite);
+            addSource(source, id, ".css", overWrite);
         }
 
         void addJavascript(const char* script,  const char* id, bool overWrite) {
-            String _id = "raw-javascript-" ;
-            _id  += id;
             String source = script;
-            addSource(source, _id, overWrite);
+            addSource(source, id, ".js", overWrite);
         }
-
 
         /*
             Add a new dropdown input element
         */
         void addDropdownList(const char *label, const char** array, size_t size) {
-
-            // If key is present we don't need to create it.
-            if (m_doc->hasObject(label)) {
-                log_debug("Key \"%s\" value present", label);
-                return;
-            }
-            m_doc->ensureObject(label);
-            
-            // Try to get saved "selected" value from m_savedDoc, otherwise use first item
-            String selectedValue = String(array[0]);
-            if (m_savedDoc) {
-                String savedSelected;
-                if (m_savedDoc->getString(label, "selected", savedSelected)) {
-                    selectedValue = savedSelected;
-                    log_debug("Dropdown \"%s\" using saved value: %s", label, selectedValue.c_str());
+            if (m_doc == nullptr) {
+                if (!openConfiguration()) {
+                    log_error("Error! /setup configuration not possible");
                 }
             }
-            
-            m_doc->setString(label, "selected", selectedValue);
-            std::vector<String> vals; vals.reserve(size);
-            for (unsigned int i=0; i<size; i++) { vals.emplace_back(String(array[i])); }
-            m_doc->setArray(label, "values", vals);
 
-            numOptions++ ;
+            ensureActiveSection();
+
+            // Determine selected value: prefer saved, otherwise first item
+            String selectedValue = (size > 0) ? String(array[0]) : String("");
+            if (m_savedDoc) {
+                const cJSON* root = m_savedDoc->getRoot();
+                if (root) {
+                    const cJSON* sections = cJSON_GetObjectItemCaseSensitive(root, "sections");
+                    if (sections && cJSON_IsArray(sections)) {
+                        const cJSON* sec = sections->child;
+                        while (sec) {
+                            const cJSON* elems = cJSON_GetObjectItemCaseSensitive(sec, "elements");
+                            if (elems && cJSON_IsArray(elems)) {
+                                const cJSON* el = elems->child;
+                                while (el) {
+                                    const cJSON* lbl = cJSON_GetObjectItemCaseSensitive(el, "label");
+                                    if (lbl && cJSON_IsString(lbl) && lbl->valuestring && String(lbl->valuestring).equals(label)) {
+                                        const cJSON* val = cJSON_GetObjectItemCaseSensitive(el, "value");
+                                        if (val && cJSON_IsString(val) && val->valuestring) {
+                                            selectedValue = String(val->valuestring);
+                                        }
+                                        break;
+                                    }
+                                    el = el->next;
+                                }
+                            }
+                            sec = sec->next;
+                        }
+                    }
+                }
+            }
+
+            CJSON::Json elem;
+            elem.createObject();
+            elem.setString("label", label);
+            elem.setString("type", "select");
+            elem.setString("value", selectedValue);
+            std::vector<String> vals; vals.reserve(size);
+            for (size_t i = 0; i < size; i++) vals.emplace_back(String(array[i]));
+            elem.setArray("options", vals);
+
+            m_currentElements.add(elem);
+            numOptions++;
         }
 
         /*
@@ -363,44 +583,57 @@ class SetupConfigurator
             }
 
             const char* label = def.label;
+            ensureActiveSection();
 
-            // If key is present we don't need to create it.
-            if (m_doc->hasObject(label)) {
-                log_debug("Key \"%s\" value present", label);
-            } else {
-                m_doc->ensureObject(label);
-
-                // Determine selected value: prefer saved, otherwise provided index, otherwise first
-                String selectedValue = (def.size > 0) ? String(def.values[(def.selectedIndex < def.size) ? def.selectedIndex : 0]) : String("");
-                if (m_savedDoc) {
-                    String savedSelected;
-                    if (m_savedDoc->getString(label, "selected", savedSelected)) {
-                        selectedValue = savedSelected;
-                        log_debug("Dropdown \"%s\" using saved value: %s", label, selectedValue.c_str());
+            // Determine selected value: prefer saved, otherwise provided index, otherwise first
+            String selectedValue = (def.size > 0) ? String(def.values[(def.selectedIndex < def.size) ? def.selectedIndex : 0]) : String("");
+            if (m_savedDoc) {
+                const cJSON* root = m_savedDoc->getRoot();
+                if (root) {
+                    const cJSON* sections = cJSON_GetObjectItemCaseSensitive(root, "sections");
+                    if (sections && cJSON_IsArray(sections)) {
+                        const cJSON* sec = sections->child;
+                        while (sec) {
+                            const cJSON* elems = cJSON_GetObjectItemCaseSensitive(sec, "elements");
+                            if (elems && cJSON_IsArray(elems)) {
+                                const cJSON* el = elems->child;
+                                while (el) {
+                                    const cJSON* lbl = cJSON_GetObjectItemCaseSensitive(el, "label");
+                                    if (lbl && cJSON_IsString(lbl) && lbl->valuestring && String(lbl->valuestring).equals(label)) {
+                                        const cJSON* val = cJSON_GetObjectItemCaseSensitive(el, "value");
+                                        if (val && cJSON_IsString(val) && val->valuestring) {
+                                            selectedValue = String(val->valuestring);
+                                        }
+                                        break;
+                                    }
+                                    el = el->next;
+                                }
+                            }
+                            sec = sec->next;
+                        }
                     }
                 }
-
-                m_doc->setString(label, "selected", selectedValue);
-                std::vector<String> vals; vals.reserve(def.size);
-                for (size_t i = 0; i < def.size; i++) { vals.emplace_back(String(def.values[i])); }
-                m_doc->setArray(label, "values", vals);
             }
 
-            // Update selectedIndex to reflect selected string
-            size_t idx = 0;
-            String sel;
-            // Read from current doc (preferred) then saved
-            if (!m_doc->getString(label, "selected", sel)) {
-                if (m_savedDoc) m_savedDoc->getString(label, "selected", sel);
-            }
-            for (idx = 0; idx < def.size; idx++) {
-                if (sel.equals(String(def.values[idx]))) {
-                    def.selectedIndex = idx;
+            CJSON::Json elem;
+            elem.createObject();
+            elem.setString("label", label);
+            elem.setString("type", "select");
+            elem.setString("value", selectedValue);
+            std::vector<String> vals; vals.reserve(def.size);
+            for (size_t i = 0; i < def.size; i++) { vals.emplace_back(String(def.values[i])); }
+            elem.setArray("options", vals);
+
+            // Update def.selectedIndex from selectedValue
+            for (size_t i = 0; i < def.size; i++) {
+                if (selectedValue.equals(String(def.values[i]))) {
+                    def.selectedIndex = i;
                     break;
                 }
             }
 
-            numOptions++ ;
+            m_currentElements.add(elem);
+            numOptions++;
         }
 
         /*
@@ -420,14 +653,33 @@ class SetupConfigurator
                 return false;
             }
 
+            const cJSON* root = sourceDoc->getRoot();
+            if (!root) return false;
+            const cJSON* sections = cJSON_GetObjectItemCaseSensitive(root, "sections");
+            if (!sections || !cJSON_IsArray(sections)) return false;
+
             String sel;
-            // Try object key "selected" under the label
-            if (!sourceDoc->getString(def.label, "selected", sel)) {
-                // Fallback to top-level string (legacy)
-                if (!sourceDoc->getString(def.label, sel)) {
-                    return false;
+            const cJSON* sec = sections->child;
+            while (sec) {
+                const cJSON* elems = cJSON_GetObjectItemCaseSensitive(sec, "elements");
+                if (elems && cJSON_IsArray(elems)) {
+                    const cJSON* el = elems->child;
+                    while (el) {
+                        const cJSON* lbl = cJSON_GetObjectItemCaseSensitive(el, "label");
+                        if (lbl && cJSON_IsString(lbl) && lbl->valuestring && String(lbl->valuestring).equals(def.label)) {
+                            const cJSON* val = cJSON_GetObjectItemCaseSensitive(el, "value");
+                            if (val && cJSON_IsString(val) && val->valuestring) {
+                                sel = String(val->valuestring);
+                            }
+                            break;
+                        }
+                        el = el->next;
+                    }
                 }
+                sec = sec->next;
             }
+
+            if (!sel.length()) return false;
 
             for (size_t i = 0; i < def.size; i++) {
                 if (sel.equals(String(def.values[i]))) {
@@ -449,23 +701,50 @@ class SetupConfigurator
             }
 
             const char* label = def.label;
-            m_doc->ensureObject(label);
+            ensureActiveSection();
 
             // Prefer saved value when available; else use def.value
             double current = def.value;
             if (m_savedDoc) {
-                double saved;
-                if (m_savedDoc->getNumber(label, "value", saved) || m_savedDoc->getNumber(label, saved)) {
-                    current = saved;
-                    log_debug("Slider \"%s\" using saved value: %f", label, current);
+                const cJSON* root = m_savedDoc->getRoot();
+                if (root) {
+                    const cJSON* sections = cJSON_GetObjectItemCaseSensitive(root, "sections");
+                    if (sections && cJSON_IsArray(sections)) {
+                        const cJSON* sec = sections->child;
+                        while (sec) {
+                            const cJSON* elems = cJSON_GetObjectItemCaseSensitive(sec, "elements");
+                            if (elems && cJSON_IsArray(elems)) {
+                                const cJSON* el = elems->child;
+                                while (el) {
+                                    const cJSON* lbl = cJSON_GetObjectItemCaseSensitive(el, "label");
+                                    if (lbl && cJSON_IsString(lbl) && lbl->valuestring && String(lbl->valuestring).equals(label)) {
+                                        const cJSON* val = cJSON_GetObjectItemCaseSensitive(el, "value");
+                                        if (val && cJSON_IsNumber(val)) {
+                                            current = val->valuedouble;
+                                        }
+                                        break;
+                                    }
+                                    el = el->next;
+                                }
+                            }
+                            sec = sec->next;
+                        }
+                    }
                 }
             }
 
-            m_doc->setNumber(label, "value", current);
-            m_doc->setNumber(label, "min", def.min);
-            m_doc->setNumber(label, "max", def.max);
-            m_doc->setNumber(label, "step", def.step);
-            m_doc->setString(label, "type", String("slider"));            
+            def.value = current;
+
+            CJSON::Json elem;
+            elem.createObject();
+            elem.setString("label", label);
+            elem.setString("type", "slider");
+            elem.setNumber("value", current);
+            elem.setNumber("min", def.min);
+            elem.setNumber("max", def.max);
+            elem.setNumber("step", def.step);
+
+            m_currentElements.add(elem);
             numOptions++;
         }
 
@@ -482,10 +761,30 @@ class SetupConfigurator
             CJSON::Json* sourceDoc = (m_savedDoc != nullptr) ? m_savedDoc : m_doc;
             if (sourceDoc == nullptr) return false;
 
-            double v;
-            if (sourceDoc->getNumber(def.label, "value", v) || sourceDoc->getNumber(def.label, v)) {
-                def.value = v;
-                return true;
+            const cJSON* root = sourceDoc->getRoot();
+            if (!root) return false;
+            const cJSON* sections = cJSON_GetObjectItemCaseSensitive(root, "sections");
+            if (!sections || !cJSON_IsArray(sections)) return false;
+
+            const cJSON* sec = sections->child;
+            while (sec) {
+                const cJSON* elems = cJSON_GetObjectItemCaseSensitive(sec, "elements");
+                if (elems && cJSON_IsArray(elems)) {
+                    const cJSON* el = elems->child;
+                    while (el) {
+                        const cJSON* lbl = cJSON_GetObjectItemCaseSensitive(el, "label");
+                        if (lbl && cJSON_IsString(lbl) && lbl->valuestring && String(lbl->valuestring).equals(def.label)) {
+                            const cJSON* val = cJSON_GetObjectItemCaseSensitive(el, "value");
+                            if (val && cJSON_IsNumber(val)) {
+                                def.value = val->valuedouble;
+                                return true;
+                            }
+                            return false;
+                        }
+                        el = el->next;
+                    }
+                }
+                sec = sec->next;
             }
             return false;
         }
@@ -494,7 +793,13 @@ class SetupConfigurator
             Add a new option box with custom label
         */
         void addOptionBox(const char* boxTitle) {
-            addOption("param-box", boxTitle, false);
+            if (m_doc == nullptr) {
+                if (!openConfiguration()) {
+                    log_error("Error! /setup configuration not possible");
+                    return;
+                }
+            }
+            startNewSection(boxTitle);
         }
 
         /*
@@ -517,98 +822,136 @@ class SetupConfigurator
                 if (!openConfiguration()) {
                     log_error("Error! /setup configuration not possible");
                 }
-            }            
-
-            String key = label;
-            String savedKey = key; // original label for lookup in saved file
-            if (hidden)
-                key += "-hidden";
-            // Univoque key name
-            if (key.equals("param-box"))
-                key += numOptions ;
-            if (key.equals("raw-javascript"))
-                key += numOptions ;
-
-            // Note: m_doc is a fresh session document. We always create/update the key here,
-            // and prefer values from m_savedDoc when available.
-            
-            // Try to get saved value from m_savedDoc, otherwise use provided default
-            bool valueFromSaved = false;
-            
-            // if min, max, step != from default, treat this as object in order to set other properties
-            if (d_min != MIN_F || d_max != MAX_F || step != 1.0) {
-                m_doc->ensureObject(key.c_str());
-                
-                if constexpr (std::is_same<T, String>::value) {
-                    String savedVal;
-                    if (m_savedDoc && (m_savedDoc->getString(key.c_str(), "value", savedVal) || m_savedDoc->getString(savedKey.c_str(), "value", savedVal))) {
-                        m_doc->setString(key.c_str(), "value", savedVal);
-                        valueFromSaved = true;
-                    } else {
-                        m_doc->setString(key.c_str(), "value", val);
-                    }
-                } else if constexpr (std::is_same<T, const char*>::value || std::is_same<T, char*>::value) {
-                    String savedVal;
-                    if (m_savedDoc && (m_savedDoc->getString(key.c_str(), "value", savedVal) || m_savedDoc->getString(savedKey.c_str(), "value", savedVal))) {
-                        m_doc->setString(key.c_str(), "value", savedVal);
-                        valueFromSaved = true;
-                    } else {
-                        m_doc->setString(key.c_str(), "value", String(val));
-                    }
-                } else {
-                    double savedVal;
-                    if (m_savedDoc && (m_savedDoc->getNumber(key.c_str(), "value", savedVal) || m_savedDoc->getNumber(savedKey.c_str(), "value", savedVal))) {
-                        m_doc->setNumber(key.c_str(), "value", savedVal);
-                        valueFromSaved = true;
-                    } else {
-                        m_doc->setNumber(key.c_str(), "value", static_cast<double>(val));
-                    }
-                }
-                
-                // min, max, step always use defaults (not persisted per se)
-                m_doc->setNumber(key.c_str(), "min", d_min);
-                m_doc->setNumber(key.c_str(), "max", d_max);
-                m_doc->setNumber(key.c_str(), "step", step);
-                m_doc->setString(key.c_str(), "type", String("number"));
             }
-            else {
-                if constexpr (std::is_same<T, String>::value) {
-                    String savedVal;
-                    if (m_savedDoc && (m_savedDoc->getString(key.c_str(), savedVal) || m_savedDoc->getString(savedKey.c_str(), savedVal))) {
-                        m_doc->setString(key.c_str(), savedVal);
-                        valueFromSaved = true;
-                    } else {
-                        m_doc->setString(key.c_str(), val);
+
+            ensureActiveSection();
+
+            String lbl = label;
+            bool valueFromSaved = false;
+
+            // Resolve current value: check saved v2 sections first
+            auto readSavedNumber = [&](double& out) -> bool {
+                if (!m_savedDoc) return false;
+                const cJSON* root = m_savedDoc->getRoot();
+                if (!root) return false;
+                const cJSON* sections = cJSON_GetObjectItemCaseSensitive(root, "sections");
+                if (!sections || !cJSON_IsArray(sections)) return false;
+                const cJSON* sec = sections->child;
+                while (sec) {
+                    const cJSON* elems = cJSON_GetObjectItemCaseSensitive(sec, "elements");
+                    if (elems && cJSON_IsArray(elems)) {
+                        const cJSON* el = elems->child;
+                        while (el) {
+                            const cJSON* lblNode = cJSON_GetObjectItemCaseSensitive(el, "label");
+                            if (lblNode && cJSON_IsString(lblNode) && lblNode->valuestring && String(lblNode->valuestring).equals(lbl)) {
+                                const cJSON* v = cJSON_GetObjectItemCaseSensitive(el, "value");
+                                if (v && cJSON_IsNumber(v)) {
+                                    out = v->valuedouble;
+                                    return true;
+                                }
+                                return false;
+                            }
+                            el = el->next;
+                        }
                     }
-                } else if constexpr (std::is_same<T, const char*>::value || std::is_same<T, char*>::value) {
-                    String savedVal;
-                    if (m_savedDoc && (m_savedDoc->getString(key.c_str(), savedVal) || m_savedDoc->getString(savedKey.c_str(), savedVal))) {
-                        m_doc->setString(key.c_str(), savedVal);
-                        valueFromSaved = true;
-                    } else {
-                        m_doc->setString(key.c_str(), String(val));
-                    }
-                } else if constexpr (std::is_same<T, bool>::value) {
-                    // Handle bool as boolean JSON type, not number
-                    bool savedVal;
-                    if (m_savedDoc && (m_savedDoc->getBool(key.c_str(), savedVal) || m_savedDoc->getBool(savedKey.c_str(), savedVal))) {
-                        m_doc->setBool(key.c_str(), savedVal);
-                        valueFromSaved = true;
-                    } else {
-                        m_doc->setBool(key.c_str(), val);
-                    }
-                } else {
-                    double savedVal;
-                    if (m_savedDoc && (m_savedDoc->getNumber(key.c_str(), savedVal) || m_savedDoc->getNumber(savedKey.c_str(), savedVal))) {
-                        m_doc->setNumber(key.c_str(), savedVal);
-                        valueFromSaved = true;
-                    } else {
-                        m_doc->setNumber(key.c_str(), static_cast<double>(val));
-                    }
+                    sec = sec->next;
                 }
-            }                        
-            
-            log_debug("Option \"%s\" using %s value", key.c_str(), valueFromSaved ? "saved" : "default");            
+                return false;
+            };
+
+            auto readSavedBool = [&](bool& out) -> bool {
+                if (!m_savedDoc) return false;
+                const cJSON* root = m_savedDoc->getRoot();
+                if (!root) return false;
+                const cJSON* sections = cJSON_GetObjectItemCaseSensitive(root, "sections");
+                if (!sections || !cJSON_IsArray(sections)) return false;
+                const cJSON* sec = sections->child;
+                while (sec) {
+                    const cJSON* elems = cJSON_GetObjectItemCaseSensitive(sec, "elements");
+                    if (elems && cJSON_IsArray(elems)) {
+                        const cJSON* el = elems->child;
+                        while (el) {
+                            const cJSON* lblNode = cJSON_GetObjectItemCaseSensitive(el, "label");
+                            if (lblNode && cJSON_IsString(lblNode) && lblNode->valuestring && String(lblNode->valuestring).equals(lbl)) {
+                                const cJSON* v = cJSON_GetObjectItemCaseSensitive(el, "value");
+                                if (v && cJSON_IsBool(v)) {
+                                    out = cJSON_IsTrue(v);
+                                    return true;
+                                }
+                                return false;
+                            }
+                            el = el->next;
+                        }
+                    }
+                    sec = sec->next;
+                }
+                return false;
+            };
+
+            auto readSavedString = [&](String& out) -> bool {
+                if (!m_savedDoc) return false;
+                const cJSON* root = m_savedDoc->getRoot();
+                if (!root) return false;
+                const cJSON* sections = cJSON_GetObjectItemCaseSensitive(root, "sections");
+                if (!sections || !cJSON_IsArray(sections)) return false;
+                const cJSON* sec = sections->child;
+                while (sec) {
+                    const cJSON* elems = cJSON_GetObjectItemCaseSensitive(sec, "elements");
+                    if (elems && cJSON_IsArray(elems)) {
+                        const cJSON* el = elems->child;
+                        while (el) {
+                            const cJSON* lblNode = cJSON_GetObjectItemCaseSensitive(el, "label");
+                            if (lblNode && cJSON_IsString(lblNode) && lblNode->valuestring && String(lblNode->valuestring).equals(lbl)) {
+                                const cJSON* v = cJSON_GetObjectItemCaseSensitive(el, "value");
+                                if (v && cJSON_IsString(v) && v->valuestring) {
+                                    out = String(v->valuestring);
+                                    return true;
+                                }
+                                return false;
+                            }
+                            el = el->next;
+                        }
+                    }
+                    sec = sec->next;
+                }
+                return false;
+            };
+
+            CJSON::Json elem;
+            elem.createObject();
+            elem.setString("label", lbl);
+
+            if constexpr (std::is_same<T, bool>::value) {
+                bool current = val;
+                if (readSavedBool(current)) valueFromSaved = true;
+                elem.setString("type", "boolean");
+                elem.setBool("value", current);
+            } else if constexpr (std::is_same<T, String>::value) {
+                String current = val;
+                if (readSavedString(current)) valueFromSaved = true;
+                elem.setString("type", "text");
+                elem.setString("value", current);
+            } else if constexpr (std::is_same<T, const char*>::value || std::is_same<T, char*>::value) {
+                String current = String(val);
+                if (readSavedString(current)) valueFromSaved = true;
+                elem.setString("type", "text");
+                elem.setString("value", current);
+            } else {
+                double current = static_cast<double>(val);
+                if (readSavedNumber(current)) valueFromSaved = true;
+                elem.setString("type", "number");
+                elem.setNumber("value", current);
+                if (d_min != MIN_F) elem.setNumber("min", d_min);
+                if (d_max != MAX_F) elem.setNumber("max", d_max);
+                if (step != 1.0) elem.setNumber("step", step);
+            }
+
+            if (hidden) {
+                elem.setBool("hidden", true);
+            }
+
+            log_debug("Option \"%s\" using %s value", lbl.c_str(), valueFromSaved ? "saved" : "default");
+            m_currentElements.add(elem);
             numOptions++;
         }
 
@@ -628,36 +971,70 @@ class SetupConfigurator
             
             // Prefer persisted values when available; fall back to current session doc
             CJSON::Json* sourceDoc = (m_savedDoc != nullptr) ? m_savedDoc : m_doc;
-            
+
             if (sourceDoc == nullptr) {
                 log_error("No configuration document available for reading");
                 return false;
             }
 
-            if constexpr (std::is_same<T, String>::value) {
-                String out;
-                if (sourceDoc->getString(label, "value", out)) var = out;
-                else if (sourceDoc->getString(label, "selected", out)) var = out;
-                else if (sourceDoc->getString(label, out)) var = out;
-            } else if constexpr (std::is_same<T, const char*>::value || std::is_same<T, char*>::value) {
-                // For C-strings, read as string and assign to var via const char*
-                String out;
-                if (sourceDoc->getString(label, "value", out)) var = out.c_str();
-                else if (sourceDoc->getString(label, "selected", out)) var = out.c_str();
-                else if (sourceDoc->getString(label, out)) var = out.c_str();
-            } else if constexpr (std::is_same<T, bool>::value) {
-                // Read booleans strictly as JSON boolean type
-                bool outBool = false;
-                if (sourceDoc->getBool(label, "value", outBool)) var = outBool;
-                else if (sourceDoc->getBool(label, "selected", outBool)) var = outBool;
-                else if (sourceDoc->getBool(label, outBool)) var = outBool;
-            } else {
-                double out;
-                if (sourceDoc->getNumber(label, "value", out)) var = static_cast<T>(out);
-                else if (sourceDoc->getNumber(label, "selected", out)) var = static_cast<T>(out);
-                else if (sourceDoc->getNumber(label, out)) var = static_cast<T>(out);
+            const cJSON* root = sourceDoc->getRoot();
+            if (!root) return false;
+
+            // Special case: port/host are stored in _meta
+            if constexpr (!std::is_same<T, String>::value && !std::is_same<T, const char*>::value && !std::is_same<T, char*>::value) {
+                if (strcmp(label, "port") == 0) {
+                    const cJSON* meta = cJSON_GetObjectItemCaseSensitive(root, "_meta");
+                    const cJSON* p = meta ? cJSON_GetObjectItemCaseSensitive(meta, "port") : nullptr;
+                    if (p && cJSON_IsNumber(p)) {
+                        var = static_cast<T>(p->valuedouble);
+                        return true;
+                    }
+                }
             }
-            return true;
+
+            const cJSON* sections = cJSON_GetObjectItemCaseSensitive(root, "sections");
+            if (!sections || !cJSON_IsArray(sections)) return false;
+
+            const cJSON* sec = sections->child;
+            while (sec) {
+                const cJSON* elems = cJSON_GetObjectItemCaseSensitive(sec, "elements");
+                if (elems && cJSON_IsArray(elems)) {
+                    const cJSON* el = elems->child;
+                    while (el) {
+                        const cJSON* lblNode = cJSON_GetObjectItemCaseSensitive(el, "label");
+                        if (lblNode && cJSON_IsString(lblNode) && lblNode->valuestring && String(lblNode->valuestring).equals(label)) {
+                            const cJSON* valNode = cJSON_GetObjectItemCaseSensitive(el, "value");
+                            if constexpr (std::is_same<T, String>::value) {
+                                if (valNode && cJSON_IsString(valNode) && valNode->valuestring) {
+                                    var = String(valNode->valuestring);
+                                    return true;
+                                }
+                            } else if constexpr (std::is_same<T, const char*>::value || std::is_same<T, char*>::value) {
+                                if (valNode && cJSON_IsString(valNode) && valNode->valuestring) {
+                                    static String tmp; // Note: lifetime tied to process; acceptable for config reads
+                                    tmp = String(valNode->valuestring);
+                                    var = tmp.c_str();
+                                    return true;
+                                }
+                            } else if constexpr (std::is_same<T, bool>::value) {
+                                if (valNode && cJSON_IsBool(valNode)) {
+                                    var = cJSON_IsTrue(valNode);
+                                    return true;
+                                }
+                            } else {
+                                if (valNode && cJSON_IsNumber(valNode)) {
+                                    var = static_cast<T>(valNode->valuedouble);
+                                    return true;
+                                }
+                            }
+                            return false;
+                        }
+                        el = el->next;
+                    }
+                }
+                sec = sec->next;
+            }
+            return false;
         }
 
         template <typename T>
@@ -669,27 +1046,41 @@ class SetupConfigurator
                 }
             }
 
+            // Ensure sections are attached before modifying (so we always work on the same tree)
+            finalizeSectionsToRoot();
+
+            cJSON* root = m_doc->getRoot();
+            if (!root) return false;
+            cJSON* sections = cJSON_GetObjectItemCaseSensitive(root, "sections");
+            if (!sections || !cJSON_IsArray(sections)) return false;
+
+            cJSON* targetElement = nullptr;
+            for (cJSON* sec = sections->child; sec; sec = sec->next) {
+                cJSON* elems = cJSON_GetObjectItemCaseSensitive(sec, "elements");
+                if (!elems || !cJSON_IsArray(elems)) continue;
+                for (cJSON* el = elems->child; el; el = el->next) {
+                    cJSON* lblNode = cJSON_GetObjectItemCaseSensitive(el, "label");
+                    if (lblNode && cJSON_IsString(lblNode) && lblNode->valuestring && String(lblNode->valuestring).equals(label)) {
+                        targetElement = el;
+                        break;
+                    }
+                }
+                if (targetElement) break;
+            }
+
+            if (!targetElement) return false;
+
+            // Replace or create "value" field inside target element
+            cJSON_DeleteItemFromObjectCaseSensitive(targetElement, "value");
+
             if constexpr (std::is_same<T, String>::value) {
-                String v = val;
-                if (m_doc->hasKey(label, "value")) m_doc->setString(label, "value", v);
-                else if (m_doc->hasKey(label, "selected")) m_doc->setString(label, "selected", v);
-                else m_doc->setString(label, v);
+                cJSON_AddItemToObject(targetElement, "value", cJSON_CreateString(val.c_str()));
             } else if constexpr (std::is_same<T, const char*>::value || std::is_same<T, char*>::value) {
-                String v = String(val);
-                if (m_doc->hasKey(label, "value")) m_doc->setString(label, "value", v);
-                else if (m_doc->hasKey(label, "selected")) m_doc->setString(label, "selected", v);
-                else m_doc->setString(label, v);
+                cJSON_AddItemToObject(targetElement, "value", cJSON_CreateString(String(val).c_str()));
             } else if constexpr (std::is_same<T, bool>::value) {
-                // Persist booleans as JSON boolean type
-                bool v = val;
-                if (m_doc->hasKey(label, "value")) m_doc->setBool(label, "value", v);
-                else if (m_doc->hasKey(label, "selected")) m_doc->setBool(label, "selected", v);
-                else m_doc->setBool(label, v);
+                cJSON_AddItemToObject(targetElement, "value", cJSON_CreateBool(val));
             } else {
-                double v = static_cast<double>(val);
-                if (m_doc->hasKey(label, "value")) m_doc->setNumber(label, "value", v);
-                else if (m_doc->hasKey(label, "selected")) m_doc->setNumber(label, "selected", v);
-                else m_doc->setNumber(label, v);
+                cJSON_AddItemToObject(targetElement, "value", cJSON_CreateNumber(static_cast<double>(val)));
             }
             return true;
         }
