@@ -1,1 +1,144 @@
-window.renderCredentialTabs=()=>{const e=$("wifi-cred-tabs");if(!e)return;e.innerHTML="";const t=$("wifi-box").offsetWidth||Math.min(window.innerWidth,840),i=Math.floor((t-60)/140);if(window.matchMedia("(max-width: 608px)").matches){const t=newEl("select",{class:"in",style:"margin-bottom:10px"});wifiCredentials.forEach((e,i)=>{const d=newEl("option",{value:i});d.textContent=e.ssid||"(empty SSID)",i===selectedCredentialIndex&&(d.selected=!0),t.appendChild(d)}),t.addEventListener("change",e=>{selectedCredentialIndex=parseInt(e.target.value),window.applyCredential(wifiCredentials[selectedCredentialIndex])}),e.appendChild(t)}else if(wifiCredentials.length>i){const t=newEl("select",{class:"in",style:"margin-bottom:10px"});wifiCredentials.forEach((e,i)=>{const d=newEl("option",{value:i});d.textContent=e.ssid||"(empty SSID)",i===selectedCredentialIndex&&(d.selected=!0),t.appendChild(d)}),t.addEventListener("change",e=>{selectedCredentialIndex=parseInt(e.target.value),window.applyCredential(wifiCredentials[selectedCredentialIndex])}),e.appendChild(t)}else wifiCredentials.forEach((t,i)=>{const d=newEl("button",{class:"tab"});d.textContent=t.ssid||"(empty SSID)",i===selectedCredentialIndex&&d.classList.add("active"),d.onclick=d=>{e.querySelectorAll(".tab").forEach(e=>e.classList.remove("active")),d.target.classList.add("active"),selectedCredentialIndex=i,window.applyCredential(t)},e.appendChild(d)});const d=wifiCredentials.length>0;["delete-cred","clear-creds","cred-actions-inline"].forEach(e=>{const t=$(e);t&&(d?t.classList.remove("hide"):t.classList.add("hide"))})},window.addEventListener("resize",()=>{wifiCredentials&&wifiCredentials.length&&"function"==typeof renderCredentialTabs&&renderCredentialTabs()}),window.deleteSelectedCredential=()=>{if(selectedCredentialIndex<0||selectedCredentialIndex>=wifiCredentials.length)return;const e=wifiCredentials[selectedCredentialIndex];openModal("Delete WiFi",`Delete <b>${e.ssid}</b>?`,async()=>{try{await fetch(`${esp}wifi/credentials?index=${selectedCredentialIndex}`,{method:"DELETE"}),await loadCredentials(),closeModal(!1)}catch(e){openModal("Error","Failed to delete")}})},window.clearAllCredentials=()=>{wifiCredentials.length&&openModal("Clear All","Delete all WiFi credentials?",async()=>{try{await fetch(`${esp}wifi/credentials`,{method:"DELETE"}),await loadCredentials(),closeModal(!1)}catch(e){openModal("Error","Failed to clear")}})};
+/**
+ * Render WiFi credential tabs or dropdown based on screen size
+ */
+window.renderCredentialTabs = () => {
+  const credTabs = $("wifi-cred-tabs");
+  if (!credTabs) return;
+
+  credTabs.innerHTML = "";
+  const wifiBoxWidth = $("wifi-box").offsetWidth || Math.min(window.innerWidth, 840);
+  const maxTabsPerRow = Math.floor((wifiBoxWidth - 60) / 140);
+
+  // Mobile: Use dropdown select
+  if (window.matchMedia("(max-width: 608px)").matches) {
+    const select = newEl("select", { class: "in", style: "margin-bottom:10px" });
+    wifiCredentials.forEach((cred, idx) => {
+      const option = newEl("option", { value: idx });
+      option.textContent = cred.ssid || "(empty SSID)";
+      if (idx === selectedCredentialIndex) option.selected = true;
+      select.appendChild(option);
+    });
+    select.addEventListener("change", (e) => {
+      selectedCredentialIndex = parseInt(e.target.value);
+      window.applyCredential(wifiCredentials[selectedCredentialIndex]);
+    });
+    credTabs.appendChild(select);
+  }
+  // Tablet: Use dropdown if too many credentials
+  else if (wifiCredentials.length > maxTabsPerRow) {
+    const select = newEl("select", { class: "in", style: "margin-bottom:10px" });
+    wifiCredentials.forEach((cred, idx) => {
+      const option = newEl("option", { value: idx });
+      option.textContent = cred.ssid || "(empty SSID)";
+      if (idx === selectedCredentialIndex) option.selected = true;
+      select.appendChild(option);
+    });
+    select.addEventListener("change", (e) => {
+      selectedCredentialIndex = parseInt(e.target.value);
+      window.applyCredential(wifiCredentials[selectedCredentialIndex]);
+    });
+    credTabs.appendChild(select);
+  }
+  // Desktop: Use button tabs
+  else {
+    wifiCredentials.forEach((cred, idx) => {
+      const tabBtn = newEl("button", { class: "tab" });
+      tabBtn.textContent = cred.ssid || "(empty SSID)";
+      if (idx === selectedCredentialIndex) tabBtn.classList.add("active");
+      tabBtn.onclick = (e) => {
+        credTabs.querySelectorAll(".tab").forEach(tab => tab.classList.remove("active"));
+        e.target.classList.add("active");
+        selectedCredentialIndex = idx;
+        window.applyCredential(cred);
+      };
+      credTabs.appendChild(tabBtn);
+    });
+  }
+
+  // Toggle visibility of credential action buttons
+  const hasCredentials = wifiCredentials.length > 0;
+  ["delete-cred", "clear-creds", "cred-actions-inline"].forEach(elemId => {
+    const elem = $(elemId);
+    if (elem) {
+      if (hasCredentials) {
+        elem.classList.remove("hide");
+      } else {
+        elem.classList.add("hide");
+      }
+    }
+  });
+};
+
+/**
+ * Re-render credential tabs on window resize
+ */
+window.addEventListener("resize", () => {
+  if (wifiCredentials && wifiCredentials.length && typeof renderCredentialTabs === "function") {
+    renderCredentialTabs();
+  }
+});
+
+/**
+ * Delete selected WiFi credential
+ */
+window.deleteSelectedCredential = () => {
+  if (selectedCredentialIndex < 0 || selectedCredentialIndex >= wifiCredentials.length) {
+    return;
+  }
+
+  const cred = wifiCredentials[selectedCredentialIndex];
+  openModal(
+    "Delete WiFi",
+    `Delete <b>${cred.ssid}</b>?`,
+    async () => {
+      try {
+        await fetch(`${esp}wifi/credentials?index=${selectedCredentialIndex}`, {
+          method: "DELETE"
+        });
+        await loadCredentials();
+        closeModal(false);
+      } catch (err) {
+        openModal("Error", "Failed to delete");
+      }
+    }
+  );
+};
+
+/**
+ * Delete all WiFi credentials
+ */
+window.clearAllCredentials = () => {
+  if (wifiCredentials.length === 0) return;
+
+  openModal(
+    "Clear All",
+    "Delete all WiFi credentials?",
+    async () => {
+      try {
+        await fetch(`${esp}wifi/credentials`, {
+          method: "DELETE"
+        });
+        await loadCredentials();
+        closeModal(false);
+      } catch (err) {
+        openModal("Error", "Failed to clear");
+      }
+    }
+  );
+};
+
+/**
+ * Attach event handlers to credential action buttons
+ * Called immediately when script loads (not waiting for DOMContentLoaded)
+ */
+(() => {
+  const deleteBtn = $("delete-cred");
+  const clearBtn = $("clear-creds");
+
+  if (deleteBtn) {
+    deleteBtn.onclick = window.deleteSelectedCredential;
+  }
+  if (clearBtn) {
+    clearBtn.onclick = window.clearAllCredentials;
+  }
+})();

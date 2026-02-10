@@ -296,14 +296,11 @@ void setup() {
   // Try to connect to WiFi (will start AP if not connected after timeout)
   if (!server.startWiFi(10000)) {
     Serial.println("\nWiFi not connected! Starting AP mode...");
-    if (!server.startWiFi(10000)) {
-      Serial.println("\nWiFi not connected! Starting AP mode...");
-      WiFiConnectParams params ("ESP_AP", "123456789");            
-      params.config.local_ip = IPAddress(192, 168, 1, 1);
-      params.config.gateway = IPAddress(192, 168, 1, 1);
-      params.config.subnet = IPAddress(255, 255, 255, 0);    
-      server.startCaptivePortal(params, "/setup");
-    }
+    WiFiConnectParams params ("ESP_AP", "123456789");            
+    params.config.local_ip = IPAddress(192, 168, 1, 1);
+    params.config.gateway = IPAddress(192, 168, 1, 1);
+    params.config.subnet = IPAddress(255, 255, 255, 0);    
+    server.startCaptivePortal(params, "/setup");
   }
 
   // Add custom page handler
