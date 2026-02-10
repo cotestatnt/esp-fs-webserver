@@ -54,7 +54,7 @@ struct WiFiCredential {
     IPAddress subnet;               // Optional static IP config    
     IPAddress local_ip;             // Optional static IP config
     IPAddress dns1;                 // Optional primary DNS (per SSID)
-    IPAddress dns2;                 // Optional secondary DNS (per SSID)
+    IPAddress dns2;                 // Optional secondary DNS (per SSID)    
 };
 
 class CredentialManager {

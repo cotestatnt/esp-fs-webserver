@@ -180,10 +180,9 @@ private:
         // Add state (empty)
         result += "  \"_state\": {},\n";
 
-        // Extract assets (CSS, JS, and HTML)
+        // Extract assets (CSS and JS only - HTML is handled as elements)
         std::vector<String> cssList;
         std::vector<String> jsList;
-        std::vector<String> htmlList;
         
         for (cJSON* assetItem = oldRoot->child; assetItem; assetItem = assetItem->next) {
             String key = assetItem->string ? String(assetItem->string) : String("");
@@ -192,12 +191,10 @@ private:
                 cssList.push_back(assetItem->valuestring);
             } else if ((key.indexOf("raw-javascript-") == 0 || key.indexOf("raw-js-") == 0) && assetItem->valuestring) {
                 jsList.push_back(assetItem->valuestring);
-            } else if (key.indexOf("raw-html-") == 0 && assetItem->valuestring) {
-                htmlList.push_back(assetItem->valuestring);
             }
         }
 
-        // Add assets section
+        // Add assets section (CSS and JS only)
         result += "  \"_assets\": {\n";
         result += "    \"css\": [";
         for (size_t i = 0; i < cssList.size(); i++) {
@@ -210,13 +207,6 @@ private:
         for (size_t i = 0; i < jsList.size(); i++) {
             result += "\"" + escapeJson(jsList[i]) + "\"";
             if (i < jsList.size() - 1) result += ", ";
-        }
-        result += "],\n";
-        
-        result += "    \"html\": [";
-        for (size_t i = 0; i < htmlList.size(); i++) {
-            result += "\"" + escapeJson(htmlList[i]) + "\"";
-            if (i < htmlList.size() - 1) result += ", ";
         }
         result += "]\n";
         result += "  },\n";
@@ -253,15 +243,10 @@ private:
                 continue;
             }
 
-            // Skip raw-css, raw-javascript, and raw-html (they all go to _assets)
+            // Skip raw-css and raw-javascript (they all go to _assets)
             if ((key.indexOf("raw-css-") == 0 || key.indexOf("raw-javascript-") == 0 || 
-                 key.indexOf("raw-js-") == 0 || key.indexOf("raw-html-") == 0) && 
+                 key.indexOf("raw-js-") == 0) && 
                 key.indexOf("raw-html-") != 0) {
-                continue;
-            }
-            
-            // Skip raw-html (goes to assets)
-            if (key.indexOf("raw-html-") == 0) {
                 continue;
             }
 

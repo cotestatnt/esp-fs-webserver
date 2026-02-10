@@ -15,7 +15,7 @@ const newEl = (tag, attrs = {}) => {
 };
 
 const port = location.port || (location.protocol === "https:" ? "443" : "80");
-const esp = `${location.protocol}//${location.hostname}:${port}/`;
+let esp = `${location.protocol}//${location.hostname}:${port}/`;  // Will be updated with IP after getStatus
 
 let config, configPath;
 let wifiCredentials = [], selectedCredentialIndex = -1;
@@ -636,6 +636,10 @@ window.addEventListener("load", () => {
   fetch(`${esp}getStatus`)
     .then(res => res.json())
     .then(data => {
+      // Update esp with IP if available
+      if (data.ip) {
+        esp = `${location.protocol}//${data.ip}:${port}/`;
+      }
       applyStatusHeader(data);
       if (!configPath) throw new Error("No config path");
       return fetch(`${esp}${configPath}`).then(r => r.json());

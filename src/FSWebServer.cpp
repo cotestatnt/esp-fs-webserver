@@ -383,6 +383,7 @@ void FSWebServer::handleSetup() {
             return this->requestAuthentication();
     }
     this->sendHeader(PSTR("Content-Encoding"), "gzip");
+    this->sendHeader(PSTR("Cache-Control"), "public, max-age=86400");
     // Changed array name to match SEGGER Bin2C output
     this->send_P(200, "text/html", (const char*)_acsetup_min_htm, sizeof(_acsetup_min_htm));
 }

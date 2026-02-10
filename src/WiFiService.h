@@ -43,6 +43,23 @@ struct WiFiConnectParams {
     uint32_t timeout = 0;                       // Connection timeout in milliseconds
     uint32_t wdtLongTimeout = 0;                // Long WDT timeout in milliseconds 
     uint32_t wdtTimeout = 0;                    // Regular WDT timeout in milliseconds
+    
+    // Default constructor
+    WiFiConnectParams() {
+        memset(&config, 0, sizeof(config));
+    }
+    
+    // Constructor with SSID and plaintext password
+    WiFiConnectParams(const char* ssid, const char* plaintext_password) {
+        memset(&config, 0, sizeof(config));
+        if (ssid) {
+            strncpy(config.ssid, ssid, sizeof(config.ssid) - 1);
+            config.ssid[sizeof(config.ssid) - 1] = '\0';
+        }
+        if (plaintext_password) {
+            password = plaintext_password;
+        }
+    }
 };
 
 struct WiFiConnectResult {
