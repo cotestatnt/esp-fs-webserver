@@ -20,6 +20,17 @@ server.init(onWsEvent);
 3. On `/setup` the user selects the WiFi network (managed by `CredentialManager`) and any extra application options;  
   the library saves **only the application options** to `config.json` and stores WiFi credentials in encrypted form via `CredentialManager`.
 
+It's possible also change the setting of IP address and mask for the captive portal passing a `WiFiConnectParams` structs to `startCaptivePortal()` method.
+```cpp
+if (!server.startWiFi(10000)) {
+  Serial.println("\nWiFi not connected! Starting AP mode...");
+  WiFiConnectParams params ("ESP_AP", "123456789");            
+  params.config.local_ip = IPAddress(192, 168, 1, 1);
+  params.config.gateway = IPAddress(192, 168, 1, 1);
+  params.config.subnet = IPAddress(255, 255, 255, 0);    
+  server.startCaptivePortal(params, "/setup");
+}
+```
 ## Application options on /setup
 
 Example (see also `withWebSocket.ino`):
