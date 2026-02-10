@@ -95,21 +95,11 @@ function applyStatusHeader(data) {
   configPath = data.path;
   if ($("hostname")) $("hostname").value = data.hostname || "";
   if ($("ssid-name")) $("ssid-name").textContent = "SSID";
-
-  const logoImg = $("img-logo")?.querySelector("img");
-  if (data["img-logo"] && logoImg) {
-    logoImg.src = data["img-logo"];
-    $("img-logo").classList.remove("loading");
-  }
-  if (data["page-title"]) {
-    const safe = data["page-title"].replace(/(<([^>]+)>)/ig, "");
-    $("page-title").textContent = safe;
-    document.title = safe;
-  }
 }
 
 // Apply config v2 metadata
 function applyMetaFromConfig(cfg) {
+  console.log(cfg)
   if (!cfg || typeof cfg !== "object") return;
   const meta = cfg._meta || {};
 
@@ -119,7 +109,7 @@ function applyMetaFromConfig(cfg) {
     $("img-logo").classList.remove("loading");
   }
 
-  if (meta.app_title && !$("page-title").textContent) {
+  if (meta.app_title) {
     const safe = meta.app_title.replace(/(<([^>]+)>)/ig, "");
     $("page-title").textContent = safe;
     document.title = safe;
