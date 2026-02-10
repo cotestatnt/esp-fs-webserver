@@ -10,13 +10,13 @@ This library can:
 
 ```cpp
 if (!server.startWiFi(10000)) {
-  server.startCaptivePortal("ESP_AP", "123456789", "/setup");
+  server.startCaptivePortal("ESP_AP", "123456789", "/setup");  
 }
 server.init(onWsEvent);
 ```
 
 1. `startWiFi(timeout)` attempts to connect using saved credentials.
-2. If it fails, `startCaptivePortal(ssid, pass, "/setup")` switches the ESP to AP mode and redirects requests to `/setup`.
+2. If it fails, `startCaptivePortal(ssid, pass, "/setup")` switches the ESP to AP mode and redirects requests to `/setup` (or a custom endpoint)
 3. On `/setup` the user selects the WiFi network (managed by `CredentialManager`) and any extra application options;  
   the library saves **only the application options** to `config.json` and stores WiFi credentials in encrypted form via `CredentialManager`.
 
