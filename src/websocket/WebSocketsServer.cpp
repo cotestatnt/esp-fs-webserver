@@ -76,8 +76,7 @@ void WebSocketsServerCore::begin(void) {
 #ifdef ESP8266
     randomSeed(RANDOM_REG32);
 #elif defined(ESP32)
-#define DR_REG_RNG_BASE 0x3ff75144
-    randomSeed(READ_PERI_REG(DR_REG_RNG_BASE));
+    randomSeed(esp_random());
 #elif defined(ARDUINO_ARCH_RP2040)
     randomSeed(rp2040.hwrand32());
 #else
