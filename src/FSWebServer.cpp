@@ -166,6 +166,7 @@ void FSWebServer::begin(WebSocketsServer::WebSocketServerEvent wsEventHandler) {
             m_websocket = new WebSocketsServer(m_port+1);
             m_websocket->begin();
             m_websocket->onEvent(wsEventHandler);
+            log_debug("WebSocket server started on port %u", m_port + 1);
         }
     }
 #endif
@@ -174,6 +175,7 @@ void FSWebServer::begin(WebSocketsServer::WebSocketServerEvent wsEventHandler) {
     this->enableCrossOrigin(true);    
 #endif
     WebServerClass::begin(m_port);
+    log_debug("HTTP server started on port %u", m_port);
     
 #if ESP_FS_WS_SETUP
     // Free SetupConfigurator memory after initialization (will be recreated lazily if needed)

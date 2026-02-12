@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ESP WebSocket Telemetry</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Space+Grotesk:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* Theme tokens */
+      :root {
+        --bg-1: #0b0f1a;
+        --bg-2: #14253d;
+        --panel: #111827cc;
+        --panel-strong: #0f172a;
+        --text: #e5e7eb;
+        --muted: #94a3b8;
+        --accent: #22d3ee;
+        --accent-2: #f59e0b;
+        --accent-3: #34d399;
+        --danger: #f87171;
+        --grid: rgba(148, 163, 184, 0.2);
+        --shadow: 0 18px 45px rgba(2, 6, 23, 0.55);
+      }
+
+      /* Theme variants */
+      body[data-theme="sunrise"] {
+        --bg-1: #1b0c24;
+        --bg-2: #3f1a3a;
+        --panel: #1f1230cc;
+        --panel-strong: #1b0f2a;
+        --text: #fdf2f8;
+        --muted: #f9a8d4;
+        --accent: #fb7185;
+        --accent-2: #f59e0b;
+        --accent-3: #f472b6;
+        --danger: #f43f5e;
+        --grid: rgba(251, 113, 133, 0.2);
+        --shadow: 0 18px 45px rgba(24, 5, 32, 0.6);
+      }
+
+      body[data-theme="mono"] {
+        --bg-1: #0b0d0f;
+        --bg-2: #1b2128;
+        --panel: #0f1318cc;
+        --panel-strong: #0f141a;
+        --text: #e2e8f0;
+        --muted: #94a3b8;
+        --accent: #e2e8f0;
+        --accent-2: #94a3b8;
+        --accent-3: #cbd5f5;
+        --danger: #f87171;
+        --grid: rgba(148, 163, 184, 0.2);
+        --shadow: 0 18px 45px rgba(5, 8, 12, 0.65);
+      }
+
+      /* Base reset */
+      * {
+        box-sizing: border-box;
+      }
+
+      /* Page background and typography */
+      body {
+        margin: 0;
+        font-family: "Space Grotesk", system-ui, sans-serif;
+        color: var(--text);
+        background: radial-gradient(1200px 600px at 15% 20%, #1b3a5e 0%, transparent 60%),
+          radial-gradient(900px 500px at 85% 0%, #15304e 0%, transparent 60%),
+          linear-gradient(180deg, var(--bg-1), var(--bg-2));
+        min-height: 100vh;
+      }
+
+      body[data-theme="sunrise"] {
+        background: radial-gradient(1000px 600px at 12% 15%, #8b215b 0%, transparent 60%),
+          radial-gradient(900px 500px at 85% 5%, #f97316 0%, transparent 55%),
+          linear-gradient(180deg, var(--bg-1), var(--bg-2));
+      }
+
+      body[data-theme="mono"] {
+        background: radial-gradient(1000px 600px at 12% 15%, #2b3640 0%, transparent 60%),
+          radial-gradient(900px 500px at 85% 5%, #1f2a33 0%, transparent 55%),
+          linear-gradient(180deg, var(--bg-1), var(--bg-2));
+      }
+
+      /* Subtle grid overlay */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-image: radial-gradient(rgba(148, 163, 184, 0.15) 1px, transparent 0);
+        background-size: 24px 24px;
+        pointer-events: none;
+        opacity: 0.35;
+      }
+
+      /* Layout container */
+      .page {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 28px 22px 40px;
+        position: relative;
+      }
+
+      /* Top header */
+      header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 22px;
+      }
+
+      /* Theme selector pill */
+      .theme-switch {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        background: var(--panel);
+        box-shadow: var(--shadow);
+        font-size: 0.9rem;
+        color: var(--muted);
+      }
+
+      .theme-switch select {
+        appearance: none;
+        background: var(--panel-strong);
+        color: var(--text);
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        border-radius: 999px;
+        padding: 6px 28px 6px 12px;
+        font-family: "Space Grotesk", system-ui, sans-serif;
+        font-size: 0.9rem;
+        position: relative;
+      }
+
+      .theme-switch select:focus {
+        outline: 2px solid rgba(34, 211, 238, 0.45);
+        outline-offset: 2px;
+      }
+
+      .title {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .title h1 {
+        font-size: clamp(28px, 3vw, 38px);
+        margin: 0;
+        letter-spacing: -0.02em;
+      }
+
+      .title span {
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+
+      .status {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: var(--panel);
+        padding: 10px 16px;
+        border-radius: 999px;
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        box-shadow: var(--shadow);
+      }
+
+      .status-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--danger);
+        box-shadow: 0 0 10px rgba(248, 113, 113, 0.8);
+        transition: background 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .status.connected .status-dot {
+        background: var(--accent-3);
+        box-shadow: 0 0 10px rgba(52, 211, 153, 0.7);
+      }
+
+      /* Metric cards */
+      .stats {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        margin-bottom: 22px;
+      }
+
+      .card {
+        background: var(--panel);
+        border-radius: 18px;
+        padding: 16px;
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        box-shadow: var(--shadow);
+        animation: floatIn 0.8s ease both;
+      }
+
+      .card h3 {
+        margin: 0 0 10px;
+        font-size: 0.9rem;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .card .value {
+        font-size: 1.6rem;
+        font-weight: 700;
+      }
+
+      .card .sub {
+        font-family: "IBM Plex Mono", monospace;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      /* Charts grid */
+      .charts {
+        display: grid;
+        gap: 18px;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      }
+
+      .chart-panel {
+        background: var(--panel-strong);
+        border-radius: 20px;
+        padding: 18px;
+        border: 1px solid rgba(148, 163, 184, 0.15);
+        box-shadow: var(--shadow);
+        min-height: 320px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .chart-panel h2 {
+        margin: 0;
+        font-size: 1.1rem;
+      }
+
+      .chart {
+        flex: 1;
+        min-height: 240px;
+      }
+
+      /* Soft card reveal */
+      @keyframes floatIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @media (max-width: 720px) {
+        .page {
+          padding: 20px 16px 32px;
+        }
+      }
+    </style>
+  </head>
+  <body data-theme="aurora">
+    <div class="page">
+      <!-- Header with title, theme selector, and connection status -->
+      <header>
+        <div class="title">
+          <h1>ESP WebSocket Telemetry</h1>
+          <span>Real-time heap + RSSI monitoring</span>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center;">
+          <div class="theme-switch">
+            <label for="themeSelect">Theme</label>
+            <select id="themeSelect" aria-label="Theme selector">
+              <option value="aurora">Aurora</option>
+              <option value="sunrise">Sunrise</option>
+              <option value="mono">Mono</option>
+            </select>
+          </div>
+          <div class="status" id="statusBadge">
+            <div class="status-dot" id="statusDot"></div>
+            <div>
+              <div id="statusText">Disconnected</div>
+              <div class="sub" id="statusMeta">Waiting for data...</div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Live metrics -->
+      <section class="stats">
+        <div class="card">
+          <h3>Total Heap</h3>
+          <div class="value" id="heapValue">--</div>
+          <div class="sub" id="heapSub">bytes</div>
+        </div>
+        <div class="card">
+          <h3>Max Block</h3>
+          <div class="value" id="blockValue">--</div>
+          <div class="sub" id="blockSub">bytes</div>
+        </div>
+        <div class="card">
+          <h3>WiFi RSSI</h3>
+          <div class="value" id="rssiValue">--</div>
+          <div class="sub">dBm</div>
+        </div>
+        <div class="card">
+          <h3>Last Update</h3>
+          <div class="value" id="timeValue">--</div>
+          <div class="sub" id="timeSub">local time</div>
+        </div>
+      </section>
+
+      <!-- Chart panels -->
+      <section class="charts">
+        <div class="chart-panel">
+          <h2>Memory Trend</h2>
+          <div id="heapChart" class="chart"></div>
+        </div>
+        <div class="chart-panel">
+          <h2>WiFi Signal</h2>
+          <div id="rssiChart" class="chart"></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Charting library -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+    <script>
+      // DOM references
+      const statusBadge = document.getElementById("statusBadge");
+      const statusText = document.getElementById("statusText");
+      const statusMeta = document.getElementById("statusMeta");
+      const heapValue = document.getElementById("heapValue");
+      const heapSub = document.getElementById("heapSub");
+      const blockValue = document.getElementById("blockValue");
+      const blockSub = document.getElementById("blockSub");
+      const rssiValue = document.getElementById("rssiValue");
+      const timeValue = document.getElementById("timeValue");
+      const timeSub = document.getElementById("timeSub");
+      const themeSelect = document.getElementById("themeSelect");
+
+      // Chart instances
+      const heapChart = echarts.init(document.getElementById("heapChart"));
+      const rssiChart = echarts.init(document.getElementById("rssiChart"));
+
+      // In-memory time series (bounded by maxPoints)
+      const heapSeries = [];
+      const blockSeries = [];
+      const rssiSeries = [];
+      const maxPoints = 120;
+
+      // Update connection badge
+      function setStatus(isConnected, message) {
+        statusBadge.classList.toggle("connected", isConnected);
+        statusText.textContent = isConnected ? "Connected" : "Disconnected";
+        statusMeta.textContent = message || "";
+      }
+
+      // Human readable byte formatting
+      function formatBytes(value) {
+        if (!Number.isFinite(value)) return "--";
+        if (value >= 1024 * 1024) {
+          return (value / (1024 * 1024)).toFixed(2) + " MB";
+        }
+        if (value >= 1024) {
+          return (value / 1024).toFixed(1) + " KB";
+        }
+        return value.toFixed(0) + " B";
+      }
+
+      // Numeric-only axis labels
+      function formatNumber(value) {
+        if (!Number.isFinite(value)) return "--";
+        return Math.round(value).toLocaleString();
+      }
+
+      // Keep fixed-size series for smooth charting
+      function pushPoint(series, point) {
+        series.push(point);
+        if (series.length > maxPoints) {
+          series.shift();
+        }
+      }
+
+      // Render charts with current series data
+      function updateCharts() {
+        heapChart.setOption({
+          animationDuration: 300,
+          grid: { left: 40, right: 20, top: 20, bottom: 30 },
+          tooltip: { trigger: "axis" },
+          xAxis: {
+            type: "time",
+            axisLine: { lineStyle: { color: "rgba(148,163,184,0.6)" } },
+            splitLine: { show: false },
+          },
+          yAxis: {
+            type: "value",
+            name: "Bytes",
+            nameLocation: "end",
+            nameGap: 12,
+            nameTextStyle: { color: "rgba(148,163,184,0.7)", fontSize: 12 },
+            axisLine: { lineStyle: { color: "rgba(148,163,184,0.6)" } },
+            splitLine: { lineStyle: { color: "rgba(148,163,184,0.15)" } },
+            axisLabel: { formatter: (value) => formatNumber(value) },
+          },
+          series: [
+            {
+              name: "Total Heap",
+              type: "line",
+              smooth: true,
+              showSymbol: false,
+              data: heapSeries,
+              lineStyle: { color: "#22d3ee", width: 2 },
+              areaStyle: { color: "rgba(34,211,238,0.25)" },
+            },
+            {
+              name: "Max Block",
+              type: "line",
+              smooth: true,
+              showSymbol: false,
+              data: blockSeries,
+              lineStyle: { color: "#f59e0b", width: 2 },
+              areaStyle: { color: "rgba(245,158,11,0.2)" },
+            },
+          ],
+        });
+
+        rssiChart.setOption({
+          animationDuration: 300,
+          grid: { left: 40, right: 20, top: 20, bottom: 30 },
+          tooltip: { trigger: "axis" },
+          xAxis: {
+            type: "time",
+            axisLine: { lineStyle: { color: "rgba(148,163,184,0.6)" } },
+            splitLine: { show: false },
+          },
+          yAxis: {
+            type: "value",
+            name: "dBm",
+            nameLocation: "end",
+            nameGap: 12,
+            nameTextStyle: { color: "rgba(148,163,184,0.7)", fontSize: 12 },
+            max: -30,
+            min: -95,
+            axisLine: { lineStyle: { color: "rgba(148,163,184,0.6)" } },
+            splitLine: { lineStyle: { color: "rgba(148,163,184,0.15)" } },
+            axisLabel: { formatter: (value) => Math.round(value).toString() },
+          },
+          series: [
+            {
+              name: "RSSI",
+              type: "line",
+              smooth: true,
+              showSymbol: false,
+              data: rssiSeries,
+              lineStyle: { color: "#34d399", width: 2 },
+              areaStyle: { color: "rgba(52,211,153,0.18)" },
+              markLine: {
+                symbol: "none",
+                lineStyle: { color: "rgba(248,113,113,0.8)", type: "dashed" },
+                data: [{ yAxis: -70, name: "Weak" }],
+              },
+            },
+          ],
+        });
+      }
+
+      // Apply incoming WebSocket payload
+      function handleMessage(data) {
+        if (!data || !data.addPoint) return;
+        const timestamp = (data.timestamp || 0) * 1000;
+        if (!timestamp) return;
+
+        pushPoint(heapSeries, [timestamp, data.totalHeap || 0]);
+        pushPoint(blockSeries, [timestamp, data.maxBlock || 0]);
+        pushPoint(rssiSeries, [timestamp, data.rssi || 0]);
+
+        heapValue.textContent = formatBytes(data.totalHeap || 0);
+        heapSub.textContent = "bytes";
+        blockValue.textContent = formatBytes(data.maxBlock || 0);
+        blockSub.textContent = "bytes";
+        rssiValue.textContent = (data.rssi || 0).toFixed(0);
+
+        const localTime = new Date(timestamp);
+        timeValue.textContent = localTime.toLocaleTimeString();
+        timeSub.textContent = localTime.toLocaleDateString();
+
+        updateCharts();
+      }
+
+      // WebSocket connection state
+      let socket;
+      let reconnectTimer;
+
+      // Apply theme and persist selection
+      function applyTheme(value) {
+        document.body.setAttribute("data-theme", value);
+        try {
+          localStorage.setItem("esp-theme", value);
+        } catch (err) {
+          // Storage can fail in private mode.
+        }
+      }
+
+      // Initialize theme selector with saved preference
+      function initTheme() {
+        let saved = "aurora";
+        try {
+          saved = localStorage.getItem("esp-theme") || saved;
+        } catch (err) {
+          saved = "aurora";
+        }
+        themeSelect.value = saved;
+        applyTheme(saved);
+        themeSelect.addEventListener("change", (event) => {
+          applyTheme(event.target.value);
+        });
+      }
+
+      // Connect to ESP WebSocket endpoint
+      function connect() {
+        clearTimeout(reconnectTimer);
+        const proto = location.protocol === "https:" ? "wss" : "ws";
+        const wsUrl = proto + "://" + location.hostname + ":81/ws";
+        statusMeta.textContent = "Connecting to " + wsUrl + "...";
+
+        socket = new WebSocket(wsUrl);
+
+        socket.addEventListener("open", () => {
+          setStatus(true, "Receiving live data");
+        });
+
+        socket.addEventListener("close", () => {
+          setStatus(false, "Reconnecting...");
+          reconnectTimer = setTimeout(connect, 1500);
+        });
+
+        socket.addEventListener("error", () => {
+          setStatus(false, "Connection error");
+          socket.close();
+        });
+
+        socket.addEventListener("message", (event) => {
+          try {
+            const payload = JSON.parse(event.data);
+            handleMessage(payload);
+          } catch (err) {
+            statusMeta.textContent = "Invalid data";
+          }
+        });
+      }
+
+      // Boot sequence
+      updateCharts();
+      initTheme();
+      connect();
+      window.addEventListener("resize", () => {
+        heapChart.resize();
+        rssiChart.resize();
+      });
+    </script>
+  </body>
+</html>
