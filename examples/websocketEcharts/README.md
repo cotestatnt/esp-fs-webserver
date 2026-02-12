@@ -14,3 +14,6 @@ This example uses **[ECharts 5](https://echarts.apache.org/)** – a powerful, d
 - **Rich API**: [Full documentation](https://echarts.apache.org/en/option.html)
 
 The dashboard implements real-time `line` charts with `time` axis and formatted tooltips. All chart options are in `data/index.htm`.
+
+
+![Websocket Echarts](../../docs/ws_echarts.jpg)
