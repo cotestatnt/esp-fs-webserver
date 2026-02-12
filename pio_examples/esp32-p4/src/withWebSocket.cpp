@@ -1,3 +1,6 @@
+#ifdef USE_M5UNIFIED
+    #include <M5Unified.h>
+#endif
 #include "ESP_HostedOTA.h"
 #include <FS.h>
 #include <LittleFS.h>
@@ -100,8 +103,10 @@ bool loadApplicationConfig() {
 void setup() {
 
     Serial.begin(115200);
-    delay(3000);
-
+#ifdef USE_M5UNIFIED
+    auto cfg = M5.config();
+    M5.begin(cfg);
+#endif
     // FILESYSTEM INIT
     if (startFilesystem()) {
         // Load configuration (if not present, default will be created when webserver will start)
@@ -156,6 +161,9 @@ void setup() {
 
 
 void loop() {
+#ifdef USE_M5UNIFIED
+    M5.update();
+#endif
     server.run();  // Handle client requests
 
     // Send ESP system time (epoch) to WS client

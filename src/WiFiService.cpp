@@ -217,11 +217,12 @@ WiFiStartResult WiFiService::startWiFi(CredentialManager* credentialManager, fs:
         credentialManager->loadFromFS();
 #endif
 #ifdef BOARD_HAS_SDIO_ESP_HOSTED
-        delay(500);
+        WiFi.setPins(BOARD_SDIO_ESP_HOSTED_CLK, BOARD_SDIO_ESP_HOSTED_CMD, BOARD_SDIO_ESP_HOSTED_D0,
+                    BOARD_SDIO_ESP_HOSTED_D1, BOARD_SDIO_ESP_HOSTED_D2, BOARD_SDIO_ESP_HOSTED_D3,
+                    BOARD_SDIO_ESP_HOSTED_RESET);
+        WiFi.STA.begin();
         WiFi.mode(WIFI_STA);
-        delay(500);
-        WiFi.disconnect(false, true, 1000);
-        delay(500);
+        WiFi.disconnect(false, true, 1000); // needed for scanNetworks to work
 #endif
         std::vector<WiFiCredential>* creds = credentialManager->getCredentials();
         if (creds && creds->size() > 0) {
