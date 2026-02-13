@@ -124,7 +124,7 @@ WiFiConnectResult WiFiService::connectWithParams(const WiFiConnectParams& params
             if (!ok) {
                 log_error("STA Failed to configure");
             }
-        }        
+        }
 
         DBG_OUTPUT_PORT.print("\n\n\nConnecting to ");
         DBG_OUTPUT_PORT.println(params.config.ssid);
@@ -182,7 +182,7 @@ WiFiConnectResult WiFiService::connectWithParams(const WiFiConnectParams& params
                 resp += params.host;
                 resp += ".local/setup</a></i><br><p style='text-align: center'>Do you want to proceed with a ESP restart right now?</p><div id='action-restart-required'></div>";
             } else {
-                // Case 2: request came from a client already on the same WiFi as the ESP (pure SSID switch). 
+                // Case 2: request came from a client already on the same WiFi as the ESP (pure SSID switch).
                 // After the switch this page will no longer reach the device until the client changes WiFi as well.
                 resp += " <br><br><i>Note:<br>This setup page may stop communicating with the device due to the WiFi network change.<br>After you switch your PC/phone to the new WiFi network, open <a href='http://";
                 resp += params.host;
@@ -215,13 +215,21 @@ WiFiStartResult WiFiService::startWiFi(CredentialManager* credentialManager, fs:
         credentialManager->loadFromNVS();
 #else
         credentialManager->loadFromFS();
-#endif        
+#endif
+#ifdef BOARD_HAS_SDIO_ESP_HOSTED
+        WiFi.setPins(BOARD_SDIO_ESP_HOSTED_CLK, BOARD_SDIO_ESP_HOSTED_CMD, BOARD_SDIO_ESP_HOSTED_D0,
+                    BOARD_SDIO_ESP_HOSTED_D1, BOARD_SDIO_ESP_HOSTED_D2, BOARD_SDIO_ESP_HOSTED_D3,
+                    BOARD_SDIO_ESP_HOSTED_RESET);
+        WiFi.STA.begin();
+        WiFi.mode(WIFI_STA);
+        WiFi.disconnect(false, true, 1000); // needed for scanNetworks to work
+#endif
         std::vector<WiFiCredential>* creds = credentialManager->getCredentials();
         if (creds && creds->size() > 0) {
             int networksFound = WiFi.scanNetworks();
             if (networksFound > 0) {
                 int32_t bestRSSI = -200;
-                
+
                 for (int i = 0; i < networksFound; i++) {
                     String scannedSSID = WiFi.SSID(i);
                     int32_t scannedRSSI = WiFi.RSSI(i);
@@ -261,7 +269,7 @@ WiFiStartResult WiFiService::startWiFi(CredentialManager* credentialManager, fs:
                             log_error("Failed to configure static IP");
                         }
                     }
-                    
+
                     if (credentialManager->getPassword(bestCred->ssid).length() > 0) {
                         log_info("Connecting to %s (RSSI: %d dBm)...", bestCred->ssid, bestRSSI);
                         WiFi.begin(bestCred->ssid, credentialManager->getPassword(bestCred->ssid).c_str());
@@ -362,7 +370,7 @@ WiFiStartResult WiFiService::startWiFi(CredentialManager* credentialManager, fs:
 }
 
 
-bool WiFiService::startAccessPoint(WiFiConnectParams& params, IPAddress& outIp) {    
+bool WiFiService::startAccessPoint(WiFiConnectParams& params, IPAddress& outIp) {
     delay(100);
     WiFi.mode(WIFI_AP);
 
