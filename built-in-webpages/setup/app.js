@@ -152,10 +152,14 @@ function buildElement(el, secIdx, elIdx, container) {
     item = newEl("div");
     if (el.value) fetch(el.value).then(r=>r.text()).then(t=>item.innerHTML=t).catch(()=>item.textContent="Error");
   } else if (el.type === "boolean") {
+    // wrap label/switch inside dedicated .tbw so it can be styled independently
+    const wrap = newEl("div", { class: "tbw" });
     item = newEl("label", { class: "lbl tgl", for: id });
     inp = newEl("input", { id, type: "checkbox", class: "tc in" });
     inp.checked = !!el.value;
     item.append(inp, newEl("div", { class: "tsw" }), Object.assign(newEl("span", { class: "tlbl" }), { textContent: el.label||"" }));
+    wrap.appendChild(item);
+    item = wrap;
   } else {
     item = newEl("div", { class: "tw" });
     item.appendChild(Object.assign(newEl("label", { class: "lbl", for: id }), { textContent: el.label||"" }));
@@ -213,12 +217,17 @@ function buildSectionsFromConfig() {
     navLink.onclick = switchPage;
     $("nav-link").appendChild(navLink);
 
-    // Create flex container for boolean elements
-    const toggleContainer = newEl("div", { class: "tglw" });
-    box.appendChild(toggleContainer);
+    // Optionally create a flex container for boolean elements when grouping is desired
+    let toggleContainer = null;
 
     (section.elements || []).forEach((el, eIdx) => {
-      const container = el.type === "boolean" ? toggleContainer : box;
+      // check element-specific group flag (default true for booleans)
+      const shouldGroup = el.type === "boolean" && (el.group !== false);
+      if (shouldGroup && toggleContainer === null) {
+        toggleContainer = newEl("div", { class: "tglw" });
+        box.appendChild(toggleContainer);
+      }
+      const container = shouldGroup ? toggleContainer : box;
       buildElement(el, sIdx, eIdx, container);
     });
   });

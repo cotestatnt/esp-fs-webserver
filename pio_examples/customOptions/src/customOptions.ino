@@ -308,16 +308,25 @@ void setup() {
 
   // Configure /setup page and start Web Server
   server.addOptionBox("My Options");
-  server.addOption(BOOL_LABEL, boolVar);
-  server.addOption(BOOL_LABEL2, boolVar2);
+
+  // boolean options can be grouped or left inline by passing `grouped`
+  // as the fourth argument (hidden is the third, preserving old sketches):
+  // grouped = true  (default) → all switches collected in a row
+  // grouped = false            → option appears exactly where added
+  // server.addOption(BOOL_LABEL, boolVar);               // grouped
+  // server.addOption(BOOL_LABEL, boolVar, false);        // hidden=false, grouped=true
+  // server.addOption(BOOL_LABEL, boolVar, false, false); // not grouped
+
+  server.addHTML(reload_btn_htm, "buttons", /*overwrite*/ false);
+  server.addJavascript(reload_btn_script, "script", /*overwrite*/ false);
+  server.addOption(BOOL_LABEL, boolVar, false, false);
   server.addOption(LED_LABEL, ledPin);
   server.addOption(LONG_LABEL, longVar);
   server.addOption(FLOAT_LABEL, floatVar, 1.0, 100.0, 0.01);
   server.addOption(STRING_LABEL, stringVar);
+  server.addOption(BOOL_LABEL2, boolVar2, false, false);
   server.addDropdownList(dayOfWeek);
   server.addSlider(brightness);  
-  server.addHTML(reload_btn_htm, "buttons", /*overwrite*/ false);
-  server.addJavascript(reload_btn_script, "script", /*overwrite*/ false);
 
   // Enable ACE FS file web editor and add FS info callback function
   server.enableFsCodeEditor();

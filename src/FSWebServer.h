@@ -539,6 +539,12 @@ public:
   void setSetupPageLogo(const char* svgText, bool ow = false) {
     getSetupConfigurator()->setSetupPageLogo(svgText, ow);
   }
+  
+  // boolean option overload with per-option grouping control
+  void addOption(const char *lbl, bool val, bool hidden = false, bool grouped = true) {
+    getSetupConfigurator()->addOption(lbl, val, hidden, grouped);
+  }
+
   template <typename T>
   void addOption(const char *lbl, T val, double min, double max, double st) {
     getSetupConfigurator()->addOption(lbl, val, false, min, max, st);

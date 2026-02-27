@@ -42,6 +42,8 @@ class SetupConfigurator
         CJSON::Json m_currentElements;      // Elements array for current section
         bool m_hasCurrentSection = false;   // True if a section is open
 
+        // (previously grouping settings were global; now per-option)
+
         uint16_t& m_port;         
         String& m_host;
         bool m_opened = false;
@@ -802,6 +804,7 @@ class SetupConfigurator
             startNewSection(boxTitle);
         }
 
+
         /*
             Add custom option to config webpage (float values)
         */
@@ -813,6 +816,69 @@ class SetupConfigurator
         /*
         Add custom option to config webpage (type of parameter will be deduced from variable itself)
         */
+        // bool-specific overload with grouping flag (grouped last to avoid breaking existing code)
+        void addOption(const char *label, bool val, bool hidden = false, bool grouped = true) {
+            if (m_doc == nullptr) {
+                if (!openConfiguration()) {
+                    log_error("Error! /setup configuration not possible");
+                }
+            }
+
+            ensureActiveSection();
+            String lbl = label;
+            bool valueFromSaved = false;
+            // read saved as before
+            auto readSavedBool = [&](bool& out) -> bool {
+                if (!m_savedDoc) return false;
+                const cJSON* root = m_savedDoc->getRoot();
+                if (!root) return false;
+                const cJSON* sections = cJSON_GetObjectItemCaseSensitive(root, "sections");
+                if (!sections || !cJSON_IsArray(sections)) return false;
+                const cJSON* sec = sections->child;
+                while (sec) {
+                    const cJSON* elems = cJSON_GetObjectItemCaseSensitive(sec, "elements");
+                    if (elems && cJSON_IsArray(elems)) {
+                        const cJSON* el = elems->child;
+                        while (el) {
+                            const cJSON* lblNode = cJSON_GetObjectItemCaseSensitive(el, "label");
+                            if (lblNode && cJSON_IsString(lblNode) && lblNode->valuestring && String(lblNode->valuestring).equals(lbl)) {
+                                const cJSON* v = cJSON_GetObjectItemCaseSensitive(el, "value");
+                                if (v && cJSON_IsBool(v)) {
+                                    out = cJSON_IsTrue(v);
+                                    return true;
+                                }
+                                return false;
+                            }
+                            el = el->next;
+                        }
+                    }
+                    sec = sec->next;
+                }
+                return false;
+            };
+
+            CJSON::Json elem;
+            elem.createObject();
+            elem.setString("label", lbl);
+
+            bool current = val;
+            if (readSavedBool(current)) valueFromSaved = true;
+            elem.setString("type", "boolean");
+            elem.setBool("value", current);
+
+            if (!grouped) {
+                elem.setBool("group", false);
+            }
+            if (hidden) {
+                elem.setBool("hidden", true);
+            }
+
+            log_debug("Option \"%s\" using %s value", lbl.c_str(), valueFromSaved ? "saved" : "default");
+            m_currentElements.add(elem);
+            numOptions++;
+        }
+
+        // generic template for all other types
         template <typename T>
         void addOption(const char *label, T val, bool hidden = false,
                             double d_min = MIN_F, double d_max = MAX_F, double step = 1.0)
@@ -859,35 +925,6 @@ class SetupConfigurator
                 return false;
             };
 
-            auto readSavedBool = [&](bool& out) -> bool {
-                if (!m_savedDoc) return false;
-                const cJSON* root = m_savedDoc->getRoot();
-                if (!root) return false;
-                const cJSON* sections = cJSON_GetObjectItemCaseSensitive(root, "sections");
-                if (!sections || !cJSON_IsArray(sections)) return false;
-                const cJSON* sec = sections->child;
-                while (sec) {
-                    const cJSON* elems = cJSON_GetObjectItemCaseSensitive(sec, "elements");
-                    if (elems && cJSON_IsArray(elems)) {
-                        const cJSON* el = elems->child;
-                        while (el) {
-                            const cJSON* lblNode = cJSON_GetObjectItemCaseSensitive(el, "label");
-                            if (lblNode && cJSON_IsString(lblNode) && lblNode->valuestring && String(lblNode->valuestring).equals(lbl)) {
-                                const cJSON* v = cJSON_GetObjectItemCaseSensitive(el, "value");
-                                if (v && cJSON_IsBool(v)) {
-                                    out = cJSON_IsTrue(v);
-                                    return true;
-                                }
-                                return false;
-                            }
-                            el = el->next;
-                        }
-                    }
-                    sec = sec->next;
-                }
-                return false;
-            };
-
             auto readSavedString = [&](String& out) -> bool {
                 if (!m_savedDoc) return false;
                 const cJSON* root = m_savedDoc->getRoot();
@@ -921,12 +958,7 @@ class SetupConfigurator
             elem.createObject();
             elem.setString("label", lbl);
 
-            if constexpr (std::is_same<T, bool>::value) {
-                bool current = val;
-                if (readSavedBool(current)) valueFromSaved = true;
-                elem.setString("type", "boolean");
-                elem.setBool("value", current);
-            } else if constexpr (std::is_same<T, String>::value) {
+            if constexpr (std::is_same<T, String>::value) {
                 String current = val;
                 if (readSavedString(current)) valueFromSaved = true;
                 elem.setString("type", "text");

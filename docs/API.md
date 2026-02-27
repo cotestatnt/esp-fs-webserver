@@ -91,6 +91,10 @@ Options and setup UI:
 void setSetupPageTitle(const char* title);
 void addOptionBox(const char* title);
 
+// boolean option: grouped by default, pass fourth argument false to keep declaration order
+// the third parameter specifies `hidden` exactly like the generic template
+void addOption(const char *lbl, bool val, bool hidden = false, bool grouped = true);
+
 template <typename T>
 void addOption(const char *lbl, T val, bool hidden=false, double min=MIN_F, double max=MAX_F, double st=1.0);
 
@@ -100,6 +104,8 @@ bool getOptionValue(const char *lbl, T &var);
 template <typename T>
 bool saveOptionValue(const char *lbl, T val);
 ```
+
+Boolean options are now controlled per-option; the third parameter (or the `grouped` argument) determines whether the switch/check is collected with other booleans or left inline. Hidden behaviour still works via `hidden` argument.
 
 Dropdown/Slider:
 
