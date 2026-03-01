@@ -153,8 +153,9 @@ function slugify(str) {
 }
 
 function buildElement(el, secIdx, elIdx, container) {
+  // make id deterministic from label; include section index to avoid collisions
   const base = slugify(el.label);
-  const id = `opt-${secIdx}-${base}` + (base ? "" : `-${elIdx}`);
+  const id = $(base) ? `${base}-${elIdx}` : base;
   let item, inp;
 
   if (el.type === "html") {

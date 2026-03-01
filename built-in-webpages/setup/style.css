@@ -130,7 +130,7 @@ select{
     color:var(--c-1-d);
     background:var(--c-2-d);
     transition:.3s;
-    align-self:flex-start
+    z-index: 99;
 }
 .lbl:hover{
     border-color:var(--c-1);
