@@ -12,7 +12,7 @@ A library for ESP8266/ESP32 that provides a web server with an integrated file s
     -   Inject custom **HTML, CSS, and JavaScript** snippets into the setup page to create rich, dynamic user interfaces for your specific project needs.
 -   **Over-the-Air (OTA) Updates**: Update your device's firmware securely and conveniently through the web interface. You can easily upload also your entire web project's `data` folder to the ESP's filesystem.
 -   **WebSocket Support**: Built-in support for real-time, two-way communication between the web client and the ESP.
--   **Advanced File Management**: An embedded file manager (`/edit`) allows you to browse, view, upload, and delete files and folders. 
+-   **Advanced File Management**: An embedded file manager (`/edit`) allows you to browse, view, upload, and delete files and folders.
 
 ## Documentation
 
@@ -84,7 +84,8 @@ void loop() {
 - The `/getStatus` handler exposes firmware version, active mode, hostname, IP, and the configuration file path so the UI knows where to direct the user after a network change.
 - After `/connect` begins switching SSIDs the browser starts polling `http://<hostname>.local/getStatus` (falling back to the captured AP when necessary) until the ESP reappears on the new network, automatically updates the credential list, and surfaces a timeout message only after several failed polls.
 - This polling loop keeps the loader visible, shows a modal once the device is reachable again, and points users to either the new `http://<hostname>.local` URL or the IP reported by the ESP without forcing them to refresh manually.
-```
+
+
 ### Custom application "options manager"
 ![options](docs/options_manager.png)
 
