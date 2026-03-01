@@ -156,10 +156,12 @@ void setup() {
   server.addOptionBox("My Options");
   server.addOption(BOOL_LABEL, boolVar);
   server.addOption(BOOL_LABEL2, boolVar2);
-  server.addOption(LED_LABEL, ledPin);
-  server.addOption(LONG_LABEL, longVar);
+  // You can also add a comment to the option,
+  // which will be displayed in the UI as helper text. 
+  server.addOption(LED_LABEL, ledPin, "Select the GPIO for the LED");
+  server.addOption(LONG_LABEL, longVar, "Enter a long integer value");
   server.addOption(FLOAT_LABEL, floatVar, 1.0, 100.0, 0.01);
-  server.addOption(STRING_LABEL, stringVar);
+  server.addOption(STRING_LABEL, stringVar, "Enter a custom string");
   server.addDropdownList(dayOfWeek);
   server.addSlider(brightness);  
   server.addHTML(reload_btn_htm, "buttons", /*overwrite*/ false);

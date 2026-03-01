@@ -40,6 +40,8 @@ server.addOptionBox("My Options");
 server.addOption("LED Pin", ledPin);
 server.addOption("Option 1", option1.c_str());
 server.addOption("Option 2", option2);
+// you can also add a comment for a control that will appear beneath it
+server.addComment("Option 2", "Explanation or hint text goes here");
 ```
 
 Read your application options at boot (from `config.json`, WiFi excluded):

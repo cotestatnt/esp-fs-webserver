@@ -57,6 +57,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
 String optionString = "Test option String";
 uint32_t optionULong = 1234567890;
 uint8_t ledPin = LED_BUILTIN;
+bool optionBool = true;
 
 // Timezone definition to get properly time from NTP server
 #define MYTZ "CET-1CEST,M3.5.0,M10.5.0/3"
@@ -96,6 +97,8 @@ bool loadApplicationConfig() {
     server.getOptionValue("Option 1", optionString);
     server.getOptionValue("Option 2", optionULong);
     server.getOptionValue("LED Pin", ledPin);
+    server.getOptionValue("Option Bool", optionBool);
+    server.getOptionValue("Option Bool", optionBool);
     server.closeSetupConfiguration();  // Close configuration to free resources
     return true;
   }
@@ -117,7 +120,8 @@ void setup() {
       Serial.println(F("\nApplication option loaded"));
       Serial.printf("  LED Pin: %d\n", ledPin);
       Serial.printf("  Option 1: %s\n", optionString.c_str());   
-      Serial.printf("  Option 2: %u\nn", optionULong);
+      Serial.printf("  Option 2: %u\n", optionULong);
+      Serial.printf("  Option Bool: %s\n", optionBool?"true":"false");
     }
     else
       Serial.println(F("Application options NOT loaded!"));
@@ -134,6 +138,8 @@ void setup() {
   server.addOption("LED Pin", ledPin);
   server.addOption("Option 1", optionString.c_str());
   server.addOption("Option 2", optionULong);
+  server.addOption("Option Bool", optionBool);
+  server.addComment("Option Bool", "Enable this feature on startup");
 
   // Add custom page handlers
   server.on("/", HTTP_GET, [](){

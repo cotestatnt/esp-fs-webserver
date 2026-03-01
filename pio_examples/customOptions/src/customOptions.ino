@@ -321,10 +321,15 @@ void setup() {
   server.addJavascript(reload_btn_script, "script", /*overwrite*/ false);
   server.addOption(BOOL_LABEL, boolVar, false, false);
   server.addOption(LED_LABEL, ledPin);
+  server.addComment(LED_LABEL, "Select the GPIO for the LED");
   server.addOption(LONG_LABEL, longVar);
+  server.addComment(LONG_LABEL, "Large integer value");
   server.addOption(FLOAT_LABEL, floatVar, 1.0, 100.0, 0.01);
+  server.addComment(FLOAT_LABEL, "Adjust between 1 and 100");
   server.addOption(STRING_LABEL, stringVar);
+  server.addComment(STRING_LABEL, "Small text string");
   server.addOption(BOOL_LABEL2, boolVar2, false, false);
+  server.addComment(BOOL_LABEL2, "Second boolean setting");
   server.addDropdownList(dayOfWeek);
   server.addSlider(brightness);  
 

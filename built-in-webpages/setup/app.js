@@ -188,6 +188,17 @@ function buildElement(el, secIdx, elIdx, container) {
 
   if (inp) { inp.dataset.secIndex = secIdx; inp.dataset.elIndex = elIdx; }
   if (el.hidden) item.classList.add("hide");
+  if (el.comment) {
+    if (el.type === "boolean") {
+      const span = newEl("span", { class: "cmt inline" });
+      span.textContent = el.comment;
+      item.appendChild(span);
+    } else {
+      const cdiv = newEl("div", { class: "cmt" });
+      cdiv.textContent = el.comment;
+      item.appendChild(cdiv);
+    }
+  }
   container.appendChild(item);
 }
 
