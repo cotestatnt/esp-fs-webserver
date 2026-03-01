@@ -144,8 +144,17 @@ function clearDynamicContent() {
 }
 
 // Build a single option element
+function slugify(str) {
+  return String(str || "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 function buildElement(el, secIdx, elIdx, container) {
-  const id = `opt-${secIdx}-${elIdx}`;
+  const base = slugify(el.label);
+  const id = `opt-${secIdx}-${base}` + (base ? "" : `-${elIdx}`);
   let item, inp;
 
   if (el.type === "html") {
