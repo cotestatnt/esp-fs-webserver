@@ -333,6 +333,19 @@ void setup() {
   server.addDropdownList(dayOfWeek);
   server.addSlider(brightness);  
 
+  bool boolLED1ENABLE, boolLED2ENABLE, boolLED3ENABLE, boolLED4ENABLE;
+  byte byteLED1PIN, byteLED2PIN, byteLED3PIN, byteLED4PIN;
+  server.addOptionBox("LEDs");
+  server.addOption("LED1 enable", boolLED1ENABLE, "Enable LED1");
+  server.addOption("LED1 PIN", byteLED1PIN);
+  server.addOption("LED2 enable", boolLED2ENABLE , "Enable LED2");
+  server.addOption("LED2 PIN", byteLED2PIN);
+  server.addOption("LED3 enable", boolLED3ENABLE, "Enable LED3");
+  server.addOption("LED3 PIN", byteLED3PIN);
+  server.addOption("LED4 enable", boolLED4ENABLE, "Enable LED4");
+  server.addOption("LED4 PIN", byteLED4PIN);
+
+
   // Enable ACE FS file web editor and add FS info callback function
   server.enableFsCodeEditor();
 

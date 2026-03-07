@@ -513,10 +513,9 @@ void FSWebServer::checkForUnsupportedPath(String& filename, String& error)
 
 void FSWebServer::handleFileUpload()
 {
-     HTTPUpload& upload = this->upload();
+    HTTPUpload& upload = this->upload();
     if (upload.status == UPLOAD_FILE_START) {
         String filename = upload.filename;
-
         String result;
         // Make sure paths always start with "/"
         if (!filename.startsWith("/")) {
@@ -549,6 +548,12 @@ void FSWebServer::handleFileUpload()
         log_debug("Upload: WRITE, Bytes: %d\n", upload.currentSize);
     } 
     else if (upload.status == UPLOAD_FILE_END) {
+        // Call config saved callback if this is the config file
+        if (strcmp(m_uploadFile.path(), ESP_FS_WS_CONFIG_FILE) == 0 && m_configSavedCallback) {
+            log_debug("Config file saved, calling callback");
+            m_configSavedCallback(m_uploadFile.path());
+        }
+
         if (m_uploadFile) { 
             m_uploadFile.close();
         }
