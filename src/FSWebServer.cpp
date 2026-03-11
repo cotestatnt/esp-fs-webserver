@@ -548,10 +548,16 @@ void FSWebServer::handleFileUpload()
         log_debug("Upload: WRITE, Bytes: %d\n", upload.currentSize);
     } 
     else if (upload.status == UPLOAD_FILE_END) {
+        #if defined(ESP32)
+            const char* filepath = m_uploadFile.path();            
+        #elif defined(ESP8266)
+            const char* filepath = m_uploadFile.fullName();   
+        #endif
+
         // Call config saved callback if this is the config file
-        if (strcmp(m_uploadFile.path(), ESP_FS_WS_CONFIG_FILE) == 0 && m_configSavedCallback) {
+        if (strcmp(filepath, ESP_FS_WS_CONFIG_FILE) == 0 && m_configSavedCallback) {
             log_debug("Config file saved, calling callback");
-            m_configSavedCallback(m_uploadFile.path());
+            m_configSavedCallback(filepath);
         }
 
         if (m_uploadFile) { 
