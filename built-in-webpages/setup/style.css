@@ -130,7 +130,6 @@ select{
     color:var(--c-1-d);
     background:var(--c-2-d);
     transition:.3s;
-    z-index: 99;
 }
 .lbl:hover{
     border-color:var(--c-1);
@@ -168,6 +167,10 @@ select{
 .logo{
     width:128px;
     margin:10px
+}
+.ldg{
+  text-align:center;
+  color:var(--c-1-d)
 }
 hr{
     width:100%;
@@ -495,7 +498,6 @@ hr{
     color:var(--c-1-d);
     border:2px solid var(--c-1);
     border-bottom:2px solid var(--c-2-d);
-    z-index:2;
     position:relative;
     top:2px;
     box-shadow:none
