@@ -77,12 +77,70 @@ class SetupConfigurator
         // Finalize any open section and attach sections array to root document
         void finalizeSectionsToRoot() {
             if (m_doc == nullptr) return;
+
+            cJSON* root = m_doc->getRoot();
+            cJSON* existingSections = root ? cJSON_GetObjectItemCaseSensitive(root, "sections") : nullptr;
+
             if (m_hasCurrentSection) {
                 m_currentSection.set("elements", m_currentElements);
                 m_sectionsArray.add(m_currentSection);
                 m_hasCurrentSection = false;
             }
+
+            cJSON* builtSections = m_sectionsArray.getRoot();
+            const bool hasBuiltSections = builtSections && cJSON_IsArray(builtSections) && builtSections->child != nullptr;
+
+            if (!hasBuiltSections && existingSections != nullptr) {
+                return;
+            }
+
             m_doc->set("sections", m_sectionsArray);
+        }
+
+        cJSON* findElementByLabel(cJSON* root, const char *label) {
+            if (!root || label == nullptr) return nullptr;
+
+            cJSON* sections = cJSON_GetObjectItemCaseSensitive(root, "sections");
+            if (!sections || !cJSON_IsArray(sections)) return nullptr;
+
+            for (cJSON* sec = sections->child; sec; sec = sec->next) {
+                cJSON* elems = cJSON_GetObjectItemCaseSensitive(sec, "elements");
+                if (!elems || !cJSON_IsArray(elems)) continue;
+
+                for (cJSON* el = elems->child; el; el = el->next) {
+                    cJSON* lblNode = cJSON_GetObjectItemCaseSensitive(el, "label");
+                    if (lblNode && cJSON_IsString(lblNode) && lblNode->valuestring && String(lblNode->valuestring).equals(label)) {
+                        return el;
+                    }
+                }
+            }
+
+            return nullptr;
+        }
+
+        bool adoptSavedConfigurationAsSessionDoc() {
+            if (m_savedDoc == nullptr) return false;
+
+            String savedContent = m_savedDoc->serialize(false);
+
+            if (m_doc != nullptr) {
+                delete m_doc;
+                m_doc = nullptr;
+            }
+
+            m_doc = new CJSON::Json();
+            if (!m_doc->parse(savedContent)) {
+                log_error("Failed to clone saved configuration into session document");
+                delete m_doc;
+                m_doc = nullptr;
+                return false;
+            }
+
+            m_sectionsArray.createArray();
+            m_currentSection.createObject();
+            m_currentElements.createArray();
+            m_hasCurrentSection = false;
+            return true;
         }
 
         bool isOpened() {
@@ -256,6 +314,7 @@ class SetupConfigurator
 
     public:
         friend class FSWebServer;
+        friend class AsyncFsWebServer;
         SetupConfigurator(fs::FS *fs, uint16_t& port, String& host) 
             : m_filesystem(fs), m_port(port), m_host(host) { ; }
 
@@ -1135,24 +1194,17 @@ class SetupConfigurator
 
             cJSON* root = m_doc->getRoot();
             if (!root) return false;
-            cJSON* sections = cJSON_GetObjectItemCaseSensitive(root, "sections");
-            if (!sections || !cJSON_IsArray(sections)) return false;
+            cJSON* targetElement = findElementByLabel(root, label);
 
-            cJSON* targetElement = nullptr;
-            for (cJSON* sec = sections->child; sec; sec = sec->next) {
-                cJSON* elems = cJSON_GetObjectItemCaseSensitive(sec, "elements");
-                if (!elems || !cJSON_IsArray(elems)) continue;
-                for (cJSON* el = elems->child; el; el = el->next) {
-                    cJSON* lblNode = cJSON_GetObjectItemCaseSensitive(el, "label");
-                    if (lblNode && cJSON_IsString(lblNode) && lblNode->valuestring && String(lblNode->valuestring).equals(label)) {
-                        targetElement = el;
-                        break;
-                    }
-                }
-                if (targetElement) break;
+            if (!targetElement && adoptSavedConfigurationAsSessionDoc()) {
+                root = m_doc ? m_doc->getRoot() : nullptr;
+                targetElement = findElementByLabel(root, label);
             }
 
-            if (!targetElement) return false;
+            if (!targetElement) {
+                log_error("Error! /setup configuration element with label \"%s\" not found", label);
+                return false;
+            }
 
             // Replace or create "value" field inside target element
             cJSON_DeleteItemFromObjectCaseSensitive(targetElement, "value");
@@ -1165,6 +1217,10 @@ class SetupConfigurator
                 cJSON_AddItemToObject(targetElement, "value", cJSON_CreateBool(val));
             } else {
                 cJSON_AddItemToObject(targetElement, "value", cJSON_CreateNumber(static_cast<double>(val)));
+            }
+
+            if (numOptions == 0) {
+                numOptions = 1;
             }
             return true;
         }
