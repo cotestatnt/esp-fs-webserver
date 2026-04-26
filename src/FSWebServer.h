@@ -78,7 +78,6 @@ class Print;
 #include "CredentialManager.h"
 #include "SetupConfig.hpp"
 #include "assets/setup_htm.h"
-#include "assets/creds_js.h"
 #include "assets/logo_svg.h"
 #endif
 
@@ -118,6 +117,9 @@ protected:
 #if ESP_FS_WS_WEBSOCKET
   WebSocketsServer *m_websocket;
 #endif
+#if ESP_FS_WS_SETUP
+  WebSocketsServer *m_setupWebSocket = nullptr;
+#endif
   DNSServer *m_dnsServer = nullptr;
   bool m_isApMode = false;
   bool m_authAll = false; // Flag to require authentication for all pages
@@ -134,10 +136,6 @@ protected:
   File m_uploadFile;
   uint8_t otaDone = 0;
   void handleSetup();
-  void getStatus();  
-  void clearConfig();
-  void doWifiConnection();
-  void handleScanNetworks();
   void handleFileUpload();
   void checkForUnsupportedPath(String &filename, String &error);
   void update_second();
@@ -183,13 +181,27 @@ private:
 #if ESP_FS_WS_SETUP
   SetupConfigurator *setup = nullptr;
 
-  // Deferred STA reconnect handling (used when applying new WiFi settings
-  // while already connected in STA mode, to avoid HTTP timeouts).
-  bool m_pendingWifiConnect = false;
-  WiFiConnectParams m_pendingParams;
-  bool m_pendingWasStaConnected = false;
+  bool m_pendingSetupWifiConnect = false;
+  WiFiConnectParams m_pendingSetupParams;
+  bool m_pendingSetupPersistent = true;
+  bool m_pendingSetupAllowApFallback = false;
+  bool m_pendingSetupFromApClient = false;
+  uint8_t m_pendingSetupClientId = 0;
+  bool m_releaseSetupWebSocketPending = false;
+  unsigned long m_pendingSetupRestartAt = 0;
 
-  void processPendingWifiConnection();
+  void initSetupWebSocket();
+  void releaseSetupWebSocketIfIdle();
+  void handleSetupWebSocket(uint8_t clientId, WStype_t type, uint8_t *payload, size_t length);
+  void handleSetupWebSocketMessage(uint8_t clientId, const uint8_t *data, size_t len);
+  void sendSetupWsResponse(uint8_t clientId, const String &reqId, bool ok, const char *name, const String &payload = String(), const String &error = String());
+  void sendSetupWsEvent(uint8_t clientId, const char *name, const String &payload = String());
+  String buildSetupStatusPayload() const;
+  String buildSetupConfigPayload() const;
+  String buildSetupCredentialsPayload() const;
+  bool saveSetupConfigJson(const String &jsonText);
+  void queueSetupWifiConnect(uint8_t clientId, const WiFiConnectParams &params, bool persistent, bool allowApFallback, bool fromApClient);
+  void processPendingSetupWifiConnection();
 
   // Lazy initialization: create setup object only when first needed
   SetupConfigurator *getSetupConfigurator() {
@@ -275,6 +287,10 @@ public:
     if (m_websocket)
       delete m_websocket;
 #endif
+#if ESP_FS_WS_SETUP
+    if (m_setupWebSocket)
+      delete m_setupWebSocket;
+#endif
     if (m_dnsServer)
       delete m_dnsServer;
 #if ESP_FS_WS_SETUP
@@ -290,6 +306,10 @@ public:
     if (m_websocket)
       m_websocket->loop();
 #endif
+#if ESP_FS_WS_SETUP
+    if (m_setupWebSocket)
+      m_setupWebSocket->loop();
+#endif
     // Handle DNS requests
 #if ESP_FS_WS_MDNS
     if (m_dnsServer)
@@ -302,10 +322,17 @@ public:
 #endif
 
 #if ESP_FS_WS_SETUP
-    // If a STA reconnection has been scheduled (from /connect), process it
-    // after the HTTP response has been handled.
-    if (m_pendingWifiConnect) {
-      processPendingWifiConnection();
+    if (m_pendingSetupWifiConnect) {
+      processPendingSetupWifiConnection();
+    }
+
+    if (m_releaseSetupWebSocketPending) {
+      releaseSetupWebSocketIfIdle();
+    }
+
+    if (m_pendingSetupRestartAt != 0 && millis() >= m_pendingSetupRestartAt) {
+      m_pendingSetupRestartAt = 0;
+      ESP.restart();
     }
 #endif
 }

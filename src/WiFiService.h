@@ -36,7 +36,7 @@ struct WiFiStartResult {
 
 struct WiFiConnectParams {
     WiFiCredential config;                       // WiFi credentials (ssid, encrypted password, IP config, DNS)
-    bool fromApClient = false;                  // True if the /connect request was initiated by a client
+    bool fromApClient = false;                  // True if the setup client initiated the connection while AP mode is active
     bool dhcp = true;                           // True to use DHCP, false for static IP
     String password;                            // Plaintext password (temporary, not stored in credential)
     String host;                                // Hostname for mDNS

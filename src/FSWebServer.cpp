@@ -4,6 +4,22 @@
     #include "mimetable/mimetable.h"
 #endif
 
+namespace {
+String serializeJsonDocument(cJSON *root) {
+    if (!root) {
+        return "{}";
+    }
+
+    char *raw = cJSON_PrintUnformatted(root);
+    String out = raw ? String(raw) : String("{}");
+    if (raw) {
+        free(raw);
+    }
+    cJSON_Delete(root);
+    return out;
+}
+}
+
 
 void FSWebServer::begin(WebSocketsServer::WebSocketServerEvent wsEventHandler) {
 
@@ -35,6 +51,9 @@ void FSWebServer::begin(WebSocketsServer::WebSocketServerEvent wsEventHandler) {
         }
     }     
 
+    // Register the setup websocket before serving /setup to avoid a first-load race.
+    initSetupWebSocket();
+
     // Setup page handlers
     on("*", HTTP_HEAD, [this]() { this->handleFileName(); });
     on("/", HTTP_GET, [this]() { this->handleIndex(); });
@@ -55,20 +74,6 @@ void FSWebServer::begin(WebSocketsServer::WebSocketServerEvent wsEventHandler) {
         }
     });
 
-    // Handler for serving the isolated credentials script (Gzipped from PROGMEM)
-    on("/creds.js", HTTP_GET, [this]() {
-        if (m_pageUser != nullptr) {
-            if(!this->authenticate(m_pageUser, m_pagePswd))
-                return this->requestAuthentication();
-        }
-        this->sendHeader(PSTR("Content-Encoding"), "gzip");
-        this->sendHeader(PSTR("Cache-Control"), "public, max-age=86400");
-        this->send_P(200, "application/javascript", (const char*)_accreds_js, sizeof(_accreds_js));
-    });
-    on("/connect", HTTP_POST, [this]() { this->doWifiConnection(); });
-    on("/scan", HTTP_GET, [this]() { this->handleScanNetworks(); });
-    on("/getStatus", HTTP_GET, [this]() { this->getStatus(); });
-    on("/clear_config", HTTP_GET, [this]() { this->clearConfig(); });
     // WiFi info handler
     on("/wifi", HTTP_GET, [this]() {
         CJSON::Json doc;
@@ -76,98 +81,14 @@ void FSWebServer::begin(WebSocketsServer::WebSocketServerEvent wsEventHandler) {
         doc.setNumber("rssi", WiFi.RSSI());
         this->send(200, "application/json", doc.serialize());
     });
-    // WiFi credentials management (no plaintext passwords exposed)
-    on("/wifi/credentials", HTTP_GET, [this]() {
-        CJSON::Json json_array;
-        json_array.createArray();
-        if (m_credentialManager) {
-            std::vector<WiFiCredential>* creds = m_credentialManager->getCredentials();
-            if (creds) {
-                for (size_t i = 0; i < creds->size(); ++i) {
-                    const WiFiCredential &c = (*creds)[i];
-                    CJSON::Json item;
-                    item.setNumber("index", static_cast<int>(i));
-                    item.setString("ssid", c.ssid);
-                    if (c.local_ip != IPAddress(0, 0, 0, 0)) {
-                        item.setString("ip", c.local_ip.toString());
-                        item.setString("gateway", c.gateway.toString());
-                        item.setString("subnet", c.subnet.toString());
-                    }
-                    item.setNumber("hasPassword", c.pwd_len > 0 ? 1 : 0);
-                    json_array.add(item);
-                }
-            }
-        }
-        this->send(200, "application/json", json_array.serialize());
-    });
-    // Delete a single credential (by index) or clear all if no index is provided
-    on("/wifi/credentials", HTTP_DELETE, [this]() {
-        if (!m_credentialManager) {
-            this->send(404, "text/plain", "Credential manager not available");
-            return;
-        }
-
-        bool ok = false;
-        if (this->hasArg("index")) {
-            int idx = this->arg("index").toInt();
-            ok = m_credentialManager->removeCredential(static_cast<uint8_t>(idx));
-        } else {
-            m_credentialManager->clearAll();
-            ok = true;
-        }
-
-#if defined(ESP32)
-        m_credentialManager->saveToNVS();
-#elif defined(ESP8266)
-        m_credentialManager->saveToFS();
 #endif
 
-        this->send(ok ? 200 : 400, "text/plain", ok ? "OK" : "Invalid index");
-    });
-    // File upload handler for /setup page
-    on("/upload", HTTP_POST,
-        [this]() { this->sendOK();},
-        [this]() { this->handleFileUpload(); }  
-    );
-    // OTA update via webbrowser
-    this->on("/update", HTTP_POST,
-        [this]() { this->update_second(); },
-        [this]() { this->update_first(); }  
-    );
-    // Restart handler
-    on("/reset", HTTP_GET, [this]() {
-        // Send response first, then restart shortly after
-        this->sendHeader(PSTR("Connection"), "close");
-        this->send(200, "text/plain", WiFi.localIP().toString());
-        delay(500);
-#if defined(ESP8266)
-        ESP.reset();
-#else
-        ESP.restart();
-#endif
-    });
-#endif
-
-    // Handler for all other files
-    onNotFound([this]() { this->handleFileRequest(); });    
-    
-    // Start MDNS responder if hostname is set
-    if (m_host.length()) {
-        if (m_dnsServer)
-            this->startMDNSResponder();
-
-        this->setHostname(m_host.c_str());        
-    }
-
-    // WebSocket setup
 #if ESP_FS_WS_WEBSOCKET
-    if (wsEventHandler != nullptr) {
-        if (!m_websocket) {
-            m_websocket = new WebSocketsServer(m_port+1);
-            m_websocket->begin();
-            m_websocket->onEvent(wsEventHandler);
-            log_debug("WebSocket server started on port %u", m_port + 1);
-        }
+    if (wsEventHandler) {
+        m_websocket = new WebSocketsServer(m_port + 1);
+        m_websocket->begin();
+        m_websocket->onEvent(wsEventHandler);
+        log_debug("WebSocket server started on port %u", m_port + 1);
     }
 #endif
 
@@ -182,6 +103,465 @@ void FSWebServer::begin(WebSocketsServer::WebSocketServerEvent wsEventHandler) {
     freeSetupConfigurator();
 #endif
 }
+
+#if ESP_FS_WS_SETUP
+void FSWebServer::initSetupWebSocket() {
+    if (m_setupWebSocket) {
+        return;
+    }
+
+    m_setupWebSocket = new WebSocketsServer(m_port + 2);
+    m_setupWebSocket->begin();
+    m_setupWebSocket->onEvent([this](uint8_t clientId, WStype_t type, uint8_t *payload, size_t length) {
+        this->handleSetupWebSocket(clientId, type, payload, length);
+    });
+    log_debug("Setup WebSocket server started on port %u", m_port + 2);
+}
+
+void FSWebServer::releaseSetupWebSocketIfIdle() {
+    m_releaseSetupWebSocketPending = false;
+    if (!m_setupWebSocket || m_setupWebSocket->connectedClients() > 0) {
+        return;
+    }
+
+    // Keep the setup websocket listener alive across page reloads.
+    // Tearing it down on every disconnect creates a race where the browser's
+    // next reload connects while the server is being closed and recreated.
+    log_debug("Setup WebSocket idle; listener kept active");
+}
+
+void FSWebServer::handleSetupWebSocket(uint8_t clientId, WStype_t type, uint8_t *payload, size_t length) {
+    switch (type) {
+        case WStype_CONNECTED:
+            sendSetupWsEvent(clientId, "setup.socket.ready");
+            break;
+        case WStype_TEXT:
+            handleSetupWebSocketMessage(clientId, payload, length);
+            break;
+        case WStype_DISCONNECTED:
+            if (m_setupWebSocket && m_setupWebSocket->connectedClients() == 0) {
+                m_releaseSetupWebSocketPending = true;
+            }
+            break;
+        default:
+            break;
+    }
+}
+
+void FSWebServer::handleSetupWebSocketMessage(uint8_t clientId, const uint8_t *data, size_t len) {
+    if (!data || len == 0) {
+        return;
+    }
+
+    cJSON *root = cJSON_ParseWithLengthOpts(reinterpret_cast<const char *>(data), len, nullptr, 0);
+    if (!root) {
+        sendSetupWsResponse(clientId, String(), false, "invalid", String(), "Invalid JSON");
+        return;
+    }
+
+    cJSON *type = cJSON_GetObjectItemCaseSensitive(root, "type");
+    cJSON *name = cJSON_GetObjectItemCaseSensitive(root, "name");
+    cJSON *payload = cJSON_GetObjectItemCaseSensitive(root, "payload");
+    cJSON *reqId = cJSON_GetObjectItemCaseSensitive(root, "reqId");
+
+    String reqIdStr = cJSON_IsString(reqId) && reqId->valuestring ? String(reqId->valuestring) : String();
+    String nameStr = cJSON_IsString(name) && name->valuestring ? String(name->valuestring) : String();
+
+    if (!cJSON_IsString(type) || strcmp(type->valuestring, "cmd") != 0 || nameStr.length() == 0) {
+        cJSON_Delete(root);
+        sendSetupWsResponse(clientId, reqIdStr, false, "invalid", String(), "Invalid command envelope");
+        return;
+    }
+
+    if (nameStr == "status.get") {
+        cJSON_Delete(root);
+        sendSetupWsResponse(clientId, reqIdStr, true, nameStr.c_str(), buildSetupStatusPayload());
+        return;
+    }
+
+    if (nameStr == "config.get") {
+        cJSON_Delete(root);
+        sendSetupWsResponse(clientId, reqIdStr, true, nameStr.c_str(), buildSetupConfigPayload());
+        return;
+    }
+
+    if (nameStr == "credentials.get") {
+        cJSON_Delete(root);
+        sendSetupWsResponse(clientId, reqIdStr, true, nameStr.c_str(), buildSetupCredentialsPayload());
+        return;
+    }
+
+    if (nameStr == "credentials.delete") {
+        bool ok = false;
+        if (m_credentialManager && cJSON_IsObject(payload)) {
+            cJSON *index = cJSON_GetObjectItemCaseSensitive(payload, "index");
+            if (cJSON_IsNumber(index)) {
+                ok = m_credentialManager->removeCredential(static_cast<uint8_t>(index->valuedouble));
+            }
+        }
+        if (ok) {
+#if defined(ESP32)
+            m_credentialManager->saveToNVS();
+#elif defined(ESP8266)
+            m_credentialManager->saveToFS();
+#endif
+        }
+        cJSON_Delete(root);
+        sendSetupWsResponse(clientId, reqIdStr, ok, nameStr.c_str(), buildSetupCredentialsPayload(), ok ? String() : String("Invalid credential index"));
+        return;
+    }
+
+    if (nameStr == "credentials.clear") {
+        bool ok = m_credentialManager != nullptr;
+        if (m_credentialManager) {
+            m_credentialManager->clearAll();
+#if defined(ESP32)
+            m_credentialManager->saveToNVS();
+#elif defined(ESP8266)
+            m_credentialManager->saveToFS();
+#endif
+        }
+        cJSON_Delete(root);
+        sendSetupWsResponse(clientId, reqIdStr, ok, nameStr.c_str(), buildSetupCredentialsPayload(), ok ? String() : String("Credential manager not available"));
+        return;
+    }
+
+    if (nameStr == "wifi.scan") {
+        WiFiScanResult scan = WiFiService::scanNetworks();
+        cJSON *scanPayload = cJSON_CreateObject();
+        if (scan.reload) {
+            cJSON_AddBoolToObject(scanPayload, "reload", true);
+        } else {
+            cJSON *networks = cJSON_Parse(scan.json.c_str());
+            if (!networks) {
+                networks = cJSON_CreateArray();
+            }
+            cJSON_AddItemToObject(scanPayload, "networks", networks);
+        }
+        cJSON_Delete(root);
+        sendSetupWsResponse(clientId, reqIdStr, true, nameStr.c_str(), serializeJsonDocument(scanPayload));
+        return;
+    }
+
+    if (nameStr == "config.save") {
+        bool ok = false;
+        if (cJSON_IsObject(payload)) {
+            cJSON *configNode = cJSON_GetObjectItemCaseSensitive(payload, "config");
+            if (configNode) {
+                char *rawConfig = cJSON_Print(configNode);
+                if (rawConfig) {
+                    ok = saveSetupConfigJson(String(rawConfig));
+                    free(rawConfig);
+                }
+            }
+        }
+        cJSON_Delete(root);
+        sendSetupWsResponse(clientId, reqIdStr, ok, nameStr.c_str(), buildSetupConfigPayload(), ok ? String() : String("Failed to save config"));
+        return;
+    }
+
+    if (nameStr == "device.restart") {
+        cJSON_Delete(root);
+        sendSetupWsResponse(clientId, reqIdStr, true, nameStr.c_str());
+        m_pendingSetupRestartAt = millis() + 200;
+        return;
+    }
+
+    if (nameStr == "wifi.connect") {
+        WiFiConnectParams params;
+        bool persistent = true;
+        bool confirmed = false;
+
+        if (cJSON_IsObject(payload)) {
+            cJSON *ssid = cJSON_GetObjectItemCaseSensitive(payload, "ssid");
+            cJSON *password = cJSON_GetObjectItemCaseSensitive(payload, "password");
+            cJSON *host = cJSON_GetObjectItemCaseSensitive(payload, "hostname");
+            cJSON *dhcp = cJSON_GetObjectItemCaseSensitive(payload, "dhcp");
+            cJSON *persistentNode = cJSON_GetObjectItemCaseSensitive(payload, "persistent");
+            cJSON *confirmedNode = cJSON_GetObjectItemCaseSensitive(payload, "confirmed");
+            cJSON *ip = cJSON_GetObjectItemCaseSensitive(payload, "ip_address");
+            cJSON *gateway = cJSON_GetObjectItemCaseSensitive(payload, "gateway");
+            cJSON *subnet = cJSON_GetObjectItemCaseSensitive(payload, "subnet");
+            cJSON *dns1 = cJSON_GetObjectItemCaseSensitive(payload, "dns1");
+            cJSON *dns2 = cJSON_GetObjectItemCaseSensitive(payload, "dns2");
+
+            if (cJSON_IsString(ssid) && ssid->valuestring) {
+                strlcpy(params.config.ssid, ssid->valuestring, sizeof(params.config.ssid));
+            }
+            if (cJSON_IsString(password) && password->valuestring) {
+                params.password = password->valuestring;
+            }
+            if (cJSON_IsString(host) && host->valuestring) {
+                String requestedHost = String(host->valuestring);
+                requestedHost.trim();
+                if (requestedHost.length() > 32) {
+                    requestedHost.remove(32);
+                }
+                if (requestedHost.length()) {
+                    m_host = requestedHost;
+                    if (m_credentialManager) {
+                        m_credentialManager->setHostname(m_host.c_str());
+                    }
+                }
+            }
+
+            params.dhcp = !cJSON_IsBool(dhcp) || cJSON_IsTrue(dhcp);
+            persistent = !cJSON_IsBool(persistentNode) || cJSON_IsTrue(persistentNode);
+            confirmed = cJSON_IsBool(confirmedNode) && cJSON_IsTrue(confirmedNode);
+
+            if (!params.dhcp) {
+                if (cJSON_IsString(ip) && ip->valuestring) params.config.local_ip.fromString(ip->valuestring);
+                if (cJSON_IsString(gateway) && gateway->valuestring) params.config.gateway.fromString(gateway->valuestring);
+                if (cJSON_IsString(subnet) && subnet->valuestring) params.config.subnet.fromString(subnet->valuestring);
+                if (cJSON_IsString(dns1) && dns1->valuestring) params.config.dns1.fromString(dns1->valuestring);
+                if (cJSON_IsString(dns2) && dns2->valuestring) params.config.dns2.fromString(dns2->valuestring);
+            }
+        }
+
+        if (params.password.length() == 0 && strlen(params.config.ssid) && m_credentialManager &&
+            m_credentialManager->checkSSIDExists(params.config.ssid)) {
+            String stored = m_credentialManager->getPassword(params.config.ssid);
+            if (stored.length()) {
+                params.password = stored;
+            }
+        }
+
+        bool wasStaConnected = (WiFi.status() == WL_CONNECTED && WiFi.getMode() != WIFI_AP);
+        params.fromApClient = m_isApMode;
+        params.host = m_host;
+        params.timeout = m_timeout;
+        params.wdtLongTimeout = AWS_LONG_WDT_TIMEOUT;
+        params.wdtTimeout = AWS_WDT_TIMEOUT;
+
+        if (!params.fromApClient && !confirmed && WiFi.status() == WL_CONNECTED) {
+            cJSON *confirmPayload = cJSON_CreateObject();
+            cJSON_AddBoolToObject(confirmPayload, "confirmRequired", true);
+            cJSON_AddStringToObject(confirmPayload, "ssid", params.config.ssid);
+            cJSON_Delete(root);
+            sendSetupWsResponse(clientId, reqIdStr, true, nameStr.c_str(), serializeJsonDocument(confirmPayload));
+            return;
+        }
+
+        cJSON_Delete(root);
+        sendSetupWsResponse(clientId, reqIdStr, true, nameStr.c_str(), String("{\"accepted\":true}"));
+        queueSetupWifiConnect(clientId, params, persistent, wasStaConnected && !params.fromApClient, params.fromApClient);
+        return;
+    }
+
+    cJSON_Delete(root);
+    sendSetupWsResponse(clientId, reqIdStr, false, nameStr.c_str(), String(), "Unknown command");
+}
+
+void FSWebServer::sendSetupWsResponse(uint8_t clientId, const String &reqId, bool ok, const char *name, const String &payload, const String &error) {
+    if (!m_setupWebSocket || !m_setupWebSocket->clientIsConnected(clientId)) {
+        return;
+    }
+
+    cJSON *root = cJSON_CreateObject();
+    cJSON_AddStringToObject(root, "type", "res");
+    cJSON_AddStringToObject(root, "name", name ? name : "unknown");
+    if (reqId.length()) {
+        cJSON_AddStringToObject(root, "reqId", reqId.c_str());
+    }
+    cJSON_AddBoolToObject(root, "ok", ok);
+    if (payload.length()) {
+        cJSON *payloadNode = cJSON_Parse(payload.c_str());
+        if (payloadNode) {
+            cJSON_AddItemToObject(root, "payload", payloadNode);
+        }
+    }
+    if (error.length()) {
+        cJSON_AddStringToObject(root, "error", error.c_str());
+    }
+
+    String message = serializeJsonDocument(root);
+    m_setupWebSocket->sendTXT(clientId, message.c_str(), message.length());
+}
+
+void FSWebServer::sendSetupWsEvent(uint8_t clientId, const char *name, const String &payload) {
+    if (!m_setupWebSocket || !m_setupWebSocket->clientIsConnected(clientId)) {
+        return;
+    }
+
+    cJSON *root = cJSON_CreateObject();
+    cJSON_AddStringToObject(root, "type", "evt");
+    cJSON_AddStringToObject(root, "name", name ? name : "unknown");
+    if (payload.length()) {
+        cJSON *payloadNode = cJSON_Parse(payload.c_str());
+        if (payloadNode) {
+            cJSON_AddItemToObject(root, "payload", payloadNode);
+        }
+    }
+
+    String message = serializeJsonDocument(root);
+    m_setupWebSocket->sendTXT(clientId, message.c_str(), message.length());
+}
+
+String FSWebServer::buildSetupStatusPayload() const {
+    cJSON *payload = cJSON_CreateObject();
+    cJSON *status = cJSON_CreateObject();
+    cJSON_AddStringToObject(status, "firmware", m_version.c_str());
+
+    String mode;
+    if (WiFi.status() == WL_CONNECTED) {
+        mode = "Station (";
+        mode += WiFi.SSID();
+        mode += ")";
+    } else {
+        mode = "Access Point";
+    }
+    cJSON_AddStringToObject(status, "mode", mode.c_str());
+    String ip = (WiFi.status() == WL_CONNECTED) ? WiFi.localIP().toString() : WiFi.softAPIP().toString();
+    cJSON_AddStringToObject(status, "ip", ip.c_str());
+    cJSON_AddStringToObject(status, "hostname", m_host.c_str());
+    cJSON_AddStringToObject(status, "path", String(ESP_FS_WS_CONFIG_FILE).substring(1).c_str());
+    cJSON_AddStringToObject(status, "liburl", LIB_URL);
+
+    String logoPath;
+    if (const_cast<FSWebServer *>(this)->getSetupConfigurator()->getOptionValue("img-logo", logoPath) && logoPath.length() > 0) {
+        cJSON_AddStringToObject(status, "img-logo", logoPath.c_str());
+    }
+
+    String pageTitle;
+    if (const_cast<FSWebServer *>(this)->getSetupConfigurator()->getOptionValue("page-title", pageTitle) && pageTitle.length() > 0) {
+        cJSON_AddStringToObject(status, "page-title", pageTitle.c_str());
+    }
+
+    cJSON_AddItemToObject(payload, "status", status);
+    return serializeJsonDocument(payload);
+}
+
+String FSWebServer::buildSetupConfigPayload() const {
+    cJSON *payload = cJSON_CreateObject();
+    cJSON *config = nullptr;
+    if (m_filesystem && m_filesystem->exists(ESP_FS_WS_CONFIG_FILE)) {
+        File file = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "r");
+        if (file) {
+            String content = file.readString();
+            file.close();
+            config = cJSON_Parse(content.c_str());
+        }
+    }
+    if (!config) {
+        config = cJSON_CreateObject();
+    }
+    cJSON_AddItemToObject(payload, "config", config);
+    return serializeJsonDocument(payload);
+}
+
+String FSWebServer::buildSetupCredentialsPayload() const {
+    cJSON *payload = cJSON_CreateObject();
+    cJSON *credentials = cJSON_CreateArray();
+
+    if (m_credentialManager) {
+        std::vector<WiFiCredential> *creds = m_credentialManager->getCredentials();
+        if (creds) {
+            for (size_t i = 0; i < creds->size(); ++i) {
+                const WiFiCredential &cred = (*creds)[i];
+                cJSON *item = cJSON_CreateObject();
+                cJSON_AddNumberToObject(item, "index", static_cast<double>(i));
+                cJSON_AddStringToObject(item, "ssid", cred.ssid);
+                if (cred.local_ip != IPAddress(0, 0, 0, 0)) {
+                    cJSON_AddStringToObject(item, "ip", cred.local_ip.toString().c_str());
+                    cJSON_AddStringToObject(item, "gateway", cred.gateway.toString().c_str());
+                    cJSON_AddStringToObject(item, "subnet", cred.subnet.toString().c_str());
+                    if (cred.dns1 != IPAddress(0, 0, 0, 0)) {
+                        cJSON_AddStringToObject(item, "dns1", cred.dns1.toString().c_str());
+                    }
+                    if (cred.dns2 != IPAddress(0, 0, 0, 0)) {
+                        cJSON_AddStringToObject(item, "dns2", cred.dns2.toString().c_str());
+                    }
+                }
+                cJSON_AddBoolToObject(item, "hasPassword", cred.pwd_len > 0);
+                cJSON_AddItemToArray(credentials, item);
+            }
+        }
+    }
+
+    cJSON_AddItemToObject(payload, "credentials", credentials);
+    return serializeJsonDocument(payload);
+}
+
+bool FSWebServer::saveSetupConfigJson(const String &jsonText) {
+    if (!m_filesystem) {
+        return false;
+    }
+
+    File file = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "w");
+    if (!file) {
+        return false;
+    }
+
+    size_t written = file.print(jsonText);
+    file.close();
+    if (written == 0) {
+        return false;
+    }
+
+    if (m_configSavedCallback) {
+        m_configSavedCallback(ESP_FS_WS_CONFIG_FILE);
+    }
+    return true;
+}
+
+void FSWebServer::queueSetupWifiConnect(uint8_t clientId, const WiFiConnectParams &params, bool persistent, bool allowApFallback, bool fromApClient) {
+    m_pendingSetupClientId = clientId;
+    m_pendingSetupParams = params;
+    m_pendingSetupPersistent = persistent;
+    m_pendingSetupAllowApFallback = allowApFallback;
+    m_pendingSetupFromApClient = fromApClient;
+    m_pendingSetupWifiConnect = true;
+
+    cJSON *payload = cJSON_CreateObject();
+    cJSON_AddStringToObject(payload, "ssid", params.config.ssid);
+    sendSetupWsEvent(clientId, "wifi.connect.started", serializeJsonDocument(payload));
+}
+
+void FSWebServer::processPendingSetupWifiConnection() {
+    m_pendingSetupWifiConnect = false;
+
+    WiFiConnectParams params = m_pendingSetupParams;
+    bool persistent = m_pendingSetupPersistent;
+    bool allowApFallback = m_pendingSetupAllowApFallback;
+    bool fromApClient = m_pendingSetupFromApClient;
+    uint8_t clientId = m_pendingSetupClientId;
+
+    WiFiConnectResult result = WiFiService::connectWithParams(params);
+
+    if (result.connected && persistent && strlen(params.config.ssid) && params.password.length() && m_credentialManager) {
+        if (params.dhcp) {
+            params.config.local_ip = IPAddress(0, 0, 0, 0);
+            params.config.gateway = IPAddress(0, 0, 0, 0);
+            params.config.subnet = IPAddress(0, 0, 0, 0);
+            params.config.dns1 = IPAddress(0, 0, 0, 0);
+            params.config.dns2 = IPAddress(0, 0, 0, 0);
+        }
+        if (!m_credentialManager->updateCredential(params.config, params.password.c_str())) {
+            m_credentialManager->addCredential(params.config, params.password.c_str());
+        }
+#if defined(ESP32)
+        m_credentialManager->saveToNVS();
+#elif defined(ESP8266)
+        m_credentialManager->saveToFS();
+#endif
+    }
+
+    if (result.connected) {
+        m_serverIp = result.ip;
+    } else if (allowApFallback && strlen(m_apSSID) > 0) {
+        startCaptivePortal(m_apSSID, m_apPassword, "/setup");
+    }
+
+    cJSON *payload = cJSON_CreateObject();
+    cJSON_AddBoolToObject(payload, "connected", result.connected);
+    cJSON_AddNumberToObject(payload, "status", result.status);
+    cJSON_AddStringToObject(payload, "body", result.body.c_str());
+    cJSON_AddStringToObject(payload, "ip", result.ip.toString().c_str());
+    cJSON_AddStringToObject(payload, "hostname", m_host.c_str());
+    cJSON_AddBoolToObject(payload, "fromApClient", fromApClient);
+    sendSetupWsEvent(clientId, result.connected ? "wifi.connect.success" : "wifi.connect.error", serializeJsonDocument(payload));
+}
+#endif
 
 
 void FSWebServer::handleIndex(){
@@ -384,91 +764,16 @@ void FSWebServer::handleSetup() {
         if(!this->authenticate(m_pageUser, m_pagePswd))
             return this->requestAuthentication();
     }
+    initSetupWebSocket();
     this->sendHeader(PSTR("Content-Encoding"), "gzip");
-    this->sendHeader(PSTR("Cache-Control"), "public, max-age=86400");
+    this->sendHeader(PSTR("X-Config-File"), ESP_FS_WS_CONFIG_FILE);
+    this->sendHeader(PSTR("Set-Cookie"), "esp_fs_ws_mode=dedicated; Path=/; SameSite=Lax");
     // Changed array name to match SEGGER Bin2C output
     this->send_P(200, "text/html", (const char*)_acsetup_min_htm, sizeof(_acsetup_min_htm));
 }
 #endif
 
 #if ESP_FS_WS_SETUP
-void FSWebServer::getStatus() {
-    CJSON::Json doc;
-    doc.setString("firmware", m_version);
-    String mode;
-    if (WiFi.status() == WL_CONNECTED) {
-        mode = "Station (";
-        mode += WiFi.SSID();
-        mode += ")";
-    } else {
-        mode = "Access Point";
-    }
-    doc.setString("mode", mode);
-    String ip = (WiFi.status() == WL_CONNECTED) ? WiFi.localIP().toString() : WiFi.softAPIP().toString();
-    doc.setString("ip", ip);
-    doc.setString("hostname", m_host);
-    doc.setNumber("port", static_cast<double>(m_port));
-    doc.setString("path", String(ESP_FS_WS_CONFIG_FILE).substring(1));   // remove first '/'
-    doc.setString("liburl", LIB_URL);
-
-    // Optional: expose current logo URL so the UI can avoid an extra fetch
-  #if ESP_FS_WS_SETUP_HTM
-    String logoPath;
-
-    // Try to read from existing config.json (preferred, supports custom logos)
-    if (m_filesystem->exists(ESP_FS_WS_CONFIG_FILE)) {
-        File cfg = m_filesystem->open(ESP_FS_WS_CONFIG_FILE, "r");
-        if (cfg) {
-            String content = cfg.readString();
-            cfg.close();
-
-            CJSON::Json cfgDoc;
-            if (cfgDoc.parse(content)) {
-                String tmp;
-                // Prefer v2 metadata location
-                if (cfgDoc.getString("_meta", "logo", tmp)) {
-                    logoPath = tmp;
-                }
-                // Backwards compatibility: fall back to flat "img-logo" if present
-                else if (cfgDoc.getString("img-logo", tmp)) {
-                    logoPath = tmp;
-                }
-            }
-        }
-    }
-
-    // Fallback: infer default logo path if not present in config
-    if (!logoPath.length()) {
-        if (m_filesystem->exists(ESP_FS_WS_CONFIG_FOLDER "/logo.svg.gz")) {
-            logoPath = ESP_FS_WS_CONFIG_FOLDER "/logo.svg.gz";
-        } else if (m_filesystem->exists(ESP_FS_WS_CONFIG_FOLDER "/logo.svg")) {
-            logoPath = ESP_FS_WS_CONFIG_FOLDER "/logo.svg";
-        } else if (m_filesystem->exists(ESP_FS_WS_CONFIG_FOLDER "/logo.png")) {
-            logoPath = ESP_FS_WS_CONFIG_FOLDER "/logo.png";
-        }
-    }
-
-    if (logoPath.length()) {
-        doc.setString("img-logo", logoPath);
-    }
-  #endif
-    this->send(200, "application/json", doc.serialize());
-}
-
-void FSWebServer::clearConfig() {
-    if (m_filesystem->remove(ESP_FS_WS_CONFIG_FILE))
-        this->send(200, "text/plain", "Clear config OK");
-    else
-        this->send(200, "text/plain", "Clear config not done");
-    m_credentialManager->clearAll();
-}
-
-void FSWebServer::handleScanNetworks() {
-    log_info("Start scan WiFi networks");
-    WiFiScanResult scan = WiFiService::scanNetworks();
-    this->send(200, "application/json", scan.json);
-}
-
 bool FSWebServer::createDirFromPath(const String& path) {
     String dir;
     dir.reserve(path.length());
@@ -565,202 +870,6 @@ void FSWebServer::handleFileUpload()
         }
         log_debug("Upload: END, Size: %d\n", upload.totalSize);
     }
-}
-
-void FSWebServer::doWifiConnection() {
-    // Use WiFiConnectParams as the main container for all connection options
-    WiFiConnectParams params = WiFiConnectParams();
-    String requestedHost;   // Optional hostname provided by the setup UI
-
-    // Optional static IP configuration
-    if (this->hasArg("ip_address") && this->hasArg("subnet") && this->hasArg("gateway")) {
-        params.config.gateway.fromString(this->arg("gateway"));
-        params.config.subnet.fromString(this->arg("subnet"));
-        params.config.local_ip.fromString(this->arg("ip_address"));
-        params.dhcp = false;
-        log_debug("Static IP requested: %s, GW: %s, SN: %s",
-                 params.config.local_ip.toString().c_str(),
-                 params.config.gateway.toString().c_str(),
-                 params.config.subnet.toString().c_str());
-        log_debug("params.dhcp set to: %d", params.dhcp);
-    }
-
-    // Optional per-SSID DNS configuration (if provided by client)
-    if (this->hasArg("dns1")) 
-        params.config.dns1.fromString(this->arg("dns1"));
-
-    if (this->hasArg("dns2")) 
-        params.config.dns2.fromString(this->arg("dns2"));
-
-    // Optional hostname override (for mDNS / shared hostname, max 32 chars)
-    if (this->hasArg("hostname")) {
-        requestedHost = this->arg("hostname");
-        requestedHost.trim();
-        if (requestedHost.length() > 32) {
-            requestedHost.remove(32); // limit to 32 chars
-        }
-        if (requestedHost.length()) {
-            m_host = requestedHost;
-            if (m_credentialManager) {
-                m_credentialManager->setHostname(m_host.c_str());
-            }
-        }
-    }
-
-    // Basic WiFi credentials
-    if (this->hasArg("ssid")) {
-        String ssid = this->arg("ssid");
-        strncpy(params.config.ssid, ssid.c_str(), sizeof(params.config.ssid) - 1);
-        params.config.ssid[sizeof(params.config.ssid) - 1] = '\0';
-    }
-    if (this->hasArg("password"))
-        params.password = this->arg("password");
-
-    // If no password provided but a stored credential exists for this SSID,
-    // reuse the stored password without exposing it to the client.
-    if (params.password.length() == 0 && strlen(params.config.ssid) && m_credentialManager &&
-        m_credentialManager->checkSSIDExists(params.config.ssid)) {
-        String stored = m_credentialManager->getPassword(params.config.ssid);
-        if (stored.length()) {
-            params.password = stored;
-        }
-    }
-
-    // Track if we had a working STA connection before this /connect
-    // (used to decide fallbacks on failure).
-    bool wasStaConnected = (WiFi.status() == WL_CONNECTED && WiFi.getMode() != WIFI_AP);
-
-    // By default, new credentials will be persisted to survive reboots,
-    // but the client can disable this if they want a temporary connection.
-    bool hasPersistentArg = this->hasArg("persistent");
-    bool persistent = hasPersistentArg ? this->arg("persistent").equals("true") : true;
-    WiFi.persistent(hasPersistentArg ? persistent : true);  // default true
-
-    // Remember if this /connect was requested while we are serving the captive portal (AP mode).
-    params.fromApClient = m_isApMode;
-    params.host = m_host;
-    params.timeout = m_timeout;
-    params.wdtLongTimeout = AWS_LONG_WDT_TIMEOUT;
-    params.wdtTimeout = AWS_WDT_TIMEOUT;
-
-    // In AP/captive-portal mode we can still safely perform the
-    // connection synchronously and return the detailed HTML result, because the AP interface remains up.
-    if (params.fromApClient) {
-        WiFiConnectResult result = WiFiService::connectWithParams(params);
-
-        if (result.connected && persistent && strlen(params.config.ssid) && params.password.length() && m_credentialManager) {
-            // Credential is already populated in params.credential, just need to configure it based on dhcp flag
-            if (params.dhcp) {
-                // Clear static IP config for DHCP mode
-                params.config.local_ip = IPAddress(0, 0, 0, 0);
-                params.config.gateway = IPAddress(0, 0, 0, 0);
-                params.config.subnet = IPAddress(0, 0, 0, 0);
-                params.config.dns1 = IPAddress(0, 0, 0, 0);
-                params.config.dns2 = IPAddress(0, 0, 0, 0);
-            }
-            // Static IP config already set in params.creds if dhcp == false
-            if (!m_credentialManager->updateCredential(params.config, params.password.c_str())) {
-                m_credentialManager->addCredential(params.config, params.password.c_str());
-            }
-        #if defined(ESP32)
-            m_credentialManager->saveToNVS();
-        #elif defined(ESP8266)
-            m_credentialManager->saveToFS();
-        #endif
-        }
-
-        if (result.connected) {
-            m_serverIp = result.ip;
-        }
-
-        log_debug("WiFi connect result body: %s", result.body.c_str());
-        const char* contentType = (result.status == 200) ? "text/html" : "text/plain";
-        this->send(result.status, contentType, result.body);
-        return;
-    }
-
-    // STA mode: if already connected, always ask for confirmation before reconfiguring
-    bool userConfirmed = this->hasArg("confirmed") && this->arg("confirmed").equals("true");
-    
-    if (!userConfirmed && WiFi.status() == WL_CONNECTED) {
-        String resp;
-        resp.reserve(512);
-        resp = "<div id='action-confirm-sta-change'></div>";
-        resp += "You are about to apply new WiFi configuration for <b>";
-        resp += String(params.config.ssid);
-        resp += "</b>.<br><br><i>Note: This page may lose connection during the reconfiguration.</i>";
-        resp += "<br><br>Do you want to proceed?";
-        this->send(200, "text/html", resp);
-        return;
-    }
-
-    // User confirmed: proceed with connection, but perform reconnection
-    // shortly after sending this HTTP response to avoid timeouts.
-
-    // Store parameters for a deferred connection attempt handled in run().
-    m_pendingParams = params;
-    m_pendingWasStaConnected = wasStaConnected;
-    m_pendingWifiConnect = true;
-
-    // Send response FIRST to avoid HTTP timeout
-    String resp;
-    resp.reserve(512);
-    resp = "<div id='action-async-applying'></div>";
-    resp += "WiFi configuration applying for <b>";
-    resp += String(params.config.ssid);
-    resp += "</b>.<br><br>";
-    resp += "<i>The ESP is reconnecting...<br>Please reload this page after a few seconds.</i>";
-    this->send(200, "text/html", resp);
-}
-
-void FSWebServer::processPendingWifiConnection() {
-#if ESP_FS_WS_SETUP
-    // Clear the flag early to avoid re-entrancy if connectWithParams
-    // indirectly triggers further HTTP handling.
-    m_pendingWifiConnect = false;
-
-    WiFiConnectParams params = m_pendingParams;
-    bool wasStaConnected = m_pendingWasStaConnected;
-
-    WiFiConnectResult result = WiFiService::connectWithParams(params);
-    log_debug("Connection result: connected=%d", result.connected);
-
-    // Save credentials ONLY if connection succeeded
-    if (result.connected && strlen(params.config.ssid) && params.password.length() && m_credentialManager) {
-        if (params.dhcp) {
-            // Clear static IP config for DHCP mode
-            params.config.local_ip = IPAddress(0, 0, 0, 0);
-            params.config.gateway = IPAddress(0, 0, 0, 0);
-            params.config.subnet = IPAddress(0, 0, 0, 0);
-            params.config.dns1 = IPAddress(0, 0, 0, 0);
-            params.config.dns2 = IPAddress(0, 0, 0, 0);
-            log_debug("Saving DHCP config");
-        } else {
-            log_debug("Saving static IP: IP=%s, GW=%s, SN=%s, DNS1=%s, DNS2=%s",
-                     params.config.local_ip.toString().c_str(),
-                     params.config.gateway.toString().c_str(),
-                     params.config.subnet.toString().c_str(),
-                     params.config.dns1.toString().c_str(),
-                     params.config.dns2.toString().c_str());
-        }
-
-        if (!m_credentialManager->updateCredential(params.config, params.password.c_str())) {
-            m_credentialManager->addCredential(params.config, params.password.c_str());
-        }
-    #if defined(ESP32)
-        m_credentialManager->saveToNVS();
-    #elif defined(ESP8266)
-        m_credentialManager->saveToFS();
-    #endif
-    }
-
-    if (result.connected) {
-        m_serverIp = result.ip;
-    } else if (wasStaConnected && !params.fromApClient && strlen(m_apSSID) > 0) {
-        log_info("WiFi connect failed, starting AP mode: SSID=%s", m_apSSID);
-        startCaptivePortal(m_apSSID, m_apPassword, "/setup");
-    }
-#endif
 }
 
 void FSWebServer::update_first()

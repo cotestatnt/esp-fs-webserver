@@ -58,26 +58,14 @@ async function build() {
       input: '../app.js',
       output: './min/app.js',
       options: {
-        toplevel: false, // Must be false so global vars (wifiCredentials, etc) are accessible by creds.js
+        toplevel: true,
         mangle: { properties: false }
       }
     });
 
     console.log('App JS minified');
 
-    // 2. Minify JS (Creds)
-    await minify({
-      compressor: terser,
-      input: '../creds.js',
-      output: './min/creds.js',
-      options: {
-        toplevel: false // KEEP FALSE to satisfy dynamic loading requirement!
-      }
-    });
-
-    console.log('Creds JS minified (no extra mangle)');
-
-    // 3. Minify CSS
+    // 2. Minify CSS
     await minify({
       compressor: cssnano,
       input: '../style.css',
@@ -86,7 +74,7 @@ async function build() {
 
     console.log('CSS minified');
 
-    // 4. Inline into HTML
+    // 3. Inline into HTML
     let html = fs.readFileSync('../setup.htm', 'utf8');
 
     const css = fs.readFileSync('./min/style.css');
@@ -125,7 +113,7 @@ async function build() {
     fs.writeFileSync('./min/all.htm', html);
     console.log('all.htm created');
 
-    // 5. Gzip HTML -> setup_htm.h
+    // 4. Gzip HTML -> setup_htm.h
     await new Promise((resolve, reject) => {
         const gzip = createGzip({ level: constants.Z_BEST_COMPRESSION });
         const source = createReadStream('./min/all.htm');
@@ -142,24 +130,7 @@ async function build() {
         })
     });
 
-    // 6. Gzip Creds -> creds_js.h
-    await new Promise((resolve, reject) => {
-        const gzip = createGzip({ level: constants.Z_BEST_COMPRESSION });
-        const source = createReadStream('./min/creds.js');
-        const destination = createWriteStream('./min/creds.js.gz');
-
-      pipeline(source, gzip, destination, async (err) => {
-            if (err) return reject(err);
-            try {
-                const c_array = converter.toString(fs.readFileSync('./min/creds.js.gz'), 16, '_accreds_js');
-          const targetPath = path.join(outputDir, 'creds_js.h');
-          await writeWithConfirm(targetPath, c_array);
-                resolve();
-            } catch(e) { reject(e); }
-        })
-    });
-
-    // 7. Gzip Logo -> logo_svg.h
+    // 5. Gzip Logo -> logo_svg.h
     await new Promise((resolve, reject) => {
         const gzip = createGzip({ level: constants.Z_BEST_COMPRESSION });
         const source = createReadStream('../logo.svg');

@@ -1,4 +1,3 @@
-// Setup page v2 - simplified and clean
 const ICONS = {
   lock: "🔒", unlock: "🔓", scan: "📡", connect: "📶",
   save: "💾", restart: "↻", eye: "🐵", noEye: "🙈",
@@ -8,21 +7,33 @@ const ICONS = {
 const $ = id => document.getElementById(id);
 const hide = id => { const el = $(id); if (el) el.classList.add("hide"); };
 const show = id => { const el = $(id); if (el) el.classList.remove("hide"); };
+const bindIfPresent = (id, eventName, handler) => {
+  const el = $(id);
+  if (el) el.addEventListener(eventName, handler);
+  return el;
+};
 const newEl = (tag, attrs = {}) => {
   const el = document.createElement(tag);
-  for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+  for (const [key, value] of Object.entries(attrs)) el.setAttribute(key, value);
   return el;
 };
 
-const port = location.port || (location.protocol === "https:" ? "443" : "80");
-let esp = `${location.protocol}//${location.hostname}:${port}/`;  // Will be updated with IP after getStatus
+const port = Number(location.port || (location.protocol === "https:" ? "443" : "80"));
+let esp = `${location.protocol}//${location.hostname}:${port}/`;
 
-let config, configPath;
-let wifiCredentials = [], selectedCredentialIndex = -1;
+let config;
+let configPath;
+let wifiCredentials = [];
+let selectedCredentialIndex = -1;
 let modalCloseCb;
-const loadedAssets = { css: new Set(), js: new Set(), html: new Set() };
+let setupSocket;
+let setupSocketConnectPromise;
+let reconnectTimer = 0;
+let requestSeq = 0;
 
-// Modal
+const pendingRequests = new Map();
+const loadedAssets = { css: new Set(), js: new Set() };
+
 function openModal(title, body, onOk) {
   $("message-title").innerHTML = title;
   $("message-body").innerHTML = body;
@@ -42,13 +53,235 @@ function closeModal(exec) {
 window.openModal = openModal;
 window.closeModal = closeModal;
 
+function getCookieValue(name) {
+  const prefix = `${name}=`;
+  return document.cookie
+    .split(";")
+    .map(chunk => chunk.trim())
+    .find(chunk => chunk.startsWith(prefix))
+    ?.slice(prefix.length) || "";
+}
+
+function getSetupWsUrls() {
+  const proto = location.protocol === "https:" ? "wss:" : "ws:";
+  const sameOriginHost = location.host || `${location.hostname}:${port}`;
+  const dedicatedPortHost = `${location.hostname}:${port + 2}`;
+  const wsMode = getCookieValue("esp_fs_ws_mode");
+
+  // The backend tells us whether setup websocket traffic shares the HTTP
+  // server or lives on the dedicated websocket port.
+  if (wsMode === "dedicated") {
+    return [`${proto}//${dedicatedPortHost}/`];
+  }
+
+  return [`${proto}//${sameOriginHost}/setup-ws`];
+}
+
+function rejectAllPending(error) {
+  pendingRequests.forEach(entry => {
+    clearTimeout(entry.timer);
+    entry.reject(error);
+  });
+  pendingRequests.clear();
+}
+
+function connectSetupSocket() {
+  if (setupSocket) {
+    if (setupSocket.readyState === WebSocket.OPEN) {
+      return Promise.resolve();
+    }
+    if (setupSocket.readyState === WebSocket.CONNECTING && setupSocketConnectPromise) {
+      return setupSocketConnectPromise;
+    }
+  }
+
+  setupSocketConnectPromise = new Promise((resolve, reject) => {
+    const urls = getSetupWsUrls();
+
+    // Try the configured endpoint list in order and keep one live socket for
+    // all setup commands/events.
+    const tryConnect = (urls, index) => {
+      const ws = new WebSocket(urls[index]);
+      let opened = false;
+      setupSocket = ws;
+
+      const connectFailed = () => {
+        if (opened) {
+          return;
+        }
+        if (setupSocket === ws) {
+          setupSocket = null;
+        }
+        if (index + 1 < urls.length) {
+          tryConnect(urls, index + 1);
+        } else {
+          setupSocketConnectPromise = null;
+          reject(new Error("WebSocket connection failed"));
+        }
+      };
+
+      ws.onopen = () => {
+        opened = true;
+        if (reconnectTimer) {
+          clearTimeout(reconnectTimer);
+          reconnectTimer = 0;
+        }
+        resolve();
+      };
+
+      ws.onmessage = event => {
+        try {
+          const msg = JSON.parse(event.data);
+          handleSetupSocketMessage(msg);
+        } catch (error) {
+          console.error("Invalid WS message", error);
+        }
+      };
+
+      ws.onerror = () => {
+        if (!opened) {
+          connectFailed();
+        }
+      };
+
+      ws.onclose = () => {
+        if (!opened) {
+          connectFailed();
+          return;
+        }
+
+        const reconnectNeeded = !document.hidden;
+        if (setupSocket === ws) {
+          setupSocket = null;
+          setupSocketConnectPromise = null;
+          rejectAllPending(new Error("WebSocket disconnected"));
+        }
+        if (reconnectNeeded) {
+          reconnectTimer = window.setTimeout(() => {
+            connectSetupSocket().catch(() => {});
+          }, 1500);
+        }
+      };
+    };
+
+    tryConnect(urls, 0);
+  });
+
+  return setupSocketConnectPromise;
+}
+
+async function ensureSetupSocket() {
+  let lastError;
+
+  for (let attempt = 0; attempt < 8; attempt++) {
+    try {
+      await connectSetupSocket();
+      if (setupSocket && setupSocket.readyState === WebSocket.OPEN) {
+        return;
+      }
+      throw new Error("WebSocket not ready");
+    } catch (error) {
+      lastError = error;
+      if (attempt < 7) {
+        await new Promise(resolve => {
+          window.setTimeout(resolve, 350 * (attempt + 1));
+        });
+      }
+    }
+  }
+
+  throw lastError || new Error("WebSocket connection failed");
+}
+
+async function sendWsCommand(name, payload = {}, timeout = 15000) {
+  await ensureSetupSocket();
+
+  if (!setupSocket || setupSocket.readyState !== WebSocket.OPEN) {
+    throw new Error("WebSocket not ready");
+  }
+
+  const reqId = `${Date.now()}-${++requestSeq}`;
+  const envelope = { type: "cmd", reqId, name, payload };
+
+  return new Promise((resolve, reject) => {
+    const timer = window.setTimeout(() => {
+      pendingRequests.delete(reqId);
+      reject(new Error(`Timeout for command ${name}`));
+    }, timeout);
+
+    pendingRequests.set(reqId, { resolve, reject, timer, name });
+    setupSocket.send(JSON.stringify(envelope));
+  });
+}
+
+function handleSetupSocketMessage(message) {
+  if (!message || typeof message !== "object") return;
+
+  if (message.type === "res" && message.reqId) {
+    const pending = pendingRequests.get(message.reqId);
+    if (!pending) return;
+    clearTimeout(pending.timer);
+    pendingRequests.delete(message.reqId);
+    if (message.ok) pending.resolve(message.payload || {});
+    else pending.reject(new Error(message.error || `Command failed: ${pending.name}`));
+    return;
+  }
+
+  if (message.type === "evt") {
+    handleSetupSocketEvent(message.name, message.payload || {});
+  }
+}
+
+function applyRuntimeNetworkPayload(payload) {
+  if (payload.ip) {
+    esp = `${location.protocol}//${payload.ip}:${port}/`;
+  }
+  if (payload.hostname && $("hostname")) {
+    $("hostname").value = payload.hostname;
+  }
+}
+
+const setupSocketEventHandlers = {
+  "wifi.connect.started": payload => {
+    show("loader");
+    openModal("WiFi", `Connecting to <b>${payload.ssid || $("ssid").value || "WiFi"}</b>...`);
+  },
+  "wifi.connect.success": payload => {
+    hide("loader");
+    applyRuntimeNetworkPayload(payload);
+    if (payload.body && payload.body.includes("action-restart-required")) {
+      openModal("WiFi", payload.body, restartESP);
+    } else {
+      openModal("WiFi", payload.body || "Connected");
+    }
+    refreshRuntimeStatus();
+    loadCredentials();
+  },
+  "wifi.connect.error": payload => {
+    hide("loader");
+    openModal("WiFi", payload.body || "Connection failed");
+    refreshRuntimeStatus();
+  }
+};
+
+function handleSetupSocketEvent(name, payload) {
+  const handler = setupSocketEventHandlers[name];
+  if (handler) {
+    handler(payload);
+  }
+}
+
 const confirmRestart = () => openModal("Restart", "Restart now?", restartESP);
-const restartESP = () => fetch(`${esp}reset`).then(() => {
+
+async function restartESP() {
+  try {
+    await sendWsCommand("device.restart", {}, 5000);
+  } catch (_) {
+  }
   closeModal(false);
   openModal("Restarted", "ESP restarted");
-});
+}
 
-// Header responsive layout
 function setupHeaderLayout() {
   const move = () => {
     const h = document.querySelector("header.ctn"), t = h?.querySelector(".title"), hg = t?.querySelector(".hd"), n = $("top-nav");
@@ -61,7 +294,8 @@ function setupHeaderLayout() {
       n.classList.add("inline-header");
     }
   };
-  move(); window.onresize = move;
+  move();
+  window.addEventListener("resize", move);
 }
 
 function applyIcons() {
@@ -71,19 +305,19 @@ function applyIcons() {
     "svg-restart": ICONS.restart, "svg-delete": ICONS.del,
     "svg-clear": ICONS.clear, "svg-update": ICONS.upload
   };
-  for (const [id, ico] of Object.entries(map)) {
+  for (const [id, icon] of Object.entries(map)) {
     const el = $(id);
-    if (el) el.textContent = ico;
+    if (el) el.textContent = icon;
   }
 }
 
-// Apply status data from /getStatus
 function applyStatusHeader(data) {
+  if (!data) return;
   if ($("esp-mode")) $("esp-mode").textContent = data.mode || "";
   if ($("firmware")) $("firmware").textContent = data.firmware || "";
   if ($("about")) {
     $("about").href = data.liburl || "#";
-    $("about").textContent = data.liburl ? "Created with " + data.liburl : "";
+    $("about").textContent = data.liburl ? `Created with ${data.liburl}` : "";
   }
   if ($("esp-ip")) {
     const host = data.hostname || location.hostname;
@@ -97,9 +331,7 @@ function applyStatusHeader(data) {
   if ($("ssid-name")) $("ssid-name").textContent = "SSID";
 }
 
-// Apply config v2 metadata
 function applyMetaFromConfig(cfg) {
-  console.log(cfg)
   if (!cfg || typeof cfg !== "object") return;
   const meta = cfg._meta || {};
 
@@ -121,7 +353,6 @@ function applyMetaFromConfig(cfg) {
   }
 }
 
-// Load external assets (CSS, JS, HTML)
 function loadAssets(assets) {
   if (!assets || typeof assets !== "object") return;
 
@@ -143,7 +374,6 @@ function clearDynamicContent() {
   document.querySelectorAll("#nav-link a[data-dynamic='1']").forEach(el => el.remove());
 }
 
-// Build a single option element
 function slugify(str) {
   return String(str || "")
     .toLowerCase()
@@ -153,50 +383,57 @@ function slugify(str) {
 }
 
 function buildElement(el, secIdx, elIdx, container) {
-  // make id deterministic from label; include section index to avoid collisions
   const base = slugify(el.label);
   const id = $(base) ? `${base}-${elIdx}` : base;
-  let item, inp;
+  let item;
+  let inp;
 
   if (el.type === "html") {
     item = newEl("div");
-    if (el.value) fetch(el.value).then(r=>r.text()).then(t=>item.innerHTML=t).catch(()=>item.textContent="Error");
+    if (el.value) fetch(el.value).then(r => r.text()).then(t => { item.innerHTML = t; }).catch(() => { item.textContent = "Error"; });
   } else if (el.type === "boolean") {
-    // wrap label/switch inside dedicated .tbw so it can be styled independently
     const wrap = newEl("div", { class: "tbw" });
     item = newEl("label", { class: "lbl tgl", for: id });
     inp = newEl("input", { id, type: "checkbox", class: "tc in" });
     inp.checked = !!el.value;
-    item.append(inp, newEl("div", { class: "tsw" }), Object.assign(newEl("span", { class: "tlbl" }), { textContent: el.label||"" }));
+    item.append(inp, newEl("div", { class: "tsw" }), Object.assign(newEl("span", { class: "tlbl" }), { textContent: el.label || "" }));
     wrap.appendChild(item);
     item = wrap;
   } else {
     item = newEl("div", { class: "tw" });
-    item.appendChild(Object.assign(newEl("label", { class: "lbl", for: id }), { textContent: el.label||"" }));
-    
+    item.appendChild(Object.assign(newEl("label", { class: "lbl", for: id }), { textContent: el.label || "" }));
+
     if (el.type === "select") {
       inp = newEl("select", { id, class: "in" });
-      (el.options||[]).forEach(o => inp.add(new Option(o, o, false, String(o)===String(el.value))));
+      (el.options || []).forEach(option => inp.add(new Option(option, option, false, String(option) === String(el.value))));
       item.appendChild(inp);
     } else if (el.type === "slider") {
       const g = newEl("div", { class: "slw" });
-      inp = newEl("input", { id, type: "range", class: "in sl", min: el.min??0, max: el.max??100, step: el.step??1 });
+      inp = newEl("input", { id, type: "range", class: "in sl", min: el.min ?? 0, max: el.max ?? 100, step: el.step ?? 1 });
       inp.value = el.value ?? el.min ?? 0;
-      const ro = newEl("input", { id: id+"-readout", type: "number", class: "in slr", min: inp.min, max: inp.max, step: inp.step });
+      const ro = newEl("input", { id: `${id}-readout`, type: "number", class: "in slr", min: inp.min, max: inp.max, step: inp.step });
       ro.value = inp.value;
-      ro.dataset.secIndex = secIdx; ro.dataset.elIndex = elIdx;
+      ro.dataset.secIndex = secIdx;
+      ro.dataset.elIndex = elIdx;
       g.append(inp, ro);
       item.appendChild(g);
     } else {
       const type = el.type === "number" ? "number" : "text";
       inp = newEl("input", { id, type, class: "in" });
-      if(type==="number"){ if(el.min!=null)inp.min=el.min; if(el.max!=null)inp.max=el.max; if(el.step!=null)inp.step=el.step; }
+      if (type === "number") {
+        if (el.min != null) inp.min = el.min;
+        if (el.max != null) inp.max = el.max;
+        if (el.step != null) inp.step = el.step;
+      }
       inp.value = el.value ?? "";
       item.appendChild(inp);
     }
   }
 
-  if (inp) { inp.dataset.secIndex = secIdx; inp.dataset.elIndex = elIdx; }
+  if (inp) {
+    inp.dataset.secIndex = secIdx;
+    inp.dataset.elIndex = elIdx;
+  }
   if (el.hidden) item.classList.add("hide");
   if (el.comment) {
     if (el.type === "boolean") {
@@ -212,11 +449,12 @@ function buildElement(el, secIdx, elIdx, container) {
   container.appendChild(item);
 }
 
-// Build all sections from config v2
 function buildSectionsFromConfig() {
   clearDynamicContent();
   if (!config || !Array.isArray(config.sections)) return;
 
+  // Custom options are described by config.json and rendered entirely on the
+  // client so the same setup page can serve different projects.
   const main = $("main");
   const before = $("btn-hr");
 
@@ -238,27 +476,24 @@ function buildSectionsFromConfig() {
     navLink.onclick = switchPage;
     $("nav-link").appendChild(navLink);
 
-    // Optionally create a flex container for boolean elements when grouping is desired
     let toggleContainer = null;
-
     (section.elements || []).forEach((el, eIdx) => {
-      // check element-specific group flag (default true for booleans)
       const shouldGroup = el.type === "boolean" && (el.group !== false);
       if (shouldGroup && toggleContainer === null) {
         toggleContainer = newEl("div", { class: "tglw" });
         box.appendChild(toggleContainer);
       }
-      const container = shouldGroup ? toggleContainer : box;
-      buildElement(el, sIdx, eIdx, container);
+      buildElement(el, sIdx, eIdx, shouldGroup ? toggleContainer : box);
     });
   });
 }
 
-// Handle option value changes
 function handleOptionChange(e) {
   const t = e.target;
   if (!t.classList.contains("in")) return;
 
+  // Slider readouts mirror the real input, so map them back to the slider
+  // before updating the in-memory config model.
   let base = t;
   if (t.id && t.id.endsWith("-readout")) {
     const slider = $(t.id.replace(/-readout$/, ""));
@@ -275,7 +510,6 @@ function handleOptionChange(e) {
 
   if (el.type === "boolean") el.value = !!base.checked;
   else if (el.type === "slider" || el.type === "number") el.value = Number(base.value);
-  else if (el.type === "select") el.value = base.value;
   else el.value = base.value;
 }
 
@@ -288,42 +522,11 @@ function handleOptionInput(e) {
   handleOptionChange(e);
 }
 
-// WiFi credentials management
-async function loadCredentials() {
-  try {
-    const res = await fetch(`${esp}wifi/credentials?_=${Date.now()}`);
-    if (!res.ok) return;
-    
-    wifiCredentials = await res.json();
-    selectedCredentialIndex = wifiCredentials.length ? 0 : -1;
-
-    if (wifiCredentials.length > 1) {
-      if (typeof renderCredentialTabs === "undefined") {
-        const script = document.createElement("script");
-        script.src = "creds.js";
-        script.onload = () => window.renderCredentialTabs && window.renderCredentialTabs();
-        document.body.appendChild(script);
-      } else {
-        window.renderCredentialTabs();
-      }
-    } else {
-      if ($("wifi-cred-tabs")) $("wifi-cred-tabs").innerHTML = "";
-      ["delete-cred", "clear-creds", "cred-actions-inline"].forEach(hide);
-    }
-
-    if (selectedCredentialIndex >= 0 && wifiCredentials[0]) {
-      window.applyCredential(wifiCredentials[0]);
-    }
-  } catch (e) {
-    console.error(e);
-  }
-}
-
 function hasStoredCredentialFor(ssid) {
   return wifiCredentials.some(c => c.ssid === ssid);
 }
 
-window.applyCredential = cred => {
+function applyCredential(cred) {
   if (!cred) return;
   $("ssid").value = cred.ssid || "";
   $("ssid-name").textContent = cred.ssid || "SSID";
@@ -333,9 +536,9 @@ window.applyCredential = cred => {
 
   if (isStatic) {
     show("conf-wifi");
-    $("ip").value = cred.ip;
-    $("gateway").value = cred.gateway;
-    $("subnet").value = cred.subnet;
+    $("ip").value = cred.ip || "";
+    $("gateway").value = cred.gateway || "";
+    $("subnet").value = cred.subnet || "";
     $("dns1").value = cred.dns1 || "";
     $("dns2").value = cred.dns2 || "";
   } else {
@@ -346,94 +549,215 @@ window.applyCredential = cred => {
     $("dns1").value = "";
     $("dns2").value = "";
   }
-  $("password").value = "";
-};
 
-// WiFi scan
-function getWiFiList() {
+  $("password").value = "";
+}
+
+function updateCredentialActionVisibility() {
+  const hasCredentials = wifiCredentials.length > 0;
+  ["delete-cred", "clear-creds", "cred-actions-inline"].forEach(id => {
+    const elem = $(id);
+    if (!elem) return;
+    elem.classList.toggle("hide", !hasCredentials);
+  });
+}
+
+function applySelectedCredential() {
+  if (selectedCredentialIndex < 0 || selectedCredentialIndex >= wifiCredentials.length) return;
+  applyCredential(wifiCredentials[selectedCredentialIndex]);
+}
+
+function syncCredentials(credentials, preferredIndex = selectedCredentialIndex) {
+  wifiCredentials = credentials || [];
+  selectedCredentialIndex = wifiCredentials.length
+    ? Math.min(preferredIndex >= 0 ? preferredIndex : 0, wifiCredentials.length - 1)
+    : -1;
+  renderCredentialTabs();
+  applySelectedCredential();
+}
+
+function renderCredentialTabs() {
+  const credTabs = $("wifi-cred-tabs");
+  if (!credTabs) return;
+
+  credTabs.innerHTML = "";
+  const wifiBoxWidth = $("wifi-box").offsetWidth || Math.min(window.innerWidth, 840);
+  const maxTabsPerRow = Math.floor((wifiBoxWidth - 60) / 140);
+
+  if (window.matchMedia("(max-width: 608px)").matches || wifiCredentials.length > maxTabsPerRow) {
+    const select = newEl("select", { class: "in", style: "margin-bottom:10px" });
+    wifiCredentials.forEach((cred, idx) => {
+      const option = newEl("option", { value: idx });
+      option.textContent = cred.ssid || "(empty SSID)";
+      if (idx === selectedCredentialIndex) option.selected = true;
+      select.appendChild(option);
+    });
+    select.addEventListener("change", event => {
+      selectedCredentialIndex = parseInt(event.target.value, 10);
+      applySelectedCredential();
+    });
+    credTabs.appendChild(select);
+  } else {
+    wifiCredentials.forEach((cred, idx) => {
+      const tabBtn = newEl("button", { class: "tab" });
+      tabBtn.textContent = cred.ssid || "(empty SSID)";
+      if (idx === selectedCredentialIndex) tabBtn.classList.add("active");
+      tabBtn.onclick = event => {
+        credTabs.querySelectorAll(".tab").forEach(tab => tab.classList.remove("active"));
+        event.target.classList.add("active");
+        selectedCredentialIndex = idx;
+        applyCredential(cred);
+      };
+      credTabs.appendChild(tabBtn);
+    });
+  }
+
+  updateCredentialActionVisibility();
+}
+
+window.addEventListener("resize", () => {
+  if (wifiCredentials.length) renderCredentialTabs();
+});
+
+async function loadCredentials() {
+  try {
+    const payload = await sendWsCommand("credentials.get");
+    syncCredentials(payload.credentials);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+function deleteSelectedCredential() {
+  if (selectedCredentialIndex < 0 || selectedCredentialIndex >= wifiCredentials.length) return;
+  const cred = wifiCredentials[selectedCredentialIndex];
+  openModal("Delete WiFi", `Delete <b>${cred.ssid}</b>?`, async () => {
+    try {
+      const payload = await sendWsCommand("credentials.delete", { index: selectedCredentialIndex });
+      syncCredentials(payload.credentials, 0);
+      closeModal(false);
+    } catch (_) {
+      openModal("Error", "Failed to delete");
+    }
+  });
+}
+
+function clearAllCredentials() {
+  if (!wifiCredentials.length) return;
+  openModal("Clear All", "Delete all WiFi credentials?", async () => {
+    try {
+      const payload = await sendWsCommand("credentials.clear");
+      syncCredentials(payload.credentials, -1);
+      closeModal(false);
+    } catch (_) {
+      openModal("Error", "Failed to clear");
+    }
+  });
+}
+
+function renderWiFiNetworks(networks) {
+  const list = $("w-lst");
+  list.innerHTML = "";
+  const frag = document.createDocumentFragment();
+
+  networks.sort((a, b) => b.strength - a.strength);
+  networks.forEach((net, i) => {
+    const row = newEl("tr", { id: `wifi-${i}` });
+    row.innerHTML =
+      `<td><input type="radio" name="select" id="select-wifi-${i}"></td>` +
+      `<td>${net.ssid}</td>` +
+      `<td class="hide-tiny">${net.strength} dBm</td>` +
+      `<td>${net.security ? ICONS.lock : ICONS.unlock}</td>`;
+    row.onclick = () => {
+      $("ssid").value = net.ssid;
+      $("ssid-name").textContent = net.ssid;
+      $("password").focus();
+      try { $(`select-wifi-${i}`).checked = true; } catch (_) {}
+      $("w-tbl").classList.add("hide");
+      show("show-networks");
+    };
+    frag.appendChild(row);
+  });
+
+  list.appendChild(frag);
+  show("w-tbl");
+}
+
+async function getWiFiList() {
   const btn = $("scan-wifi");
   btn.classList.add("load");
-
-  fetch(`${esp}scan`)
-    .then(r => r.json())
-    .then(data => {
-      if (data.reload) setTimeout(getWiFiList, 2000);
-      data.sort((a, b) => b.strength - a.strength);
-
-      const list = $("w-lst");
-      list.innerHTML = "";
-      const frag = document.createDocumentFragment();
-
-      data.forEach((net, i) => {
-        const row = newEl("tr", { id: `wifi-${i}` });
-        row.innerHTML =
-          `<td><input type="radio" name="select" id="select-wifi-${i}"></td>` +
-          `<td>${net.ssid}</td>` +
-          `<td class="hide-tiny">${net.strength} dBm</td>` +
-          `<td>${net.security ? ICONS.lock : ICONS.unlock}</td>`;
-        
-        row.onclick = () => {
-          $("ssid").value = net.ssid;
-          $("ssid-name").textContent = net.ssid;
-          $("password").focus();
-          try { $(`select-wifi-${i}`).checked = true; } catch (e) { }
-          $("w-tbl").classList.add("hide");
-          show("show-networks");
-        };
-        frag.appendChild(row);
-      });
-      
-      list.appendChild(frag);
-      show("w-tbl");
-      btn.classList.remove("load");
-    })
-    .catch(() => hide("loader"));
+  try {
+    const payload = await sendWsCommand("wifi.scan", {}, 10000);
+    if (payload.reload) {
+      window.setTimeout(getWiFiList, 1500);
+      return;
+    }
+    renderWiFiNetworks(payload.networks || []);
+  } catch (error) {
+    console.error(error);
+  } finally {
+    btn.classList.remove("load");
+    hide("loader");
+  }
 }
 
-// WiFi connect
-function doConnection(e, skipConfirm) {
-  const ssid = $("ssid").value;
-  const pass = $("password").value;
-  if (!ssid || (!pass && !hasStoredCredentialFor(ssid)))
-    return openModal("WiFi", "Insert SSID & Password");
+function buildConnectPayload(confirmed) {
+  // Mirror the setup websocket command envelope expected by the firmware.
+  const payload = {
+    ssid: $("ssid").value.trim(),
+    password: $("password").value,
+    persistent: $("persistent").checked,
+    dhcp: $("dhcp").checked,
+    confirmed: !!confirmed
+  };
 
-  const f = new FormData();
-  f.append("ssid", ssid);
-  f.append("password", pass);
-  f.append("persistent", $("persistent").checked);
-  
   const host = $("hostname") ? $("hostname").value.trim() : "";
-  if (host) f.append("hostname", host);
-  
-  if (!$("dhcp").checked) {
-    f.append("ip_address", $("ip").value);
-    f.append("gateway", $("gateway").value);
-    f.append("subnet", $("subnet").value);
+  if (host) payload.hostname = host;
+
+  if (!payload.dhcp) {
+    payload.ip_address = $("ip").value.trim();
+    payload.gateway = $("gateway").value.trim();
+    payload.subnet = $("subnet").value.trim();
     const dns1 = $("dns1").value.trim();
     const dns2 = $("dns2").value.trim();
-    if (dns1) f.append("dns1", dns1);
-    if (dns2) f.append("dns2", dns2);
+    if (dns1) payload.dns1 = dns1;
+    if (dns2) payload.dns2 = dns2;
   }
-  
-  if (skipConfirm) f.append("confirmed", "true");
 
-  show("loader");
-  fetch("/connect", { method: "POST", body: f })
-    .then(r => r.text().then(msg => {
-      hide("loader");
-      if (r.status !== 200) {
-        openModal("Error", msg);
-      } else if (msg.includes("action-confirm-sta-change")) {
-        openModal("WiFi", msg, () => doConnection(e, true));
-      } else if (msg.includes("action-restart-required")) {
-        openModal("WiFi", msg, restartESP);
-      } else if (msg.includes("action-async-applying")) {
-        openModal("WiFi", msg);
-      }
-    }));
+  return payload;
 }
 
-// Firmware update
+async function doConnection(skipConfirm) {
+  const ssid = $("ssid").value.trim();
+  const pass = $("password").value;
+  if (!ssid || (!pass && !hasStoredCredentialFor(ssid))) {
+    openModal("WiFi", "Insert SSID & Password");
+    return;
+  }
+
+  show("loader");
+  try {
+    // The firmware may ask for an explicit confirmation when a live station
+    // connection is about to be replaced.
+    const payload = await sendWsCommand("wifi.connect", buildConnectPayload(skipConfirm), 10000);
+    if (payload.confirmRequired) {
+      hide("loader");
+      openModal(
+        "WiFi",
+        `You are about to apply new WiFi configuration for <b>${payload.ssid || ssid}</b>.<br><br><i>This page may lose connection during reconfiguration.</i><br><br>Do you want to proceed?`,
+        () => doConnection(true)
+      );
+      return;
+    }
+    if (payload.accepted) {
+      openModal("WiFi", `Applying configuration for <b>${ssid}</b>...`);
+    }
+  } catch (error) {
+    hide("loader");
+    openModal("Error", error.message || "Connection failed");
+  }
+}
+
 function handleUpdate() {
   const file = $("file-input").files[0];
   if (!file) return;
@@ -443,11 +767,11 @@ function handleUpdate() {
   $("pgr-wrap").classList.add("active");
   $("update-log").textContent = "Updating...";
 
-  const f = new FormData();
-  f.append("update", file);
+  const form = new FormData();
+  form.append("update", file);
   const xhr = new XMLHttpRequest();
   xhr.open("POST", `/update?size=${file.size}`);
-  
+
   xhr.onload = () => {
     hide("loader");
     $("pgr-wrap").classList.remove("active");
@@ -465,16 +789,16 @@ function handleUpdate() {
     if ($("pgr-anim")) $("pgr-anim").style.width = "0%";
     hide("pgr-wrap");
   };
-  
-  xhr.upload.onprogress = p => {
-    if (p.lengthComputable && $("pgr-anim"))
-      $("pgr-anim").style.width = `${Math.round((p.loaded / p.total) * 100)}%`;
+
+  xhr.upload.onprogress = progress => {
+    if (progress.lengthComputable && $("pgr-anim")) {
+      $("pgr-anim").style.width = `${Math.round((progress.loaded / progress.total) * 100)}%`;
+    }
   };
-  
-  xhr.send(f);
+
+  xhr.send(form);
 }
 
-// FS upload
 async function uploadFolder(e) {
   const files = Array.from(e.target.files || []);
   if (!files.length) return;
@@ -490,7 +814,8 @@ async function uploadFolder(e) {
     label.textContent = `${txt} (${files.length} file${files.length > 1 ? "s" : ""} selected)`;
   }
 
-  let ok = 0, fail = 0;
+  let ok = 0;
+  let fail = 0;
 
   for (const file of files) {
     const path = file.webkitRelativePath.replace(/^data\//, "");
@@ -498,11 +823,11 @@ async function uploadFolder(e) {
     li.textContent = path;
     if (list) list.appendChild(li);
 
-    const f = new FormData();
-    f.append("data", file, "/" + path);
+    const form = new FormData();
+    form.append("data", file, `/${path}`);
 
     try {
-      const res = await fetch("/edit", { method: "POST", body: f });
+      const res = await fetch("/edit", { method: "POST", body: form });
       if (!res.ok) {
         fail++;
         li.style.color = "red";
@@ -516,22 +841,19 @@ async function uploadFolder(e) {
   }
 
   if (e.target) e.target.value = "";
-
   if (label) {
     label.textContent = label.dataset.defaultText || "Select the folder containing your files";
     label.style.background = "";
     label.removeAttribute("aria-disabled");
   }
 
-  const msg = `<br>Uploaded <b>${ok}</b> file${ok !== 1 ? "s" : ""}${fail ? `, <b>${fail}</b> failed` : " successfully"}.`;
-  openModal("FS Upload", msg);
+  openModal("FS Upload", `<br>Uploaded <b>${ok}</b> file${ok !== 1 ? "s" : ""}${fail ? `, <b>${fail}</b> failed` : " successfully"}.`);
 }
 
-// Page navigation
 function switchPage(e) {
   const t = e.target;
   const boxId = t.getAttribute("data-box");
-  
+
   $("top-nav").classList.remove("responsive");
   document.querySelectorAll("a").forEach(a => a.classList.remove("active"));
   t.classList.add("active");
@@ -550,132 +872,150 @@ function switchPage(e) {
   }
 }
 
-// Save config
-function saveParameters() {
-  if (!config || !configPath) return;
+async function saveParameters() {
+  if (!config) return;
 
   if ($("port") && config._meta) {
     const v = parseInt($("port").value, 10);
     if (!Number.isNaN(v)) config._meta.port = v;
   }
 
-  const blob = new Blob([JSON.stringify(config, null, 2)], { type: "application/json" });
-  const form = new FormData();
-  form.append("data", blob, "/" + configPath);
-
-  fetch("/edit", { method: "POST", body: form })
-    .then(() => openModal("Save", `<br>Saved config to <b>/${configPath}</b>`))
-    .catch(e => openModal("Error", `Save failed: ${e}`));
+  try {
+    const payload = await sendWsCommand("config.save", { config }, 10000);
+    if (payload.config) {
+      config = payload.config;
+    }
+    openModal("Save", `<br>Saved config to <b>/${configPath}</b>`);
+  } catch (error) {
+    openModal("Error", `Save failed: ${error.message || error}`);
+  }
 }
 
-// Initialize on page load
+async function refreshRuntimeStatus() {
+  try {
+    const payload = await sendWsCommand("status.get");
+    applyRuntimeNetworkPayload(payload.status || {});
+    applyStatusHeader(payload.status || {});
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+async function bootstrapSetupPage() {
+  show("loader");
+  try {
+    // Load runtime status first, then config-driven UI, then stored WiFi
+    // credentials so the page renders with the current device state.
+    await ensureSetupSocket();
+    const statusPayload = await sendWsCommand("status.get");
+    applyRuntimeNetworkPayload(statusPayload.status || {});
+    applyStatusHeader(statusPayload.status || {});
+
+    const configPayload = await sendWsCommand("config.get");
+    config = configPayload.config || {};
+    applyMetaFromConfig(config);
+    loadAssets(config._assets || {});
+    buildSectionsFromConfig();
+    await loadCredentials();
+  } finally {
+    hide("loader");
+    document.body.classList.remove("boot-loading");
+  }
+}
+
+function toggleNetworkList() {
+  $("w-tbl").classList.toggle("hide");
+  $("show-networks").classList.toggle("hide");
+}
+
+function togglePasswordVisibility() {
+  const inp = $("password");
+  const isPass = inp.type === "password";
+  inp.type = isPass ? "text" : "password";
+  if (isPass) {
+    show("show-pass");
+    hide("hide-pass");
+  } else {
+    hide("show-pass");
+    show("hide-pass");
+  }
+}
+
+function syncSsidLabel() {
+  const v = $("ssid").value.trim();
+  $("ssid-name").textContent = v || "SSID";
+}
+
+function toggleDhcpConfig() {
+  if ($("dhcp").checked) hide("conf-wifi");
+  else show("conf-wifi");
+}
+
+function primeFileInputLabel() {
+  const lbl = $("fw-lbl");
+  const input = $("file-input");
+  if (!input || !lbl) return;
+  if (!input.files || !input.files.length) return;
+  const f = input.files[0];
+  lbl.textContent = `${f.name} (${f.size} bytes)`;
+  lbl.title = f.name;
+  lbl.style.background = "brown";
+  if ($("update-btn")) $("update-btn").classList.remove("load");
+}
+
+function initializeDefaultLabelText(id) {
+  const el = $(id);
+  if (el && !el.dataset.defaultText) el.dataset.defaultText = el.textContent;
+}
+
+function bindUiActions() {
+  // Keep DOM lookups local to startup and bind only controls that exist in the
+  // current setup variant.
+  [
+    ["hum-btn", () => $("top-nav").classList.toggle("responsive")],
+    ["scan-wifi", getWiFiList],
+    ["connect-wifi", () => doConnection(false)],
+    ["save-params", saveParameters],
+    ["set-wifi", switchPage],
+    ["set-update", switchPage],
+    ["restart", confirmRestart],
+    ["update-btn", handleUpdate],
+    ["ok-modal", () => closeModal(true)],
+    ["close-modal", () => closeModal(false)],
+    ["delete-cred", deleteSelectedCredential],
+    ["clear-creds", clearAllCredentials],
+    ["show-networks", toggleNetworkList],
+    ["show-hide-password", togglePasswordVisibility]
+  ].forEach(([id, handler]) => bindIfPresent(id, "click", handler));
+
+  bindIfPresent("picker", "change", uploadFolder);
+  bindIfPresent("ssid", "input", syncSsidLabel);
+  bindIfPresent("dhcp", "change", toggleDhcpConfig);
+  bindIfPresent("file-input", "change", primeFileInputLabel);
+}
+
 window.addEventListener("load", () => {
   const main = $("main");
   if (main) {
+    // Dynamic config controls are created after bootstrap, so delegate change
+    // handling from the main container.
     main.addEventListener("change", handleOptionChange);
     main.addEventListener("input", handleOptionInput);
   }
 
-  // Button handlers
-  if ($("hum-btn")) $("hum-btn").onclick = () => $("top-nav").classList.toggle("responsive");
-  if ($("scan-wifi")) $("scan-wifi").onclick = getWiFiList;
-  if ($("connect-wifi")) $("connect-wifi").onclick = e => doConnection(e, false);
-  if ($("save-params")) $("save-params").onclick = saveParameters;
-  if ($("set-wifi")) $("set-wifi").onclick = switchPage;
-  if ($("set-update")) $("set-update").onclick = switchPage;
-  if ($("restart")) $("restart").onclick = confirmRestart;
-  if ($("update-btn")) $("update-btn").onclick = handleUpdate;
-  if ($("ok-modal")) $("ok-modal").onclick = () => closeModal(true);
-  if ($("close-modal")) $("close-modal").onclick = () => closeModal(false);
-  if ($("picker")) $("picker").onchange = uploadFolder;
+  bindUiActions();
 
-  if ($("show-networks")) {
-    $("show-networks").onclick = () => {
-      $("w-tbl").classList.toggle("hide");
-      $("show-networks").classList.toggle("hide");
-    };
-  }
-
-  if ($("show-hide-password")) {
-    $("show-hide-password").onclick = () => {
-      const inp = $("password");
-      const isPass = inp.type === "password";
-      inp.type = isPass ? "text" : "password";
-      if (isPass) {
-        show("show-pass");
-        hide("hide-pass");
-      } else {
-        hide("show-pass");
-        show("hide-pass");
-      }
-    };
-  }
-
-  if ($("ssid") && $("ssid-name")) {
-    $("ssid").addEventListener("input", () => {
-      const v = $("ssid").value.trim();
-      $("ssid-name").textContent = v || "SSID";
-    });
-  }
-
-  if ($("dhcp")) {
-    $("dhcp").onchange = function () {
-      if (this.checked) hide("conf-wifi");
-      else show("conf-wifi");
-    };
-  }
-
-  // Store default text for labels
-  const fwLabel = $("fw-lbl");
-  if (fwLabel && !fwLabel.dataset.defaultText)
-    fwLabel.dataset.defaultText = fwLabel.textContent;
-  
-  const pickLabel = $("pick-lbl");
-  if (pickLabel && !pickLabel.dataset.defaultText)
-    pickLabel.dataset.defaultText = pickLabel.textContent;
+  initializeDefaultLabelText("fw-lbl");
+  initializeDefaultLabelText("pick-lbl");
 
   if ($("update-btn")) $("update-btn").classList.add("load");
-  
-  if ($("file-input")) {
-    $("file-input").onchange = function () {
-      const lbl = $("fw-lbl");
-      if (!this.files || !this.files.length || !lbl) return;
-      const f = this.files[0];
-      lbl.textContent = `${f.name} (${f.size} bytes)`;
-      lbl.title = f.name;
-      lbl.style.background = "brown";
-      if ($("update-btn")) $("update-btn").classList.remove("load");
-    };
-  }
 
   applyIcons();
   setupHeaderLayout();
-
-  // Load config
-  show("loader");
-  fetch(`${esp}getStatus`)
-    .then(res => res.json())
-    .then(data => {
-      // Update esp with IP if available
-      if (data.ip) {
-        esp = `${location.protocol}//${data.ip}:${port}/`;
-      }
-      applyStatusHeader(data);
-      if (!configPath) throw new Error("No config path");
-      return fetch(`${esp}${configPath}`).then(r => r.json());
-    })
-    .then(cfg => {
-      config = cfg;
-      applyMetaFromConfig(cfg);
-      loadAssets(cfg._assets || {});
-      buildSectionsFromConfig();
-      hide("loader");
-      document.body.classList.remove("boot-loading");
-      loadCredentials();
-      window.dispatchEvent(new Event("setupPageReady"));
-    })
-    .catch(() => {
-      hide("loader");
-      document.body.classList.remove("boot-loading");
-    });
+  bootstrapSetupPage().catch(error => {
+    console.error(error);
+    hide("loader");
+    document.body.classList.remove("boot-loading");
+    openModal("Setup", "Unable to initialize setup websocket.");
+  });
 });

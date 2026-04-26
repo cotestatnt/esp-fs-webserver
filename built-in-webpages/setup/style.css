@@ -476,7 +476,8 @@ hr{
     margin-bottom:20px
 }
 .port{
-    width:15%
+    width:15%;
+    margin-left: 5px;
 }
 .tabs{
     align-items:flex-end;
