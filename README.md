@@ -14,6 +14,8 @@ A library for ESP8266/ESP32 that provides a web server with an integrated file s
 -   **WebSocket Support**: Built-in support for real-time, two-way communication between the web client and the ESP.
 -   **Advanced File Management**: An embedded file manager (`/edit`) allows you to browse, view, upload, and delete files and folders.
 
+Built-in `/setup` and `/edit` page sources are shared with the async library and are maintained in `C:\Cloud\fs-webserver-shared-pages`. Regenerate the embedded headers from that repository instead of editing generated files in `src/assets` directly.
+
 ## Documentation
 
 For more detailed information, please refer to the documentation in the `docs` folder:

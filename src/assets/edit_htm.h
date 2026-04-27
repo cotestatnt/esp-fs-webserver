@@ -1,4 +1,4 @@
-// Auto Generated file (minify build script)
+// Auto Generated file (shared build script)
 #pragma once
 #include <pgmspace.h>
 

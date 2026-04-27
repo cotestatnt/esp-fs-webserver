@@ -2,6 +2,9 @@
 #define CONFIGURATOR_HPP
 #include <type_traits>
 #include <FS.h>
+#if defined(ESP8266)
+#include <pgmspace.h>
+#endif
 
 #include "Json.h"
 #include "SerialLog.h"
@@ -47,6 +50,40 @@ class SetupConfigurator
         uint16_t& m_port;         
         String& m_host;
         bool m_opened = false;
+
+        uint8_t readBinaryByte(const uint8_t* data, size_t offset) const {
+#if defined(ESP8266)
+            return pgm_read_byte(data + offset);
+#else
+            return data[offset];
+#endif
+        }
+
+        bool writeBinaryFile(File& file, const uint8_t* data, size_t len) {
+#if defined(ESP8266)
+            uint8_t chunk[64];
+            size_t totalWritten = 0;
+            while (totalWritten < len) {
+                size_t chunkLen = len - totalWritten;
+                if (chunkLen > sizeof(chunk)) {
+                    chunkLen = sizeof(chunk);
+                }
+
+                for (size_t i = 0; i < chunkLen; ++i) {
+                    chunk[i] = readBinaryByte(data, totalWritten + i);
+                }
+
+                size_t written = file.write(chunk, chunkLen);
+                totalWritten += written;
+                if (written != chunkLen) {
+                    return false;
+                }
+            }
+            return true;
+#else
+            return file.write(data, len) == len;
+#endif
+        }
 
         // --------- Helpers for v2 hierarchical schema ---------
 
@@ -408,7 +445,7 @@ class SetupConfigurator
             filename += extension;
             
             // Auto-detect gzip compression by checking magic bytes
-            if (imageSize >= 2 && imageData[0] == 0x1f && imageData[1] == 0x8b) {
+            if (imageSize >= 2 && readBinaryByte(imageData, 0) == 0x1f && readBinaryByte(imageData, 1) == 0x8b) {
                 filename += ".gz";
             }
             
@@ -475,10 +512,10 @@ class SetupConfigurator
             }
             File file = m_filesystem->open(filename, "w");
             if (file) {
-                size_t written = file.write(data, len);
+                bool ok = writeBinaryFile(file, data, len);
                 file.close();
-                log_debug("Binary file %s saved (%d bytes)", filename, written);
-                return written == len;
+                log_debug("Binary file %s saved (%d bytes)", filename, ok ? len : 0);
+                return ok;
             }
             log_debug("Error writing binary file %s", filename);
             return false;
@@ -491,10 +528,10 @@ class SetupConfigurator
             }
             File file = m_filesystem->open(filename, "w");
             if (file) {
-                size_t written = file.write(data, len);
+                bool ok = writeBinaryFile(file, data, len);
                 file.close();
-                log_debug("Binary file %s saved (%d bytes)", filename, written);
-                return written == len;
+                log_debug("Binary file %s saved (%d bytes)", filename, ok ? len : 0);
+                return ok;
             }
             log_debug("Error writing binary file %s", filename);
             return false;
@@ -987,6 +1024,7 @@ class SetupConfigurator
             log_debug("Option \"%s\" using %s value", lbl.c_str(), valueFromSaved ? "saved" : "default");
             m_currentElements.add(elem);
             numOptions++;
+            (void)valueFromSaved;
         }
 
         // generic template for all other types

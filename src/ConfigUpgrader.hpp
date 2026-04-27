@@ -89,9 +89,208 @@ public:
         return true;
     }
 
+    bool migrateLegacySetupStorage(const char* legacyConfigFile, const char* legacyConfigFolder,
+                                   const char* targetConfigFolder, bool* migrated = nullptr) {
+        if (migrated != nullptr) {
+            *migrated = false;
+        }
+
+        if (m_filesystem == nullptr || m_configFile == nullptr || legacyConfigFile == nullptr ||
+            legacyConfigFolder == nullptr || targetConfigFolder == nullptr) {
+            log_error("ConfigUpgrader: Invalid migration arguments");
+            return false;
+        }
+
+        if (!m_filesystem->exists(legacyConfigFile)) {
+            return true;
+        }
+
+        const String sourceDir = legacyConfigFolder;
+        const String targetDir = targetConfigFolder;
+
+        if (!moveDirectoryContents(sourceDir, targetDir)) {
+            log_error("ConfigUpgrader: Legacy setup migration failed while moving %s to %s", legacyConfigFolder, targetConfigFolder);
+            return false;
+        }
+
+        m_filesystem->rmdir(legacyConfigFolder);
+
+        if (!rewriteSetupPathsInConfigFile(m_configFile, sourceDir, targetDir)) {
+            log_error("ConfigUpgrader: Legacy setup migration failed while rewriting asset paths in %s", m_configFile);
+            return false;
+        }
+
+        log_error("Legacy setup storage detected in %s. Migrated to %s; restarting ESP to apply the new paths.", legacyConfigFolder, targetConfigFolder);
+        if (migrated != nullptr) {
+            *migrated = true;
+        }
+        return true;
+    }
+
 private:
     fs::FS* m_filesystem = nullptr;
     const char* m_configFile = nullptr;
+
+    String joinPath(const String& base, const String& name) {
+        if (base.endsWith("/")) {
+            return base + name;
+        }
+        return base + "/" + name;
+    }
+
+    bool ensureDirectory(const String& path) {
+        return m_filesystem->exists(path.c_str()) || m_filesystem->mkdir(path.c_str());
+    }
+
+    bool copyFile(const String& source, const String& target) {
+        File input = m_filesystem->open(source.c_str(), "r");
+        if (!input) {
+            return false;
+        }
+
+        File output = m_filesystem->open(target.c_str(), "w");
+        if (!output) {
+            input.close();
+            return false;
+        }
+
+        uint8_t buffer[128];
+        while (input.available()) {
+            size_t read = input.read(buffer, sizeof(buffer));
+            if (read == 0 || output.write(buffer, read) != read) {
+                input.close();
+                output.close();
+                return false;
+            }
+            yield();
+        }
+
+        input.close();
+        output.close();
+        return true;
+    }
+
+    bool moveFile(const String& source, const String& target) {
+        m_filesystem->remove(target.c_str());
+        if (m_filesystem->rename(source.c_str(), target.c_str())) {
+            return true;
+        }
+        if (!copyFile(source, target)) {
+            return false;
+        }
+        return m_filesystem->remove(source.c_str());
+    }
+
+    bool moveDirectoryContents(const String& sourceDir, const String& targetDir) {
+        if (!ensureDirectory(targetDir)) {
+            return false;
+        }
+
+        File dir = m_filesystem->open(sourceDir.c_str(), "r");
+        if (!dir || !dir.isDirectory()) {
+            return false;
+        }
+
+        dir.rewindDirectory();
+        while (true) {
+            File entry = dir.openNextFile();
+            if (!entry) {
+                break;
+            }
+
+            const String name = entry.name();
+            const String sourcePath = joinPath(sourceDir, name);
+            const String targetPath = joinPath(targetDir, name);
+
+            if (entry.isDirectory()) {
+                entry.close();
+                if (!moveDirectoryContents(sourcePath, targetPath)) {
+                    dir.close();
+                    return false;
+                }
+                m_filesystem->rmdir(sourcePath.c_str());
+            } else {
+                entry.close();
+                if (!moveFile(sourcePath, targetPath)) {
+                    dir.close();
+                    return false;
+                }
+            }
+            yield();
+        }
+
+        dir.close();
+        return true;
+    }
+
+    String remapLegacySetupPath(const String& value, const String& sourceDir, const String& targetDir) {
+        if (value == sourceDir) {
+            return targetDir;
+        }
+
+        const String sourcePrefix = sourceDir + "/";
+        if (value.startsWith(sourcePrefix)) {
+            return targetDir + value.substring(sourceDir.length());
+        }
+
+        return value;
+    }
+
+    void rewriteLegacySetupPaths(cJSON* node, const String& sourceDir, const String& targetDir, bool& changed) {
+        for (cJSON* current = node; current; current = current->next) {
+            if (cJSON_IsString(current) && current->valuestring) {
+                const String rewritten = remapLegacySetupPath(String(current->valuestring), sourceDir, targetDir);
+                if (rewritten != String(current->valuestring)) {
+                    cJSON_SetValuestring(current, rewritten.c_str());
+                    changed = true;
+                }
+            }
+
+            if (current->child) {
+                rewriteLegacySetupPaths(current->child, sourceDir, targetDir, changed);
+            }
+        }
+    }
+
+    bool rewriteSetupPathsInConfigFile(const char* configPath, const String& sourceDir, const String& targetDir) {
+        File file = m_filesystem->open(configPath, "r");
+        if (!file) {
+            return false;
+        }
+
+        const String jsonText = file.readString();
+        file.close();
+
+        cJSON* root = cJSON_Parse(jsonText.c_str());
+        if (!root) {
+            return false;
+        }
+
+        bool changed = false;
+        rewriteLegacySetupPaths(root, sourceDir, targetDir, changed);
+        if (!changed) {
+            cJSON_Delete(root);
+            return true;
+        }
+
+        char* raw = cJSON_PrintUnformatted(root);
+        cJSON_Delete(root);
+        if (!raw) {
+            return false;
+        }
+
+        const String serialized(raw);
+        free(raw);
+
+        file = m_filesystem->open(configPath, "w");
+        if (!file) {
+            return false;
+        }
+
+        const size_t written = file.print(serialized);
+        file.close();
+        return written == serialized.length();
+    }
 
     /**
      * @brief Generate valid ID from label
@@ -102,7 +301,7 @@ private:
         id.replace(" ", "-");
         
         String cleaned;
-        for (int i = 0; i < id.length(); i++) {
+        for (unsigned int i = 0; i < id.length(); i++) {
             char c = id[i];
             if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-' || c == '_') {
                 cleaned += c;
@@ -117,7 +316,7 @@ private:
      */
     String escapeJson(const String& input) {
         String result;
-        for (int i = 0; i < input.length(); i++) {
+        for (unsigned int i = 0; i < input.length(); i++) {
             char c = input[i];
             switch (c) {
                 case '\"': result += "\\\""; break;

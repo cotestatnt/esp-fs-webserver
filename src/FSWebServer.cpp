@@ -29,6 +29,14 @@ void FSWebServer::begin(WebSocketsServer::WebSocketServerEvent wsEventHandler) {
 
 //////////////////////    BUILT-IN HANDLERS    ///////////////////////////
 #if ESP_FS_WS_SETUP
+    ConfigUpgrader upgrader(m_filesystem, ESP_FS_WS_CONFIG_FILE);
+    bool migratedLegacySetupStorage = false;
+    upgrader.migrateLegacySetupStorage("/config/config.json", "/config", ESP_FS_WS_CONFIG_FOLDER, &migratedLegacySetupStorage);
+    if (migratedLegacySetupStorage) {
+        ESP.restart();
+        return;
+    }
+
     m_filesystem_ok = getSetupConfigurator()->checkConfigFile();
     if (!m_filesystem_ok) {
         log_error("Filesystem not available. Setup page will not work.");
@@ -58,14 +66,16 @@ void FSWebServer::begin(WebSocketsServer::WebSocketServerEvent wsEventHandler) {
     on("*", HTTP_HEAD, [this]() { this->handleFileName(); });
     on("/", HTTP_GET, [this]() { this->handleIndex(); });
     on("/setup", HTTP_GET, [this]() { this->handleSetup(); });
+    onNotFound([this]() { this->handleFileRequest(); });
 
     // Serve default logo from PROGMEM when no custom logo exists on filesystem
-    on("/config/logo.svg", HTTP_GET, [this]() {
-        if (!m_filesystem->exists("/config/logo.svg") && 
-            !m_filesystem->exists("/config/logo.svg.gz") &&
-            !m_filesystem->exists("/config/logo.png") &&
-            !m_filesystem->exists("/config/logo.jpg") &&
-            !m_filesystem->exists("/config/logo.gif")) {
+    on(ESP_FS_WS_CONFIG_FOLDER "/logo.svg", HTTP_GET, [this]() {
+        const String logoBase = String(ESP_FS_WS_CONFIG_FOLDER) + "/logo";
+        if (!m_filesystem->exists(logoBase + ".svg") && 
+            !m_filesystem->exists(logoBase + ".svg.gz") &&
+            !m_filesystem->exists(logoBase + ".png") &&
+            !m_filesystem->exists(logoBase + ".jpg") &&
+            !m_filesystem->exists(logoBase + ".gif")) {
                 this->sendHeader(PSTR("Content-Encoding"), "gzip");
                 this->sendHeader(PSTR("Cache-Control"), "public, max-age=86400");
                 this->send_P(200, "image/svg+xml", (const char*)_aclogo_svg, sizeof(_aclogo_svg));

@@ -46,12 +46,12 @@ struct WiFiConnectParams {
     
     // Default constructor
     WiFiConnectParams() {
-        memset(&config, 0, sizeof(config));
+        config = WiFiCredential();
     }
     
     // Constructor with SSID and plaintext password
     WiFiConnectParams(const char* ssid, const char* plaintext_password) {
-        memset(&config, 0, sizeof(config));
+        config = WiFiCredential();
         if (ssid) {
             strncpy(config.ssid, ssid, sizeof(config.ssid) - 1);
             config.ssid[sizeof(config.ssid) - 1] = '\0';
