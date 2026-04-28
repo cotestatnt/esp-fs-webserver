@@ -416,6 +416,15 @@ public:
   void sendOK();
 
   /*
+  Set wifi event callback to handle captive portal fallback on wifi disconnect    
+  */
+  #if defined(ESP32) || defined(ESP8266)
+  inline void setWiFiConnectionCallbacks(WiFiConnectedCallbackF connectedCallback, WiFiDisconnectedCallbackF disconnectedCallback) {
+    WiFiService::setWiFiConnectionCallbacks(connectedCallback, disconnectedCallback);          
+  }
+  #endif
+
+  /*
     Start WiFi connection, callback function is called when trying to connect
   */
   bool startWiFi(uint32_t timeout, CallbackF fn = nullptr);

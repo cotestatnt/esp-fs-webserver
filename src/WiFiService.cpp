@@ -1,6 +1,28 @@
 #include "WiFiService.h"
 #include "Json.h"
 
+#if defined(ESP32) || defined(ESP8266)
+WiFiConnectedCallbackF WiFiService::m_wifiConnectedCallback = nullptr;
+WiFiDisconnectedCallbackF WiFiService::m_wifiDisconnectedCallback = nullptr;
+#endif
+
+#if defined(ESP8266)
+WiFiEventHandler WiFiService::m_wifiConnectedHandler;
+WiFiEventHandler WiFiService::m_wifiDisconnectedHandler;
+
+void WiFiService::handleWiFiConnected(const WiFiEventStationModeGotIP& event) {
+    if (m_wifiConnectedCallback) {
+        m_wifiConnectedCallback(event);
+    }
+}
+
+void WiFiService::handleWiFiDisconnected(const WiFiEventStationModeDisconnected& event) {
+    if (m_wifiDisconnectedCallback) {
+        m_wifiDisconnectedCallback(event);
+    }
+}
+#endif
+
 // Helper: log the actual station network configuration as seen by the core
 // (independent from WiFiConnectParams / CredentialManager values).
 static void logCurrentStaNetworkConfig() {
@@ -124,11 +146,11 @@ WiFiConnectResult WiFiService::connectWithParams(const WiFiConnectParams& params
             if (!ok) {
                 log_error("STA Failed to configure");
             }
-        }
+        }        
 
         DBG_OUTPUT_PORT.print("\n\n\nConnecting to ");
-        DBG_OUTPUT_PORT.println(params.config.ssid);
-        WiFi.begin(params.config.ssid, params.password.c_str());
+    DBG_OUTPUT_PORT.println(params.config.ssid);
+    WiFi.begin(params.config.ssid, params.password.c_str());
 
         uint32_t beginTime = millis();
         while (WiFi.status() != WL_CONNECTED) {
@@ -182,7 +204,7 @@ WiFiConnectResult WiFiService::connectWithParams(const WiFiConnectParams& params
                 resp += params.host;
                 resp += ".local/setup</a></i><br><p style='text-align: center'>Do you want to proceed with a ESP restart right now?</p><div id='action-restart-required'></div>";
             } else {
-                // Case 2: request came from a client already on the same WiFi as the ESP (pure SSID switch).
+                // Case 2: request came from a client already on the same WiFi as the ESP (pure SSID switch). 
                 // After the switch this page will no longer reach the device until the client changes WiFi as well.
                 resp += " <br><br><i>Note:<br>This setup page may stop communicating with the device due to the WiFi network change.<br>After you switch your PC/phone to the new WiFi network, open <a href='http://";
                 resp += params.host;
@@ -208,28 +230,42 @@ WiFiConnectResult WiFiService::connectWithParams(const WiFiConnectParams& params
 WiFiStartResult WiFiService::startWiFi(CredentialManager* credentialManager, fs::FS* filesystem, const char* configFile, uint32_t timeout) {
     WiFiStartResult result;
     WiFi.mode(WIFI_STA);
-    WiFiCredential* bestCred = nullptr;
+    WiFi.setAutoReconnect(true);
+#ifdef ESP32    
+    if (m_wifiDisconnectedCallback)
+        WiFi.onEvent(m_wifiDisconnectedCallback, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
+    if (m_wifiConnectedCallback)
+        WiFi.onEvent(m_wifiConnectedCallback, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_GOT_IP);
+#elif defined(ESP8266)
+    if (m_wifiDisconnectedCallback) {
+        m_wifiDisconnectedHandler = WiFi.onStationModeDisconnected(&WiFiService::handleWiFiDisconnected);
+    }
+    if (m_wifiConnectedCallback) {
+        m_wifiConnectedHandler = WiFi.onStationModeGotIP(&WiFiService::handleWiFiConnected);
+    }
+#endif
 
+    WiFiCredential* bestCred = nullptr;
     if (credentialManager) {
 #ifdef ESP32
         credentialManager->loadFromNVS();
 #else
         credentialManager->loadFromFS();
-#endif
-#ifdef BOARD_HAS_SDIO_ESP_HOSTED
+    #endif
+    #ifdef BOARD_HAS_SDIO_ESP_HOSTED
         WiFi.setPins(BOARD_SDIO_ESP_HOSTED_CLK, BOARD_SDIO_ESP_HOSTED_CMD, BOARD_SDIO_ESP_HOSTED_D0,
-                    BOARD_SDIO_ESP_HOSTED_D1, BOARD_SDIO_ESP_HOSTED_D2, BOARD_SDIO_ESP_HOSTED_D3,
-                    BOARD_SDIO_ESP_HOSTED_RESET);
+                BOARD_SDIO_ESP_HOSTED_D1, BOARD_SDIO_ESP_HOSTED_D2, BOARD_SDIO_ESP_HOSTED_D3,
+                BOARD_SDIO_ESP_HOSTED_RESET);
         WiFi.STA.begin();
         WiFi.mode(WIFI_STA);
         WiFi.disconnect(false, true, 1000); // needed for scanNetworks to work
-#endif
+    #endif
         std::vector<WiFiCredential>* creds = credentialManager->getCredentials();
         if (creds && creds->size() > 0) {
             int networksFound = WiFi.scanNetworks();
             if (networksFound > 0) {
                 int32_t bestRSSI = -200;
-
+                
                 for (int i = 0; i < networksFound; i++) {
                     String scannedSSID = WiFi.SSID(i);
                     int32_t scannedRSSI = WiFi.RSSI(i);
@@ -269,7 +305,7 @@ WiFiStartResult WiFiService::startWiFi(CredentialManager* credentialManager, fs:
                             log_error("Failed to configure static IP");
                         }
                     }
-
+                    
                     if (credentialManager->getPassword(bestCred->ssid).length() > 0) {
                         log_info("Connecting to %s (RSSI: %d dBm)...", bestCred->ssid, bestRSSI);
                         WiFi.begin(bestCred->ssid, credentialManager->getPassword(bestCred->ssid).c_str());
@@ -370,7 +406,7 @@ WiFiStartResult WiFiService::startWiFi(CredentialManager* credentialManager, fs:
 }
 
 
-bool WiFiService::startAccessPoint(WiFiConnectParams& params, IPAddress& outIp) {
+bool WiFiService::startAccessPoint(WiFiConnectParams& params, IPAddress& outIp) {    
     delay(100);
     WiFi.mode(WIFI_AP);
 

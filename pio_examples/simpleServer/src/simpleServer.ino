@@ -24,6 +24,10 @@ bool startFilesystem() {
   return false;
 }
 
+//////////////////////////////// WiFi Event Callbacks /////////////////////////////////////////
+uint8_t wifiStatus = WL_IDLE_STATUS;  // WiFi status variable to track connection state
+
+
 ////////////////////////////  Load custom options //////////////////////////////////////
 bool loadApplicationConfig() {
   if (LittleFS.exists(server.getConfiFileName())) {
@@ -64,6 +68,39 @@ void setup() {
 
   // Clear saved config and wifi credentials (for testing purposes) 
   //server.clearAll(); // Uncomment to clear saved config on each boot (for testing)
+
+  // Register WiFi event callbacks
+  #ifdef ESP32
+  server.setWiFiConnectionCallbacks(
+    [](WiFiEvent_t event, WiFiEventInfo_t info) {
+      (void)event;
+      (void)info;
+      Serial.println("WiFi connected, IP address: " + WiFi.localIP().toString());
+      wifiStatus = WL_CONNECTED;
+    },
+    [](WiFiEvent_t event, WiFiEventInfo_t info) {
+      (void)event;
+      if (wifiStatus == WL_CONNECTED) {
+        Serial.println("WiFi disconnected, reason: " + String(info.wifi_sta_disconnected.reason));
+      }
+      wifiStatus = WiFi.status();
+    }
+  );
+  #elif defined(ESP8266)
+  server.setWiFiConnectionCallbacks(
+    [](const WiFiEventStationModeGotIP& event) {
+      Serial.println("WiFi connected, IP address: " + event.ip.toString());
+      wifiStatus = WL_CONNECTED;
+    },
+    [](const WiFiEventStationModeDisconnected& event) {
+      if (wifiStatus == WL_CONNECTED) {
+        Serial.println("WiFi disconnected, reason: " + String(event.reason));
+      }
+      wifiStatus = WiFi.status();
+    }
+  );
+  #endif
+
 
   // Try to connect to WiFi (will start AP if not connected after timeout)
   if (!server.startWiFi(10000)) {
