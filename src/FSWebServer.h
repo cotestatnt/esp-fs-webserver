@@ -546,7 +546,7 @@ public:
   /*
    * Get complete path of config.json file
    */
-  inline const char *getConfiFileName() { return ESP_FS_WS_CONFIG_FILE; }
+  inline const char *getConfigFileName() { return ESP_FS_WS_CONFIG_FILE; }
 
   void setSetupPageTitle(const char *title) {
     getSetupConfigurator()->setSetupPageTitle(title);
