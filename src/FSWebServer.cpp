@@ -66,6 +66,7 @@ void FSWebServer::begin(WebSocketsServer::WebSocketServerEvent wsEventHandler) {
     on("*", HTTP_HEAD, [this]() { this->handleFileName(); });
     on("/", HTTP_GET, [this]() { this->handleIndex(); });
     on("/setup", HTTP_GET, [this]() { this->handleSetup(); });
+    on("/update", HTTP_POST, [this]() {this->update_second();}, [this]() { this->update_first();});
     onNotFound([this]() { this->handleFileRequest(); });
 
     // Serve default logo from PROGMEM when no custom logo exists on filesystem
