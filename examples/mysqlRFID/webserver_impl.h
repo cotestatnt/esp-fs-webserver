@@ -200,7 +200,7 @@ void handleMainPage() {
 
 ////////////////////  Load application options from filesystem  ////////////////////
 bool loadOptions() {
-  if (LittleFS.exists(myWebServer.getConfiFileName())) {
+  if (LittleFS.exists(myWebServer.getConfigFileName())) {
     myWebServer.getOptionValue(MY_SQL_HOST, dbHost);
     myWebServer.getOptionValue(MY_SQL_PORT, dbPort);
     myWebServer.getOptionValue(MY_SQL_DB, database);
@@ -215,7 +215,7 @@ bool loadOptions() {
     return true;
   }
   else
-    Serial.printf("File \"%s\" not exist\n", myWebServer.getConfiFileName());
+    Serial.printf("File \"%s\" not exist\n", myWebServer.getConfigFileName());
   return false;
 }
 
@@ -232,7 +232,7 @@ bool startWebServer(bool clear = false) {
   }
 
   if (clear) {
-    LittleFS.remove(myWebServer.getConfiFileName());
+    LittleFS.remove(myWebServer.getConfigFileName());
   }
 
   // Load configuration (if not present, default will be created when webserver will start)

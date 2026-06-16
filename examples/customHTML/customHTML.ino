@@ -80,7 +80,7 @@ bool startFilesystem() {
 
 ////////////////////  Load application options from filesystem  ////////////////////
 bool loadOptions() {
-  if (FILESYSTEM.exists(server.getConfiFileName())) {
+  if (FILESYSTEM.exists(server.getConfigFileName())) {
     // Test "options" values
     server.getOptionValue(LED_LABEL, ledPin);
     server.getOptionValue(BOOL_LABEL, boolVar);

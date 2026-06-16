@@ -80,7 +80,7 @@ Config file and callback:
 
 ```cpp
 File getConfigFile(const char* mode);
-const char* getConfiFileName();
+const char* getConfigFileName();
 bool clearConfigFile();
 void setConfigSavedCallback(ConfigSavedCallbackF callback);
 ```

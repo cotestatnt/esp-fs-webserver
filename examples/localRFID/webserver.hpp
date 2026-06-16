@@ -169,7 +169,7 @@ bool startWebServer(bool clear = false) {
   }
 
   if (clear) {
-    LittleFS.remove(myWebServer.getConfiFileName());
+    LittleFS.remove(myWebServer.getConfigFileName());
   }
 
   // Try to connect to WiFi (will start AP if not connected after timeout)

@@ -30,7 +30,7 @@ uint8_t wifiStatus = WL_IDLE_STATUS;  // WiFi status variable to track connectio
 
 ////////////////////////////  Load custom options //////////////////////////////////////
 bool loadApplicationConfig() {
-  if (LittleFS.exists(server.getConfiFileName())) {
+  if (LittleFS.exists(server.getConfigFileName())) {
     // Test "options" values
     server.getOptionValue("Test int variable", testInt);
     server.getOptionValue("Test float variable", testFloat);

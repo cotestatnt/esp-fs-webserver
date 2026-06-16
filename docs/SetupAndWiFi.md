@@ -53,7 +53,7 @@ server.getOptionValue("Option 2", option2);
 
 ## Config file: read/write
 
-- Full path: `server.getConfiFileName()`
+- Full path: `server.getConfigFileName()`
 - File access: `server.getConfigFile("r")` / `server.getConfigFile("w")`
 - Reset config: `server.clearConfigFile()`
 
