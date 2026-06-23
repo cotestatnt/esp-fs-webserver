@@ -27,7 +27,7 @@ bool startFilesystem() {
 
 ////////////////////////////  Load custom options //////////////////////////////////////
 bool loadApplicationConfig() {
-  if (LittleFS.exists(server.getConfiFileName())) {
+  if (LittleFS.exists(server.getConfigFileName())) {
     // Test "options" values
     server.getOptionValue("Test int variable", testInt);
     server.getOptionValue("Test float variable", testFloat);

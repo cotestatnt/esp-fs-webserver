@@ -93,7 +93,7 @@ bool startFilesystem() {
 
 ////////////////////  Load and save application configuration from filesystem  ////////////////////
 bool loadApplicationConfig() {
-  if (FILESYSTEM.exists(server.getConfiFileName())) {
+  if (FILESYSTEM.exists(server.getConfigFileName())) {
     server.getOptionValue("Option 1", optionString);
     server.getOptionValue("Option 2", optionULong);
     server.getOptionValue("LED Pin", ledPin);
